@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <!--
+    ============================================================
+    LOCAL SETUP — first time only
+    ============================================================
+    Copy GamePath.props.example → GamePath.props in this folder.
+    Edit GamePath.props to point at your Descenders install.
+    GamePath.props is gitignored so it never gets committed.
+    ============================================================
+  -->
+  <Import Project="GamePath.props" Condition="Exists('GamePath.props')" />
+  <PropertyGroup Condition="'$(DescendersPath)' == ''">
+    <!-- Fallback if GamePath.props is missing — edit this or create GamePath.props -->
+    <DescendersPath>C:\Program Files (x86)\Steam\steamapps\common\Descenders</DescendersPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{788BC472-59F7-46F6-B760-65C18BA74389}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DescendersModMenu</RootNamespace>
+    <AssemblyName>DescendersSandbox</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(SolutionDir)Output\</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>$(DescendersPath)\MelonLoader\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="MelonLoader">
+      <HintPath>$(DescendersPath)\MelonLoader\MelonLoader.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="TextMeshPro-1.0.55.2017.1.0b11">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\TextMeshPro-1.0.55.2017.1.0b11.dll</HintPath>
+    </Reference>
+    <Reference Include="TextSystemsImport">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\TextSystemsImport.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AIModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.AIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ClothModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.ClothModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.TerrainModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainPhysicsModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(DescendersPath)\Descenders_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BikeStats\BikeStatsData.cs" />
+    <Compile Include="BikeStats\StatsManager.cs" />
+    <Compile Include="Data\GameRefs.cs" />
+    <Compile Include="Mods\Bike\Acceleration.cs" />
+    <Compile Include="Mods\Bike\AirControl.cs" />
+    <Compile Include="Mods\Bike\AutoBalance.cs" />
+    <Compile Include="Mods\Bike\BikeDamage.cs" />
+    <Compile Include="Mods\Bike\BikeSwitcher.cs" />
+    <Compile Include="Mods\Bike\BikeTorch.cs" />
+    <Compile Include="Mods\Bike\BrakeFade.cs" />
+    <Compile Include="Mods\Bike\CenterOfMass.cs" />
+    <Compile Include="Mods\Bike\CutBrakes.cs" />
+    <Compile Include="Mods\Bike\IceMode.cs" />
+    <Compile Include="Mods\Bike\InstantRespawn.cs" />
+    <Compile Include="Mods\Bike\LandingImpact.cs" />
+    <Compile Include="Mods\Bike\MaxSpeedMultiplier.cs" />
+    <Compile Include="Mods\Bike\Movement.cs" />
+    <Compile Include="Mods\Bike\NoBail.cs" />
+    <Compile Include="Mods\Bike\NoSpeedCap.cs" />
+    <Compile Include="Mods\Bike\QuickBrake.cs" />
+    <Compile Include="Mods\Bike\ReverseSteering.cs" />
+    <Compile Include="Mods\Bike\StickyTyres.cs" />
+    <Compile Include="Mods\Bike\Suspension.cs" />
+    <Compile Include="Mods\Bike\TrickSetSwap.cs" />
+    <Compile Include="Mods\Bike\TyrePressure.cs" />
+    <Compile Include="Mods\Bike\WheelieAngleLimit.cs" />
+    <Compile Include="Mods\Bike\WideTyres.cs" />
+    <Compile Include="Mods\World\AvalancheMode.cs" />
+    <Compile Include="Mods\World\BoulderDodgeMode.cs" />
+    <Compile Include="Mods\World\CameraShake.cs" />
+    <Compile Include="Mods\World\EarthquakeMode.cs" />
+    <Compile Include="Mods\World\ExplodingProps.cs" />
+    <Compile Include="Mods\World\Gravity.cs" />
+    <Compile Include="Mods\World\HeadlightsOnly.cs" />
+    <Compile Include="Mods\World\MapChanger.cs" />
+    <Compile Include="Mods\World\NearMissSensitivity.cs" />
+    <Compile Include="Mods\World\SkyColours.cs" />
+    <Compile Include="Mods\World\TimeOfDay.cs" />
+    <Compile Include="Mods\Player\DrunkMode.cs" />
+    <Compile Include="Mods\Player\FlyMode.cs" />
+    <Compile Include="Mods\Player\Fov.cs" />
+    <Compile Include="Mods\Player\MirrorMode.cs" />
+    <Compile Include="Mods\Player\OutfitPresets.cs" />
+    <Compile Include="Mods\Player\SpeedrunTimer.cs" />
+    <Compile Include="Mods\Modes\PoliceChaseMod.cs" />
+    <Compile Include="Mods\Modes\SurvivalMode.cs" />
+    <Compile Include="Mods\Modes\TrickAttackMode.cs" />
+    <Compile Include="Mods\Tracking\ESP.cs" />
+    <Compile Include="Mods\Tracking\GhostReplay.cs" />
+    <Compile Include="Mods\Tracking\SessionTrackers.cs" />
+    <Compile Include="Mods\Tracking\SlowMoOnBail.cs" />
+    <Compile Include="Mods\Tracking\SpeedWatcher.cs" />
+    <Compile Include="Mods\Tracking\TopSpeed.cs" />
+    <Compile Include="Mods\System\AssemblyScanner.cs" />
+    <Compile Include="Mods\System\DiagnosticsManager.cs" />
+    <Compile Include="Mods\System\GameModifiers.cs" />
+    <Compile Include="Mods\System\Graphics.cs" />
+    <Compile Include="Mods\System\MenuCustomiser.cs" />
+    <Compile Include="Mods\System\ModChat.cs" />
+    <Compile Include="Mods\System\ModDetection.cs" />
+    <Compile Include="Mods\System\SceneDumper.cs" />
+    <Compile Include="Mods\System\ScreenshotMode.cs" />
+    <Compile Include="Mods\System\SlowMotion.cs" />
+    <Compile Include="Mods\System\SteamPlayerCount.cs" />
+    <Compile Include="Mods\System\TeleportToCheckpoint.cs" />
+    <Compile Include="Mods\System\TeleportToPlayer.cs" />
+    <Compile Include="Mods\System\UIRemover.cs" />
+    <Compile Include="Mods\System\UpdateChecker.cs" />
+    <Compile Include="Mods\Bike\BikeSize.cs" />
+    <Compile Include="Mods\Bike\InvisibleBike.cs" />
+    <Compile Include="Mods\Bike\WheelSize.cs" />
+    <Compile Include="Mods\Fun\InvisiblePlayer.cs" />
+    <Compile Include="Mods\Fun\MoonMode.cs" />
+    <Compile Include="Mods\Fun\PlayerSize.cs" />
+    <Compile Include="Mods\World\Fog.cs" />
+    <Compile Include="Mods\World\Music.cs" />
+    <Compile Include="Mods\World\Trees.cs" />
+    <Compile Include="Mods\World\TurboWind.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Core\ModEntry.cs" />
+    <Compile Include="UI\Core\FavouritesManager.cs" />
+    <Compile Include="UI\Core\Uitheme.cs" />
+    <Compile Include="UI\HUDs\GhostHUD.cs" />
+    <Compile Include="UI\Pages\AvalanchePage.cs" />
+    <Compile Include="UI\Pages\BikePage.cs" />
+    <Compile Include="UI\Pages\ChatPage.cs" />
+    <Compile Include="UI\Pages\EspPage.cs" />
+    <Compile Include="UI\Pages\FavsPage.cs" />
+    <Compile Include="UI\Pages\FunPage.cs" />
+    <Compile Include="UI\Pages\GhostPage.cs" />
+    <Compile Include="UI\Pages\GraphicsPage.cs" />
+    <Compile Include="UI\Pages\InfoPage.cs" />
+    <Compile Include="UI\Pages\MapPage.cs" />
+    <Compile Include="UI\Pages\ModesPage.cs" />
+    <Compile Include="UI\Pages\MovePage.cs" />
+    <Compile Include="UI\Pages\OutfitPage.cs" />
+    <Compile Include="UI\Pages\ScreenshotPage.cs" />
+    <Compile Include="UI\Pages\SessionPage.cs" />
+    <Compile Include="UI\Pages\WorldPage.cs" />
+    <Compile Include="UI\HUDs\PoliceHUD.cs" />
+    <Compile Include="UI\HUDs\SessionHUD.cs" />
+    <Compile Include="UI\HUDs\SurvivalHUD.cs" />
+    <Compile Include="UI\HUDs\SuspensionHUD.cs" />
+    <Compile Include="UI\HUDs\TrickAttackHUD.cs" />
+    <Compile Include="UI\Core\UIHelpers.cs" />
+    <Compile Include="UI\Core\MenuWindow.cs" />
+    <Compile Include="UI\Core\MenuUI.cs" />
+    <Compile Include="UI\HUDs\WheelieHUD.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(TargetPath)" "$(DescendersPath)\Mods\"</PostBuildEvent>
+  </PropertyGroup>
+</Project>
