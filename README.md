@@ -2,7 +2,7 @@
 
 A MelonLoader mod menu for Descenders, packed with tweaks, tools, and game modifiers to mess around with in **Free Ride and Bike Parks**.
 
-> ⚠️ This mod is intended for use in **Free Ride and Bike Park** sessions only. Features will not work in career mode, events, or online lobbies.
+> ⚠️ This mod is intended for use in **Free Ride and Bike Park** sessions only. Features will not work in career mode, events, or online lobbies. This mod is client side only.
 
 Press **F6** in-game to open the menu.
 
