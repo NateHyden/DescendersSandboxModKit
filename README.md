@@ -187,4 +187,4 @@ Not sure where your install is? In Steam, right-click Descenders â†’ **Manage â†
 ## Links
 
 - **Discord:** [discord.gg/rHvCrBdqaR](https://discord.gg/rHvCrBdqaR)
-- **Nexus Mods:** Coming soon
+- **Nexus Mods:** [nexusmods.com/descenders/mods/8](https://www.nexusmods.com/descenders/mods/8)
