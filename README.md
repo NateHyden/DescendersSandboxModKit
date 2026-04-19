@@ -112,6 +112,16 @@ Custom game modes you can run in free ride:
 ### ⭐ Favourites
 Pin any setting to your Favourites tab for quick access without digging through menus.
 
+### ⌨️ Key Binds
+
+Bind any key on your keyboard to toggle mods or trigger actions without opening the menu.
+
+- 51 bindable actions covering every toggle, mode, and one-shot action in the mod
+- Default bindings: **F2** = Slow Motion, **F3** = Ghost Replay Toggle, **F4** = Ghost Replay Save
+- Bindings are saved automatically and loaded on every launch
+- Conflict detection — if a key is already in use, you'll be prompted to steal it or cancel
+- Bindings work whenever the menu is closed and no text field is focused
+
 ---
 
 ## Requirements
