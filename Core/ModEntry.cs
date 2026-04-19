@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "1.0.0";
+        public const string Version = "1.1.0";
         public const string DownloadLink = null;
     }
 
@@ -138,6 +138,10 @@ namespace DescendersModMenu
             // Load favourites configuration
             try { UI.FavouritesManager.LoadFromFile(); }
             catch (System.Exception ex) { MelonLogger.Warning("FavouritesManager.LoadFromFile: " + ex.Message); }
+
+            // Load key bindings
+            try { KeyBindManager.LoadBindings(); MelonLogger.Msg("KeyBindManager.LoadBindings OK."); }
+            catch (System.Exception ex) { MelonLogger.Warning("KeyBindManager.LoadBindings: " + ex.Message); }
 
             // Check for updates on a background thread
             try { UpdateChecker.CheckAsync(); } catch { }
@@ -461,8 +465,6 @@ namespace DescendersModMenu
 
             try
             {
-                if (Input.GetKeyDown(KeyCode.F3)) { GhostReplay.Toggle(); GhostPage.RefreshAll(); }
-                if (Input.GetKeyDown(KeyCode.F4)) { GhostReplay.SaveRun(); GhostPage.RefreshAll(); }
                 if (Input.GetKeyDown(KeyCode.JoystickButton8))
                 {
                     if (SurvivalMode.Enabled && SurvivalMode.IsGameOver) SurvivalMode.ResetRun();
@@ -480,7 +482,7 @@ namespace DescendersModMenu
                     _pendingRStickSave = false;
                     if (GhostReplay.IsRecording && GhostReplay.RecordedFrames >= 30) { GhostReplay.SaveRun(); GhostPage.RefreshAll(); }
                 }
-                if (Input.GetKeyDown(KeyCode.F6)) MenuUI.ToggleMenu();
+                if (!UI.BindsPage.IsListening && Input.GetKeyDown(KeyCode.F6)) MenuUI.ToggleMenu();
             }
             catch (System.Exception ex) { MelonLogger.Error("ToggleMenu: " + ex.Message); }
 
@@ -510,8 +512,8 @@ namespace DescendersModMenu
             try { GhostPage.Tick(); } catch { }
             try { SlowMoOnBail.Tick(); } catch { }
             try { ModDetection.TagLocalPlayer(); } catch { }
-            try { if (Input.GetKeyDown(KeyCode.F2)) SlowMotion.Toggle(); }
-            catch (System.Exception ex) { MelonLogger.Error("SlowMotion.Toggle: " + ex.Message); }
+            if (!OutfitPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.BindsPage.IsListening)
+                try { KeyBindManager.CheckAll(); } catch (System.Exception ex) { MelonLogger.Error("KeyBindManager.CheckAll: " + ex.Message); }
         }
 
         public override void OnFixedUpdate()
@@ -548,6 +550,7 @@ namespace DescendersModMenu
             try { SuspensionHUD.OnGUI(); } catch { }
             try { BrakeFade.OnGUI(); } catch { }
             try { WheelieHUD.OnGUI(); } catch { }
+            try { UI.BindsPage.OnGUI(); } catch { }
         }
 
         public override void OnApplicationQuit()
