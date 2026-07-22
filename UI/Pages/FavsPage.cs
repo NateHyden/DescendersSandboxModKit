@@ -239,6 +239,28 @@ namespace DescendersModMenu.UI
             });
         }
 
+        /// <summary>One-shot action row - no toggle, no persisted state (e.g. Complete Missions, Level Reset).
+        /// getResult can return a short status string shown after the button fires; pass null to skip it.</summary>
+        public static void BuildActionButton(Transform parent, string id, string label, string btnLabel,
+            FavAction doAction, FavAction refreshPage, FavStringGetter getResult = null)
+        {
+            var row = UIHelpers.StatRow(label, parent);
+            Text resultTxt = null;
+            if (getResult != null)
+            {
+                resultTxt = UIHelpers.Txt("FAR_" + id, row.transform, "", 10,
+                    FontStyle.Normal, TextAnchor.MiddleRight, UIHelpers.TextDim);
+                resultTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+            }
+            UIHelpers.ActionBtnOrange(row.transform, btnLabel, () =>
+            {
+                doAction();
+                if (resultTxt != null && getResult != null) resultTxt.text = getResult();
+                if (refreshPage != null) refreshPage();
+                RefreshFavourites();
+            }, 100);
+        }
+
         /// <summary>Toggle + level slider row (e.g. Wide Tyres, Acceleration)</summary>
         public static void BuildToggleSlider(Transform parent, string id, string label,
             FavBoolGetter getState, FavAction doToggle,
@@ -452,6 +474,7 @@ namespace DescendersModMenu.UI
                 if (lvlVal) lvlVal.text = lv.ToString();
                 UIHelpers.SetRowActive(row, on);
             });
+
         }
 
         /// <summary>Toggle + intensity stepper (Torch)</summary>

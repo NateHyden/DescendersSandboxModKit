@@ -12,6 +12,25 @@ namespace DescendersModMenu.Mods
         public static float ClimbSpeed = 20f;
         public static float LookSpeed = 90f;
 
+        // ── Adjustable speed ranges ─────────────────────────────────
+        // MoveSpeed drives forward/back AND left/right together (see Tick()).
+        // ClimbSpeed drives up/down. Exposed as +/- steppers in the Fun tab.
+        public const float MinMoveSpeed = 5f;
+        public const float MaxMoveSpeed = 80f;
+        public const float MoveSpeedStep = 5f;
+
+        public const float MinClimbSpeed = 5f;
+        public const float MaxClimbSpeed = 60f;
+        public const float ClimbSpeedStep = 5f;
+
+        public static void IncreaseMoveSpeed() { MoveSpeed = Mathf.Min(MaxMoveSpeed, MoveSpeed + MoveSpeedStep); }
+        public static void DecreaseMoveSpeed() { MoveSpeed = Mathf.Max(MinMoveSpeed, MoveSpeed - MoveSpeedStep); }
+        public static void SetMoveSpeed(float v) { MoveSpeed = Mathf.Clamp(v, MinMoveSpeed, MaxMoveSpeed); }
+
+        public static void IncreaseClimbSpeed() { ClimbSpeed = Mathf.Min(MaxClimbSpeed, ClimbSpeed + ClimbSpeedStep); }
+        public static void DecreaseClimbSpeed() { ClimbSpeed = Mathf.Max(MinClimbSpeed, ClimbSpeed - ClimbSpeedStep); }
+        public static void SetClimbSpeed(float v) { ClimbSpeed = Mathf.Clamp(v, MinClimbSpeed, MaxClimbSpeed); }
+
         private static Vehicle _vehicle = null;
         private static Rigidbody _rb = null;
         private static Transform _playerTrans = null;

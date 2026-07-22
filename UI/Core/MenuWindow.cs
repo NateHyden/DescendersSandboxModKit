@@ -59,17 +59,17 @@ namespace DescendersModMenu.UI
         // No Speed Cap
         private static Image capBg, capBdr; private static Text capTxt;
         // ── Pages ─────────────────────────────────────────────────────
-        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19;
+        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20;
         private static int cur = 1;
 
-        private static readonly int[] PageOrder = { 17, 1, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 3, 19 };
-        private static readonly string[] NavLabels = { "\u2605 Favourites", "General", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Info/Customise", "Key Binds" };
-        private static readonly string[] GroupLabels = { null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
+        private static readonly int[] PageOrder = { 17, 20, 1, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 3, 19 };
+        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "General", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Info/Customise", "Key Binds" };
+        private static readonly string[] GroupLabels = { null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
 
-        private static Image[] _navBars = new Image[17];
-        private static Text[] _navTxts = new Text[17];
-        private static Image[] _navBgs = new Image[17];
-        private static Image[] _activeDots = new Image[17];
+        private static Image[] _navBars = new Image[18];
+        private static Text[] _navTxts = new Text[18];
+        private static Image[] _navBgs = new Image[18];
+        private static Image[] _activeDots = new Image[18];
         private static UnityEngine.UI.Image _infoTabDot;
 
         public static CanvasGroup RootCanvasGroup { get; private set; }
@@ -225,7 +225,7 @@ namespace DescendersModMenu.UI
                 sVlg.childAlignment = TextAnchor.UpperCenter;
                 sVlg.childForceExpandWidth = true; sVlg.childForceExpandHeight = false;
 
-                for (int i = 0; i < 17; i++)
+                for (int i = 0; i < 18; i++)
                 {
                     // ── Group separator ────────────────────────────────
                     if (GroupLabels[i] != null)
@@ -321,6 +321,7 @@ namespace DescendersModMenu.UI
                 pg16 = UIHelpers.Obj("P16", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg16)); SessionPage.CreatePage(pg16.transform);
 
                 pg17 = UIHelpers.Obj("P17", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg17)); FavsPage.CreatePage(pg17.transform);
+                pg20 = UIHelpers.Obj("P20", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg20)); SearchPage.CreatePage(pg20.transform);
                 pg18 = UIHelpers.Obj("P18", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg18)); ScreenshotPage.CreatePage(pg18.transform);
                 pg19 = UIHelpers.Obj("P19", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg19)); BindsPage.CreatePage(pg19.transform);
 
@@ -808,6 +809,7 @@ namespace DescendersModMenu.UI
                     case 17: return FavsPage.IsAnyActive;
                     case 18: return ScreenshotPage.IsAnyActive;
                     case 19: return BindsPage.IsAnyActive;
+                    case 20: return false;
                     default: return false;
                 }
             }
@@ -830,10 +832,11 @@ namespace DescendersModMenu.UI
             if (pg16) pg16.SetActive(cur == 16);
             if (pg17) pg17.SetActive(cur == 17);
             if (cur == 17) FavsPage.CheckDirty();
+            if (pg20) pg20.SetActive(cur == 20);
             if (pg18) pg18.SetActive(cur == 18);
             if (pg19) pg19.SetActive(cur == 19);
 
-            for (int i = 0; i < 17; i++)
+            for (int i = 0; i < 18; i++)
             {
                 bool on = PageOrder[i] == cur;
                 bool active = IsPageActive(PageOrder[i]);

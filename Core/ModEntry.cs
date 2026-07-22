@@ -498,7 +498,7 @@ namespace DescendersModMenu
             try { OutfitPage.Tick(); } catch { }
             try { ChatPage.Tick(); } catch { }
             try { InfoPage.Tick(); } catch { }
-            if (!OutfitPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused)
+            if (!OutfitPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.SearchPage.IsQueryFocused)
                 try { SessionTrackers.CheckpointTick(); } catch { }
             try { ModesPage.Tick(); } catch { }
             try { AvalancheMode.Tick(); } catch { }
@@ -509,10 +509,11 @@ namespace DescendersModMenu
             try { GhostReplay.Tick(); } catch { }
             try { MapChanger.Tick(); } catch { }
             try { MapPage.SeedTick(); } catch { }
+            try { UI.SearchPage.SearchTick(); } catch { }
             try { GhostPage.Tick(); } catch { }
             try { SlowMoOnBail.Tick(); } catch { }
             try { ModDetection.TagLocalPlayer(); } catch { }
-            if (!OutfitPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.BindsPage.IsListening)
+            if (!OutfitPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.BindsPage.IsListening && !UI.SearchPage.IsQueryFocused)
                 try { KeyBindManager.CheckAll(); } catch (System.Exception ex) { MelonLogger.Error("KeyBindManager.CheckAll: " + ex.Message); }
         }
 

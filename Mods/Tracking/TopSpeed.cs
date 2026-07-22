@@ -10,7 +10,12 @@ namespace DescendersModMenu.Mods
         public static float SessionTopSpeed { get; private set; } = 0f;
         private static bool _tracking = false;
 
-        // Cached refs — avoid GameObject.Find every frame
+        // Throttle saves â€” never write to disk more than once every 3 seconds.
+        // Without this, File.WriteAllText fires every frame while accelerating,
+        // causing 200-2000ms main-thread stalls (Windows Defender / disk flush).
+        private static float _lastSaveTime = -999f;
+
+        // Cached refs ï¿½ avoid GameObject.Find every frame
         private static GameObject _cachedPlayer = null;
         private static Rigidbody _cachedRb = null;
 
@@ -94,6 +99,9 @@ namespace DescendersModMenu.Mods
 
         private static void Save()
         {
+            float now = Time.realtimeSinceStartup;
+            if (now - _lastSaveTime < 3f) return;   // throttle: max one write per 3 seconds
+            _lastSaveTime = now;
             try
             {
                 if (!Directory.Exists(SaveFolder))

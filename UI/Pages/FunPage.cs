@@ -22,6 +22,10 @@ namespace DescendersModMenu.UI
         private static Image _flyTrack; private static RectTransform _flyKnob; private static Text _flyVal;
         private static Image _mirrorTrack; private static RectTransform _mirrorKnob; private static Text _mirrorVal;
 
+        // ── Fly Mode speed steppers ────────────────────────────────────
+        private static Text _flyMoveVal, _flyClimbVal;
+        private static UnityEngine.UI.Button _flyMoveMinus, _flyMovePlus, _flyClimbMinus, _flyClimbPlus;
+
         // ── Moon Mode UI refs ─────────────────────────────────────────
         private static Image _moonBg, _moonBdr;
         private static Text _moonTxt;
@@ -45,6 +49,8 @@ namespace DescendersModMenu.UI
             if (InvisiblePlayer.Enabled) InvisiblePlayer.SetEnabled(false);
             if (MoonMode.IsActive) MoonMode.Toggle();
             PlayerSize.ApplyLevel(10);
+            FlyMode.SetMoveSpeed(30f);
+            FlyMode.SetClimbSpeed(20f);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -160,6 +166,22 @@ namespace DescendersModMenu.UI
                 _flyVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(flyr.transform, "FlT", () => { FlyMode.Toggle(); RefreshAll(); }, out _flyTrack, out _flyKnob);
 
+                var flyMoveRow = UIHelpers.StatRow("Side-to-Side Speed (Fly Mode)", pg9);
+                _flyMoveMinus = UIHelpers.SmallBtn(flyMoveRow.transform, "-", () => { FlyMode.DecreaseMoveSpeed(); RefreshAll(); });
+                _flyMoveVal = UIHelpers.Txt("FlMV", flyMoveRow.transform, FlyMode.MoveSpeed.ToString("0"), 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _flyMoveVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                _flyMovePlus = UIHelpers.SmallBtn(flyMoveRow.transform, "+", () => { FlyMode.IncreaseMoveSpeed(); RefreshAll(); });
+
+                var flyClimbRow = UIHelpers.StatRow("Up/Down Speed (Fly Mode)", pg9);
+                _flyClimbMinus = UIHelpers.SmallBtn(flyClimbRow.transform, "-", () => { FlyMode.DecreaseClimbSpeed(); RefreshAll(); });
+                _flyClimbVal = UIHelpers.Txt("FlCV", flyClimbRow.transform, FlyMode.ClimbSpeed.ToString("0"), 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _flyClimbVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                _flyClimbPlus = UIHelpers.SmallBtn(flyClimbRow.transform, "+", () => { FlyMode.IncreaseClimbSpeed(); RefreshAll(); });
+
+                UIHelpers.InfoBox(pg9, "Side-to-Side also covers forward/back. Up/Down is vertical climb rate. Only apply while Fly Mode is on.");
+
                 _drunkRow = UIHelpers.StatRow("Drunk Mode", pg9);
                 var drnkr = _drunkRow;
                 _drunkVal = UIHelpers.Txt("DrV", drnkr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -202,6 +224,8 @@ namespace DescendersModMenu.UI
                 // ── STAR BUTTONS (Favourites) ──────────────────────────
                 FavouritesManager.RegisterStarButton("DrunkMode", UIHelpers.StarBtn(_drunkRow.transform, "DrunkMode", () => FavouritesManager.Toggle("DrunkMode")));
                 FavouritesManager.RegisterStarButton("FlyMode", UIHelpers.StarBtn(_flyRow.transform, "FlyMode", () => FavouritesManager.Toggle("FlyMode")));
+                FavouritesManager.RegisterStarButton("FlyMoveSpeed", UIHelpers.StarBtn(flyMoveRow.transform, "FlyMoveSpeed", () => FavouritesManager.Toggle("FlyMoveSpeed")));
+                FavouritesManager.RegisterStarButton("FlyClimbSpeed", UIHelpers.StarBtn(flyClimbRow.transform, "FlyClimbSpeed", () => FavouritesManager.Toggle("FlyClimbSpeed")));
                 FavouritesManager.RegisterStarButton("MirrorMode", UIHelpers.StarBtn(_mirrorRow.transform, "MirrorMode", () => FavouritesManager.Toggle("MirrorMode")));
                 FavouritesManager.RegisterStarButton("CameraShake", UIHelpers.StarBtn(csr.transform, "CameraShake", () => FavouritesManager.Toggle("CameraShake")));
                 FavouritesManager.RegisterStarButton("PlayerSize", UIHelpers.StarBtn(psr.transform, "PlayerSize", () => FavouritesManager.Toggle("PlayerSize")));
@@ -226,6 +250,30 @@ namespace DescendersModMenu.UI
                     BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "FlyMode", "Fly Mode",
                         () => FlyMode.Enabled, () => FlyMode.Toggle(), () => RefreshAll()),
                     IsActive = () => FlyMode.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "FlyMoveSpeed",
+                    DisplayName = "Fly: Side-to-Side Speed",
+                    TabBadge = "FUN",
+                    BuildControls = (p) => FavsPage.BuildStepper(p, "FlyMoveSpeed", "Side-to-Side Speed",
+                        () => (int)FlyMode.MoveSpeed,
+                        () => FlyMode.DecreaseMoveSpeed(),
+                        () => FlyMode.IncreaseMoveSpeed(),
+                        (int)FlyMode.MinMoveSpeed, (int)FlyMode.MaxMoveSpeed, () => RefreshAll(), 30),
+                    IsActive = () => FlyMode.MoveSpeed != 30f
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "FlyClimbSpeed",
+                    DisplayName = "Fly: Up/Down Speed",
+                    TabBadge = "FUN",
+                    BuildControls = (p) => FavsPage.BuildStepper(p, "FlyClimbSpeed", "Up/Down Speed",
+                        () => (int)FlyMode.ClimbSpeed,
+                        () => FlyMode.DecreaseClimbSpeed(),
+                        () => FlyMode.IncreaseClimbSpeed(),
+                        (int)FlyMode.MinClimbSpeed, (int)FlyMode.MaxClimbSpeed, () => RefreshAll(), 20),
+                    IsActive = () => FlyMode.ClimbSpeed != 20f
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
@@ -313,6 +361,14 @@ namespace DescendersModMenu.UI
             if (_flyVal) { _flyVal.text = flyOn ? "ON" : "OFF"; _flyVal.color = flyOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_flyTrack, _flyKnob, flyOn);
             UIHelpers.SetRowActive(_flyRow, flyOn);
+
+            if (_flyMoveVal) _flyMoveVal.text = FlyMode.MoveSpeed.ToString("0");
+            if ((object)_flyMoveMinus != null) _flyMoveMinus.interactable = FlyMode.MoveSpeed > FlyMode.MinMoveSpeed;
+            if ((object)_flyMovePlus != null) _flyMovePlus.interactable = FlyMode.MoveSpeed < FlyMode.MaxMoveSpeed;
+
+            if (_flyClimbVal) _flyClimbVal.text = FlyMode.ClimbSpeed.ToString("0");
+            if ((object)_flyClimbMinus != null) _flyClimbMinus.interactable = FlyMode.ClimbSpeed > FlyMode.MinClimbSpeed;
+            if ((object)_flyClimbPlus != null) _flyClimbPlus.interactable = FlyMode.ClimbSpeed < FlyMode.MaxClimbSpeed;
 
             bool drunkOn = DrunkMode.Enabled;
             if (_drunkVal) { _drunkVal.text = drunkOn ? "ON" : "OFF"; _drunkVal.color = drunkOn ? UIHelpers.OnColor : UIHelpers.OffColor; }

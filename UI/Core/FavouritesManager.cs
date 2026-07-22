@@ -105,6 +105,9 @@ namespace DescendersModMenu.UI
 
         public static List<string> GetAll() { return new List<string>(_orderedFavs); }
 
+        /// <summary>Every registered mod, favourited or not - used by the Search tab.</summary>
+        public static List<string> GetAllRegisteredIds() { return new List<string>(_registry.Keys); }
+
         public static bool TryGetEntry(string id, out ModFavEntry entry)
         {
             return _registry.TryGetValue(id, out entry);

@@ -170,6 +170,15 @@ namespace DescendersModMenu.UI
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeader("COMMUNITY", vlg.transform);
             _steamPlayerTxt = MakeInfoRow("Steam Players Online", vlg.transform);
+
+            UIHelpers.Divider(vlg.transform);
+            UIHelpers.SectionHeader("DIAGNOSTICS", vlg.transform);
+            var dumpRow = UIHelpers.StatRow("Scene Dump", vlg.transform);
+            UIHelpers.ActionBtn(dumpRow.transform, "Dump Now", () =>
+            {
+                SceneDumper.DumpCurrentScene();
+            }, 90);
+            UIHelpers.InfoBox(vlg.transform, "Writes forensic dump files next to the game folder. Same as pressing # in-game - use this if that hotkey doesn't register on your setup.");
         }
 
         // ── Hotkeys page ──────────────────────────────────────────────

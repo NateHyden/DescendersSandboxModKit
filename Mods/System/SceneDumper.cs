@@ -53,14 +53,31 @@ namespace DescendersModMenu.Mods
 
                 // ── FILE 1: Full scene hierarchy ──────────────────────────────────────
                 {
-                    GameObject[] roots = scene.GetRootGameObjects();
+                    GameObject[] sceneRoots = scene.GetRootGameObjects();
+
+                    // Persistent UI (Sponsor Office, overworld menus, etc.) lives under
+                    // DontDestroyOnLoad, which GetActiveScene() never sees. Standard trick:
+                    // a temp DDOL object's .scene handle IS the DDOL pseudo-scene, so grab
+                    // its roots the same way, then drop the temp object.
+                    GameObject[] ddolRoots;
+                    {
+                        GameObject temp = new GameObject("SceneDumper_DDOLProbe");
+                        UnityEngine.Object.DontDestroyOnLoad(temp);
+                        ddolRoots = temp.scene.GetRootGameObjects();
+                        UnityEngine.Object.Destroy(temp);
+                    }
+
+                    GameObject[] roots = new GameObject[sceneRoots.Length + ddolRoots.Length];
+                    sceneRoots.CopyTo(roots, 0);
+                    ddolRoots.CopyTo(roots, sceneRoots.Length);
+
                     StringBuilder sb = new StringBuilder(32 * 1024 * 1024);
 
                     sb.AppendLine("=== DESCENDERS FULL SCENE DUMP ===");
                     sb.AppendLine("Scene Name:  " + scene.name);
                     sb.AppendLine("Scene Path:  " + scene.path);
                     sb.AppendLine("Date:        " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                    sb.AppendLine("Root Count:  " + roots.Length);
+                    sb.AppendLine("Root Count:  " + roots.Length + " (" + sceneRoots.Length + " scene + " + ddolRoots.Length + " DontDestroyOnLoad)");
                     sb.AppendLine("Dump Flags:  Fields + Properties + Methods + Static + Inheritance chain");
                     sb.AppendLine();
 
