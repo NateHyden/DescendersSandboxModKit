@@ -225,8 +225,7 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(_listRoot);
                 UIHelpers.SectionHeader("CAREER PROGRESSION", _listRoot);
-                UIHelpers.InfoBox(_listRoot, "The game's own dev cheats for these were stripped in a recent "
-                    + "update - these rebuild the same effect directly. Irreversible, no confirm step.");
+                UIHelpers.InfoBox(_listRoot, "Irreversible, no confirmation step.");
 
                 var completeRow = UIHelpers.StatRow("Complete Missions", _listRoot);
                 UIHelpers.ActionBtnOrange(completeRow.transform, "Complete All", () =>
