@@ -15,6 +15,8 @@ namespace DescendersModMenu.Mods
             public int PositionPreset = 0;
             public int ScaleLevel = 3;
             public int OpacityLevel = 8;
+            public float CustomX = 0f;
+            public float CustomY = 0f;
         }
 
         // ── Save path ─────────────────────────────────────────────────
@@ -28,10 +30,12 @@ namespace DescendersModMenu.Mods
             Path.Combine(SaveFolder, "MenuLayout.json");
 
         // ── State ─────────────────────────────────────────────────────
-        // 0 = Centre, 1 = Top Left, 2 = Top Right
+        // 0 = Centre, 1 = Top Left, 2 = Top Right, 3 = Custom (dragged)
         public static int PositionPreset = 0;
+        public static float CustomX = 0f;
+        public static float CustomY = 0f;
 
-        public static readonly string[] PositionLabels = { "Centre", "Top Left", "Top Right" };
+        public static readonly string[] PositionLabels = { "Centre", "Top Left", "Top Right", "Custom" };
 
         private static readonly float[] ScaleValues = { 0.7f, 0.8f, 0.9f, 1.0f, 1.1f, 1.2f };
         private static readonly string[] ScaleLabels = { "70%", "80%", "90%", "100%", "110%", "120%" };
@@ -53,6 +57,18 @@ namespace DescendersModMenu.Mods
         public static void SetPosition(int preset)
         {
             PositionPreset = preset;
+            Apply();
+            SaveToFile();
+        }
+
+        /// <summary>Called once, on drag end - not every frame. The drag handler itself moves
+        /// the window live and cheaply (just a Vector2), this only persists the final result.
+        /// File.WriteAllText every frame is a known lag source in this codebase - avoided here.</summary>
+        public static void SetCustomPosition(float x, float y)
+        {
+            PositionPreset = 3;
+            CustomX = x;
+            CustomY = y;
             Apply();
             SaveToFile();
         }
@@ -113,6 +129,12 @@ namespace DescendersModMenu.Mods
                     rt.pivot = new Vector2(1f, 1f);
                     rt.anchoredPosition = new Vector2(-10f, -10f);
                     break;
+                case 3: // Custom (dragged) - same top-left pivot convention the drag handler uses
+                    rt.anchorMin = new Vector2(0f, 1f);
+                    rt.anchorMax = new Vector2(0f, 1f);
+                    rt.pivot = new Vector2(0f, 1f);
+                    rt.anchoredPosition = new Vector2(CustomX, CustomY);
+                    break;
             }
 
             float s = ScaleValues[ScaleLevel];
@@ -148,6 +170,8 @@ namespace DescendersModMenu.Mods
                 PositionPreset = Mathf.Clamp(data.PositionPreset, 0, PositionLabels.Length - 1);
                 ScaleLevel = Mathf.Clamp(data.ScaleLevel, 0, ScaleValues.Length - 1);
                 OpacityLevel = Mathf.Clamp(data.OpacityLevel, 0, OpacityValues.Length - 1);
+                CustomX = data.CustomX;
+                CustomY = data.CustomY;
 
                 Apply();
                 MelonLogger.Msg("[MenuCustomiser] Layout loaded.");
@@ -171,6 +195,8 @@ namespace DescendersModMenu.Mods
                     PositionPreset = PositionPreset,
                     ScaleLevel = ScaleLevel,
                     OpacityLevel = OpacityLevel,
+                    CustomX = CustomX,
+                    CustomY = CustomY,
                 };
 
                 File.WriteAllText(SaveFile, JsonUtility.ToJson(data, true));

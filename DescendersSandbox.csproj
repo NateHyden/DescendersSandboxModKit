@@ -228,6 +228,7 @@
     <Compile Include="UI\HUDs\TrickAttackHUD.cs" />
     <Compile Include="UI\Core\UIHelpers.cs" />
     <Compile Include="UI\Core\MenuWindow.cs" />
+    <Compile Include="UI\Core\WindowDragHandler.cs" />
     <Compile Include="UI\Core\MenuUI.cs" />
     <Compile Include="UI\HUDs\WheelieHUD.cs" />
   </ItemGroup>

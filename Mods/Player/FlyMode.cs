@@ -200,13 +200,17 @@ namespace DescendersModMenu.Mods
                 Vector3 move = Vector3.zero;
                 float v = (float)dev.LeftStick.Y;
                 float h = (float)dev.LeftStick.X;
+                if (Input.GetKey(KeyCode.W)) v = 1f;
+                else if (Input.GetKey(KeyCode.S)) v = -1f;
+                if (Input.GetKey(KeyCode.D)) h = 1f;
+                else if (Input.GetKey(KeyCode.A)) h = -1f;
                 move += newRot * Vector3.forward * v * MoveSpeed * Time.deltaTime;
                 move += newRot * Vector3.right * h * MoveSpeed * Time.deltaTime;
 
                 float up = (float)dev.RightTrigger;
                 float down = (float)dev.LeftTrigger;
-                if (Input.GetKey(KeyCode.Space)) up = 1f;
-                if (Input.GetKey(KeyCode.LeftShift)) down = 1f;
+                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) up = 1f;
+                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) down = 1f;
                 move += Vector3.up * (up - down) * ClimbSpeed * Time.deltaTime;
 
                 // Move the root transform — all children (including kinematic rb) follow

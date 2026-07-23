@@ -125,6 +125,7 @@ namespace DescendersModMenu.UI
                 hrt.pivot = new Vector2(.5f, 1);
                 hrt.sizeDelta = new Vector2(0, UIHelpers.HeaderH);
                 hrt.anchoredPosition = Vector2.zero;
+                hdr.AddComponent<WindowDragHandler>();
 
 
                 var title = UIHelpers.Txt("T", hdr.transform, "DESCENDERS", 18, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextLight);
