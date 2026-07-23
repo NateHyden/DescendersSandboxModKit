@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "1.1.1";
+        public const string Version = "1.1.2";
         public const string DownloadLink = null;
     }
 
@@ -482,7 +482,8 @@ namespace DescendersModMenu
                     _pendingRStickSave = false;
                     if (GhostReplay.IsRecording && GhostReplay.RecordedFrames >= 30) { GhostReplay.SaveRun(); GhostPage.RefreshAll(); }
                 }
-                if (!UI.BindsPage.IsListening && Input.GetKeyDown(KeyCode.F6)) MenuUI.ToggleMenu();
+                if (!UI.BindsPage.IsListening && (Input.GetKeyDown(KeyCode.F6)
+                    || InControl.InputManager.ActiveDevice.DPadDown.WasPressed)) MenuUI.ToggleMenu();
             }
             catch (System.Exception ex) { MelonLogger.Error("ToggleMenu: " + ex.Message); }
 

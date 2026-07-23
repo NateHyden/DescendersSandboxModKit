@@ -99,6 +99,8 @@ namespace DescendersModMenu.UI
                 cs.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
                 cs.matchWidthOrHeight = 0.5f;
                 cv.AddComponent<GraphicRaycaster>();
+                var raycaster = cv.GetComponent<GraphicRaycaster>();
+                cv.AddComponent<GamepadCursor>().Init(raycaster, c);
 
                 var root = UIHelpers.Obj("Root", cv.transform);
                 UIHelpers.Pin(UIHelpers.RT(root), new Vector2(.5f, .5f), new Vector2(.5f, .5f),
