@@ -146,6 +146,46 @@ namespace DescendersModMenu.UI
                 var leaveLe = leaveBtn.gameObject.AddComponent<LayoutElement>();
                 leaveLe.preferredWidth = 140; leaveLe.preferredHeight = 44; leaveLe.minHeight = 44;
 
+                UIHelpers.Divider(c);
+
+                // Rider Customisation
+                UIHelpers.SectionHeader("RIDER CUSTOMISATION", c);
+                UIHelpers.InfoBox(c, "The game doesn't expose a way to read your current look back, so these track their own value rather than showing what's actually equipped - cycle to find the one you want.");
+
+                Text skinColorVal = null, hairColorVal = null, hairTypeVal = null,
+                     beardColorVal = null, beardTypeVal = null, bodyTypeVal = null;
+
+                skinColorVal = BuildRiderStepper(c, "Skin Colour", RiderCustomiser.SkinColorLevel,
+                    () => { RiderCustomiser.DecreaseSkinColor(); if (skinColorVal) skinColorVal.text = RiderCustomiser.SkinColorLevel.ToString(); },
+                    () => { RiderCustomiser.IncreaseSkinColor(); if (skinColorVal) skinColorVal.text = RiderCustomiser.SkinColorLevel.ToString(); });
+                hairColorVal = BuildRiderStepper(c, "Hair Colour", RiderCustomiser.HairColorLevel,
+                    () => { RiderCustomiser.DecreaseHairColor(); if (hairColorVal) hairColorVal.text = RiderCustomiser.HairColorLevel.ToString(); },
+                    () => { RiderCustomiser.IncreaseHairColor(); if (hairColorVal) hairColorVal.text = RiderCustomiser.HairColorLevel.ToString(); });
+                hairTypeVal = BuildRiderStepper(c, "Hair Type", RiderCustomiser.HairTypeLevel,
+                    () => { RiderCustomiser.DecreaseHairType(); if (hairTypeVal) hairTypeVal.text = RiderCustomiser.HairTypeLevel.ToString(); },
+                    () => { RiderCustomiser.IncreaseHairType(); if (hairTypeVal) hairTypeVal.text = RiderCustomiser.HairTypeLevel.ToString(); });
+                beardColorVal = BuildRiderStepper(c, "Beard Colour", RiderCustomiser.BeardColorLevel,
+                    () => { RiderCustomiser.DecreaseBeardColor(); if (beardColorVal) beardColorVal.text = RiderCustomiser.BeardColorLevel.ToString(); },
+                    () => { RiderCustomiser.IncreaseBeardColor(); if (beardColorVal) beardColorVal.text = RiderCustomiser.BeardColorLevel.ToString(); });
+                beardTypeVal = BuildRiderStepper(c, "Beard Type", RiderCustomiser.BeardTypeLevel,
+                    () => { RiderCustomiser.DecreaseBeardType(); if (beardTypeVal) beardTypeVal.text = RiderCustomiser.BeardTypeLevel.ToString(); },
+                    () => { RiderCustomiser.IncreaseBeardType(); if (beardTypeVal) beardTypeVal.text = RiderCustomiser.BeardTypeLevel.ToString(); });
+                bodyTypeVal = BuildRiderStepper(c, "Body Type", RiderCustomiser.BodyTypeLevel,
+                    () => { RiderCustomiser.DecreaseBodyType(); if (bodyTypeVal) bodyTypeVal.text = RiderCustomiser.BodyTypeLevel.ToString(); },
+                    () => { RiderCustomiser.IncreaseBodyType(); if (bodyTypeVal) bodyTypeVal.text = RiderCustomiser.BodyTypeLevel.ToString(); });
+
+                var riderResetRow = UIHelpers.StatRow("", c);
+                UIHelpers.ActionBtnOrange(riderResetRow.transform, "Reset All", () =>
+                {
+                    RiderCustomiser.ResetAll();
+                    if (skinColorVal) skinColorVal.text = RiderCustomiser.SkinColorLevel.ToString();
+                    if (hairColorVal) hairColorVal.text = RiderCustomiser.HairColorLevel.ToString();
+                    if (hairTypeVal) hairTypeVal.text = RiderCustomiser.HairTypeLevel.ToString();
+                    if (beardColorVal) beardColorVal.text = RiderCustomiser.BeardColorLevel.ToString();
+                    if (beardTypeVal) beardTypeVal.text = RiderCustomiser.BeardTypeLevel.ToString();
+                    if (bodyTypeVal) bodyTypeVal.text = RiderCustomiser.BodyTypeLevel.ToString();
+                }, 100);
+
                 // ── STAR BUTTONS (Favourites) ──────────────────────────
                 Transform opHdr = c.Find("OUTFIT PRESETSH");
                 if ((object)opHdr != null)
@@ -153,6 +193,9 @@ namespace DescendersModMenu.UI
                 Transform qaHdr = c.Find("QUICK ACTIONSH");
                 if ((object)qaHdr != null)
                     FavouritesManager.RegisterStarButton("OutfitActions", UIHelpers.StarBtnAbs(qaHdr, "OutfitActions", () => FavouritesManager.Toggle("OutfitActions")));
+                Transform rcHdr = c.Find("RIDER CUSTOMISATIONH");
+                if ((object)rcHdr != null)
+                    FavouritesManager.RegisterStarButton("RiderCustomisation", UIHelpers.StarBtnAbs(rcHdr, "RiderCustomisation", () => FavouritesManager.Toggle("RiderCustomisation")));
 
                 FavouritesManager.Register(new ModFavEntry {
                     Id = "OutfitPresets", DisplayName = "Outfit Presets", TabBadge = "OUTFIT",
@@ -176,11 +219,67 @@ namespace DescendersModMenu.UI
                     },
                     IsActive = () => false
                 });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "RiderCustomisation", DisplayName = "Rider Customisation", TabBadge = "OUTFIT",
+                    BuildControls = (p) => {
+                        Text fSkin = null, fHairC = null, fHairT = null, fBeardC = null, fBeardT = null, fBody = null;
+                        fSkin = BuildRiderStepper(p, "Skin Colour", RiderCustomiser.SkinColorLevel,
+                            () => { RiderCustomiser.DecreaseSkinColor(); if (fSkin) fSkin.text = RiderCustomiser.SkinColorLevel.ToString(); },
+                            () => { RiderCustomiser.IncreaseSkinColor(); if (fSkin) fSkin.text = RiderCustomiser.SkinColorLevel.ToString(); });
+                        fHairC = BuildRiderStepper(p, "Hair Colour", RiderCustomiser.HairColorLevel,
+                            () => { RiderCustomiser.DecreaseHairColor(); if (fHairC) fHairC.text = RiderCustomiser.HairColorLevel.ToString(); },
+                            () => { RiderCustomiser.IncreaseHairColor(); if (fHairC) fHairC.text = RiderCustomiser.HairColorLevel.ToString(); });
+                        fHairT = BuildRiderStepper(p, "Hair Type", RiderCustomiser.HairTypeLevel,
+                            () => { RiderCustomiser.DecreaseHairType(); if (fHairT) fHairT.text = RiderCustomiser.HairTypeLevel.ToString(); },
+                            () => { RiderCustomiser.IncreaseHairType(); if (fHairT) fHairT.text = RiderCustomiser.HairTypeLevel.ToString(); });
+                        fBeardC = BuildRiderStepper(p, "Beard Colour", RiderCustomiser.BeardColorLevel,
+                            () => { RiderCustomiser.DecreaseBeardColor(); if (fBeardC) fBeardC.text = RiderCustomiser.BeardColorLevel.ToString(); },
+                            () => { RiderCustomiser.IncreaseBeardColor(); if (fBeardC) fBeardC.text = RiderCustomiser.BeardColorLevel.ToString(); });
+                        fBeardT = BuildRiderStepper(p, "Beard Type", RiderCustomiser.BeardTypeLevel,
+                            () => { RiderCustomiser.DecreaseBeardType(); if (fBeardT) fBeardT.text = RiderCustomiser.BeardTypeLevel.ToString(); },
+                            () => { RiderCustomiser.IncreaseBeardType(); if (fBeardT) fBeardT.text = RiderCustomiser.BeardTypeLevel.ToString(); });
+                        fBody = BuildRiderStepper(p, "Body Type", RiderCustomiser.BodyTypeLevel,
+                            () => { RiderCustomiser.DecreaseBodyType(); if (fBody) fBody.text = RiderCustomiser.BodyTypeLevel.ToString(); },
+                            () => { RiderCustomiser.IncreaseBodyType(); if (fBody) fBody.text = RiderCustomiser.BodyTypeLevel.ToString(); });
+                        var row = UIHelpers.StatRow("", p);
+                        UIHelpers.ActionBtnOrange(row.transform, "Reset All", () =>
+                        {
+                            RiderCustomiser.ResetAll();
+                            if (fSkin) fSkin.text = RiderCustomiser.SkinColorLevel.ToString();
+                            if (fHairC) fHairC.text = RiderCustomiser.HairColorLevel.ToString();
+                            if (fHairT) fHairT.text = RiderCustomiser.HairTypeLevel.ToString();
+                            if (fBeardC) fBeardC.text = RiderCustomiser.BeardColorLevel.ToString();
+                            if (fBeardT) fBeardT.text = RiderCustomiser.BeardTypeLevel.ToString();
+                            if (fBody) fBody.text = RiderCustomiser.BodyTypeLevel.ToString();
+                        }, 100);
+                    },
+                    IsActive = () => false
+                });
 
                 UIHelpers.AddScrollForwarders(c);
                 RefreshAll();
             }
             catch (System.Exception ex) { MelonLogger.Error("OutfitPage: " + ex.Message); }
+        }
+
+        // Deliberately UnityAction, not System.Action - the real root cause turned out to be
+        // one level deeper than first thought. It's not "lambdas" or "Func<>" specifically:
+        // this game's shipped mscorlib is stripped, and bare System.Action itself (the actual
+        // BCL delegate type) isn't fully present - confirmed directly by the runtime error
+        // ("Missing method .ctor ... type System.Action"). Not one other place in this whole
+        // project declares a parameter as System.Action; every other callback already uses
+        // UnityAction (UnityEngine.Events), which is proven to load since it's used
+        // everywhere. Matching that removes the problem instead of working around it.
+        private static Text BuildRiderStepper(Transform parent, string label,
+            int currentLevel, UnityEngine.Events.UnityAction onMinus, UnityEngine.Events.UnityAction onPlus)
+        {
+            var row = UIHelpers.StatRow(label, parent);
+            UIHelpers.SmallBtn(row.transform, "\u25C0", onMinus);
+            var val = UIHelpers.Txt("RCV_" + label, row.transform, currentLevel.ToString(), 13,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            val.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.SmallBtn(row.transform, "\u25B6", onPlus);
+            return val;
         }
 
         private static void GoToShed()
@@ -261,7 +360,11 @@ namespace DescendersModMenu.UI
 
         public static void Tick()
         {
-            if (_renamingSlot < 0) return;
+            if (_renamingSlot >= 0) { TickRename(); return; }
+        }
+
+        private static void TickRename()
+        {
             foreach (char ch in Input.inputString)
             {
                 if (ch == '\b')

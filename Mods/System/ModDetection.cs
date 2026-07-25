@@ -9,7 +9,7 @@ namespace DescendersModMenu.Mods
     internal static class ModDetection
     {
         public const string PropKey = "DescMM";
-        public const string ModVersion = "3.0.0";
+        public const string ModVersion = "1.2.0";
 
         private static Type _photonNetType;    // upVWa84E
         private static FieldInfo _localPlayer; // gQ`083tus

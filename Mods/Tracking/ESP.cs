@@ -11,11 +11,13 @@ namespace DescendersModMenu.Mods
         public static bool Enabled { get; private set; }
         public static bool ShowDistance { get; private set; } = true;
         public static bool ShowTracers { get; private set; } = true;
+        public static bool ShowWorldObjects { get; private set; }
 
         private static GUIStyle _labelStyle;
         private static Texture2D _lineTexture;
 
         private static readonly List<ESPTarget> _targets = new List<ESPTarget>();
+        private static readonly List<WorldTarget> _worldTargets = new List<WorldTarget>();
         private static float _lastRefreshTime = -999f;
         private const float RefreshInterval = 1.0f;
         private const float HeadHeightOffset = 1.8f;
@@ -32,6 +34,13 @@ namespace DescendersModMenu.Mods
         {
             public Transform Root;
             public string DisplayName;
+        }
+
+        private class WorldTarget
+        {
+            public Transform Root;
+            public string DisplayName;
+            public Color Color;
         }
 
         // ── Public API ────────────────────────────────────────────────────────
@@ -54,18 +63,27 @@ namespace DescendersModMenu.Mods
             MelonLogger.Msg("ESP Tracers -> " + (ShowTracers ? "ON" : "OFF"));
         }
 
+        public static void ToggleWorldObjects()
+        {
+            ShowWorldObjects = !ShowWorldObjects;
+            MelonLogger.Msg("ESP World Objects -> " + (ShowWorldObjects ? "ON" : "OFF"));
+            if (ShowWorldObjects) RefreshWorldTargets();
+        }
+
         public static void RefreshNow()
         {
             RefreshTargets();
+            RefreshWorldTargets();
             _lastRefreshTime = Time.unscaledTime;
-            MelonLogger.Msg("ESP targets refreshed: " + _targets.Count + " player(s).");
+            MelonLogger.Msg("ESP targets refreshed: " + _targets.Count + " player(s), "
+                + _worldTargets.Count + " world object(s).");
         }
 
         // ── Rendering ─────────────────────────────────────────────────────────
 
         public static void OnGUI()
         {
-            if (!Enabled) return;
+            if (!Enabled && !ShowWorldObjects) return;
 
             Camera cam = Camera.main;
             if ((object)cam == null) return;
@@ -97,7 +115,8 @@ namespace DescendersModMenu.Mods
 
             if (Time.unscaledTime - _lastRefreshTime >= RefreshInterval)
             {
-                RefreshTargets();
+                if (Enabled) RefreshTargets();
+                if (ShowWorldObjects) RefreshWorldTargets();
                 _lastRefreshTime = Time.unscaledTime;
             }
 
@@ -106,7 +125,7 @@ namespace DescendersModMenu.Mods
                 ? localPlayer.transform.position
                 : Vector3.zero;
 
-            for (int i = 0; i < _targets.Count; i++)
+            for (int i = 0; Enabled && i < _targets.Count; i++)
             {
                 try
                 {
@@ -152,6 +171,47 @@ namespace DescendersModMenu.Mods
                 }
                 catch { }
             }
+
+            for (int i = 0; ShowWorldObjects && i < _worldTargets.Count; i++)
+            {
+                try
+                {
+                    WorldTarget target = _worldTargets[i];
+                    if ((object)target == null) continue;
+
+                    Vector3 rootPos;
+                    try { rootPos = target.Root.position; }
+                    catch { continue; }
+
+                    Vector3 screenPos = cam.WorldToScreenPoint(rootPos);
+                    if (screenPos.z <= 0f) continue;
+
+                    float screenX = screenPos.x;
+                    float screenY = Screen.height - screenPos.y;
+
+                    float dist = Vector3.Distance(localPos, rootPos);
+                    string label = ShowDistance
+                        ? target.DisplayName + "  [" + dist.ToString("0") + "m]"
+                        : target.DisplayName;
+
+                    float labelWidth = label.Length * 9f;
+                    float labelHeight = 20f;
+
+                    Color prevColor = _labelStyle.normal.textColor;
+                    _labelStyle.normal.textColor = target.Color;
+                    GUI.Label(new Rect(screenX - labelWidth * 0.5f, screenY - 22f, labelWidth, labelHeight),
+                        label, _labelStyle);
+                    _labelStyle.normal.textColor = prevColor;
+
+                    if (ShowTracers && (object)_lineTexture != null)
+                    {
+                        Vector2 start = new Vector2(Screen.width * 0.5f, Screen.height - 40f);
+                        Vector2 end = new Vector2(screenX, screenY);
+                        DrawLine(start, end, 1.5f, target.Color);
+                    }
+                }
+                catch { }
+            }
         }
 
         // ── Target scanning ───────────────────────────────────────────────────
@@ -187,6 +247,77 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Warning("ESP.RefreshTargets failed: " + ex.Message);
+            }
+        }
+
+        // All type names verified directly against the decompile before use - a wrong one
+        // here is a compile error, not a soft failure. Curated to genuinely useful things to
+        // find (collectibles, shortcuts, hazards, checkpoints, boost/launch pads, physics
+        // zones) - deliberately excludes decorative/structural clutter (bird flocks, spline
+        // guide rails, cranes) that would just spam the screen with dozens of markers.
+        private static void RefreshWorldTargets()
+        {
+            _worldTargets.Clear();
+            try
+            {
+                Color gold = new Color(1f, 0.85f, 0.2f);
+                Color cyan = new Color(0.3f, 0.9f, 1f);
+                Color orange = new Color(1f, 0.4f, 0.1f);
+                Color purple = new Color(0.6f, 0.4f, 1f);
+                Color green = new Color(0.3f, 1f, 0.4f);
+                Color red = new Color(1f, 0.15f, 0.15f);
+                Color lightBlue = new Color(0.6f, 0.9f, 1f);
+
+                AddWorldObjects<ScavengerHuntItem>("Scavenger Item", gold);
+                AddWorldObjects<Collectible>("Collectible", gold);
+                AddWorldObjects<PickupItem>("Pickup", gold);
+                AddWorldObjects<ShortcutTrigger>("Shortcut", cyan);
+                AddWorldObjects<Boost>("Boost Pad", orange);
+                AddWorldObjects<Catapult>("Catapult", orange);
+                AddWorldObjects<SpecialJumpTrigger>("Special Jump", orange);
+                AddWorldObjects<ForceVolume>("Force Volume", purple);
+                AddWorldObjects<BounceVolume>("Bounce Volume", purple);
+                AddWorldObjects<WheelieVolume>("Wheelie Zone", purple);
+                AddWorldObjects<Nobailvolume>("No-Bail Zone", green);
+                AddWorldObjects<Checkpoint>("Checkpoint", green);
+                AddWorldObjects<RouteCheckpoint>("Route Checkpoint", green);
+                AddWorldObjects<StartLine>("Start Line", green);
+                AddWorldObjects<FinishLine>("Finish Line", green);
+                AddWorldObjects<AirBagVolume>("Air Bag", green);
+                AddWorldObjects<Gap>("Gap", green);
+                AddWorldObjects<Portal>("Portal", cyan);
+                AddWorldObjects<DeathVolume>("Death Volume", red);
+                AddWorldObjects<IceVolume>("Ice Patch", lightBlue);
+                AddWorldObjects<HighFrictionVolume>("Sticky Ground", lightBlue);
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Warning("ESP.RefreshWorldTargets failed: " + ex.Message);
+            }
+        }
+
+        private static void AddWorldObjects<T>(string label, Color color) where T : Component
+        {
+            try
+            {
+                T[] objs = UnityEngine.Object.FindObjectsOfType<T>();
+                for (int i = 0; i < objs.Length; i++)
+                {
+                    if ((object)objs[i] == null) continue;
+                    GameObject go = objs[i].gameObject;
+                    if ((object)go == null || !go.activeInHierarchy) continue;
+
+                    _worldTargets.Add(new WorldTarget
+                    {
+                        Root = go.transform,
+                        DisplayName = label,
+                        Color = color
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Warning("[ESP] AddWorldObjects<" + typeof(T).Name + "> failed: " + ex.Message);
             }
         }
 

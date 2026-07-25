@@ -10,6 +10,9 @@ namespace DescendersModMenu.UI
         private static Text espVal, distVal, tracVal;
         private static Image espTrk, distTrk, tracTrk;
         private static RectTransform espKnb, distKnb, tracKnb;
+        private static Text worldVal;
+        private static Image worldTrk;
+        private static RectTransform worldKnb;
         private static Text _modUsersText;
         private static int _cpIndex = 0;
         private static Text _cpIndexText = null;
@@ -19,8 +22,33 @@ namespace DescendersModMenu.UI
             GameObject pg = null;
             try
             {
-                pg = UIHelpers.Obj("P2R", parent);
-                UIHelpers.Fill(UIHelpers.RT(pg));
+                // This tab grew past one screen's worth of content once World Object Finder
+                // was added, so it needs the same ScrollRect setup every other scrollable
+                // page in this project uses. "pg" becomes the scrollable content object here
+                // (not the outer root) so every existing "pg.transform" reference below still
+                // parents correctly inside the scroll view without needing to change.
+                var root = UIHelpers.Obj("P2R", parent);
+                UIHelpers.Fill(UIHelpers.RT(root));
+
+                var scrollObj = UIHelpers.Obj("Scroll", root.transform);
+                UIHelpers.Fill(UIHelpers.RT(scrollObj));
+                var scrollRect = scrollObj.AddComponent<ScrollRect>();
+                scrollRect.horizontal = false; scrollRect.vertical = true;
+                scrollRect.movementType = ScrollRect.MovementType.Clamped;
+                scrollRect.scrollSensitivity = 25f; scrollRect.inertia = false;
+
+                var vp = UIHelpers.Obj("VP", scrollObj.transform);
+                UIHelpers.Fill(UIHelpers.RT(vp));
+                vp.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f);
+                vp.AddComponent<Mask>().showMaskGraphic = true;
+                scrollRect.viewport = UIHelpers.RT(vp);
+
+                pg = UIHelpers.Obj("Content", vp.transform);
+                var crt = UIHelpers.RT(pg);
+                crt.anchorMin = new Vector2(0, 1); crt.anchorMax = new Vector2(1, 1);
+                crt.pivot = new Vector2(0.5f, 1); crt.sizeDelta = new Vector2(0, 0);
+                scrollRect.content = crt;
+                pg.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 var vlg = pg.AddComponent<VerticalLayoutGroup>();
                 vlg.spacing = UIHelpers.RowGap;
                 vlg.padding = new RectOffset((int)UIHelpers.ContentPad, (int)UIHelpers.ContentPad, 8, 8);
@@ -46,6 +74,18 @@ namespace DescendersModMenu.UI
 
                 var rr = UIHelpers.StatRow("Refresh", pg.transform);
                 UIHelpers.ActionBtn(rr.transform, "Refresh", () => { ESP.RefreshNow(); RefreshTexts(); });
+
+                UIHelpers.Divider(pg.transform);
+                UIHelpers.SectionHeader("WORLD OBJECT FINDER", pg.transform);
+                UIHelpers.InfoBox(pg.transform, "Collectibles, shortcuts, boost pads, hazards and checkpoints - colour-coded by type. Uses the same Distance/Tracers toggles above.");
+
+                var wr = UIHelpers.StatRow("World Object Finder", pg.transform);
+                worldVal = UIHelpers.Txt("WV", wr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                var wvle = worldVal.gameObject.AddComponent<LayoutElement>(); wvle.preferredWidth = 28; wvle.preferredHeight = 18; wvle.flexibleHeight = 0;
+                UIHelpers.Toggle(wr.transform, "WT", () => { ESP.ToggleWorldObjects(); RefreshTexts(); }, out worldTrk, out worldKnb);
+
+                var wrr = UIHelpers.StatRow("Refresh Objects", pg.transform);
+                UIHelpers.ActionBtn(wrr.transform, "Refresh", () => { ESP.RefreshNow(); RefreshTexts(); });
 
                 UIHelpers.Divider(pg.transform);
                 UIHelpers.SectionHeader("TELEPORT", pg.transform);
@@ -125,6 +165,7 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("ESP", UIHelpers.StarBtn(er.transform, "ESP", () => FavouritesManager.Toggle("ESP")));
                 FavouritesManager.RegisterStarButton("ESPDistance", UIHelpers.StarBtn(dr.transform, "ESPDistance", () => FavouritesManager.Toggle("ESPDistance")));
                 FavouritesManager.RegisterStarButton("ESPTracers", UIHelpers.StarBtn(tr.transform, "ESPTracers", () => FavouritesManager.Toggle("ESPTracers")));
+                FavouritesManager.RegisterStarButton("ESPWorldObjects", UIHelpers.StarBtn(wr.transform, "ESPWorldObjects", () => FavouritesManager.Toggle("ESPWorldObjects")));
 
                 FavouritesManager.Register(new ModFavEntry
                 {
@@ -153,9 +194,20 @@ namespace DescendersModMenu.UI
                         () => ESP.ShowTracers, () => ESP.ToggleTracers(), () => RefreshTexts()),
                     IsActive = () => !ESP.ShowTracers
                 });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "ESPWorldObjects",
+                    DisplayName = "World Object Finder",
+                    TabBadge = "SYSTEM",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "ESPWorldObjects", "World Object Finder",
+                        () => ESP.ShowWorldObjects, () => ESP.ToggleWorldObjects(), () => RefreshTexts()),
+                    IsActive = () => ESP.ShowWorldObjects
+                });
 
                 RefreshTexts();
 
+                UIHelpers.AddScrollbar(scrollRect);
+                UIHelpers.AddScrollForwarders(pg.transform);
             }
             catch (System.Exception ex) { MelonLogger.Error("EspPage.CreatePage: " + ex.Message); return null; }
             return pg;
@@ -166,6 +218,7 @@ namespace DescendersModMenu.UI
             Upd(espVal, espTrk, espKnb, ESP.Enabled);
             Upd(distVal, distTrk, distKnb, ESP.ShowDistance);
             Upd(tracVal, tracTrk, tracKnb, ESP.ShowTracers);
+            Upd(worldVal, worldTrk, worldKnb, ESP.ShowWorldObjects);
             RefreshCpIndex();
         }
 

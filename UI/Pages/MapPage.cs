@@ -58,37 +58,6 @@ namespace DescendersModMenu.UI
                 _listRoot = content.transform;
 
                 RebuildList();
-
-                // Registered once here (not in RebuildList, which reruns on every map-list refresh) -
-                // BuildControls below builds its own UI inside the Favourites tab and doesn't reference
-                // any of MapPage's own row objects, so it's safe independent of how often the list rebuilds.
-                FavouritesManager.Register(new ModFavEntry
-                {
-                    Id = "CompleteMissions",
-                    DisplayName = "Complete All Missions",
-                    TabBadge = "MAP",
-                    BuildControls = (p) => FavsPage.BuildActionButton(p, "CompleteMissions", "Complete All Missions",
-                        "Complete All", () => CareerReset.CompleteAllMissions(), null, () => CareerReset.LastResult),
-                    IsActive = () => false
-                });
-                FavouritesManager.Register(new ModFavEntry
-                {
-                    Id = "LevelReset",
-                    DisplayName = "Level Reset",
-                    TabBadge = "MAP",
-                    BuildControls = (p) => FavsPage.BuildActionButton(p, "LevelReset", "Level Reset",
-                        "Wipe Progress", () => CareerReset.ResetLevelProgress(), null, () => CareerReset.LastResult),
-                    IsActive = () => false
-                });
-                FavouritesManager.Register(new ModFavEntry
-                {
-                    Id = "SponsorReset",
-                    DisplayName = "Sponsor Reset",
-                    TabBadge = "MAP",
-                    BuildControls = (p) => FavsPage.BuildActionButton(p, "SponsorReset", "Sponsor Reset",
-                        "Reset Sponsor", () => CareerReset.ResetSponsorProgress(), null, () => CareerReset.LastResult),
-                    IsActive = () => false
-                });
             }
             catch (System.Exception ex)
             {
@@ -222,50 +191,6 @@ namespace DescendersModMenu.UI
                             BuildMapRow(i);
                     }
                 }
-
-                UIHelpers.Divider(_listRoot);
-                UIHelpers.SectionHeader("CAREER PROGRESSION", _listRoot);
-                UIHelpers.InfoBox(_listRoot, "Irreversible, no confirmation step.");
-
-                var completeRow = UIHelpers.StatRow("Complete Missions", _listRoot);
-                UIHelpers.ActionBtnOrange(completeRow.transform, "Complete All", () =>
-                {
-                    CareerReset.CompleteAllMissions();
-                    RefreshAll();
-                }, 100);
-
-                var levelRow = UIHelpers.StatRow("Level Reset", _listRoot);
-                UIHelpers.ActionBtnOrange(levelRow.transform, "Wipe Progress", () =>
-                {
-                    CareerReset.ResetLevelProgress();
-                    RefreshAll();
-                }, 100);
-
-                var sponsorRow = UIHelpers.StatRow("Sponsor Reset", _listRoot);
-                UIHelpers.ActionBtnOrange(sponsorRow.transform, "Reset Sponsor", () =>
-                {
-                    CareerReset.ResetSponsorProgress();
-                    RefreshAll();
-                }, 100);
-
-                var maxTierRow = UIHelpers.StatRow("Max Sponsor Level", _listRoot);
-                UIHelpers.ActionBtnOrange(maxTierRow.transform, "Max Level", () =>
-                {
-                    CareerReset.MaxSponsorLevel();
-                    RefreshAll();
-                }, 100);
-
-                if (!string.IsNullOrEmpty(CareerReset.LastResult))
-                {
-                    var resultRow = UIHelpers.StatRow("Last Result", _listRoot);
-                    var resultTxt = UIHelpers.Txt("CRResult", resultRow.transform, CareerReset.LastResult,
-                        11, FontStyle.Normal, TextAnchor.MiddleRight, UIHelpers.Accent);
-                    resultTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
-                }
-
-                FavouritesManager.RegisterStarButton("CompleteMissions", UIHelpers.StarBtn(completeRow.transform, "CompleteMissions", () => FavouritesManager.Toggle("CompleteMissions")));
-                FavouritesManager.RegisterStarButton("LevelReset", UIHelpers.StarBtn(levelRow.transform, "LevelReset", () => FavouritesManager.Toggle("LevelReset")));
-                FavouritesManager.RegisterStarButton("SponsorReset", UIHelpers.StarBtn(sponsorRow.transform, "SponsorReset", () => FavouritesManager.Toggle("SponsorReset")));
 
                 UIHelpers.AddScrollForwarders(_listRoot);
             }

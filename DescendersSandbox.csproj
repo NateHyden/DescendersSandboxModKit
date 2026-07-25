@@ -157,6 +157,7 @@
     <Compile Include="Mods\World\SkyColours.cs" />
     <Compile Include="Mods\World\TimeOfDay.cs" />
     <Compile Include="Mods\Player\DrunkMode.cs" />
+    <Compile Include="Mods\Player\RiderCustomiser.cs" />
     <Compile Include="Mods\Player\FlyMode.cs" />
     <Compile Include="Mods\Player\Fov.cs" />
     <Compile Include="Mods\Player\MirrorMode.cs" />

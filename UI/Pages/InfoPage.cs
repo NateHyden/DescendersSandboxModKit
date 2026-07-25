@@ -31,6 +31,7 @@ namespace DescendersModMenu.UI
         private static Text _steamPlayerTxt;
         private static Text _unityMatchTxt;
         private static Text _mlVersionTxt;
+        private static Text _careerResultTxt;
 
         // ── CreatePage ────────────────────────────────────────────────
         public static GameObject CreatePage(Transform parent)
@@ -146,8 +147,28 @@ namespace DescendersModMenu.UI
         // ── System page ───────────────────────────────────────────────
         private static void BuildSystemPage(Transform p)
         {
-            var vlg = UIHelpers.Obj("SysVlg", p);
-            UIHelpers.Fill(UIHelpers.RT(vlg));
+            // Scrollable - this tab grew past one screen's worth of content once
+            // Career Progression moved in, so it needs the same ScrollRect setup every
+            // other scrollable page in this project already uses.
+            var scrollObj = UIHelpers.Obj("SysScroll", p);
+            UIHelpers.Fill(UIHelpers.RT(scrollObj));
+            var sr = scrollObj.AddComponent<ScrollRect>();
+            sr.horizontal = false; sr.vertical = true;
+            sr.movementType = ScrollRect.MovementType.Clamped;
+            sr.scrollSensitivity = 25f; sr.inertia = false;
+
+            var vp = UIHelpers.Obj("SysVP", scrollObj.transform);
+            UIHelpers.Fill(UIHelpers.RT(vp));
+            vp.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f);
+            vp.AddComponent<Mask>().showMaskGraphic = true;
+            sr.viewport = UIHelpers.RT(vp);
+
+            var vlg = UIHelpers.Obj("SysVlg", vp.transform);
+            var crt = UIHelpers.RT(vlg);
+            crt.anchorMin = new Vector2(0, 1); crt.anchorMax = new Vector2(1, 1);
+            crt.pivot = new Vector2(0.5f, 1); crt.sizeDelta = new Vector2(0, 0);
+            sr.content = crt;
+            vlg.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             var v = vlg.AddComponent<VerticalLayoutGroup>();
             v.spacing = UIHelpers.RowGap;
             v.padding = new RectOffset((int)UIHelpers.ContentPad, (int)UIHelpers.ContentPad, 8, 8);
@@ -179,6 +200,94 @@ namespace DescendersModMenu.UI
                 SceneDumper.DumpCurrentScene();
             }, 90);
             UIHelpers.InfoBox(vlg.transform, "Writes forensic dump files next to the game folder. Same as pressing # in-game - use this if that hotkey doesn't register on your setup.");
+
+            // ── Career Progression (moved here from the Map tab) ────────
+            UIHelpers.Divider(vlg.transform);
+            UIHelpers.SectionHeader("CAREER PROGRESSION", vlg.transform);
+            UIHelpers.InfoBox(vlg.transform, "Irreversible, no confirmation step.");
+
+            var completeRow = UIHelpers.StatRow("Complete Missions", vlg.transform);
+            UIHelpers.ActionBtnOrange(completeRow.transform, "Complete All", () =>
+            {
+                CareerReset.CompleteAllMissions();
+                RefreshCareerResult();
+            }, 100);
+
+            var levelRow = UIHelpers.StatRow("Level Reset", vlg.transform);
+            UIHelpers.ActionBtnOrange(levelRow.transform, "Wipe Progress", () =>
+            {
+                CareerReset.ResetLevelProgress();
+                RefreshCareerResult();
+            }, 100);
+
+            var sponsorRow = UIHelpers.StatRow("Sponsor Reset", vlg.transform);
+            UIHelpers.ActionBtnOrange(sponsorRow.transform, "Reset Sponsor", () =>
+            {
+                CareerReset.ResetSponsorProgress();
+                RefreshCareerResult();
+            }, 100);
+
+            var maxTierRow = UIHelpers.StatRow("Max Sponsor Level", vlg.transform);
+            UIHelpers.ActionBtnOrange(maxTierRow.transform, "Max Level", () =>
+            {
+                CareerReset.MaxSponsorLevel();
+                RefreshCareerResult();
+            }, 100);
+
+            var resultRow = UIHelpers.StatRow("Last Result", vlg.transform);
+            _careerResultTxt = UIHelpers.Txt("CRResult", resultRow.transform, CareerReset.LastResult,
+                11, FontStyle.Normal, TextAnchor.MiddleRight, UIHelpers.Accent);
+            _careerResultTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+            FavouritesManager.RegisterStarButton("CompleteMissions", UIHelpers.StarBtn(completeRow.transform, "CompleteMissions", () => FavouritesManager.Toggle("CompleteMissions")));
+            FavouritesManager.RegisterStarButton("LevelReset", UIHelpers.StarBtn(levelRow.transform, "LevelReset", () => FavouritesManager.Toggle("LevelReset")));
+            FavouritesManager.RegisterStarButton("SponsorReset", UIHelpers.StarBtn(sponsorRow.transform, "SponsorReset", () => FavouritesManager.Toggle("SponsorReset")));
+            FavouritesManager.RegisterStarButton("MaxSponsorLevel", UIHelpers.StarBtn(maxTierRow.transform, "MaxSponsorLevel", () => FavouritesManager.Toggle("MaxSponsorLevel")));
+
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "CompleteMissions",
+                DisplayName = "Complete All Missions",
+                TabBadge = "INFO",
+                BuildControls = (fp) => FavsPage.BuildActionButton(fp, "CompleteMissions", "Complete All Missions",
+                    "Complete All", () => CareerReset.CompleteAllMissions(), null, () => CareerReset.LastResult),
+                IsActive = () => false
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "LevelReset",
+                DisplayName = "Level Reset",
+                TabBadge = "INFO",
+                BuildControls = (fp) => FavsPage.BuildActionButton(fp, "LevelReset", "Level Reset",
+                    "Wipe Progress", () => CareerReset.ResetLevelProgress(), null, () => CareerReset.LastResult),
+                IsActive = () => false
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "SponsorReset",
+                DisplayName = "Sponsor Reset",
+                TabBadge = "INFO",
+                BuildControls = (fp) => FavsPage.BuildActionButton(fp, "SponsorReset", "Sponsor Reset",
+                    "Reset Sponsor", () => CareerReset.ResetSponsorProgress(), null, () => CareerReset.LastResult),
+                IsActive = () => false
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "MaxSponsorLevel",
+                DisplayName = "Max Sponsor Level",
+                TabBadge = "INFO",
+                BuildControls = (fp) => FavsPage.BuildActionButton(fp, "MaxSponsorLevel", "Max Sponsor Level",
+                    "Max Level", () => CareerReset.MaxSponsorLevel(), null, () => CareerReset.LastResult),
+                IsActive = () => false
+            });
+
+            UIHelpers.AddScrollbar(sr);
+            UIHelpers.AddScrollForwarders(vlg.transform);
+        }
+
+        private static void RefreshCareerResult()
+        {
+            if ((object)_careerResultTxt != null) _careerResultTxt.text = CareerReset.LastResult;
         }
 
         // ── Hotkeys page ──────────────────────────────────────────────

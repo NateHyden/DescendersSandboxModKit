@@ -308,14 +308,20 @@ namespace DescendersModMenu.UI
                 crt.offsetMin = new Vector2(UIHelpers.SidebarW, 0); crt.offsetMax = Vector2.zero;
 
                 pg1 = UIHelpers.Obj("P1", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg1)); BuildPage1(pg1.transform);
-                pg2 = UIHelpers.Obj("P2", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg2)); EspPage.CreatePage(pg2.transform);
-                pg3 = UIHelpers.Obj("P3", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg3)); InfoPage.CreatePage(pg3.transform);
+                pg2 = UIHelpers.Obj("P2", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg2));
+                try { EspPage.CreatePage(pg2.transform); }
+                catch (System.Exception espEx) { MelonLogger.Error("CreateMenu: EspPage failed - " + espEx); }
+                pg3 = UIHelpers.Obj("P3", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg3));
+                try { InfoPage.CreatePage(pg3.transform); }
+                catch (System.Exception infoEx) { MelonLogger.Error("CreateMenu: InfoPage failed - " + infoEx); }
                 pg6 = UIHelpers.Obj("P6", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg6)); MovePage.CreatePage(pg6.transform);
                 pg7 = UIHelpers.Obj("P7", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg7)); WorldPage.CreatePage(pg7.transform);
                 pg8 = UIHelpers.Obj("P8", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg8)); BikePage.CreatePage(pg8.transform);
                 pg9 = UIHelpers.Obj("P9", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg9)); FunPage.CreatePage(pg9.transform);
                 pg10 = UIHelpers.Obj("P10", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg10)); GraphicsPage.CreatePage(pg10.transform);
-                pg11 = UIHelpers.Obj("P11", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg11)); OutfitPage.CreatePage(pg11.transform);
+                pg11 = UIHelpers.Obj("P11", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg11));
+                try { OutfitPage.CreatePage(pg11.transform); }
+                catch (System.Exception outfitEx) { MelonLogger.Error("CreateMenu: OutfitPage failed - " + outfitEx); }
                 pg12 = UIHelpers.Obj("P12", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg12)); ChatPage.CreatePage(pg12.transform);
                 pg13 = UIHelpers.Obj("P13", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg13)); ModesPage.CreatePage(pg13.transform);
                 pg14 = UIHelpers.Obj("P14", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg14)); GhostPage.CreatePage(pg14.transform);
