@@ -88,6 +88,10 @@ namespace DescendersModMenu.UI
         private static UnityEngine.UI.Button _bbMinus, _bbPlus;
         private static GameObject _bbRow;
 
+        private static Text _tmLabelVal;
+        private static UnityEngine.UI.Button _tmMinus, _tmPlus;
+        private static GameObject _tmRow;
+
 
         public static void CaptureSceneDefaults()
         {
@@ -100,7 +104,7 @@ namespace DescendersModMenu.UI
             WideTyres.Enabled || StickyTyres.Enabled ||
             ReverseSteering.Enabled || IceMode.Enabled || CutBrakes.Enabled ||
             BikeTorch.Enabled || SuspensionHUD.Enabled || BrakeFade.Enabled ||
-            TyrePressure.Enabled || BikeDamage.Enabled;
+            TyrePressure.Enabled || BikeDamage.Enabled || TrickMultiplier.Enabled;
 
         public static void GlobalReset()
         {
@@ -108,6 +112,7 @@ namespace DescendersModMenu.UI
             WheelSize.Reset();
             BikeSize.ResetToDefault();
             BikeSize.Level = 10;
+            TrickMultiplier.Reset();
         }
 
         public static GameObject CreatePage(Transform parent)
@@ -443,6 +448,16 @@ namespace DescendersModMenu.UI
                 _bbPlus = UIHelpers.SmallBtn(bbr.transform, "\u25B6", () => { BrakeFade.IncreaseBalance(); RefreshAll(); });
                 UIHelpers.InfoBox(pg8, "Your brake discs overheat from hard braking. Brakes weaken above 150°C and fail completely at 300°C. Let go to cool down — going fast cools them quicker. Watch the top-right HUD.");
 
+                _tmRow = UIHelpers.StatRow("Trick Multiplier", pg8);
+                var tmr = _tmRow;
+                _tmMinus = UIHelpers.SmallBtn(tmr.transform, "\u25C0", () => { TrickMultiplier.Decrease(); RefreshAll(); });
+                _tmLabelVal = UIHelpers.Txt("TmLV", tmr.transform,
+                    TrickMultiplier.LevelDisplay, 11,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _tmLabelVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 64;
+                _tmPlus = UIHelpers.SmallBtn(tmr.transform, "\u25B6", () => { TrickMultiplier.Increase(); RefreshAll(); });
+                UIHelpers.InfoBox(pg8, "Raises the max combo multiplier cap above the game's default x3. Reapplies continuously so it survives respawns. Resets to OFF on map change.");
+
                 // ── STAR BUTTONS (Favourites) ──────────────────────────
                 Transform suspHdr = pg8.Find("SUSPENSIONH");
                 if ((object)suspHdr != null)
@@ -463,6 +478,7 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("SuspensionHUD", UIHelpers.StarBtn(_shRow.transform, "SuspensionHUD", () => FavouritesManager.Toggle("SuspensionHUD")));
                 FavouritesManager.RegisterStarButton("BrakeFade", UIHelpers.StarBtn(_bfRow.transform, "BrakeFade", () => FavouritesManager.Toggle("BrakeFade")));
                 FavouritesManager.RegisterStarButton("BrakeBalance", UIHelpers.StarBtn(_bbRow.transform, "BrakeBalance", () => FavouritesManager.Toggle("BrakeBalance")));
+                FavouritesManager.RegisterStarButton("TrickMultiplier", UIHelpers.StarBtn(_tmRow.transform, "TrickMultiplier", () => FavouritesManager.Toggle("TrickMultiplier")));
 
                 // ── FACTORY REGISTRATIONS (Bike tab mods) ──────────────
                 FavouritesManager.Register(new ModFavEntry
@@ -648,6 +664,18 @@ namespace DescendersModMenu.UI
                         1, 11, () => RefreshAll(), 6),
                     IsActive = () => BrakeFade.BalanceLevel != 6
                 });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "TrickMultiplier",
+                    DisplayName = "Trick Multiplier",
+                    TabBadge = "BIKE",
+                    BuildControls = (p) => FavsPage.BuildStepper(p, "TrickMultiplier", "Trick Multiplier",
+                        () => TrickMultiplier.Level,
+                        () => TrickMultiplier.Decrease(),
+                        () => TrickMultiplier.Increase(),
+                        0, 3, () => RefreshAll(), 0),
+                    IsActive = () => TrickMultiplier.Enabled
+                });
 
                 RefreshAll();
                 UIHelpers.AddScrollForwarders(pg8);
@@ -810,6 +838,11 @@ namespace DescendersModMenu.UI
             if (_bbLabelVal) _bbLabelVal.text = BrakeFade.BalanceDisplay;
             if ((object)_bbMinus != null) _bbMinus.interactable = BrakeFade.BalanceLevel > 1;
             if ((object)_bbPlus != null) _bbPlus.interactable = BrakeFade.BalanceLevel < 11;
+
+            // Trick Multiplier
+            if (_tmLabelVal) _tmLabelVal.text = TrickMultiplier.LevelDisplay;
+            if ((object)_tmMinus != null) _tmMinus.interactable = TrickMultiplier.Level > 0;
+            if ((object)_tmPlus != null) _tmPlus.interactable = TrickMultiplier.Level < 3;
         }
     }
 }

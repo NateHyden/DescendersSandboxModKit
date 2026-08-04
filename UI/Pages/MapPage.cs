@@ -174,9 +174,16 @@ namespace DescendersModMenu.UI
                 UIHelpers.SectionHeader("BASE GAME MAPS", _listRoot);
                 for (int i = 0; i < MapChanger.Count; i++)
                 {
-                    var entry = MapChanger.GetEntry(i);
-                    if (!entry.IsBikePark)
-                        BuildMapRow(i);
+                    try
+                    {
+                        var entry = MapChanger.GetEntry(i);
+                        if (!entry.IsBikePark)
+                            BuildMapRow(i);
+                    }
+                    catch (System.Exception exRow)
+                    {
+                        LogRowFailure(i, "base map", exRow);
+                    }
                 }
 
                 // Bike parks section — only if found
@@ -186,9 +193,16 @@ namespace DescendersModMenu.UI
                     UIHelpers.SectionHeader("BIKE PARKS & FREERIDE", _listRoot);
                     for (int i = 0; i < MapChanger.Count; i++)
                     {
-                        var entry = MapChanger.GetEntry(i);
-                        if (entry.IsBikePark)
-                            BuildMapRow(i);
+                        try
+                        {
+                            var entry = MapChanger.GetEntry(i);
+                            if (entry.IsBikePark)
+                                BuildMapRow(i);
+                        }
+                        catch (System.Exception exRow)
+                        {
+                            LogRowFailure(i, "bike park", exRow);
+                        }
                     }
                 }
 
@@ -196,8 +210,43 @@ namespace DescendersModMenu.UI
             }
             catch (System.Exception ex)
             {
-                MelonLogger.Error("MapPage.RebuildList: " + ex.Message);
+                LogFullException("MapPage.RebuildList", ex);
             }
+        }
+
+        // ex.Message has come back completely empty for at least one exception type in
+        // this build (confirmed 2026-08-04 - a bare "[ERROR] MapPage.RebuildList: " with
+        // nothing after the colon, no stack trace either in the visible log). Type name
+        // and stack trace are logged separately here since they're often populated even
+        // when Message isn't, and TargetInvocationException/reflection-wrapped exceptions
+        // hide the real cause in .InnerException, which the old one-line log never showed.
+        private static void LogFullException(string context, System.Exception ex)
+        {
+            string msg = string.IsNullOrEmpty(ex.Message) ? "(empty)" : ex.Message;
+            MelonLogger.Error("[" + context + "] " + ex.GetType().FullName + ": " + msg);
+
+            string trace = ex.StackTrace;
+            MelonLogger.Error("[" + context + "] StackTrace: " + (string.IsNullOrEmpty(trace) ? "(none)" : trace));
+
+            System.Exception inner = ex.InnerException;
+            int depth = 0;
+            while (inner != null && depth < 5)
+            {
+                string innerMsg = string.IsNullOrEmpty(inner.Message) ? "(empty)" : inner.Message;
+                MelonLogger.Error("[" + context + "] InnerException[" + depth + "]: " + inner.GetType().FullName + ": " + innerMsg);
+                if (!string.IsNullOrEmpty(inner.StackTrace))
+                    MelonLogger.Error("[" + context + "] InnerException[" + depth + "] StackTrace: " + inner.StackTrace);
+                inner = inner.InnerException;
+                depth++;
+            }
+        }
+
+        private static void LogRowFailure(int index, string kind, System.Exception ex)
+        {
+            string name = "?";
+            try { name = MapChanger.GetName(index); } catch { }
+            MelonLogger.Error("MapPage.RebuildList: row " + index + " (" + kind + ", name=\"" + name + "\") failed to build - continuing with the rest of the list.");
+            LogFullException("MapPage.RebuildList row " + index, ex);
         }
 
         private static void BuildMapRow(int i)

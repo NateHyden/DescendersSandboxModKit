@@ -141,6 +141,7 @@
     <Compile Include="Mods\Bike\ReverseSteering.cs" />
     <Compile Include="Mods\Bike\StickyTyres.cs" />
     <Compile Include="Mods\Bike\Suspension.cs" />
+    <Compile Include="Mods\Bike\TrickMultiplier.cs" />
     <Compile Include="Mods\Bike\TrickSetSwap.cs" />
     <Compile Include="Mods\Bike\TyrePressure.cs" />
     <Compile Include="Mods\Bike\WheelieAngleLimit.cs" />
@@ -174,6 +175,7 @@
     <Compile Include="Mods\Tracking\TopSpeed.cs" />
     <Compile Include="Mods\System\AssemblyScanner.cs" />
     <Compile Include="Mods\System\CareerReset.cs" />
+    <Compile Include="Mods\System\DevLock.cs" />
     <Compile Include="Mods\System\DiagnosticsManager.cs" />
     <Compile Include="Mods\System\GameModifiers.cs" />
     <Compile Include="Mods\System\Graphics.cs" />

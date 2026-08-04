@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -29,7 +29,92 @@ namespace DescendersModMenu.Mods
             BindingFlags.Static | BindingFlags.DeclaredOnly;
 
         // How many array/list items to show before truncating (0 = unlimited)
-        private const int MaxCollectionItems = 0;
+        // NOTE: was 0 (unlimited) - this was a major contributor to the OOM crash.
+        // Capped because printing doesn't stop the underlying array from being fully
+        // materialized in memory first - this only bounds output size, see RiskyMemberNames
+        // below for the fix that actually stops the dangerous allocations.
+        private const int MaxCollectionItems = 12;
+
+        // Safety valve: hard cap on characters written per dump file. If a scene is
+        // pathological (huge counts, deep hierarchies) we truncate cleanly instead of
+        // growing memory unbounded until the process dies.
+        private const long MaxCharsPerFile = 150L * 1024 * 1024; // 150 MB text per file
+
+        // Field/property names known to allocate, instantiate, or deep-copy native data
+        // when accessed via reflection. Skipping these is the actual OOM fix - the old
+        // MaxCollectionItems=0 cap only limited *printed* items, but arr = p.GetValue(...)
+        // had already fully materialized the array/instance in memory before printing
+        // ever started. Renderer.material/.materials and MeshFilter.mesh are especially
+        // bad: each access instantiates a brand new unique object that then leaks for the
+        // rest of the session (no domain reload to clean it up).
+        private static readonly HashSet<string> RiskyMemberNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "material", "materials",   // Renderer.material/materials instantiate a unique copy
+            "mesh",                    // MeshFilter.mesh instantiates a copy (sharedMesh is safe)
+            "positions",                // LineRenderer/TrailRenderer.positions copies full point buffer
+            "vertices", "normals", "tangents", "uv", "uv2", "uv3", "uv4",
+            "colors", "colors32", "triangles", "boneWeights", "bindposes",
+            "pixels", "pixels32",
+        };
+
+        private static bool IsRiskyMember(string name)
+        {
+            return RiskyMemberNames.Contains(name);
+        }
+
+        // Lightweight streaming writer used instead of a monolithic StringBuilder.
+        // Writes straight to disk so peak memory stays bounded no matter how large the
+        // scene is, and stops writing (with a clear marker) once MaxCharsPerFile is hit
+        // instead of growing forever.
+        private sealed class DumpWriter : IDisposable
+        {
+            private readonly StreamWriter writer;
+            private long charsWritten;
+            private readonly long maxChars;
+            private readonly string label;
+            public bool Capped { get; private set; }
+
+            public DumpWriter(string path, long maxChars, string label)
+            {
+                this.writer = new StreamWriter(path, false, Encoding.UTF8, 1 << 16);
+                this.maxChars = maxChars;
+                this.label = label;
+            }
+
+            public void AppendLine(string s)
+            {
+                Append(s);
+                Append("\n");
+            }
+
+            public void AppendLine()
+            {
+                Append("\n");
+            }
+
+            public void Append(string s)
+            {
+                if (Capped || string.IsNullOrEmpty(s)) return;
+
+                charsWritten += s.Length;
+                if (charsWritten > maxChars)
+                {
+                    writer.Write("\n\n[!!! DUMP TRUNCATED - exceeded " + (maxChars / 1024 / 1024) +
+                                 " MB safety cap for " + label + " - remaining content skipped to avoid OOM !!!]\n");
+                    Capped = true;
+                    MelonLogger.Warning("SceneDumper: " + label + " truncated at " + (maxChars / 1024 / 1024) + " MB safety cap.");
+                    return;
+                }
+
+                writer.Write(s);
+            }
+
+            public void Dispose()
+            {
+                writer.Flush();
+                writer.Dispose();
+            }
+        }
 
         public static void CheckHotkey()
         {
@@ -71,48 +156,62 @@ namespace DescendersModMenu.Mods
                     sceneRoots.CopyTo(roots, 0);
                     ddolRoots.CopyTo(roots, sceneRoots.Length);
 
-                    StringBuilder sb = new StringBuilder(32 * 1024 * 1024);
-
-                    sb.AppendLine("=== DESCENDERS FULL SCENE DUMP ===");
-                    sb.AppendLine("Scene Name:  " + scene.name);
-                    sb.AppendLine("Scene Path:  " + scene.path);
-                    sb.AppendLine("Date:        " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                    sb.AppendLine("Root Count:  " + roots.Length + " (" + sceneRoots.Length + " scene + " + ddolRoots.Length + " DontDestroyOnLoad)");
-                    sb.AppendLine("Dump Flags:  Fields + Properties + Methods + Static + Inheritance chain");
-                    sb.AppendLine();
-
-                    for (int i = 0; i < roots.Length; i++)
-                        DumpGameObjectRecursive(roots[i].transform, sb, 0);
-
                     string path = Path.Combine(desktop, "DescendersSceneDump_FULL_" + timestamp + ".txt");
-                    File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
-                    MelonLogger.Msg("Scene dump -> " + path);
+                    MelonLogger.Msg("SceneDumper: FILE 1 (full hierarchy) starting - " + roots.Length +
+                                     " root object(s) (" + sceneRoots.Length + " scene + " + ddolRoots.Length + " DDOL)");
+
+                    int processed = 0;
+                    using (DumpWriter sb = new DumpWriter(path, MaxCharsPerFile, "FULL scene dump"))
+                    {
+                        sb.AppendLine("=== DESCENDERS FULL SCENE DUMP ===");
+                        sb.AppendLine("Scene Name:  " + scene.name);
+                        sb.AppendLine("Scene Path:  " + scene.path);
+                        sb.AppendLine("Date:        " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        sb.AppendLine("Root Count:  " + roots.Length + " (" + sceneRoots.Length + " scene + " + ddolRoots.Length + " DontDestroyOnLoad)");
+                        sb.AppendLine("Dump Flags:  Fields + Methods + Static + Inheritance chain (Properties skipped in full-scene dump - see forensic dumps below for full property data, this avoids Renderer.material/MeshFilter.mesh instantiation leaks at scale)");
+                        sb.AppendLine();
+
+                        for (int i = 0; i < roots.Length; i++)
+                        {
+                            if (sb.Capped) break;
+                            DumpGameObjectRecursive(roots[i].transform, sb, 0, ref processed);
+                        }
+                    }
+
+                    MelonLogger.Msg("SceneDumper: FILE 1 done - " + processed + " GameObject(s) processed -> " + path);
                 }
 
                 // ── FILE 2: Vehicle forensics ─────────────────────────────────────────
                 {
-                    StringBuilder sb = new StringBuilder(8 * 1024 * 1024);
-
-                    sb.AppendLine("=== DESCENDERS VEHICLE FORENSIC DUMP ===");
-                    sb.AppendLine("Scene: " + scene.name + "  |  Date: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                    sb.AppendLine();
-
-                    List<Component> vehicles = FindComponentsByTypeName("Vehicle");
-                    sb.AppendLine("Vehicle Count: " + vehicles.Count);
-                    sb.AppendLine();
-
-                    for (int i = 0; i < vehicles.Count; i++)
-                        DumpComponentFull(vehicles[i], sb, "Vehicle[" + i + "]", includeInheritance: true);
-
                     string path = Path.Combine(desktop, "DescendersVehicleForensics_" + timestamp + ".txt");
-                    File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
-                    MelonLogger.Msg("Vehicle dump -> " + path);
+                    List<Component> vehicles = FindComponentsByTypeName("Vehicle");
+                    MelonLogger.Msg("SceneDumper: FILE 2 (vehicle forensics) starting - " + vehicles.Count + " Vehicle instance(s)");
+
+                    using (DumpWriter sb = new DumpWriter(path, MaxCharsPerFile, "vehicle forensics"))
+                    {
+                        sb.AppendLine("=== DESCENDERS VEHICLE FORENSIC DUMP ===");
+                        sb.AppendLine("Scene: " + scene.name + "  |  Date: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        sb.AppendLine();
+                        sb.AppendLine("Vehicle Count: " + vehicles.Count);
+                        sb.AppendLine();
+
+                        for (int i = 0; i < vehicles.Count; i++)
+                        {
+                            if (sb.Capped) break;
+                            DumpComponentFull(vehicles[i], sb, "Vehicle[" + i + "]", includeInheritance: true);
+                        }
+                    }
+
+                    MelonLogger.Msg("SceneDumper: FILE 2 done -> " + path);
                 }
 
                 // ── FILE 3: Player forensics (PlayerInfoImpact + VehicleController) ──
                 {
-                    StringBuilder sb = new StringBuilder(8 * 1024 * 1024);
+                    string path3 = Path.Combine(desktop, "DescendersPlayerForensics_" + timestamp + ".txt");
+                    MelonLogger.Msg("SceneDumper: FILE 3 (player forensics) starting...");
 
+                    using (DumpWriter sb = new DumpWriter(path3, MaxCharsPerFile, "player forensics"))
+                    {
                     sb.AppendLine("=== DESCENDERS PLAYER FORENSIC DUMP ===");
                     sb.AppendLine("Scene: " + scene.name + "  |  Date: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                     sb.AppendLine();
@@ -137,6 +236,8 @@ namespace DescendersModMenu.Mods
 
                     foreach (string typeName in playerTypes)
                     {
+                        if (sb.Capped) break;
+
                         List<Component> comps = FindComponentsByTypeName(typeName);
                         if (comps.Count == 0) continue;
 
@@ -146,18 +247,23 @@ namespace DescendersModMenu.Mods
                         sb.AppendLine();
 
                         for (int i = 0; i < comps.Count; i++)
+                        {
+                            if (sb.Capped) break;
                             DumpComponentFull(comps[i], sb, typeName + "[" + i + "]", includeInheritance: true);
+                        }
+                    }
                     }
 
-                    string path = Path.Combine(desktop, "DescendersPlayerForensics_" + timestamp + ".txt");
-                    File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
-                    MelonLogger.Msg("Player dump -> " + path);
+                    MelonLogger.Msg("SceneDumper: FILE 3 done -> " + path3);
                 }
 
                 // ── FILE 4: All unique component types found in scene ─────────────────
                 {
-                    StringBuilder sb = new StringBuilder(4 * 1024 * 1024);
+                    string path4 = Path.Combine(desktop, "DescendersComponentIndex_" + timestamp + ".txt");
+                    MelonLogger.Msg("SceneDumper: FILE 4 (component type index) starting...");
 
+                    using (DumpWriter sb = new DumpWriter(path4, MaxCharsPerFile, "component type index"))
+                    {
                     sb.AppendLine("=== DESCENDERS COMPONENT TYPE INDEX ===");
                     sb.AppendLine("Scene: " + scene.name + "  |  Date: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                     sb.AppendLine();
@@ -185,10 +291,9 @@ namespace DescendersModMenu.Mods
 
                     foreach (string tn in typeNames)
                         sb.AppendLine(typeCounts[tn].ToString().PadLeft(5) + "x  " + tn);
+                    }
 
-                    string path = Path.Combine(desktop, "DescendersComponentIndex_" + timestamp + ".txt");
-                    File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
-                    MelonLogger.Msg("Component index -> " + path);
+                    MelonLogger.Msg("SceneDumper: FILE 4 done -> " + path4);
                 }
 
                 MelonLogger.Msg("SceneDumper: All files written to game directory.");
@@ -206,7 +311,7 @@ namespace DescendersModMenu.Mods
         // ─── Full Component Dump ──────────────────────────────────────────────────────
         // Dumps fields, properties, methods, events — optionally walking the inheritance chain
 
-        private static void DumpComponentFull(Component comp, StringBuilder sb,
+        private static void DumpComponentFull(Component comp, DumpWriter sb,
             string label, bool includeInheritance)
         {
             if ((object)comp == null) return;
@@ -269,8 +374,15 @@ namespace DescendersModMenu.Mods
                     seenFields.Add(f.Name);
 
                     string val;
-                    try { val = FormatValue(f.GetValue(comp)); }
-                    catch (Exception ex) { val = "[ERR: " + ex.GetType().Name + "]"; }
+                    if (IsRiskyMember(f.Name))
+                    {
+                        val = "[skipped - risky getter, see RiskyMemberNames]";
+                    }
+                    else
+                    {
+                        try { val = FormatValue(f.GetValue(comp)); }
+                        catch (Exception ex) { val = "[ERR: " + ex.GetType().Name + "]"; }
+                    }
 
                     sb.AppendLine("    " + AccessModifier(f) + " " +
                                   SafeTypeName(f.FieldType) + " " + f.Name + " = " + val);
@@ -318,14 +430,21 @@ namespace DescendersModMenu.Mods
                     if (p.GetIndexParameters().Length > 0) continue;
 
                     string val;
-                    try
+                    if (IsRiskyMember(p.Name))
                     {
-                        MethodInfo getter = p.GetGetMethod(true);
-                        val = (object)getter != null
-                            ? FormatValue(p.GetValue(comp, null))
-                            : "[no getter]";
+                        val = "[skipped - risky getter, see RiskyMemberNames]";
                     }
-                    catch (Exception ex) { val = "[ERR: " + ex.GetType().Name + "]"; }
+                    else
+                    {
+                        try
+                        {
+                            MethodInfo getter = p.GetGetMethod(true);
+                            val = (object)getter != null
+                                ? FormatValue(p.GetValue(comp, null))
+                                : "[no getter]";
+                        }
+                        catch (Exception ex) { val = "[ERR: " + ex.GetType().Name + "]"; }
+                    }
 
                     sb.AppendLine("    " + SafeTypeName(p.PropertyType) + " " + p.Name + " = " + val);
                 }
@@ -434,9 +553,19 @@ namespace DescendersModMenu.Mods
 
         // ─── Scene Hierarchy Dump ─────────────────────────────────────────────────────
 
-        private static void DumpGameObjectRecursive(Transform t, StringBuilder sb, int depth)
+        // Full-scene walk can be arbitrarily deep in pathological hierarchies; bail out
+        // rather than risk a stack overflow or runaway recursion.
+        private const int MaxDumpDepth = 60;
+
+        private static void DumpGameObjectRecursive(Transform t, DumpWriter sb, int depth, ref int processed)
         {
-            if ((object)t == null) return;
+            if ((object)t == null || sb.Capped) return;
+
+            if (depth > MaxDumpDepth)
+            {
+                sb.AppendLine(new string(' ', depth * 2) + "[!!! max depth " + MaxDumpDepth + " reached, skipping subtree of \"" + t.name + "\" !!!]");
+                return;
+            }
 
             string indent = new string(' ', depth * 2);
             GameObject go = t.gameObject;
@@ -472,12 +601,25 @@ namespace DescendersModMenu.Mods
             sb.AppendLine(indent + "└─");
             sb.AppendLine();
 
+            processed++;
+            if (processed % 500 == 0)
+                MelonLogger.Msg("SceneDumper: FILE 1 progress - " + processed + " GameObject(s) written so far...");
+
             for (int i = 0; i < t.childCount; i++)
-                DumpGameObjectRecursive(t.GetChild(i), sb, depth + 1);
+            {
+                if (sb.Capped) break;
+                DumpGameObjectRecursive(t.GetChild(i), sb, depth + 1, ref processed);
+            }
         }
 
-        // Used inside the scene hierarchy — dumps fields + properties + methods per component
-        private static void DumpComponentInScene(Component c, StringBuilder sb, string indent)
+        // Used inside the scene hierarchy — dumps fields + methods per component.
+        // Properties are deliberately skipped here (unlike DumpComponentFull below):
+        // property getters on Unity types can instantiate/allocate on every access
+        // (Renderer.material, MeshFilter.mesh, LineRenderer.positions, etc.) and at
+        // full-scene scale (thousands of components) that's what caused the OOM.
+        // Use the targeted Vehicle/Player forensic dumps (files 2 & 3) when you need
+        // full property data - those only touch a handful of known components.
+        private static void DumpComponentInScene(Component c, DumpWriter sb, string indent)
         {
             Type type = c.GetType();
 
@@ -503,43 +645,19 @@ namespace DescendersModMenu.Mods
                     }
 
                     string val;
-                    try { val = FormatValue(f.IsStatic ? f.GetValue(null) : f.GetValue(c)); }
-                    catch (Exception ex) { val = "[ERR: " + ex.GetType().Name + "]"; }
+                    if (IsRiskyMember(f.Name))
+                    {
+                        val = "[skipped - risky getter, see RiskyMemberNames]";
+                    }
+                    else
+                    {
+                        try { val = FormatValue(f.IsStatic ? f.GetValue(null) : f.GetValue(c)); }
+                        catch (Exception ex) { val = "[ERR: " + ex.GetType().Name + "]"; }
+                    }
 
                     string staticTag = f.IsStatic ? "static " : "";
                     sb.AppendLine(indent + "    " + staticTag + SafeTypeName(f.FieldType) +
                                   " " + f.Name + " = " + val);
-                }
-            }
-
-            // ── Properties ────────────────────────────────────────────────────────────
-            HashSet<string> seenP = new HashSet<string>();
-            bool wrotePropHeader = false;
-            foreach (Type t in chain)
-            {
-                PropertyInfo[] props = t.GetProperties(AllInstance | BindingFlags.DeclaredOnly);
-                foreach (PropertyInfo p in props)
-                {
-                    if (seenP.Contains(p.Name)) continue;
-                    seenP.Add(p.Name);
-                    if (p.GetIndexParameters().Length > 0) continue;
-
-                    if (!wrotePropHeader)
-                    {
-                        sb.AppendLine(indent + "  Properties:");
-                        wrotePropHeader = true;
-                    }
-
-                    string val;
-                    try
-                    {
-                        MethodInfo getter = p.GetGetMethod(true);
-                        val = (object)getter != null ? FormatValue(p.GetValue(c, null)) : "[no getter]";
-                    }
-                    catch (Exception ex) { val = "[ERR: " + ex.GetType().Name + "]"; }
-
-                    sb.AppendLine(indent + "    " + SafeTypeName(p.PropertyType) +
-                                  " " + p.Name + " = " + val);
                 }
             }
 

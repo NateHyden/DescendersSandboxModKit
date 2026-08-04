@@ -85,6 +85,26 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
+        // Same silent-overwrite race as Acceleration/MaxSpeed - re-enforce every
+        // frame instead of applying once. Called from OnLateUpdate.
+        public static void Tick()
+        {
+            if (!Enabled) return;
+            try
+            {
+                Cyclist c = GetCyclist();
+                if ((object)c == null) return;
+                FieldInfo f = GetField(c);
+                if ((object)f == null) return;
+
+                float target = GetThreshold();
+                float current = (float)f.GetValue(c);
+                if (Mathf.Abs(current - target) > 0.01f)
+                    f.SetValue(c, target);
+            }
+            catch { }
+        }
+
         public static void Reset()
         {
             if (Enabled) Restore();

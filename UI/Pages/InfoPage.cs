@@ -8,18 +8,19 @@ namespace DescendersModMenu.UI
     public static class InfoPage
     {
         // ── Sub-tab state ─────────────────────────────────────────────
-        private static int _activeTab = 0; // 0=System 1=Hotkeys 2=Customise
+        private static int _activeTab = 0; // 0=System 1=Hotkeys 2=Customise 3=Career
 
-        private static readonly string[] TabLabels = { "System", "Hotkeys", "Customise" };
+        private static readonly string[] TabLabels = { "System", "Hotkeys", "Customise", "Career" };
 
         // Sub-tab bar buttons
-        private static Image[] _tabBgs = new Image[3];
-        private static Text[] _tabTxts = new Text[3];
+        private static Image[] _tabBgs = new Image[4];
+        private static Text[] _tabTxts = new Text[4];
 
         // Page root GameObjects
         private static GameObject _pgSystem;
         private static GameObject _pgHotkeys;
         private static GameObject _pgCustomise;
+        private static GameObject _pgCareer;
 
         // Customise tab refs
         private static Text _custPosLbl;
@@ -32,6 +33,16 @@ namespace DescendersModMenu.UI
         private static Text _unityMatchTxt;
         private static Text _mlVersionTxt;
         private static Text _careerResultTxt;
+        private static Text _sponsorVal;
+        private static Text _repVal;
+        private static UnityEngine.UI.Button _repMinus, _repPlus;
+        private static Text _repMultVal;
+        private static Text _inGameRepVal;
+        private static UnityEngine.UI.Button _inGameRepMinus, _inGameRepPlus;
+        private static Text _inGameRepMultVal;
+        private static GameObject _devDiagContent;
+        private static GameObject _devDiagLockedRow;
+        private static Text _devDiagLockedTxt;
 
         // ── CreatePage ────────────────────────────────────────────────
         public static GameObject CreatePage(Transform parent)
@@ -113,6 +124,12 @@ namespace DescendersModMenu.UI
                 _pgCustomise = UIHelpers.Obj("PgCustomise", contentArea.transform);
                 UIHelpers.Fill(UIHelpers.RT(_pgCustomise));
                 BuildCustomisePage(_pgCustomise.transform);
+
+                // ── Career page ───────────────────────────────────────
+                _pgCareer = UIHelpers.Obj("PgCareer", contentArea.transform);
+                UIHelpers.Fill(UIHelpers.RT(_pgCareer));
+                BuildCareerPage(_pgCareer.transform);
+
                 SwitchTab(0);
                 Refresh();
             }
@@ -131,6 +148,7 @@ namespace DescendersModMenu.UI
             if ((object)_pgSystem != null) _pgSystem.SetActive(idx == 0);
             if ((object)_pgHotkeys != null) _pgHotkeys.SetActive(idx == 1);
             if ((object)_pgCustomise != null) _pgCustomise.SetActive(idx == 2);
+            if ((object)_pgCareer != null) _pgCareer.SetActive(idx == 3);
 
             for (int i = 0; i < TabLabels.Length; i++)
             {
@@ -192,17 +210,83 @@ namespace DescendersModMenu.UI
             UIHelpers.SectionHeader("COMMUNITY", vlg.transform);
             _steamPlayerTxt = MakeInfoRow("Steam Players Online", vlg.transform);
 
+            // ── Diagnostics - gated behind DevLock (tap header 7x within 3s).
+            // Content lives in its own container so unlocking just toggles
+            // visibility instead of needing a full page rebuild. Neither row here
+            // has a Favourites entry, so there's no bypass-via-Favourites concern
+            // like the career-progression tools would have had.
             UIHelpers.Divider(vlg.transform);
-            UIHelpers.SectionHeader("DIAGNOSTICS", vlg.transform);
-            var dumpRow = UIHelpers.StatRow("Scene Dump", vlg.transform);
+            UIHelpers.SectionHeaderButton("DEVELOPER DIAGNOSTICS", vlg.transform, HandleDevDiagTap);
+
+            _devDiagLockedRow = UIHelpers.Obj("DevDiagLocked", vlg.transform);
+            var dlLe = _devDiagLockedRow.AddComponent<LayoutElement>();
+            dlLe.preferredHeight = 36; dlLe.minHeight = 36; dlLe.flexibleHeight = 0;
+            _devDiagLockedTxt = UIHelpers.Txt("DevDiagLockedTxt", _devDiagLockedRow.transform,
+                "Locked - tap the header above " + DevLock.TapsRemaining + " more time(s) to unlock.",
+                11, FontStyle.Italic, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            UIHelpers.Fill(UIHelpers.RT(_devDiagLockedTxt.gameObject));
+
+            _devDiagContent = UIHelpers.Obj("DevDiagContent", vlg.transform);
+            var dcLe = _devDiagContent.AddComponent<LayoutElement>();
+            dcLe.flexibleHeight = 0;
+            var dcVlg = _devDiagContent.AddComponent<VerticalLayoutGroup>();
+            dcVlg.spacing = UIHelpers.RowGap;
+            dcVlg.childAlignment = TextAnchor.UpperCenter;
+            dcVlg.childForceExpandWidth = true; dcVlg.childForceExpandHeight = false;
+            var dcFitter = _devDiagContent.AddComponent<ContentSizeFitter>();
+            dcFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            Transform ddc = _devDiagContent.transform;
+
+            var dumpRow = UIHelpers.StatRow("Scene Dump", ddc);
             UIHelpers.ActionBtn(dumpRow.transform, "Dump Now", () =>
             {
                 SceneDumper.DumpCurrentScene();
             }, 90);
-            UIHelpers.InfoBox(vlg.transform, "Writes forensic dump files next to the game folder. Same as pressing # in-game - use this if that hotkey doesn't register on your setup.");
+            UIHelpers.InfoBox(ddc, "Writes forensic dump files next to the game folder. Same as pressing # in-game - use this if that hotkey doesn't register on your setup.");
 
-            // ── Career Progression (moved here from the Map tab) ────────
-            UIHelpers.Divider(vlg.transform);
+            var bikeUnlockDumpRow = UIHelpers.StatRow("Bike Unlock Status", ddc);
+            UIHelpers.ActionBtn(bikeUnlockDumpRow.transform, "Dump Now", () =>
+            {
+                CareerReset.DumpBikeUnlockStatus();
+                RefreshCareerResult();
+            }, 90);
+            UIHelpers.InfoBox(ddc, "Logs every Bike/BikeType customization item with its live IsItemUnlocked() result - check MelonLoader/Latest.log for the [CareerReset] lines after clicking.");
+
+            _devDiagLockedRow.SetActive(!DevLock.IsUnlocked);
+            _devDiagContent.SetActive(DevLock.IsUnlocked);
+
+            UIHelpers.AddScrollbar(sr);
+            UIHelpers.AddScrollForwarders(vlg.transform);
+        }
+
+        // ── Career page (its own tab, next to Customise) ────────────────
+        private static void BuildCareerPage(Transform p)
+        {
+            var scrollObj = UIHelpers.Obj("CareerScroll", p);
+            UIHelpers.Fill(UIHelpers.RT(scrollObj));
+            var sr = scrollObj.AddComponent<ScrollRect>();
+            sr.horizontal = false; sr.vertical = true;
+            sr.movementType = ScrollRect.MovementType.Clamped;
+            sr.scrollSensitivity = 25f; sr.inertia = false;
+
+            var vp = UIHelpers.Obj("CareerVP", scrollObj.transform);
+            UIHelpers.Fill(UIHelpers.RT(vp));
+            vp.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f);
+            vp.AddComponent<Mask>().showMaskGraphic = true;
+            sr.viewport = UIHelpers.RT(vp);
+
+            var vlg = UIHelpers.Obj("CareerVlg", vp.transform);
+            var crt = UIHelpers.RT(vlg);
+            crt.anchorMin = new Vector2(0, 1); crt.anchorMax = new Vector2(1, 1);
+            crt.pivot = new Vector2(0.5f, 1); crt.sizeDelta = new Vector2(0, 0);
+            sr.content = crt;
+            vlg.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var v = vlg.AddComponent<VerticalLayoutGroup>();
+            v.spacing = UIHelpers.RowGap;
+            v.padding = new RectOffset((int)UIHelpers.ContentPad, (int)UIHelpers.ContentPad, 8, 8);
+            v.childAlignment = TextAnchor.UpperCenter;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
             UIHelpers.SectionHeader("CAREER PROGRESSION", vlg.transform);
             UIHelpers.InfoBox(vlg.transform, "Irreversible, no confirmation step.");
 
@@ -234,6 +318,98 @@ namespace DescendersModMenu.UI
                 RefreshCareerResult();
             }, 100);
 
+            // ── Switch Sponsor ────────────────────────────────────────
+            var switchSponsorRow = UIHelpers.StatRow("Current Sponsor", vlg.transform);
+            UIHelpers.SmallBtn(switchSponsorRow.transform, "\u25C0", () =>
+            {
+                CareerReset.PreviousSponsor();
+                RefreshCareerResult();
+            });
+            _sponsorVal = UIHelpers.Txt("SponsorV", switchSponsorRow.transform, CareerReset.CurrentSponsorName, 11,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            _sponsorVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 130;
+            UIHelpers.SmallBtn(switchSponsorRow.transform, "\u25B6", () =>
+            {
+                CareerReset.NextSponsor();
+                RefreshCareerResult();
+            });
+            UIHelpers.InfoBox(vlg.transform, "Cycles through every sponsor team. Changes which sponsor's branding/menus/tier progress you're currently signed to.");
+
+            // ── Unlock All (bikes + gear) - two plain instant buttons, no
+            // status text, no confirm step. Default OFF each session (the flag
+            // itself already starts false / resets via PrefsManager as before).
+            var unlockAllRow = UIHelpers.StatRow("Unlock All (Bikes + Gear)", vlg.transform);
+            UIHelpers.ActionBtnOrange(unlockAllRow.transform, "Unlock All", () =>
+            {
+                CareerReset.UnlockAllOn();
+                RefreshCareerResult();
+            }, 90);
+            UIHelpers.ActionBtnOrange(unlockAllRow.transform, "Lock All", () =>
+            {
+                CareerReset.UnlockAllOff();
+                RefreshCareerResult();
+            }, 90);
+            UIHelpers.InfoBox(vlg.transform, "Unlocks or locks every bike and gear item immediately - no confirmation step.");
+
+            // ── Adjust Rep (+/-) ──────────────────────────────────────
+            var repRow = UIHelpers.StatRow("Adjust Total Rep", vlg.transform);
+            _repMinus = UIHelpers.SmallBtn(repRow.transform, "\u25C0", () =>
+            {
+                CareerReset.AdjustRep(-CareerReset.RepStepAmount);
+                RefreshCareerResult();
+            });
+            _repVal = UIHelpers.Txt("RepV", repRow.transform, CareerReset.LiveRepValue.ToString(), 11,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            _repVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 90;
+            _repPlus = UIHelpers.SmallBtn(repRow.transform, "\u25B6", () =>
+            {
+                CareerReset.AdjustRep(CareerReset.RepStepAmount);
+                RefreshCareerResult();
+            });
+            UIHelpers.SmallBtn(repRow.transform, "-", () =>
+            {
+                CareerReset.DecreaseRepMultiplier();
+                RefreshCareerResult();
+            });
+            _repMultVal = UIHelpers.Txt("RepMultV", repRow.transform, "x" + CareerReset.RepMultiplierLevel, 11,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
+            _repMultVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.SmallBtn(repRow.transform, "+", () =>
+            {
+                CareerReset.IncreaseRepMultiplier();
+                RefreshCareerResult();
+            });
+            UIHelpers.InfoBox(vlg.transform, "+/- rep per click, scaled by the x1-x10 multiplier on the right. Updates TOTALREP (sponsor tiers) and the persistent lifetime rep total (the one submitted to Steam).");
+
+            var inGameRepRow = UIHelpers.StatRow("Adjust In-Game Rep", vlg.transform);
+            _inGameRepMinus = UIHelpers.SmallBtn(inGameRepRow.transform, "\u25C0", () =>
+            {
+                CareerReset.AdjustInGameRep(-CareerReset.InGameRepStepAmount);
+                RefreshCareerResult();
+            });
+            _inGameRepVal = UIHelpers.Txt("InGameRepV", inGameRepRow.transform, CareerReset.CurrentInGameRep.ToString(), 11,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            _inGameRepVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 90;
+            _inGameRepPlus = UIHelpers.SmallBtn(inGameRepRow.transform, "\u25B6", () =>
+            {
+                CareerReset.AdjustInGameRep(CareerReset.InGameRepStepAmount);
+                RefreshCareerResult();
+            });
+            UIHelpers.SmallBtn(inGameRepRow.transform, "-", () =>
+            {
+                CareerReset.DecreaseInGameRepMultiplier();
+                RefreshCareerResult();
+            });
+            _inGameRepMultVal = UIHelpers.Txt("InGameRepMultV", inGameRepRow.transform, "x" + CareerReset.InGameRepMultiplierLevel, 11,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
+            _inGameRepMultVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.SmallBtn(inGameRepRow.transform, "+", () =>
+            {
+                CareerReset.IncreaseInGameRepMultiplier();
+                RefreshCareerResult();
+            });
+            UIHelpers.InfoBox(vlg.transform, "+/- rep per click, scaled by the x1-x10 multiplier on the right. Adjusts the current session's combo-score rep counter only - resets to 0 at the start of each session, separate from your Total Rep above.");
+
             var resultRow = UIHelpers.StatRow("Last Result", vlg.transform);
             _careerResultTxt = UIHelpers.Txt("CRResult", resultRow.transform, CareerReset.LastResult,
                 11, FontStyle.Normal, TextAnchor.MiddleRight, UIHelpers.Accent);
@@ -243,6 +419,70 @@ namespace DescendersModMenu.UI
             FavouritesManager.RegisterStarButton("LevelReset", UIHelpers.StarBtn(levelRow.transform, "LevelReset", () => FavouritesManager.Toggle("LevelReset")));
             FavouritesManager.RegisterStarButton("SponsorReset", UIHelpers.StarBtn(sponsorRow.transform, "SponsorReset", () => FavouritesManager.Toggle("SponsorReset")));
             FavouritesManager.RegisterStarButton("MaxSponsorLevel", UIHelpers.StarBtn(maxTierRow.transform, "MaxSponsorLevel", () => FavouritesManager.Toggle("MaxSponsorLevel")));
+            FavouritesManager.RegisterStarButton("SwitchSponsor", UIHelpers.StarBtn(switchSponsorRow.transform, "SwitchSponsor", () => FavouritesManager.Toggle("SwitchSponsor")));
+            FavouritesManager.RegisterStarButton("UnlockAll", UIHelpers.StarBtn(unlockAllRow.transform, "UnlockAll", () => FavouritesManager.Toggle("UnlockAll")));
+            FavouritesManager.RegisterStarButton("AdjustRep", UIHelpers.StarBtn(repRow.transform, "AdjustRep", () => FavouritesManager.Toggle("AdjustRep")));
+            FavouritesManager.RegisterStarButton("AdjustInGameRep", UIHelpers.StarBtn(inGameRepRow.transform, "AdjustInGameRep", () => FavouritesManager.Toggle("AdjustInGameRep")));
+
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "SwitchSponsor",
+                DisplayName = "Current Sponsor",
+                TabBadge = "INFO",
+                BuildControls = (fp) =>
+                {
+                    var row = UIHelpers.StatRow("Current Sponsor", fp);
+                    UIHelpers.SmallBtn(row.transform, "\u25C0", () =>
+                    {
+                        CareerReset.PreviousSponsor();
+                        RefreshCareerResult();
+                        FavsPage.RefreshFavourites();
+                    });
+                    var val = UIHelpers.Txt("FSt_SwitchSponsor", row.transform, CareerReset.CurrentSponsorName,
+                        13, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                    val.gameObject.AddComponent<LayoutElement>().preferredWidth = 110;
+                    UIHelpers.SmallBtn(row.transform, "\u25B6", () =>
+                    {
+                        CareerReset.NextSponsor();
+                        RefreshCareerResult();
+                        FavsPage.RefreshFavourites();
+                    });
+                },
+                IsActive = () => false
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "UnlockAll",
+                DisplayName = "Unlock All (Bikes + Gear)",
+                TabBadge = "INFO",
+                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "UnlockAll", "Unlock All",
+                    () => CareerReset.UnlockAllEnabled, () => { CareerReset.ToggleUnlockAll(); RefreshCareerResult(); }, () => RefreshCareerResult()),
+                IsActive = () => CareerReset.UnlockAllEnabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "AdjustRep",
+                DisplayName = "Adjust Total Rep",
+                TabBadge = "INFO",
+                BuildControls = (fp) => FavsPage.BuildStepper(fp, "AdjustRep", "Adjust Total Rep",
+                    () => CareerReset.LiveRepValue,
+                    () => { CareerReset.AdjustRep(-CareerReset.RepStepAmount); RefreshCareerResult(); },
+                    () => { CareerReset.AdjustRep(CareerReset.RepStepAmount); RefreshCareerResult(); },
+                    int.MinValue, int.MaxValue, () => RefreshCareerResult(), 0),
+                IsActive = () => false
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "AdjustInGameRep",
+                DisplayName = "Adjust In-Game Rep",
+                TabBadge = "INFO",
+                BuildControls = (fp) => FavsPage.BuildStepper(fp, "AdjustInGameRep", "Adjust In-Game Rep",
+                    () => CareerReset.CurrentInGameRep,
+                    () => { CareerReset.AdjustInGameRep(-CareerReset.InGameRepStepAmount); RefreshCareerResult(); },
+                    () => { CareerReset.AdjustInGameRep(CareerReset.InGameRepStepAmount); RefreshCareerResult(); },
+                    int.MinValue, int.MaxValue, () => RefreshCareerResult(), 0),
+                IsActive = () => false
+            });
 
             FavouritesManager.Register(new ModFavEntry
             {
@@ -283,11 +523,32 @@ namespace DescendersModMenu.UI
 
             UIHelpers.AddScrollbar(sr);
             UIHelpers.AddScrollForwarders(vlg.transform);
+            RefreshCareerResult();
+        }
+
+        // ── Dev Diagnostics tap-to-unlock (gates Scene Dump / Bike Unlock Status) ──
+        private static void HandleDevDiagTap()
+        {
+            DevLock.RegisterTap();
+            if (_devDiagLockedTxt)
+                _devDiagLockedTxt.text = DevLock.IsUnlocked
+                    ? "Unlocked."
+                    : "Locked - tap the header above " + DevLock.TapsRemaining + " more time(s) to unlock.";
+
+            if (_devDiagLockedRow) _devDiagLockedRow.SetActive(!DevLock.IsUnlocked);
+            if (_devDiagContent) _devDiagContent.SetActive(DevLock.IsUnlocked);
         }
 
         private static void RefreshCareerResult()
         {
             if ((object)_careerResultTxt != null) _careerResultTxt.text = CareerReset.LastResult;
+
+            if (_sponsorVal) _sponsorVal.text = CareerReset.CurrentSponsorName;
+
+            if (_repVal) _repVal.text = CareerReset.LiveRepValue.ToString();
+            if (_repMultVal) _repMultVal.text = "x" + CareerReset.RepMultiplierLevel;
+            if (_inGameRepVal) _inGameRepVal.text = CareerReset.CurrentInGameRep.ToString();
+            if (_inGameRepMultVal) _inGameRepMultVal.text = "x" + CareerReset.InGameRepMultiplierLevel;
         }
 
         // ── Hotkeys page ──────────────────────────────────────────────

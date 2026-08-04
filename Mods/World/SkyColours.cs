@@ -617,7 +617,13 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                MethodInfo destroySky = typeof(CameraEffects).GetMethod("S\u0083wckiX",
+                // Post-update rename: old obfuscated name "S\u0083wckiX" no longer exists.
+                // Renamed to "RemoveActiveEffects" (confirmed via decompile cross-check on
+                // 03/08/2026 — identical body: destroys GetComponent<TOD_Camera>().sky.gameObject).
+                // A second obfuscated candidate with an identical body also exists
+                // ("c\u007F\u0083k\u0083PV") but RemoveActiveEffects is the public, legibly-named
+                // one and matches the original's public accessibility, so it's the safer bet.
+                MethodInfo destroySky = typeof(CameraEffects).GetMethod("RemoveActiveEffects",
                     BindingFlags.Public | BindingFlags.Instance);
                 if ((object)destroySky != null)
                     try { destroySky.Invoke(ce, null); } catch { }

@@ -79,6 +79,30 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[MaxSpeed] Apply: " + ex.Message); }
         }
 
+        // Same silent-overwrite race as Acceleration - the game's own bike-stat
+        // init runs after a one-time apply and can clobber it. Re-enforce every
+        // frame instead. Called from OnLateUpdate.
+        public static void Tick()
+        {
+            if (!Enabled) return;
+            try
+            {
+                GameObject player = GameObject.Find("Player_Human");
+                if ((object)player == null) return;
+                Vehicle vehicle = player.GetComponent<Vehicle>();
+                if ((object)vehicle == null) return;
+                FieldInfo field = FindField(vehicle);
+                if ((object)field == null) return;
+
+                float multiplier = 1f + (Level - 1) * 0.5f;
+                float target = DefaultDrag / multiplier;
+                float current = (float)field.GetValue(vehicle);
+                if (Mathf.Abs(current - target) > 0.0001f)
+                    field.SetValue(vehicle, target);
+            }
+            catch { }
+        }
+
         private static void Restore()
         {
             try

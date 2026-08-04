@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "1.2.0";
+        public const string Version = "1.3.0";
         public const string DownloadLink = null;
     }
 
@@ -324,13 +324,24 @@ namespace DescendersModMenu
             AvalancheMode.Reset(); GhostReplay.Reset();
             EarthquakeMode.Reset(); PoliceChaseMode.Reset();
             TrickAttackMode.Reset(); BoulderDodgeMode.Reset();
-            SurvivalMode.Reset(); TopSpeed.Reset();
+            SurvivalMode.Reset();
             SessionTrackers.Reset(); ExplodingProps.Reset();
             SuspensionHUD.ClearCache();
             BrakeFade.ClearCache(); BrakeFade_Patch.ClearCache();
+            TrickMultiplier.Reset();
             BikeDamage.ClearBoneCache();
             HeadlightsOnly.ClearCache();
             UIRemover.ClearCache();
+            // TopSpeed used to call Reset() here, which zeroes SessionTopSpeed AND
+            // saves that 0 straight to TopSpeed.txt on disk - permanently wiping the
+            // persisted best-speed record on every single level transition within a
+            // career session (confirmed 2026-08-04: log shows "Loaded: 0.0 km/h" at
+            // boot, and Reset() firing every scene change explains why it can never
+            // climb past whatever was tracked on the very first level of a session).
+            // ClearCache() only refreshes the stale Player_Human/Rigidbody refs (which
+            // do need refreshing every scene - they point at destroyed objects
+            // otherwise) without touching the tracked value at all.
+            TopSpeed.ClearCache();
             if (ESP.Enabled) ESP.Toggle();
 
             // == RESTORE IMMEDIATE (Harmony patches) ==
@@ -490,6 +501,7 @@ namespace DescendersModMenu
             try { SceneDumper.CheckHotkey(); } catch (System.Exception ex) { MelonLogger.Error("SceneDumper: " + ex.Message); }
             try { SpeedWatcher.CheckHotkey(); } catch (System.Exception ex) { MelonLogger.Error("SpeedWatcher: " + ex.Message); }
             try { TopSpeed.Tick(); } catch (System.Exception ex) { MelonLogger.Error("TopSpeed.Tick: " + ex.Message); }
+            try { TrickMultiplier.Tick(); } catch (System.Exception ex) { MelonLogger.Error("TrickMultiplier.Tick: " + ex.Message); }
             try { ScreenshotMode.Tick(); } catch { }
             try { SessionTrackers.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SessionTrackers.Tick: " + ex.Message); }
             try { MenuWindow.TickLive(); } catch { }
@@ -539,6 +551,15 @@ namespace DescendersModMenu
             try { WheelSize.Tick(); } catch { }
             try { WideTyres.Tick(); } catch { }
             try { BikeDamage.Tick(); } catch { }
+            // Vehicle/Cyclist stat mods that need to win the race against the game's
+            // own bike-stat init, which runs after a one-time apply and silently
+            // clobbers a plain field write (confirmed via scene dump 2026-08-04:
+            // Acceleration's field showed the raw default instead of our multiplied
+            // value, no exception, just overwritten). Re-enforcing every LateUpdate
+            // frame beats that instead of applying once on scene load.
+            try { Acceleration.Tick(); } catch (System.Exception ex) { MelonLogger.Error("Acceleration.Tick: " + ex.Message); }
+            try { MaxSpeedMultiplier.Tick(); } catch (System.Exception ex) { MelonLogger.Error("MaxSpeedMultiplier.Tick: " + ex.Message); }
+            try { LandingImpact.Tick(); } catch (System.Exception ex) { MelonLogger.Error("LandingImpact.Tick: " + ex.Message); }
         }
 
         public override void OnGUI()

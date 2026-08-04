@@ -61,6 +61,34 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[Acceleration] Apply: " + ex.Message); }
         }
 
+        // Confirmed via scene dump 2026-08-04: the game's own bike-stat init runs
+        // AFTER our apply-once reapply on scene load and silently overwrites this
+        // field back to the raw default (dump showed 14, our log said we'd set 21 -
+        // no exception, no error, just clobbered). A single apply-on-Player_Human-
+        // found isn't enough to win that race reliably. Re-enforce every frame
+        // instead, same pattern as WideTyres.Tick()/BikeDamage.Tick() elsewhere in
+        // this project. Called from OnLateUpdate so it runs after the game's own
+        // Update-phase logic for that frame.
+        public static void Tick()
+        {
+            if (!Enabled) return;
+            try
+            {
+                GameObject player = GameObject.Find("Player_Human");
+                if ((object)player == null) return;
+                Vehicle vehicle = player.GetComponent<Vehicle>();
+                if ((object)vehicle == null) return;
+                if ((object)_field == null || _originalValue < 0f) return; // Apply() handles first-time setup
+
+                float multiplier = 1f + (Level - 1) * 0.5f;
+                float target = _originalValue * multiplier;
+                float current = (float)_field.GetValue(vehicle);
+                if (Mathf.Abs(current - target) > 0.01f)
+                    _field.SetValue(vehicle, target);
+            }
+            catch { }
+        }
+
         private static void Restore()
         {
             try

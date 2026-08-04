@@ -441,6 +441,34 @@ namespace DescendersModMenu.UI
             trt.offsetMin = new Vector2(10, 0); trt.offsetMax = Vector2.zero;
         }
 
+        // Same visuals as SectionHeader, but clickable — the whole row is a
+        // transparent Button so tapping anywhere on the header fires onClick.
+        // Used for tap-to-unlock gates (see DevLock).
+        public static void SectionHeaderButton(string title, Transform p, UnityEngine.Events.UnityAction onClick)
+        {
+            var row = Obj(title + "H", p);
+            var le = row.AddComponent<LayoutElement>();
+            le.preferredHeight = 28; le.minHeight = 28; le.flexibleHeight = 0;
+
+            var img = row.AddComponent<Image>();
+            img.color = new Color(0f, 0f, 0f, 0f); // invisible, just needed to catch raycasts
+            var btn = row.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(onClick);
+
+            var bar = Panel("Bar", row.transform, Accent);
+            var brt = RT(bar);
+            brt.anchorMin = new Vector2(0, 0.5f); brt.anchorMax = new Vector2(0, 0.5f);
+            brt.pivot = new Vector2(0, 0.5f); brt.sizeDelta = new Vector2(3, 14);
+            brt.anchoredPosition = Vector2.zero;
+
+            var t = Txt(title + "T", row.transform, title.ToUpper(), 11,
+                FontStyle.Bold, TextAnchor.MiddleLeft, Accent);
+            var trt = RT(t.gameObject);
+            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+            trt.offsetMin = new Vector2(10, 0); trt.offsetMax = Vector2.zero;
+        }
+
         public static void Divider(Transform p)
         {
             Panel("Dv", p, RowBorder)

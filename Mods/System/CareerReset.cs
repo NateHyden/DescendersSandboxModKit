@@ -1,6 +1,7 @@
 using MelonLoader;
 using System;
 using System.Reflection;
+using CodeStage.AntiCheat.ObscuredTypes;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -411,6 +412,575 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] ResetSponsorProgress: " + ex.Message);
+                LastResult = "Error - see log";
+            }
+        }
+
+        // ── Adjust Rep (+/-) ─────────────────────────────────────────────
+        // Same "TOTALREP" PrefsManager key TryCompleteViaProgressNodes/ResetSponsorProgress
+        // already use - this just nudges it instead of setting an absolute target.
+        public static int CurrentRep
+        {
+            get
+            {
+                object prefsInstance = FindSingletonInstance(typeof(PrefsManager));
+                PrefsManager prefs = prefsInstance as PrefsManager;
+                if ((object)prefs == null) return 0;
+                try { return prefs.GetInt("TOTALREP"); }
+                catch (Exception ex) { MelonLogger.Error("[CareerReset] CurrentRep get: " + ex.Message); return 0; }
+            }
+        }
+
+        // ── Rep step multiplier (x1-x10, independent per row) ────────────
+        private const int RepBaseStep = 1000;
+        public static int RepMultiplierLevel { get; private set; } = 1;
+        public static int InGameRepMultiplierLevel { get; private set; } = 1;
+        public static int RepStepAmount { get { return RepBaseStep * RepMultiplierLevel; } }
+        public static int InGameRepStepAmount { get { return RepBaseStep * InGameRepMultiplierLevel; } }
+
+        public static void IncreaseRepMultiplier() { if (RepMultiplierLevel < 10) RepMultiplierLevel++; }
+        public static void DecreaseRepMultiplier() { if (RepMultiplierLevel > 1) RepMultiplierLevel--; }
+        public static void IncreaseInGameRepMultiplier() { if (InGameRepMultiplierLevel < 10) InGameRepMultiplierLevel++; }
+        public static void DecreaseInGameRepMultiplier() { if (InGameRepMultiplierLevel > 1) InGameRepMultiplierLevel--; }
+
+        public static void AdjustRep(int amount)
+        {
+            try
+            {
+                object prefsInstance = FindSingletonInstance(typeof(PrefsManager));
+                PrefsManager prefs = prefsInstance as PrefsManager;
+                if ((object)prefs == null)
+                {
+                    MelonLogger.Warning("[CareerReset] AdjustRep: Could not resolve a PrefsManager instance.");
+                    LastResult = "PrefsManager not found";
+                    return;
+                }
+
+                int before = prefs.GetInt("TOTALREP");
+                int after = before + amount;
+                if (after < 0) after = 0;
+                prefs.SetInt("TOTALREP", after);
+                try { prefs.Save(); }
+                catch (Exception exSave) { MelonLogger.Warning("[CareerReset] AdjustRep prefs.Save() threw: " + exSave.Message); }
+
+                MelonLogger.Msg("[CareerReset] TOTALREP: " + before + " -> " + after + " (" + (amount >= 0 ? "+" : "") + amount + ")");
+
+                // TOTALREP only drives sponsor-tier gating - it is NOT the value shown
+                // in the on-screen HUD counter (confirmed 2026-08-04: TOTALREP sits in
+                // the low thousands, the HUD counter runs 1,000,000+, a scale mismatch
+                // that can't be the same field). AdjustLiveRep hits the actual live
+                // field the HUD reads.
+                bool liveOk = AdjustLiveRep(amount);
+
+                LastResult = "Rep " + before + " -> " + after + (liveOk ? " (+ live HUD updated)" : " (live HUD field not found - see log)");
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[CareerReset] AdjustRep: " + ex.Message);
+                LastResult = "Error - see log";
+            }
+        }
+
+        // ── Live On-Screen Rep Counter ───────────────────────────────────
+        // CORRECTED 2026-08-04 (previous field was wrong - see below).
+        //
+        // The bottom-of-screen "R" HUD value is DevCommandsBackEnd.M{~]Ee, a clean
+        // static int wrapper (same pattern/class as the sponsor-switching field) over
+        // DescendersBackEnd.M{~]Ee, an abstract ObscuredInt property on the platform
+        // backend singleton. Confirmed directly in the decompile: this exact field is
+        // what DescendersBackEndSteam submits to Steam's leaderboard as
+        // "reputation_s2_<teamID>" - i.e. it's the actual persistent reputation
+        // counter, not a per-session score.
+        //
+        // What was wrong before: PlayerInfoImpact.d]kxXXv.LgqK]Lp. That field is real
+        // and does accumulate on trick combos, but it lives on a stats sub-object that
+        // gets freshly reconstructed each session (gated on SessionStarted()) -
+        // confirmed live, it read back as 0 immediately after being written to. It's
+        // a session-local combo-score counter, not the lifetime rep total.
+        //
+        // PERSISTENCE CAVEAT: this in-memory value is what SubmitToLeaderboard/SetStat
+        // send to Steam - but only when the game's own sync code actually calls those
+        // (end of run/session, not continuously). Changing this field updates what
+        // will be submitted next time that fires; it doesn't push to Steam's servers
+        // immediately by itself. If the number doesn't survive a full session/lobby
+        // restart, that sync timing is the next thing to check - would need a fresh
+        // scene dump captured right after a submission point to confirm.
+        private static PropertyInfo _backendRepProp;
+        private static bool _backendRepPropSearched;
+
+        private static PropertyInfo GetBackendRepProp()
+        {
+            if (!_backendRepPropSearched)
+            {
+                _backendRepPropSearched = true;
+                _backendRepProp = typeof(DevCommandsBackEnd).GetProperty("M\u0083\u007B\u007E\u005DEe",
+                    BindingFlags.Public | BindingFlags.Static);
+                if ((object)_backendRepProp == null)
+                    MelonLogger.Warning("[CareerReset] LiveRepValue: DevCommandsBackEnd.M{~]Ee property not found.");
+            }
+            return _backendRepProp;
+        }
+
+        public static int LiveRepValue
+        {
+            get
+            {
+                try
+                {
+                    PropertyInfo p = GetBackendRepProp();
+                    if ((object)p == null) return 0;
+                    return (int)p.GetValue(null, null);
+                }
+                catch (Exception ex) { MelonLogger.Error("[CareerReset] LiveRepValue get: " + ex.Message); return 0; }
+            }
+        }
+
+        private static bool AdjustLiveRep(int amount)
+        {
+            try
+            {
+                PropertyInfo p = GetBackendRepProp();
+                if ((object)p == null)
+                {
+                    MelonLogger.Warning("[CareerReset] AdjustLiveRep: backend rep property not found.");
+                    return false;
+                }
+
+                int before = (int)p.GetValue(null, null);
+                int after = before + amount;
+                if (after < 0) after = 0;
+                p.SetValue(null, after, null);
+
+                MelonLogger.Msg("[CareerReset] Live rep (backend, Steam-submitted as \"reputation_s2_\"): "
+                    + before + " -> " + after);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[CareerReset] AdjustLiveRep: " + ex.Message);
+                return false;
+            }
+        }
+
+        // ── In-Game Rep (session-local combo score) ──────────────────────
+        // This is the OTHER field from the original investigation:
+        // PlayerInfoImpact.d]kxXXv.LgqK]Lp - a CodeStage ObscuredInt on a per-player
+        // stats sub-object that accumulates every time a trick combo scores. It's
+        // NOT the persistent "Total Rep" (that's DevCommandsBackEnd.M{~]Ee, above) -
+        // this one gets freshly reconstructed to 0 each session (gated on
+        // SessionStarted()), confirmed live. That makes it exactly the "current
+        // in-game session" counter, as opposed to the lifetime total.
+        public static int CurrentInGameRep
+        {
+            get
+            {
+                try
+                {
+                    PlayerInfoImpact pii = FindLocalPlayerInfoImpact();
+                    if ((object)pii == null) return 0;
+                    ObscuredInt oi;
+                    if (!TryGetInGameRepField(pii, out oi)) return 0;
+                    return DecodeObscuredInt(oi);
+                }
+                catch (Exception ex) { MelonLogger.Error("[CareerReset] CurrentInGameRep get: " + ex.Message); return 0; }
+            }
+        }
+
+        public static bool AdjustInGameRep(int amount)
+        {
+            try
+            {
+                PlayerInfoImpact pii = FindLocalPlayerInfoImpact();
+                if ((object)pii == null)
+                {
+                    MelonLogger.Warning("[CareerReset] AdjustInGameRep: local PlayerInfoImpact not found (not in a session?).");
+                    LastResult = "Not in a session";
+                    return false;
+                }
+
+                FieldInfo statsField = typeof(PlayerInfoImpact).GetField("d\u0082kxXXv",
+                    BindingFlags.Public | BindingFlags.Instance);
+                if ((object)statsField == null)
+                {
+                    MelonLogger.Warning("[CareerReset] AdjustInGameRep: stats sub-object field (d]kxXXv) not found on PlayerInfoImpact.");
+                    LastResult = "Field not found";
+                    return false;
+                }
+
+                object statsObj = statsField.GetValue(pii);
+                if (statsObj == null)
+                {
+                    MelonLogger.Warning("[CareerReset] AdjustInGameRep: stats sub-object was null on this instance.");
+                    LastResult = "Stats object null";
+                    return false;
+                }
+
+                FieldInfo repField = statsObj.GetType().GetField("LgqK\u005DLp",
+                    BindingFlags.Public | BindingFlags.Instance);
+                if ((object)repField == null)
+                {
+                    MelonLogger.Warning("[CareerReset] AdjustInGameRep: LgqK]Lp field not found on stats sub-object.");
+                    LastResult = "Field not found";
+                    return false;
+                }
+
+                ObscuredInt beforeOi = (ObscuredInt)repField.GetValue(statsObj);
+                int beforeInt = DecodeObscuredInt(beforeOi);
+                int afterInt = beforeInt + amount;
+                if (afterInt < 0) afterInt = 0;
+                ObscuredInt afterOi = EncodeObscuredInt(afterInt);
+                repField.SetValue(statsObj, afterOi);
+
+                MelonLogger.Msg("[CareerReset] In-game rep (LgqK]Lp): " + beforeInt + " -> " + afterInt);
+                LastResult = "In-Game Rep " + beforeInt + " -> " + afterInt;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[CareerReset] AdjustInGameRep: " + ex.Message);
+                LastResult = "Error - see log";
+                return false;
+            }
+        }
+
+        private static bool TryGetInGameRepField(PlayerInfoImpact pii, out ObscuredInt value)
+        {
+            value = default(ObscuredInt);
+            FieldInfo statsField = typeof(PlayerInfoImpact).GetField("d\u0082kxXXv",
+                BindingFlags.Public | BindingFlags.Instance);
+            if ((object)statsField == null) return false;
+            object statsObj = statsField.GetValue(pii);
+            if (statsObj == null) return false;
+            FieldInfo repField = statsObj.GetType().GetField("LgqK\u005DLp",
+                BindingFlags.Public | BindingFlags.Instance);
+            if ((object)repField == null) return false;
+            value = (ObscuredInt)repField.GetValue(statsObj);
+            return true;
+        }
+
+        // ObscuredInt's own conversion operators were renamed along with everything
+        // else in this obfuscated build (the [SpecialName] "op_Implicit" methods got
+        // scrambled to DZlraRf), so the implicit int<->ObscuredInt conversions the
+        // type is normally used with don't work from source compiled against this
+        // DLL - both overloads have to be invoked explicitly via reflection.
+        //
+        // CRITICAL: DZlraRf(ObscuredInt) is not unique - there are THREE overloads
+        // that all take a single ObscuredInt parameter and differ only by RETURN
+        // TYPE (int, ObscuredFloat, ObscuredDouble - the obfuscator collapsed what
+        // used to be differently-named conversion methods onto the same string).
+        // GetMethod(name, flags, binder, parameterTypes, modifiers) matches on
+        // parameter types only, so it can silently return the WRONG overload here -
+        // confirmed live: it picked one of the float/double versions, and casting
+        // that boxed result to int threw "Cannot cast from source type to
+        // destination type". Have to walk GetMethods() and check ReturnType too.
+        // (Not currently used by LiveRepValue/AdjustLiveRep anymore - kept in case a
+        // future field needs the same ObscuredInt encode/decode dance.)
+        private static int DecodeObscuredInt(ObscuredInt oi)
+        {
+            MethodInfo m = FindDZlraRfOverload(new Type[] { typeof(ObscuredInt) }, typeof(int));
+            if ((object)m == null) throw new Exception("ObscuredInt decode method (DZlraRf(ObscuredInt) -> int) not found.");
+            return (int)m.Invoke(null, new object[] { oi });
+        }
+
+        private static ObscuredInt EncodeObscuredInt(int value)
+        {
+            MethodInfo m = FindDZlraRfOverload(new Type[] { typeof(int) }, typeof(ObscuredInt));
+            if ((object)m == null) throw new Exception("ObscuredInt encode method (DZlraRf(int) -> ObscuredInt) not found.");
+            return (ObscuredInt)m.Invoke(null, new object[] { value });
+        }
+
+        private static MethodInfo FindDZlraRfOverload(Type[] paramTypes, Type returnType)
+        {
+            // NOTE: uses .Equals(), never == or != on Type objects - Type's operator
+            // overloads compile to calls to Type.op_Equality/op_Inequality, and this
+            // build's mscorlib.dll is missing those (a documented, recurring gotcha
+            // in this project - "Type::op_Equality spam" in How_to_fix_after_update.md).
+            MethodInfo[] candidates = typeof(ObscuredInt).GetMethods(BindingFlags.Public | BindingFlags.Static);
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                MethodInfo m = candidates[i];
+                if (!string.Equals(m.Name, "DZlraRf", StringComparison.Ordinal)) continue;
+                if (!m.ReturnType.Equals(returnType)) continue;
+                ParameterInfo[] ps = m.GetParameters();
+                if (ps.Length != paramTypes.Length) continue;
+                bool match = true;
+                for (int j = 0; j < ps.Length; j++)
+                    if (!ps[j].ParameterType.Equals(paramTypes[j])) { match = false; break; }
+                if (match) return m;
+            }
+            return null;
+        }
+
+        private static PlayerInfoImpact FindLocalPlayerInfoImpact()
+        {
+            PlayerInfoImpact[] all = UnityEngine.Object.FindObjectsOfType<PlayerInfoImpact>();
+            MethodInfo isHuman = typeof(PlayerInfoImpact).GetMethod("IsHumanControlled",
+                BindingFlags.Public | BindingFlags.Instance);
+            if ((object)isHuman == null) return all.Length > 0 ? all[0] : null;
+            for (int i = 0; i < all.Length; i++)
+            {
+                try { if ((bool)isHuman.Invoke(all[i], null)) return all[i]; }
+                catch { }
+            }
+            return null;
+        }
+
+        // ── Unlock All (bikes + gear) ─────────────────────────────────────
+        // CustomizationManager.IsItemUnlocked() reads, verbatim from the post-update
+        // decompile:
+        //     return this.<unlockedList>.Contains(item) || this.mZVyMyX;
+        // mZVyMyX is a public bool property (plain-ASCII obfuscated name - no escapes
+        // needed, safe to reference directly, NOT a runtime-subclass situation) backed
+        // by PrefsManager key "UnlockAll". Flipping it true makes every
+        // CustomizationItem report as unlocked immediately. Bikes are covered by the
+        // same flag - the slot enum (mFWXh}~) includes Bike and BikeType as
+        // customization slots, so this is one flag for both asks, not two separate
+        // systems. Confirmed directly in the decompile, 2026-08-03.
+        public static bool UnlockAllEnabled
+        {
+            get
+            {
+                try
+                {
+                    CustomizationManager cm = UnityEngine.Object.FindObjectOfType<CustomizationManager>();
+                    if ((object)cm == null) return false;
+                    return cm.mZVyMyX;
+                }
+                catch (Exception ex)
+                {
+                    MelonLogger.Error("[CareerReset] UnlockAllEnabled get: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        // Explicit on/off - simpler UI than a single toggle button with a
+        // confirm-arm dance. If already in the requested state, no-ops.
+        public static void UnlockAllOn()
+        {
+            if (!UnlockAllEnabled) ToggleUnlockAll();
+        }
+
+        public static void UnlockAllOff()
+        {
+            if (UnlockAllEnabled) ToggleUnlockAll();
+        }
+
+        public static void ToggleUnlockAll()
+        {
+            try
+            {
+                CustomizationManager cm = UnityEngine.Object.FindObjectOfType<CustomizationManager>();
+                if ((object)cm == null)
+                {
+                    MelonLogger.Warning("[CareerReset] ToggleUnlockAll: CustomizationManager not found in scene.");
+                    LastResult = "CustomizationManager not found";
+                    return;
+                }
+
+                bool newVal = !cm.mZVyMyX;
+                cm.mZVyMyX = newVal;
+
+                // The property setter writes straight to PrefsManager but doesn't call
+                // Save() itself - do that explicitly here so the flag survives an app
+                // restart, matching every other PrefsManager write in this file.
+                object prefsInstance = FindSingletonInstance(typeof(PrefsManager));
+                PrefsManager prefs = prefsInstance as PrefsManager;
+                if ((object)prefs != null)
+                {
+                    try { prefs.Save(); }
+                    catch (Exception exSave) { MelonLogger.Warning("[CareerReset] ToggleUnlockAll prefs.Save() threw: " + exSave.Message); }
+                }
+
+                MelonLogger.Msg("[CareerReset] Unlock All (bikes + gear): " + newVal
+                    + " | verify readback: " + cm.mZVyMyX
+                    + " | NOTE: the shed/customization grid may cache lock icons at build time - "
+                    + "if items still show locked, leave and re-enter that screen to force a rebuild.");
+                LastResult = "Unlock All " + (newVal ? "ON - all bikes/gear unlocked" : "OFF");
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[CareerReset] ToggleUnlockAll: " + ex.Message);
+                LastResult = "Error - see log";
+            }
+        }
+
+        // ── Diagnostic: Dump Bike Unlock Status ─────────────────────────
+        // Asks the game's own IsItemUnlocked(CustomizationItem) directly for every
+        // Bike/BikeType-slot item, instead of guessing from the (unreliable - this
+        // build's string literals are shuffled/decoy) decompiled source. Definitive
+        // ground truth for whether the UnlockAll flag is actually reaching these
+        // specific items or whether something else is gating them (team/sponsor
+        // ownership, DLC, a separate cached check, etc).
+        public static string DumpBikeUnlockStatus()
+        {
+            try
+            {
+                CustomizationManager cm = UnityEngine.Object.FindObjectOfType<CustomizationManager>();
+                if ((object)cm == null)
+                {
+                    MelonLogger.Warning("[CareerReset] DumpBikeUnlockStatus: CustomizationManager not found in scene.");
+                    return "CustomizationManager not found";
+                }
+
+                CustomizationItem[] allItems = Resources.FindObjectsOfTypeAll<CustomizationItem>();
+                MelonLogger.Msg("[CareerReset] === Bike Unlock Status Dump ===");
+                MelonLogger.Msg("[CareerReset] UnlockAllEnabled (mZVyMyX) = " + cm.mZVyMyX
+                    + " | " + allItems.Length + " total CustomizationItem asset(s) loaded");
+
+                int shown = 0;
+                for (int i = 0; i < allItems.Length; i++)
+                {
+                    CustomizationItem item = allItems[i];
+                    if ((object)item == null) continue;
+                    string slotName = item.slot.ToString();
+                    if (!string.Equals(slotName, "Bike", StringComparison.Ordinal)
+                        && !string.Equals(slotName, "BikeType", StringComparison.Ordinal))
+                        continue;
+
+                    bool unlocked = false;
+                    try { unlocked = cm.IsItemUnlocked(item); }
+                    catch (Exception exItem) { MelonLogger.Warning("[CareerReset]   IsItemUnlocked threw for \"" + item.displayName + "\": " + exItem.Message); }
+
+                    MelonLogger.Msg("[CareerReset]   itemID=" + item.itemID
+                        + " name=\"" + item.displayName + "\""
+                        + " slot=" + slotName
+                        + " rarity=" + item.rarity
+                        + " unlocked=" + unlocked);
+                    shown++;
+                }
+
+                MelonLogger.Msg("[CareerReset] === End dump: " + shown + " bike-slot item(s) ===");
+                LastResult = "Logged " + shown + " bike item(s) - check MelonLoader log";
+                return LastResult;
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[CareerReset] DumpBikeUnlockStatus: " + ex.Message);
+                LastResult = "Error - see log";
+                return LastResult;
+            }
+        }
+
+        // ── Switch Sponsor ────────────────────────────────────────────────
+        // Confirmed directly in the decompile, 2026-08-04: there's a whole dedicated
+        // game state for this (State_TeamSelect.cs) that writes the exact same field
+        // this drives. The actual "which sponsor am I currently signed to" value is
+        // DescendersBackEnd.lno]zMq (an ObscuredInt on an abstract backend singleton -
+        // read everywhere the sponsor office / bike selection / team branding needs to
+        // know the active team, e.g. State_SponsorOffice.cs, UI_BikeSelection.cs).
+        // GameData.GetTeam(int) looks this value up against TeamInfo.teamID in
+        // GameData's team list (D]nWNgg) to find the matching TeamInfo.
+        //
+        // DevCommandsBackEnd (a real dev-console class already in this build) exposes
+        // a clean, plain "static int" wrapper property over the same field - no manual
+        // ObscuredInt encode/decode needed, just reflection to get at the property
+        // itself (its name still carries an obfuscated control character).
+        //
+        // TeamInfo itself is a clean, directly-referenceable type - teamID/name/tier
+        // are all plain fields, no reflection needed for those.
+        private static PropertyInfo _currentTeamProp;
+        private static bool _currentTeamPropSearched;
+
+        private static PropertyInfo GetCurrentTeamProp()
+        {
+            if (!_currentTeamPropSearched)
+            {
+                _currentTeamPropSearched = true;
+                _currentTeamProp = typeof(DevCommandsBackEnd).GetProperty("lno\u0082zMq",
+                    BindingFlags.Public | BindingFlags.Static);
+                if ((object)_currentTeamProp == null)
+                    MelonLogger.Warning("[CareerReset] Switch Sponsor: DevCommandsBackEnd.lno]zMq property not found.");
+            }
+            return _currentTeamProp;
+        }
+
+        private static TeamInfo[] GetAllTeams()
+        {
+            GameData gd = UnityEngine.Object.FindObjectOfType<GameData>();
+            if ((object)gd == null) return new TeamInfo[0];
+
+            FieldInfo teamsField = typeof(GameData).GetField("D\u0083nWNgg", BindingFlags.Public | BindingFlags.Instance);
+            if ((object)teamsField == null)
+            {
+                MelonLogger.Warning("[CareerReset] Switch Sponsor: team list field (D]nWNgg) not found on GameData.");
+                return new TeamInfo[0];
+            }
+
+            return teamsField.GetValue(gd) as TeamInfo[] ?? new TeamInfo[0];
+        }
+
+        private static int GetCurrentTeamId()
+        {
+            PropertyInfo p = GetCurrentTeamProp();
+            if ((object)p == null) return 0;
+            try { return (int)p.GetValue(null, null); }
+            catch (Exception ex) { MelonLogger.Error("[CareerReset] GetCurrentTeamId: " + ex.Message); return 0; }
+        }
+
+        private static void SetCurrentTeamId(int id)
+        {
+            PropertyInfo p = GetCurrentTeamProp();
+            if ((object)p == null) return;
+            try { p.SetValue(null, id, null); }
+            catch (Exception ex) { MelonLogger.Error("[CareerReset] SetCurrentTeamId: " + ex.Message); }
+        }
+
+        public static string CurrentSponsorName
+        {
+            get
+            {
+                try
+                {
+                    int currentId = GetCurrentTeamId();
+                    if (currentId == 0) return "None (Unsponsored)";
+
+                    TeamInfo[] teams = GetAllTeams();
+                    for (int i = 0; i < teams.Length; i++)
+                        if ((object)teams[i] != null && teams[i].teamID == currentId)
+                            return teams[i].name;
+
+                    return "Unknown (id " + currentId + ")";
+                }
+                catch (Exception ex) { MelonLogger.Error("[CareerReset] CurrentSponsorName: " + ex.Message); return "Error"; }
+            }
+        }
+
+        public static void NextSponsor() { StepSponsor(1); }
+        public static void PreviousSponsor() { StepSponsor(-1); }
+
+        private static void StepSponsor(int direction)
+        {
+            try
+            {
+                TeamInfo[] teams = GetAllTeams();
+                if (teams.Length == 0)
+                {
+                    MelonLogger.Warning("[CareerReset] StepSponsor: no teams found - GameData not in scene yet?");
+                    LastResult = "No teams found";
+                    return;
+                }
+
+                int currentId = GetCurrentTeamId();
+                int idx = 0;
+                for (int i = 0; i < teams.Length; i++)
+                    if ((object)teams[i] != null && teams[i].teamID == currentId) { idx = i; break; }
+
+                idx = ((idx + direction) % teams.Length + teams.Length) % teams.Length;
+                TeamInfo next = teams[idx];
+                if ((object)next == null)
+                {
+                    LastResult = "Team slot was null";
+                    return;
+                }
+
+                SetCurrentTeamId(next.teamID);
+                MelonLogger.Msg("[CareerReset] Sponsor: " + currentId + " -> " + next.teamID + " (\"" + next.name + "\")");
+                LastResult = "Sponsor: " + next.name;
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[CareerReset] StepSponsor: " + ex.Message);
                 LastResult = "Error - see log";
             }
         }
