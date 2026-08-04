@@ -1,8 +1,16 @@
 # Descenders Sandbox
 
-A MelonLoader mod menu for Descenders, packed with tweaks, tools, and game modifiers to mess around with in **Free Ride and Bike Parks**.
+**Descenders Sandbox** is a free-ride physics sandbox and mod menu for
+**Descenders**, built with MelonLoader. It's not a cheat tool for
+competitive play — it's a client-side sandbox for **Free Ride and Bike
+Park** sessions, letting you tweak bike physics, adjust world settings,
+and drop in custom game modes like Earthquake, Police Chase, and Trick
+Attack.
 
-> ⚠️ This mod is intended for use in **Free Ride and Bike Park** sessions only. Features will not work in career mode, events, or online lobbies. This mod is client side only.
+> ⚠️ This mod is intended for use in **Free Ride and Bike Park** sessions
+> only. Features will not work in career mode, events, or online lobbies —
+> it's a sandbox for messing around solo or with friends offline, not a
+> competitive advantage tool.
 
 Press **F6 OR DPAD DOWN** in-game to open the menu.
 
