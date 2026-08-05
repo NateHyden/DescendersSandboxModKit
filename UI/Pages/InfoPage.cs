@@ -10,7 +10,7 @@ namespace DescendersModMenu.UI
         // ── Sub-tab state ─────────────────────────────────────────────
         private static int _activeTab = 0; // 0=System 1=Hotkeys 2=Customise 3=Career
 
-        private static readonly string[] TabLabels = { "System", "Hotkeys", "Customise", "Career" };
+        private static readonly string[] TabLabels = { "System", "Hotkeys", "Customize", "Career" };
 
         // Sub-tab bar buttons
         private static Image[] _tabBgs = new Image[4];
@@ -27,6 +27,10 @@ namespace DescendersModMenu.UI
         private static Text _custScaleLbl;
         private static Text _custOpacityLbl;
         private static GameObject _custSavedRow;
+
+        // Set before RebuildMenu() to reopen the Info/Customise page on a specific
+        // sub-tab (2 = Customise) instead of the default first sub-tab. Consumed on use.
+        public static int PendingSubTab = -1;
         // System tab
         private static Text _unityVersionTxt;
         private static Text _steamPlayerTxt;
@@ -130,7 +134,8 @@ namespace DescendersModMenu.UI
                 UIHelpers.Fill(UIHelpers.RT(_pgCareer));
                 BuildCareerPage(_pgCareer.transform);
 
-                SwitchTab(0);
+                SwitchTab(PendingSubTab >= 0 ? PendingSubTab : 0);
+                PendingSubTab = -1;
                 Refresh();
             }
             catch (System.Exception ex)
@@ -590,17 +595,6 @@ namespace DescendersModMenu.UI
 
             var c = vlg.transform;
 
-            // ── How it works ──────────────────────────────────────────
-            UIHelpers.SectionHeader("HOW IT WORKS", c);
-            UIHelpers.InfoBox(c,
-                "Your layout saves automatically whenever you make a change.");
-            UIHelpers.InfoBox(c,
-                "It loads back every time you launch the game — no manual save needed.");
-            UIHelpers.InfoBox(c,
-                "Use Reset to go back to the default position, scale and opacity.");
-
-            UIHelpers.Divider(c);
-
             // ── Position ──────────────────────────────────────────────
             UIHelpers.SectionHeader("POSITION", c);
 
@@ -650,6 +644,13 @@ namespace DescendersModMenu.UI
 
             UIHelpers.Divider(c);
 
+            // ── Colour Scheme ────────────────────────────────────────
+            UIHelpers.SectionHeader("COLOUR SCHEME", c);
+            UIHelpers.InfoBox(c, "Pick an accent colour. Applies instantly and saves automatically.");
+            BuildSchemeSwatches(c);
+
+            UIHelpers.Divider(c);
+
             // ── Save / Reset buttons ──────────────────────────────────
             var btnRow = UIHelpers.StatRow("", c);
             UIHelpers.ActionBtn(btnRow.transform, "Save Now",
@@ -679,6 +680,44 @@ namespace DescendersModMenu.UI
 
             UIHelpers.AddScrollForwarders(c);
             RefreshCustomise();
+        }
+
+        // ── Colour scheme swatches ───────────────────────────────────
+        // Rebuilt fresh every time this page is built (which happens on
+        // every RebuildMenu call), so it always reflects the live
+        // ColorSchemeManager.CurrentIndex — no separate refresh needed.
+        private static void BuildSchemeSwatches(Transform c)
+        {
+            var schemes = ColorSchemeManager.Presets;
+            const int perRow = 4;
+            int i = 0;
+            while (i < schemes.Length)
+            {
+                var row = UIHelpers.Obj("SchemeRow" + i, c);
+                var rowLe = row.AddComponent<LayoutElement>();
+                rowLe.preferredHeight = 30; rowLe.minHeight = 30; rowLe.flexibleHeight = 0;
+                var hlg = row.AddComponent<HorizontalLayoutGroup>();
+                hlg.spacing = 6;
+                hlg.childAlignment = TextAnchor.MiddleLeft;
+                hlg.childForceExpandWidth = false;
+                hlg.childForceExpandHeight = true;
+
+                int rowCount = Mathf.Min(perRow, schemes.Length - i);
+                for (int j = 0; j < rowCount; j++)
+                {
+                    int idx = i + j; // captured per-iteration, safe for the lambda below
+                    var s = schemes[idx];
+                    string label = (idx == ColorSchemeManager.CurrentIndex ? "\u2713 " : "") + s.Name;
+                    var swatch = UIHelpers.Btn("Scheme" + idx, row.transform, label,
+                        new Vector2(148, 28), 11,
+                        () => { ColorSchemeManager.SelectScheme(idx); },
+                        s.Accent, UITheme.TextOnBtn);
+                    var swLe = swatch.gameObject.AddComponent<LayoutElement>();
+                    swLe.preferredWidth = 148; swLe.preferredHeight = 28;
+                    swLe.minWidth = 148; swLe.minHeight = 28; swLe.flexibleHeight = 0;
+                }
+                i += perRow;
+            }
         }
 
         private static void RefreshCustomise()

@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "1.3.0";
+        public const string Version = "1.4.0";
         public const string DownloadLink = null;
     }
 
@@ -142,6 +142,10 @@ namespace DescendersModMenu
             // Load key bindings
             try { KeyBindManager.LoadBindings(); MelonLogger.Msg("KeyBindManager.LoadBindings OK."); }
             catch (System.Exception ex) { MelonLogger.Warning("KeyBindManager.LoadBindings: " + ex.Message); }
+
+            // Load colour scheme (applies to UITheme before the menu is ever built)
+            try { UI.ColorSchemeManager.LoadAndApply(); MelonLogger.Msg("ColorSchemeManager.LoadAndApply OK."); }
+            catch (System.Exception ex) { MelonLogger.Warning("ColorSchemeManager.LoadAndApply: " + ex.Message); }
 
             // Check for updates on a background thread
             try { UpdateChecker.CheckAsync(); } catch { }
@@ -332,6 +336,8 @@ namespace DescendersModMenu
             BikeDamage.ClearBoneCache();
             HeadlightsOnly.ClearCache();
             UIRemover.ClearCache();
+            TrailPainter.ClearCache();
+            BigHeadMode.ClearCache();
             // TopSpeed used to call Reset() here, which zeroes SessionTopSpeed AND
             // saves that 0 straight to TopSpeed.txt on disk - permanently wiping the
             // persisted best-speed record on every single level transition within a
@@ -511,6 +517,7 @@ namespace DescendersModMenu
             try { OutfitPage.Tick(); } catch { }
             try { ChatPage.Tick(); } catch { }
             try { InfoPage.Tick(); } catch { }
+            try { FavsPage.Tick(); } catch { }
             if (!OutfitPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.SearchPage.IsQueryFocused)
                 try { SessionTrackers.CheckpointTick(); } catch { }
             try { ModesPage.Tick(); } catch { }
@@ -525,6 +532,7 @@ namespace DescendersModMenu
             try { UI.SearchPage.SearchTick(); } catch { }
             try { GhostPage.Tick(); } catch { }
             try { SlowMoOnBail.Tick(); } catch { }
+            try { ChaosMode.Tick(); } catch { }
             try { ModDetection.TagLocalPlayer(); } catch { }
             if (!OutfitPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.BindsPage.IsListening && !UI.SearchPage.IsQueryFocused)
                 try { KeyBindManager.CheckAll(); } catch (System.Exception ex) { MelonLogger.Error("KeyBindManager.CheckAll: " + ex.Message); }
@@ -551,6 +559,9 @@ namespace DescendersModMenu
             try { WheelSize.Tick(); } catch { }
             try { WideTyres.Tick(); } catch { }
             try { BikeDamage.Tick(); } catch { }
+            try { BigHeadMode.Tick(); } catch { }
+            try { TrailPainter.Tick(); } catch { }
+            try { RandomBikeSwitch.Tick(); } catch { }
             // Vehicle/Cyclist stat mods that need to win the race against the game's
             // own bike-stat init, which runs after a one-time apply and silently
             // clobbers a plain field write (confirmed via scene dump 2026-08-04:

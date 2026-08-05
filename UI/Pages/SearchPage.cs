@@ -193,7 +193,7 @@ namespace DescendersModMenu.UI
 
                     string capturedId = entry.Id;
                     var star = UIHelpers.StarBtn(hdr.transform, capturedId,
-                        () => { FavouritesManager.Toggle(capturedId); });
+                        () => { FavouritesManager.Toggle(capturedId); FavouritesManager.RefreshAllStars(); });
                     FavouritesManager.RegisterStarButton(capturedId, star);
 
                     // ── The mod's real controls - same function Favourites uses ──

@@ -59,17 +59,21 @@ namespace DescendersModMenu.UI
         // No Speed Cap
         private static Image capBg, capBdr; private static Text capTxt;
         // ── Pages ─────────────────────────────────────────────────────
-        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20;
+        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21;
         private static int cur = 1;
 
-        private static readonly int[] PageOrder = { 17, 20, 1, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 3, 19 };
-        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "General", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Info/Customise", "Key Binds" };
-        private static readonly string[] GroupLabels = { null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
+        // Set before RebuildMenu() to reopen on a specific page id (e.g. 3 = Info/Customize)
+        // instead of the default first tab. Consumed (reset to -1) on use.
+        public static int PendingPage = -1;
 
-        private static Image[] _navBars = new Image[18];
-        private static Text[] _navTxts = new Text[18];
-        private static Image[] _navBgs = new Image[18];
-        private static Image[] _activeDots = new Image[18];
+        private static readonly int[] PageOrder = { 17, 20, 1, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 3, 19 };
+        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "General", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Other", "Info/Customize", "Key Binds" };
+        private static readonly string[] GroupLabels = { null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
+
+        private static Image[] _navBars = new Image[19];
+        private static Text[] _navTxts = new Text[19];
+        private static Image[] _navBgs = new Image[19];
+        private static Image[] _activeDots = new Image[19];
         private static UnityEngine.UI.Image _infoTabDot;
 
         public static CanvasGroup RootCanvasGroup { get; private set; }
@@ -87,7 +91,8 @@ namespace DescendersModMenu.UI
             try
             {
                 if (UIHelpers.GetFont() == null) { MelonLogger.Error("Font null"); return null; }
-                cur = 1;
+                cur = (PendingPage >= 0) ? PendingPage : 1;
+                PendingPage = -1;
                 FavouritesManager.ClearStarButtons();
 
                 var cv = new GameObject("DescendersMenu");
@@ -108,8 +113,10 @@ namespace DescendersModMenu.UI
                 RootCanvasGroup = root.AddComponent<CanvasGroup>();
                 RootRT = UIHelpers.RT(root);
 
-                // Border frame — sits behind win, extends 3px beyond so it peeks around edges
-                var frame = UIHelpers.Panel("Frame", root.transform, new Color(0.42f, 0.20f, 0.58f, 1f), UIHelpers.WinSp);
+                // Border frame — sits behind win, extends 3px beyond so it peeks around edges.
+                // Tracks Accent (not BorderWin) so it stays a bright glow ring like the
+                // original hardcoded purple did, instead of the subtle hairline tone.
+                var frame = UIHelpers.Panel("Frame", root.transform, UIHelpers.Accent, UIHelpers.WinSp);
                 frame.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
                 var fRT = UIHelpers.RT(frame);
                 fRT.anchorMin = Vector2.zero; fRT.anchorMax = Vector2.one;
@@ -228,7 +235,7 @@ namespace DescendersModMenu.UI
                 sVlg.childAlignment = TextAnchor.UpperCenter;
                 sVlg.childForceExpandWidth = true; sVlg.childForceExpandHeight = false;
 
-                for (int i = 0; i < 18; i++)
+                for (int i = 0; i < 19; i++)
                 {
                     // ── Group separator ────────────────────────────────
                     if (GroupLabels[i] != null)
@@ -261,7 +268,7 @@ namespace DescendersModMenu.UI
                     barRT.anchorMin = Vector2.zero; barRT.anchorMax = new Vector2(0, 1);
                     barRT.pivot = new Vector2(0, .5f); barRT.offsetMin = Vector2.zero; barRT.offsetMax = new Vector2(3, 0);
                     _navBars[i] = bar.GetComponent<Image>();
-                    var lbl = UIHelpers.Txt("L", item.transform, NavLabels[i], 11, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextMid);
+                    var lbl = UIHelpers.Txt("L", item.transform, NavLabels[i], 11, FontStyle.Bold, TextAnchor.MiddleLeft, UITheme.NavInactiveText);
                     var lblRT = UIHelpers.RT(lbl.gameObject);
                     lblRT.anchorMin = Vector2.zero; lblRT.anchorMax = Vector2.one;
                     lblRT.offsetMin = new Vector2(18, 0); lblRT.offsetMax = Vector2.zero;
@@ -333,6 +340,7 @@ namespace DescendersModMenu.UI
                 pg20 = UIHelpers.Obj("P20", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg20)); SearchPage.CreatePage(pg20.transform);
                 pg18 = UIHelpers.Obj("P18", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg18)); ScreenshotPage.CreatePage(pg18.transform);
                 pg19 = UIHelpers.Obj("P19", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg19)); BindsPage.CreatePage(pg19.transform);
+                pg21 = UIHelpers.Obj("P21", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg21)); OtherPage.CreatePage(pg21.transform);
 
                 RefreshAll(); RefreshTabs();
                 Mods.MenuCustomiser.LoadFromFile();
@@ -819,6 +827,7 @@ namespace DescendersModMenu.UI
                     case 18: return ScreenshotPage.IsAnyActive;
                     case 19: return BindsPage.IsAnyActive;
                     case 20: return false;
+                    case 21: return OtherPage.IsAnyActive;
                     default: return false;
                 }
             }
@@ -826,6 +835,11 @@ namespace DescendersModMenu.UI
         }
 
         private static void Switch(int pg) { cur = pg; RefreshTabs(); }
+
+        // Public wrapper so MenuUI can force the sidebar to a specific
+        // page (e.g. General) on a normal F6/dpad open, independent of
+        // whatever the ColorSchemeManager reopen-on-Customise flow does.
+        public static void GoToPage(int pg) { Switch(pg); }
 
         private static void RefreshTabs()
         {
@@ -844,13 +858,14 @@ namespace DescendersModMenu.UI
             if (pg20) pg20.SetActive(cur == 20);
             if (pg18) pg18.SetActive(cur == 18);
             if (pg19) pg19.SetActive(cur == 19);
+            if (pg21) pg21.SetActive(cur == 21);
 
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < 19; i++)
             {
                 bool on = PageOrder[i] == cur;
                 bool active = IsPageActive(PageOrder[i]);
                 if (_navBars[i]) _navBars[i].color = new Color(0, 0, 0, 0);
-                if (_navTxts[i]) _navTxts[i].color = on ? UIHelpers.Accent : UIHelpers.TextMid;
+                if (_navTxts[i]) _navTxts[i].color = on ? UIHelpers.Accent : UITheme.NavInactiveText;
                 if (_navBgs[i]) _navBgs[i].color = on ? UIHelpers.NavActive : new Color(0, 0, 0, 0);
                 // Show active dot only when tab is not currently selected
                 if (_activeDots[i]) _activeDots[i].enabled = active && !on;

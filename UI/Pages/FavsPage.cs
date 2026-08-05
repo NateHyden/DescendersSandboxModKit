@@ -13,25 +13,37 @@ namespace DescendersModMenu.UI
 
         public static bool IsAnyActive => FavouritesManager.IsAnyActive;
 
-        /// <summary>Mark for rebuild on next tab show — avoids lag spike during star toggle.</summary>
+        /// <summary>Mark for rebuild — the actual rebuild is deferred to Tick()/
+        /// CheckDirty() rather than happening here, since MarkDirty() runs
+        /// synchronously from inside FavouritesManager.Toggle(), which itself
+        /// runs from inside a star Button's own onClick. Calling Rebuild()
+        /// (DestroyImmediate on every row) at that point would destroy the
+        /// very GameObject whose click is still mid-invocation — a real
+        /// Unity footgun, not just theoretical.</summary>
         public static void MarkDirty()
         {
-            // If Favourites tab is currently visible, rebuild now (for un-star UX)
-            if ((object)_contentRoot != null)
-            {
-                Transform t = _contentRoot;
-                bool visible = true;
-                while ((object)t != null)
-                {
-                    if (!t.gameObject.activeSelf) { visible = false; break; }
-                    t = t.parent;
-                }
-                if (visible) { Rebuild(); return; }
-            }
             _dirty = true;
         }
 
-        /// <summary>Called when Favourites tab becomes visible. Rebuilds if needed.</summary>
+        /// <summary>Called every frame from ModEntry.OnUpdate. If dirty AND the
+        /// Favourites tab is currently visible, rebuilds — one frame later
+        /// than the click that caused it, not mid-click, so it still feels
+        /// instant without the DestroyImmediate risk above.</summary>
+        public static void Tick()
+        {
+            if (!_dirty) return;
+            if ((object)_contentRoot == null) return;
+            Transform t = _contentRoot;
+            bool visible = true;
+            while ((object)t != null)
+            {
+                if (!t.gameObject.activeSelf) { visible = false; break; }
+                t = t.parent;
+            }
+            if (visible) { Rebuild(); _dirty = false; }
+        }
+
+        /// <summary>Called when Favourites tab becomes visible via tab-switch. Rebuilds if needed.</summary>
         public static void CheckDirty()
         {
             if (_dirty) { Rebuild(); _dirty = false; }
@@ -75,7 +87,17 @@ namespace DescendersModMenu.UI
 
                 _contentRoot = content.transform;
 
-                Rebuild();
+                // NOT calling Rebuild() here on purpose — CreateMenu() builds
+                // FavsPage (page 17) before some later pages (e.g. OtherPage,
+                // built last) have run their FavouritesManager.Register()
+                // calls, so an immediate Rebuild() here would silently drop
+                // any saved favourite whose owning page hasn't registered
+                // yet ("Skipping unknown ID" — confirmed via log 2026-08-05,
+                // BigHeadMode specifically, an Other-tab mod). Marking dirty
+                // instead defers the real build to the first actual tab
+                // visit, by which point every page — and therefore every
+                // registry entry — has finished building.
+                _dirty = true;
             }
             catch (Exception ex) { MelonLogger.Error("[FavsPage] CreatePage: " + ex); }
             return pg;

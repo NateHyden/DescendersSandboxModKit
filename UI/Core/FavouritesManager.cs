@@ -93,11 +93,29 @@ namespace DescendersModMenu.UI
         // ── Star button colour sync ───────────────────────────────────
         public static void RefreshAllStars()
         {
+            // Wrapped per-entry: SearchPage destroys/rebuilds its rows (and
+            // their star buttons) on every keystroke without unregistering
+            // them here, so a stale/destroyed button can end up sitting in
+            // this dictionary. Without this try/catch, SetStarActive throws
+            // on that one dead reference and aborts the WHOLE loop — which
+            // silently skipped every call site after this one in Toggle(),
+            // including MarkDirty() right below it. That's why favouriting
+            // would sometimes stop updating the Favourites tab entirely
+            // after using Search, confirmed via log 2026-08-05.
+            List<string> stale = null;
             foreach (var kv in _starButtons)
             {
                 if ((object)kv.Value == null) continue;
-                UIHelpers.SetStarActive(kv.Value, IsFavourited(kv.Key));
+                try { UIHelpers.SetStarActive(kv.Value, IsFavourited(kv.Key)); }
+                catch (Exception ex)
+                {
+                    MelonLogger.Warning("[Favs] RefreshAllStars: stale star button for '" + kv.Key + "' — " + ex.Message);
+                    if (stale == null) stale = new List<string>();
+                    stale.Add(kv.Key);
+                }
             }
+            if (stale != null)
+                for (int i = 0; i < stale.Count; i++) _starButtons.Remove(stale[i]);
         }
 
         // ── Queries ───────────────────────────────────────────────────

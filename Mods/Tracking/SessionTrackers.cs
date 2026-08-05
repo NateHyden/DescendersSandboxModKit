@@ -110,6 +110,7 @@ namespace DescendersModMenu.Mods
                 if (idx > _lastCpIndex)
                 {
                     CheckpointCount += 1;
+                    RandomMutatorOnCheckpoint.OnCheckpoint();
                 }
                 else if (idx == 0 && _lastCpIndex > 0)
                 {
@@ -263,6 +264,7 @@ namespace DescendersModMenu.Mods
                         float airtime = Time.unscaledTime - _currentAirtimeStart;
                         if (airtime > LongestAirtime)
                             LongestAirtime = airtime;
+                        ConfettiOnTrick.OnLanded(airtime);
                     }
                     _currentAirtimeStart = -1f;
                 }
