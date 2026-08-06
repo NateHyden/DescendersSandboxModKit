@@ -53,9 +53,9 @@ namespace DescendersModMenu.UI
         private static RectTransform _brakeKnob = null;
         private static Image _brakeLevelBar = null;
         private static Text _brakeLevelVal = null;
-        private static Text smobVal, nswVal;
-        private static Image smobTrack, nswTrack;
-        private static RectTransform smobKnob, nswKnob;
+        private static Text smobVal, nswVal, compassVal;
+        private static Image smobTrack, nswTrack, compassTrack;
+        private static RectTransform smobKnob, nswKnob, compassKnob;
         // No Speed Cap
         private static Image capBg, capBdr; private static Text capTxt;
         // ── Pages ─────────────────────────────────────────────────────
@@ -526,6 +526,15 @@ namespace DescendersModMenu.UI
             nswVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.Toggle(nswr.transform, "NwT", () => { GameModifierMods.NoSpeedWobblesToggle(); RefreshAll(); }, out nswTrack, out nswKnob);
 
+            // ── Show Compass ───────────────────────────────────────────
+            // Native finish-line compass, normally only shown via the "Show
+            // Compass" Blue crew member perk (or on NoPath maps) — forces it
+            // on regardless of which crew members the player has picked up.
+            var compassRow = UIHelpers.StatRow("Show Compass", pg);
+            compassVal = UIHelpers.Txt("CmpV", compassRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            compassVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(compassRow.transform, "CmpT", () => { CompassAlwaysOn.Toggle(); RefreshAll(); }, out compassTrack, out compassKnob);
+
             // ── QUICK ACTIONS ─────────────────────────────────────────
             UIHelpers.Divider(pg);
             UIHelpers.SectionHeader("QUICK ACTIONS", pg);
@@ -966,6 +975,11 @@ namespace DescendersModMenu.UI
             bool nsw = GameModifierMods.NoSpeedWobblesEnabled;
             if (nswVal) { nswVal.text = nsw ? "ON" : "OFF"; nswVal.color = nsw ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(nswTrack, nswKnob, nsw);
+
+            // ── Show Compass ──────────────────────────────────────────
+            bool compass = CompassAlwaysOn.Enabled;
+            if (compassVal) { compassVal.text = compass ? "ON" : "OFF"; compassVal.color = compass ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(compassTrack, compassKnob, compass);
 
             // ── Speedrun Timer ────────────────────────────────────────
             // ── Session live values ───────────────────────────────────

@@ -13,6 +13,7 @@ namespace DescendersModMenu
     {
         public string[] ModIds  = new string[0];
         public int[]    KeyCodes = new int[0];
+        public int      MenuOpenCode = -2; // KeyBindManager.CtrlDPadDown
     }
 
     public static class KeyBindManager
@@ -71,6 +72,102 @@ namespace DescendersModMenu
         // ── Live binding state (sized in SetDefaults) ─────────────────────
         private static int[] _keyCodes = new int[0];
 
+        // ── Controller-button binding for opening the menu ─────────────────
+        // Negative sentinels — KeyCode values are never negative, so this
+        // shares the same "int code" concept without any collision risk.
+        // Only covers digital buttons InControl exposes as discrete WasPressed
+        // controls — D-Pad and both triggers are NOT real Unity KeyCodes on
+        // Xinput controllers, which is why menu-open couldn't be rebound before.
+        public const int CtrlDPadUp = -1, CtrlDPadDown = -2, CtrlDPadLeft = -3, CtrlDPadRight = -4;
+        public const int CtrlA = -5, CtrlB = -6, CtrlX = -7, CtrlY = -8;
+        public const int CtrlLB = -9, CtrlRB = -10, CtrlLT = -11, CtrlRT = -12;
+        public const int CtrlLSB = -13, CtrlRSB = -14;
+
+        public static readonly int[] ControllerCodes = new int[]
+        {
+            CtrlDPadUp, CtrlDPadDown, CtrlDPadLeft, CtrlDPadRight,
+            CtrlA, CtrlB, CtrlX, CtrlY,
+            CtrlLB, CtrlRB, CtrlLT, CtrlRT,
+            CtrlLSB, CtrlRSB
+        };
+
+        public static string ControllerName(int code)
+        {
+            switch (code)
+            {
+                case CtrlDPadUp:    return "D-Pad Up";
+                case CtrlDPadDown:  return "D-Pad Down";
+                case CtrlDPadLeft:  return "D-Pad Left";
+                case CtrlDPadRight: return "D-Pad Right";
+                case CtrlA:  return "A / Cross";
+                case CtrlB:  return "B / Circle";
+                case CtrlX:  return "X / Square";
+                case CtrlY:  return "Y / Triangle";
+                case CtrlLB: return "Left Bumper";
+                case CtrlRB: return "Right Bumper";
+                case CtrlLT: return "Left Trigger";
+                case CtrlRT: return "Right Trigger";
+                case CtrlLSB: return "Left Stick Click";
+                case CtrlRSB: return "Right Stick Click";
+                default: return "\u2014";
+            }
+        }
+
+        public static bool IsControllerPressed(int code)
+        {
+            try
+            {
+                var dev = InControl.InputManager.ActiveDevice;
+                if ((object)dev == null) return false;
+                switch (code)
+                {
+                    case CtrlDPadUp:    return dev.DPadUp.WasPressed;
+                    case CtrlDPadDown:  return dev.DPadDown.WasPressed;
+                    case CtrlDPadLeft:  return dev.DPadLeft.WasPressed;
+                    case CtrlDPadRight: return dev.DPadRight.WasPressed;
+                    case CtrlA:  return dev.Action1.WasPressed;
+                    case CtrlB:  return dev.Action2.WasPressed;
+                    case CtrlX:  return dev.Action3.WasPressed;
+                    case CtrlY:  return dev.Action4.WasPressed;
+                    case CtrlLB: return dev.LeftBumper.WasPressed;
+                    case CtrlRB: return dev.RightBumper.WasPressed;
+                    case CtrlLT: return dev.LeftTrigger.WasPressed;
+                    case CtrlRT: return dev.RightTrigger.WasPressed;
+                    case CtrlLSB: return dev.LeftStickButton.WasPressed;
+                    case CtrlRSB: return dev.RightStickButton.WasPressed;
+                    default: return false;
+                }
+            }
+            catch (Exception ex) { MelonLogger.Warning("[KeyBindManager] IsControllerPressed(" + code + "): " + ex.Message); return false; }
+        }
+
+        public static bool AnyControllerPressed(out int code)
+        {
+            for (int i = 0; i < ControllerCodes.Length; i++)
+            {
+                if (IsControllerPressed(ControllerCodes[i])) { code = ControllerCodes[i]; return true; }
+            }
+            code = 0;
+            return false;
+        }
+
+        private static int _menuOpenCode = CtrlDPadDown;
+        private static bool _skipMenuOpenCheck = false;
+
+        public static int  GetMenuOpenCode()          { return _menuOpenCode; }
+        public static void SetMenuOpenCode(int code)  { _menuOpenCode = code; }
+        public static void SkipMenuOpenCheck()        { _skipMenuOpenCheck = true; }
+
+        // Deliberately NOT routed through CheckAll()/FireMod() — menu-open must
+        // keep working even while OutfitPage/ChatPage/MapPage/etc. have input
+        // focus (those guard CheckAll()), otherwise controller-only players
+        // could get stuck unable to close the menu from a focused text field.
+        public static bool CheckMenuOpenPressed()
+        {
+            if (_skipMenuOpenCheck) { _skipMenuOpenCheck = false; return false; }
+            return _menuOpenCode != 0 && IsControllerPressed(_menuOpenCode);
+        }
+
         private static readonly string SaveFolder = Path.Combine(
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UserData"),
             "DescendersModMenu");
@@ -83,6 +180,7 @@ namespace DescendersModMenu
             int slotF2 = IndexOf("SlowMotion");    if (slotF2 >= 0) _keyCodes[slotF2] = (int)KeyCode.F2;
             int slotF3 = IndexOf("GhostToggle");   if (slotF3 >= 0) _keyCodes[slotF3] = (int)KeyCode.F3;
             int slotF4 = IndexOf("GhostSave");     if (slotF4 >= 0) _keyCodes[slotF4] = (int)KeyCode.F4;
+            _menuOpenCode = CtrlDPadDown;
         }
 
         public static int     GetKey(int slot)     { return slot >= 0 && slot < _keyCodes.Length ? _keyCodes[slot] : (int)KeyCode.None; }
@@ -126,8 +224,9 @@ namespace DescendersModMenu
                 if (!Directory.Exists(SaveFolder)) Directory.CreateDirectory(SaveFolder);
                 var data = new BindingsData
                 {
-                    ModIds   = (string[])ModIds.Clone(),
-                    KeyCodes = (int[])_keyCodes.Clone()
+                    ModIds       = (string[])ModIds.Clone(),
+                    KeyCodes     = (int[])_keyCodes.Clone(),
+                    MenuOpenCode = _menuOpenCode
                 };
                 File.WriteAllText(Path.Combine(SaveFolder, SaveFileName), JsonUtility.ToJson(data, true));
                 MelonLogger.Msg("[KeyBindManager] Saved " + ModIds.Length + " bindings.");
@@ -151,7 +250,8 @@ namespace DescendersModMenu
                     if (slot < 0) continue;
                     if (fi < data.KeyCodes.Length) { _keyCodes[slot] = data.KeyCodes[fi]; loaded++; }
                 }
-                MelonLogger.Msg("[KeyBindManager] Loaded " + loaded + " bindings from file.");
+                if (data.MenuOpenCode != 0) _menuOpenCode = data.MenuOpenCode;
+                MelonLogger.Msg("[KeyBindManager] Loaded " + loaded + " bindings from file. MenuOpenCode=" + _menuOpenCode);
             }
             catch (Exception ex) { MelonLogger.Error("[KeyBindManager] LoadBindings: " + ex.Message); }
         }

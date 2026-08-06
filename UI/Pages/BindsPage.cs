@@ -11,8 +11,9 @@ namespace DescendersModMenu.UI
         private static int _conflictSlot  = -1;
         private static int _conflictWith  = -1;
         private static KeyCode _conflictKey = KeyCode.None;
+        private static bool _listeningMenuOpen = false;
 
-        public static bool IsListening { get { return _listeningSlot >= 0 || _conflictSlot >= 0; } }
+        public static bool IsListening { get { return _listeningSlot >= 0 || _conflictSlot >= 0 || _listeningMenuOpen; } }
         public static bool IsAnyActive { get { return false; } }
 
         private static Transform _contentRoot;
@@ -71,6 +72,10 @@ namespace DescendersModMenu.UI
                 for (int i = _contentRoot.childCount - 1; i >= 0; i--)
                     UnityEngine.Object.DestroyImmediate(_contentRoot.GetChild(i).gameObject);
 
+                UIHelpers.SectionHeader("MENU ACCESS", _contentRoot);
+                BuildMenuOpenRow();
+                UIHelpers.Divider(_contentRoot);
+
                 UIHelpers.SectionHeader("KEY BINDINGS", _contentRoot);
 
                 var hint = UIHelpers.StatRow("", _contentRoot);
@@ -103,6 +108,33 @@ namespace DescendersModMenu.UI
             catch (Exception ex) { MelonLogger.Error("[BindsPage] Rebuild: " + ex.Message); }
         }
 
+        private static void BuildMenuOpenRow()
+        {
+            var row = UIHelpers.StatRow("Open Menu (Controller)", _contentRoot);
+            if (_listeningMenuOpen)
+            {
+                UIHelpers.SetRowActive(row, true);
+                var promptTxt = UIHelpers.Txt("MOP", row.transform, "Press any controller button\u2026",
+                    11, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
+                promptTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 160;
+                UIHelpers.ActionBtn(row.transform, "ESC", () => { _listeningMenuOpen = false; Rebuild(); }, 40);
+            }
+            else
+            {
+                int code = KeyBindManager.GetMenuOpenCode();
+                string name = KeyBindManager.ControllerName(code);
+                var keyTxt = UIHelpers.Txt("MOK", row.transform, name,
+                    11, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
+                keyTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 120;
+                UIHelpers.ActionBtn(row.transform, "BIND", () =>
+                {
+                    _listeningSlot = -1; ClearConflict();
+                    _listeningMenuOpen = true;
+                    Rebuild();
+                }, 40);
+            }
+        }
+
         private static void BuildNormalRow(string label, int slot, KeyCode current)
         {
             var row = UIHelpers.StatRow(label, _contentRoot);
@@ -115,6 +147,7 @@ namespace DescendersModMenu.UI
 
             UIHelpers.ActionBtn(row.transform, "BIND", () =>
             {
+                _listeningMenuOpen = false;
                 _listeningSlot = slot; _conflictSlot = -1; _conflictWith = -1; _conflictKey = KeyCode.None;
                 Rebuild();
             }, 40);
@@ -167,8 +200,30 @@ namespace DescendersModMenu.UI
             UIHelpers.ActionBtnOrange(row.transform, "CANCEL", () => { ClearConflict(); Rebuild(); }, 52);
         }
 
+        public static void CheckController()
+        {
+            if (!_listeningMenuOpen) return;
+            int code;
+            if (!KeyBindManager.AnyControllerPressed(out code)) return;
+
+            KeyBindManager.SetMenuOpenCode(code);
+            KeyBindManager.SaveBindings();
+            KeyBindManager.SkipMenuOpenCheck();
+            _listeningMenuOpen = false;
+            Rebuild();
+        }
+
         public static void OnGUI()
         {
+            if (_listeningMenuOpen)
+            {
+                var mEv = Event.current;
+                if (mEv != null && mEv.type == EventType.KeyDown && mEv.keyCode == KeyCode.Escape)
+                {
+                    mEv.Use(); _listeningMenuOpen = false; Rebuild();
+                }
+                return;
+            }
             if (_listeningSlot < 0) return;
             var ev = Event.current;
             if (ev == null || ev.type != EventType.KeyDown) return;

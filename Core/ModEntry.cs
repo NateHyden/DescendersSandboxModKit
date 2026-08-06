@@ -105,6 +105,8 @@ namespace DescendersModMenu
             catch (System.Exception ex) { MelonLogger.Error("NoBail.ApplyPatch: " + ex.Message); }
             try { SlowMoOnBail.ApplyPatch(harmony); }
             catch (System.Exception ex) { MelonLogger.Error("SlowMoOnBail.ApplyPatch: " + ex.Message); }
+            try { CompassAlwaysOn.ApplyPatch(harmony); DiagnosticsManager.Report("CompassAlwaysOn", true); }
+            catch (System.Exception ex) { MelonLogger.Error("CompassAlwaysOn.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("CompassAlwaysOn", false, ex.Message); }
             try { OutfitPresets.Init(); }
             catch (System.Exception ex) { MelonLogger.Error("OutfitPresets.Init: " + ex.Message); }
             try { ModChat.Init(); }
@@ -183,6 +185,17 @@ namespace DescendersModMenu
         public override void OnSceneWasUnloaded(int buildIndex, string sceneName)
         {
             MelonLogger.Msg("OnSceneWasUnloaded: " + buildIndex + " | " + sceneName);
+
+            // MenuWindow.CreateMenu() builds a plain GameObject with no
+            // DontDestroyOnLoad, so Unity destroys the whole menu (and every
+            // star button) on scene load. FavouritesManager's _starButtons
+            // dict doesn't find out until RefreshAllStars() hits a dead ref
+            // and self-heals one warning at a time — clear it here instead so
+            // there's nothing stale left for the post-reapply RefreshAll() to
+            // trip over. CreateMenu() re-populates it fresh next time the
+            // menu is actually built, so this is a pure no-op if it isn't.
+            try { FavouritesManager.ClearStarButtons(); } catch { }
+            try { CompassAlwaysOn.ClearCache(); } catch { }
 
             // -- GUARD: intermediate scene (e.g. EmptyScene) --
             // If a reapply is already pending, this is a transition scene.
@@ -500,9 +513,10 @@ namespace DescendersModMenu
                     if (GhostReplay.IsRecording && GhostReplay.RecordedFrames >= 30) { GhostReplay.SaveRun(); GhostPage.RefreshAll(); }
                 }
                 if (!UI.BindsPage.IsListening && (Input.GetKeyDown(KeyCode.F6)
-                    || InControl.InputManager.ActiveDevice.DPadDown.WasPressed)) MenuUI.ToggleMenu();
+                    || KeyBindManager.CheckMenuOpenPressed())) MenuUI.ToggleMenu();
             }
             catch (System.Exception ex) { MelonLogger.Error("ToggleMenu: " + ex.Message); }
+            try { UI.BindsPage.CheckController(); } catch (System.Exception ex) { MelonLogger.Error("BindsPage.CheckController: " + ex.Message); }
 
             try { SceneDumper.CheckHotkey(); } catch (System.Exception ex) { MelonLogger.Error("SceneDumper: " + ex.Message); }
             try { SpeedWatcher.CheckHotkey(); } catch (System.Exception ex) { MelonLogger.Error("SpeedWatcher: " + ex.Message); }
