@@ -87,7 +87,7 @@ namespace DescendersModMenu.Mods
             if (!Enabled) return;
             try
             {
-                GameObject player = GameObject.Find("Player_Human");
+                GameObject player = PlayerCache.PlayerHuman;
                 if ((object)player == null) return;
                 Vehicle vehicle = player.GetComponent<Vehicle>();
                 if ((object)vehicle == null) return;

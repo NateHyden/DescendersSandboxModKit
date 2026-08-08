@@ -187,6 +187,7 @@
     <Compile Include="Mods\System\ScreenshotMode.cs" />
     <Compile Include="Mods\System\CompassAlwaysOn.cs" />
     <Compile Include="Mods\System\PerkMenu.cs" />
+    <Compile Include="Mods\System\PlayerCache.cs" />
     <Compile Include="Mods\System\SlowMotion.cs" />
     <Compile Include="Mods\System\SteamPlayerCount.cs" />
     <Compile Include="Mods\System\TeleportToCheckpoint.cs" />

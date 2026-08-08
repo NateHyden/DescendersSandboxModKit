@@ -216,6 +216,7 @@ namespace DescendersModMenu
             // menu is actually built, so this is a pure no-op if it isn't.
             try { FavouritesManager.ClearStarButtons(); } catch { }
             try { CompassAlwaysOn.ClearCache(); } catch { }
+            try { PlayerCache.Clear(); } catch { }
 
             // -- GUARD: intermediate scene (e.g. EmptyScene) --
             // If a reapply is already pending, this is a transition scene.
@@ -628,7 +629,11 @@ namespace DescendersModMenu
         public override void OnLateUpdate()
         {
             try { FOV.Apply(); } catch (System.Exception ex) { MelonLogger.Error("FOV.Apply: " + ex.Message); Telemetry.ReportErrorAsync(ex, "FOV"); }
-            try { SkyColours.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SkyColours.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SkyColours"); }
+            // Storm tick only — early-out inside is cheap, but skip the call when idle.
+            if (SkyColours.StormEnabled)
+            {
+                try { SkyColours.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SkyColours.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SkyColours"); }
+            }
             try { DrunkMode.LateTick(); } catch { }
             try { SpectateMode.LateTick(); } catch { }
             try { WheelSize.Tick(); } catch { }

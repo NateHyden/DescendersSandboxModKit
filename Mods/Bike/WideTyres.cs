@@ -25,7 +25,11 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             if (!Enabled)
+            {
                 ResetBones(); // snap back to 1x width on disable
+                _tickFront = null;
+                _tickBack = null;
+            }
             else
                 Apply();     // apply current level on enable
             MelonLogger.Msg("[WideTyres] -> " + (Enabled ? "ON" : "OFF"));
@@ -53,33 +57,43 @@ namespace DescendersModMenu.Mods
 
         public static void SetLevel(int v) { Level = System.Math.Max(1, System.Math.Min(20, v)); }
 
-        // Called from OnLateUpdate every frame ó reapplies after BikeModel Animation component runs.
+        // Called from OnLateUpdate every frame ù reapplies after BikeModel Animation component runs.
         // Reads Y scale (set by WheelSizeTick in Update) to preserve wheel size while adding width.
         public static void Tick()
         {
             if (!Enabled) return;
             try
             {
-                // Silent check ó don't spam warnings every frame before player spawns
-                if ((object)GameObject.Find("Player_Human") == null) return;
-                Transform frontBone, backBone;
-                if (!GetBones(out frontBone, out backBone)) return;
-                float w = Width;
-                if ((object)frontBone != null)
+                // Cache bones after first resolve ù Find + reflection every LateUpdate
+                // is painful on large open maps.
+                if ((object)_tickFront == null || (object)_tickBack == null
+                    || _tickFront == null || _tickBack == null)
                 {
-                    float bs = frontBone.localScale.y;
-                    if (bs <= 0f) bs = 1f;
-                    frontBone.localScale = new Vector3(w * bs, bs, bs);
+                    Transform frontBone, backBone;
+                    if (!GetBones(out frontBone, out backBone)) return;
+                    _tickFront = frontBone;
+                    _tickBack = backBone;
                 }
-                if ((object)backBone != null)
+
+                float w = Width;
+                if ((object)_tickFront != null && _tickFront != null)
                 {
-                    float bs = backBone.localScale.y;
+                    float bs = _tickFront.localScale.y;
                     if (bs <= 0f) bs = 1f;
-                    backBone.localScale = new Vector3(w * bs, bs, bs);
+                    _tickFront.localScale = new Vector3(w * bs, bs, bs);
+                }
+                if ((object)_tickBack != null && _tickBack != null)
+                {
+                    float bs = _tickBack.localScale.y;
+                    if (bs <= 0f) bs = 1f;
+                    _tickBack.localScale = new Vector3(w * bs, bs, bs);
                 }
             }
             catch { }
         }
+
+        private static Transform _tickFront;
+        private static Transform _tickBack;
         public static void Apply()
         {
             try
@@ -115,7 +129,7 @@ namespace DescendersModMenu.Mods
             {
                 Transform frontBone, backBone;
                 if (!GetBones(out frontBone, out backBone)) return;
-                // Preserve wheel size scale (Y) when resetting width ó only reset X back to match Y/Z
+                // Preserve wheel size scale (Y) when resetting width ù only reset X back to match Y/Z
                 if ((object)frontBone != null)
                 {
                     float bs = frontBone.localScale.y;
@@ -140,7 +154,7 @@ namespace DescendersModMenu.Mods
             frontBone = null;
             backBone = null;
 
-            GameObject player = GameObject.Find("Player_Human");
+            GameObject player = PlayerCache.PlayerHuman;
             if ((object)player == null)
             {
                 MelonLogger.Warning("[WideTyres] Player_Human not found.");
@@ -202,6 +216,8 @@ namespace DescendersModMenu.Mods
             // Just clear the cached field refs so they get re-resolved in the new scene.
             _backBoneField = null;
             _frontBoneField = null;
+            _tickFront = null;
+            _tickBack = null;
         }
     }
 }

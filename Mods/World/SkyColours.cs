@@ -726,6 +726,10 @@ namespace DescendersModMenu.Mods
 
         private static EffectList[] _cachedEffectLists = null;
         private static float _effectListCacheTime = -999f;
+        private static float _lastStormForceTime = -999f;
+        private static object[] _stormArgsCache;
+        private static object[] _normalArgsCache;
+        private const float StormForceInterval = 0.5f;
 
         public static void TickStorm(ref System.Type efhType, ref MethodInfo setEnvFlag)
         {
@@ -737,48 +741,63 @@ namespace DescendersModMenu.Mods
                         BindingFlags.Public | BindingFlags.Instance);
                 if ((object)setEnvFlag == null) return;
 
+                // Big open maps have hundreds of EffectLists — forcing flags every
+                // LateUpdate with fresh allocations was a major FPS hit. Refresh
+                // the list occasionally; re-apply env flags at a low rate.
                 if ((object)_cachedEffectLists == null || Time.time - _effectListCacheTime > 5f)
                 {
                     _cachedEffectLists = Object.FindObjectsOfType<EffectList>();
                     _effectListCacheTime = Time.time;
                 }
 
+                if (Time.time - _lastStormForceTime < StormForceInterval)
+                {
+                    // Still keep rain emission in sync cheaply every frame.
+                    ApplyCachedRainEmission();
+                    return;
+                }
+                _lastStormForceTime = Time.time;
+
                 if ((object)efhType == null)
                     efhType = setEnvFlag.GetParameters()[0].ParameterType;
                 if ((object)efhType == null) return;
 
-                object stormVal = System.Enum.ToObject(efhType, 7);
-                object normalVal = System.Enum.ToObject(efhType, 4);
+                if ((object)_stormArgsCache == null || (object)_normalArgsCache == null)
+                {
+                    _stormArgsCache = new object[] { System.Enum.ToObject(efhType, 7), true };
+                    _normalArgsCache = new object[] { System.Enum.ToObject(efhType, 4), false };
+                }
 
                 for (int i = 0; i < _cachedEffectLists.Length; i++)
                 {
                     try
                     {
-                        setEnvFlag.Invoke(_cachedEffectLists[i], new object[] { stormVal, true });
-                        setEnvFlag.Invoke(_cachedEffectLists[i], new object[] { normalVal, false });
+                        setEnvFlag.Invoke(_cachedEffectLists[i], _stormArgsCache);
+                        setEnvFlag.Invoke(_cachedEffectLists[i], _normalArgsCache);
                     }
                     catch { }
                 }
 
-                // Apply emission rate multiplier to cached PS
-                // Don't force-enable — game's LateUpdate handles that via env flags
-                if ((object)_cachedRainPS != null && _cachedRainPS.Length > 0)
-                {
-                    float mult = RainMultipliers[RainIntensityLevel - 1];
-                    for (int i = 0; i < _cachedRainPS.Length; i++)
-                    {
-                        if ((object)_cachedRainPS[i] == null) continue;
-                        try
-                        {
-                            var em = _cachedRainPS[i].emission;
-                            if (em.enabled)
-                                em.rateOverTime = _defaultEmissionRates[i] * mult;
-                        }
-                        catch { }
-                    }
-                }
+                ApplyCachedRainEmission();
             }
             catch { }
+        }
+
+        private static void ApplyCachedRainEmission()
+        {
+            if ((object)_cachedRainPS == null || _cachedRainPS.Length == 0) return;
+            float mult = RainMultipliers[RainIntensityLevel - 1];
+            for (int i = 0; i < _cachedRainPS.Length; i++)
+            {
+                if ((object)_cachedRainPS[i] == null) continue;
+                try
+                {
+                    var em = _cachedRainPS[i].emission;
+                    if (em.enabled)
+                        em.rateOverTime = _defaultEmissionRates[i] * mult;
+                }
+                catch { }
+            }
         }
 
         public static void Reset()
@@ -791,6 +810,9 @@ namespace DescendersModMenu.Mods
             RainIntensityLevel = 5;
             _cachedRainPS = null;
             _defaultEmissionRates = null;
+            _cachedEffectLists = null;
+            _stormArgsCache = null;
+            _normalArgsCache = null;
             _elFieldsResolved = false;
             _elEnvFlagsField = null;
             _elLtpField = null;
