@@ -358,7 +358,7 @@ namespace DescendersModMenu.Mods
                     if ((object)hf == null) break;
                     _defaultHour = (float)hf.GetValue(cycle);
                     _defaultsCaptured = true;
-                    MelonLogger.Msg("[SkyColours] Captured default hour=" + _defaultHour);
+                    ModLog.Debug("[SkyColours] Captured default hour=" + _defaultHour);
                     break;
                 }
                 if (!_defaultsCaptured)
@@ -385,7 +385,7 @@ namespace DescendersModMenu.Mods
             if (_defaultsCaptured)
                 SetTODHour(_defaultHour);
             _skyComp = null; // clear cache so next SetTODHour re-finds the component
-            MelonLogger.Msg("[SkyColours] Restored default (preset=0, hour=" + (_defaultsCaptured ? _defaultHour : -1f) + ")");
+            ModLog.Debug("[SkyColours] Restored default (preset=0, hour=" + (_defaultsCaptured ? _defaultHour : -1f) + ")");
         }
 
         // Used by Save/Load — stores the preset index without touching the game world
@@ -426,7 +426,7 @@ namespace DescendersModMenu.Mods
                 MethodInfo postfix = typeof(SkyColours_Patch).GetMethod("Postfix",
                     BindingFlags.Public | BindingFlags.Static);
                 harmony.Patch(lateUpdate, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[SkyColours] [1/4] Patched TOD_Sky.LateUpdate.");
+                ModLog.Debug("[SkyColours] [1/4] Patched TOD_Sky.LateUpdate.");
                 patchCount++;
             }
             catch (System.Exception ex)
@@ -445,11 +445,11 @@ namespace DescendersModMenu.Mods
                         BindingFlags.Public | BindingFlags.Static);
                     MethodInfo tljPostfix = typeof(SkyColours_TLJPatch).GetMethod("Postfix",
                         BindingFlags.Public | BindingFlags.Static);
-                    MelonLogger.Msg("[SkyColours] [2/4] TLJ found. prefix=" + ((object)tljPrefix != null) + " postfix=" + ((object)tljPostfix != null));
+                    ModLog.Debug("[SkyColours] [2/4] TLJ found. prefix=" + ((object)tljPrefix != null) + " postfix=" + ((object)tljPostfix != null));
                     harmony.Patch(tljMethod,
                         prefix: new HarmonyMethod(tljPrefix),
                         postfix: new HarmonyMethod(tljPostfix));
-                    MelonLogger.Msg("[SkyColours] [2/4] Patched EffectList.TLJ (prefix+postfix).");
+                    ModLog.Debug("[SkyColours] [2/4] Patched EffectList.TLJ (prefix+postfix).");
                     patchCount++;
                 }
                 else
@@ -470,7 +470,7 @@ namespace DescendersModMenu.Mods
                     MethodInfo elPostfix = typeof(SkyColours_EffectListPatch).GetMethod("Postfix",
                         BindingFlags.Public | BindingFlags.Static);
                     harmony.Patch(elLateUpdate, postfix: new HarmonyMethod(elPostfix));
-                    MelonLogger.Msg("[SkyColours] [3/4] Patched EffectList.LateUpdate (storm enforcement).");
+                    ModLog.Debug("[SkyColours] [3/4] Patched EffectList.LateUpdate (storm enforcement).");
                     patchCount++;
                 }
                 else
@@ -491,7 +491,7 @@ namespace DescendersModMenu.Mods
                     MethodInfo uesPostfix = typeof(SkyColours_UpdateEnvPatch).GetMethod("Postfix",
                         BindingFlags.Public | BindingFlags.Static);
                     harmony.Patch(uesMethod, postfix: new HarmonyMethod(uesPostfix));
-                    MelonLogger.Msg("[SkyColours] [4/4] Patched EffectList.UpdateEnvironmentStates.");
+                    ModLog.Debug("[SkyColours] [4/4] Patched EffectList.UpdateEnvironmentStates.");
                     patchCount++;
                 }
                 else
@@ -502,7 +502,7 @@ namespace DescendersModMenu.Mods
                 MelonLogger.Error("[SkyColours] [4/4] UES patch FAILED: " + ex.Message);
             }
 
-            MelonLogger.Msg("[SkyColours] Patch complete: " + patchCount + "/4 succeeded.");
+            ModLog.Debug("[SkyColours] Patch complete: " + patchCount + "/4 succeeded.");
             DiagnosticsManager.Report("SkyColours", patchCount >= 2);
         }
 
@@ -539,7 +539,7 @@ namespace DescendersModMenu.Mods
                 CaptureSceneDefaults();
             CurrentPreset = index;
             SetTODHour(TODHours[index]);
-            MelonLogger.Msg("[SkyColours] Preset -> " + PresetNames[index]);
+            ModLog.Feedback("[SkyColours] Preset -> " + PresetNames[index]);
         }
 
         public static void ToggleStorm()
@@ -550,7 +550,7 @@ namespace DescendersModMenu.Mods
                 CreateRain();
             else
                 DestroyRain();
-            MelonLogger.Msg("[SkyColours] Storm -> " + (StormEnabled ? "ON" : "OFF"));
+            ModLog.Feedback("[SkyColours] Storm -> " + (StormEnabled ? "ON" : "OFF"));
         }
 
         private static VisualModifier _originalModifier = VisualModifier.None;
@@ -667,7 +667,7 @@ namespace DescendersModMenu.Mods
                 _cachedEffectLists = allEffectLists;
                 _effectListCacheTime = Time.time;
 
-                MelonLogger.Msg("[SkyColours] Storm -> " + (StormEnabled ? "ON" : "OFF")
+                ModLog.Feedback("[SkyColours] Storm -> " + (StormEnabled ? "ON" : "OFF")
                     + " | world=" + ceWorld + " mod=" + targetModifier
                     + " | lists=" + allEffectLists.Length
                     + " | spawnMethod=" + ((object)spawnEffects != null));

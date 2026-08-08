@@ -61,7 +61,7 @@ namespace DescendersModMenu.Mods
             // Level maps: 1=10%, 2=20% ... 6=60% ... 11=100% front share
             _frontBrakeShare = _balanceLevel * 0.10f;
             _rearBrakeShare = 1f - _frontBrakeShare;
-            MelonLogger.Msg("[BrakeBalance] Level=" + _balanceLevel
+            ModLog.Debug("[BrakeBalance] Level=" + _balanceLevel
                 + " Front=" + (_frontBrakeShare * 100f).ToString("F0") + "%"
                 + " Rear=" + (_rearBrakeShare * 100f).ToString("F0") + "%");
         }
@@ -143,7 +143,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             if (!Enabled) { FrontTemp = 0f; RearTemp = 0f; }
-            MelonLogger.Msg("[BrakeFade] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[BrakeFade] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void ClearCache()
@@ -161,12 +161,12 @@ namespace DescendersModMenu.Mods
             _frontFailTime = -999f;
             _rearFailTime = -999f;
             BrakeFade_Patch.ClearCache();
-            MelonLogger.Msg("[BrakeFade] Cache cleared.");
+            ModLog.Debug("[BrakeFade] Cache cleared.");
         }
 
         public static void Reset()
         {
-            if (Enabled) MelonLogger.Msg("[BrakeFade] Reset -> OFF");
+            if (Enabled) ModLog.Feedback("[BrakeFade] Reset -> OFF");
             Enabled = false;
             _balanceLevel = 6;
             _frontBrakeShare = 0.60f;
@@ -188,7 +188,7 @@ namespace DescendersModMenu.Mods
                     "Postfix", BindingFlags.Public | BindingFlags.Static);
 
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[BrakeFade] Patched VehicleController.FixedUpdate.");
+                ModLog.Debug("[BrakeFade] Patched VehicleController.FixedUpdate.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[BrakeFade] ApplyPatch: " + ex.Message); }
         }

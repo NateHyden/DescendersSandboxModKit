@@ -4,6 +4,7 @@ using System.IO;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
+using DescendersModMenu.Mods;
 
 namespace DescendersModMenu.UI
 {
@@ -154,13 +155,13 @@ namespace DescendersModMenu.UI
             {
                 _favourites.Remove(id);
                 _orderedFavs.Remove(id);
-                MelonLogger.Msg("[Favs] Removed: " + id);
+                ModLog.Debug("[Favs] Removed: " + id);
             }
             else
             {
                 _favourites[id] = 0;
                 _orderedFavs.Add(id);
-                MelonLogger.Msg("[Favs] Added: " + id);
+                ModLog.Debug("[Favs] Added: " + id);
             }
             SaveToFile();
             RefreshAllStars();
@@ -172,7 +173,7 @@ namespace DescendersModMenu.UI
         {
             _favourites.Clear();
             _orderedFavs.Clear();
-            MelonLogger.Msg("[Favs] Cleared all favourites.");
+            ModLog.Debug("[Favs] Cleared all favourites.");
             SaveToFile();
             RefreshAllStars();
             FavsPage.MarkDirty();
@@ -186,26 +187,26 @@ namespace DescendersModMenu.UI
             try
             {
                 string path = FilePath;
-                MelonLogger.Msg("[Favs] Load path: " + path);
+                ModLog.Debug("[Favs] Load path: " + path);
                 if (!File.Exists(path))
                 {
-                    MelonLogger.Msg("[Favs] No saved favourites file — starting empty.");
+                    ModLog.Debug("[Favs] No saved favourites file — starting empty.");
                     return;
                 }
                 string json = File.ReadAllText(path);
-                MelonLogger.Msg("[Favs] Read " + json.Length + " chars from file.");
+                ModLog.Debug("[Favs] Read " + json.Length + " chars from file.");
                 var ids = ParseJsonArray(json);
-                MelonLogger.Msg("[Favs] Parsed " + ids.Count + " IDs from JSON.");
+                ModLog.Debug("[Favs] Parsed " + ids.Count + " IDs from JSON.");
                 foreach (string id in ids)
                 {
                     if (!string.IsNullOrEmpty(id) && !_favourites.ContainsKey(id))
                     {
                         _favourites[id] = 0;
                         _orderedFavs.Add(id);
-                        MelonLogger.Msg("[Favs]   -> " + id);
+                        ModLog.Debug("[Favs]   -> " + id);
                     }
                 }
-                MelonLogger.Msg("[Favs] Loaded " + _orderedFavs.Count + " favourites.");
+                ModLog.Debug("[Favs] Loaded " + _orderedFavs.Count + " favourites.");
             }
             catch (Exception ex)
             {
@@ -228,7 +229,7 @@ namespace DescendersModMenu.UI
                 if (_orderedFavs.Count > 0) sb.Append("\n  ");
                 sb.Append("]\n}");
                 File.WriteAllText(path, sb.ToString());
-                MelonLogger.Msg("[Favs] Saved " + _orderedFavs.Count + " favourites to: " + path);
+                ModLog.Debug("[Favs] Saved " + _orderedFavs.Count + " favourites to: " + path);
             }
             catch (Exception ex)
             {

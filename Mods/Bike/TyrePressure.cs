@@ -54,7 +54,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             UpdateCache();
-            MelonLogger.Msg("[TyrePressure] -> " + (Enabled ? "ON" : "OFF")
+            ModLog.Feedback("[TyrePressure] -> " + (Enabled ? "ON" : "OFF")
                 + " level=" + _level + " grip=" + _cachedMultiplier.ToString("F2") + "x");
         }
 
@@ -62,7 +62,7 @@ namespace DescendersModMenu.Mods
         {
             _level = Mathf.Clamp(level, 1, 10);
             UpdateCache();
-            MelonLogger.Msg("[TyrePressure] Level=" + _level
+            ModLog.Debug("[TyrePressure] Level=" + _level
                 + " (" + PressureLabel + ") grip=" + _cachedMultiplier.ToString("F2") + "x");
         }
 
@@ -89,7 +89,7 @@ namespace DescendersModMenu.Mods
                     harmony.Patch(wheelFU, postfix: new HarmonyMethod(
                         typeof(TyrePressure_WheelPatch).GetMethod(
                             "Postfix", BindingFlags.Public | BindingFlags.Static)));
-                    MelonLogger.Msg("[TyrePressure] Patched Wheel.FixedUpdate.");
+                    ModLog.Debug("[TyrePressure] Patched Wheel.FixedUpdate.");
                 }
                 else
                     MelonLogger.Warning("[TyrePressure] Wheel.FixedUpdate not found.");

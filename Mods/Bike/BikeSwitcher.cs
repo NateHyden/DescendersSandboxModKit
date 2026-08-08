@@ -152,7 +152,7 @@ namespace DescendersModMenu.Mods
                             string.Equals(field.Name, "<dzQf\u0082nw>k__BackingField", StringComparison.Ordinal))
                         {
                             field.SetValue(player, selectedBike);
-                            MelonLogger.Msg("BikeSwitcher: forced BikeType field -> " + field.Name);
+                            ModLog.Debug("BikeSwitcher: forced BikeType field -> " + field.Name);
                             break;
                         }
                     }
@@ -170,7 +170,7 @@ namespace DescendersModMenu.Mods
                 if (!object.ReferenceEquals(refreshBikeMeshMethod, null))
                 {
                     refreshBikeMeshMethod.Invoke(customization, null);
-                    MelonLogger.Msg("BikeSwitcher: RefreshBikeMesh called.");
+                    ModLog.Debug("BikeSwitcher: RefreshBikeMesh called.");
                 }
                 else
                 {
@@ -219,14 +219,14 @@ namespace DescendersModMenu.Mods
                                 new object[] { bikeSlotValue }
                             );
 
-                            MelonLogger.Msg("BikeSwitcher: Bike slot instance = " +
+                            ModLog.Debug("BikeSwitcher: Bike slot instance = " +
                                 (object.ReferenceEquals(bikeItemInstance, null) ? "NULL" : "FOUND"));
                         }
                     }
                 }
 
                 string bikeName = selectedBike.name;
-                MelonLogger.Msg("BikeSwitcher: switched to index " + index + " (" + bikeName + ")");
+                ModLog.Debug("BikeSwitcher: switched to index " + index + " (" + bikeName + ")");
             }
             catch (Exception ex)
             {

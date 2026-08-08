@@ -148,7 +148,7 @@ namespace DescendersModMenu.Mods
             if (patched == 0)
                 MelonLogger.Warning("[SpectateMode] No spectate patches applied.");
             else
-                MelonLogger.Msg("[SpectateMode] Applied " + patched + " spectate patch(es).");
+                ModLog.Debug("[SpectateMode] Applied " + patched + " spectate patch(es).");
         }
 
         public static bool IsWatchingReplay(VehicleReplay replay)
@@ -236,7 +236,7 @@ namespace DescendersModMenu.Mods
             Enabled = !Enabled;
             if (Enabled) Enable();
             else Disable();
-            MelonLogger.Msg("[SpectateMode] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[SpectateMode] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         private static void Enable()
@@ -373,7 +373,7 @@ namespace DescendersModMenu.Mods
                 _savedBufferLimit = (int)f.GetValue(null);
                 f.SetValue(null, RaisedBufferLimit);
                 _bufferRaised = true;
-                MelonLogger.Msg("[SpectateMode] Replay buffer limit " + _savedBufferLimit + " -> " + RaisedBufferLimit);
+                ModLog.Feedback("[SpectateMode] Replay buffer limit " + _savedBufferLimit + " -> " + RaisedBufferLimit);
             }
             catch (System.Exception ex)
             {
@@ -507,7 +507,7 @@ namespace DescendersModMenu.Mods
             if (cur < 0) cur = _targetIndex;
             if (cur < 0) cur = 0;
             WatchIndex((cur + 1) % _targets.Count);
-            MelonLogger.Msg("[SpectateMode] -> " + CurrentTargetName);
+            ModLog.Feedback("[SpectateMode] -> " + CurrentTargetName);
         }
 
         public static void Previous()
@@ -520,7 +520,7 @@ namespace DescendersModMenu.Mods
             if (cur < 0) cur = _targetIndex;
             if (cur < 0) cur = 0;
             WatchIndex((cur - 1 + _targets.Count) % _targets.Count);
-            MelonLogger.Msg("[SpectateMode] -> " + CurrentTargetName);
+            ModLog.Feedback("[SpectateMode] -> " + CurrentTargetName);
         }
 
         private static int IndexOfName(string name)

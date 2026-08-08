@@ -2,6 +2,7 @@ using System;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
+using DescendersModMenu.Mods;
 
 namespace DescendersModMenu.UI
 {
@@ -136,7 +137,7 @@ namespace DescendersModMenu.UI
                 ModFavEntry entry;
                 if (!FavouritesManager.TryGetEntry(id, out entry))
                 {
-                    MelonLogger.Msg("[Favs] Skipping unknown ID: " + id);
+                    ModLog.Debug("[Favs] Skipping unknown ID: " + id);
                     continue;
                 }
 

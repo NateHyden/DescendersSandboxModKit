@@ -17,7 +17,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[ConfettiOnTrick] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[ConfettiOnTrick] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         // Called from SessionTrackers when the player transitions air -> ground.

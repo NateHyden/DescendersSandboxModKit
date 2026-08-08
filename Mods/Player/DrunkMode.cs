@@ -69,14 +69,14 @@ namespace DescendersModMenu.Mods
                         break;
                     }
                 }
-                MelonLogger.Msg("[DrunkMode] ON");
+                ModLog.Feedback("[DrunkMode] ON");
             }
             else
             {
                 // Restore FOV
                 if ((object)_cam != null) _cam.fieldOfView = _baseFOV;
                 _cachedAngle = null;
-                MelonLogger.Msg("[DrunkMode] OFF");
+                ModLog.Feedback("[DrunkMode] OFF");
             }
         }
 
@@ -157,7 +157,7 @@ namespace DescendersModMenu.Mods
             if ((object)original == null) { MelonLogger.Warning("[DrunkMode] Vehicle.FixedUpdate not found"); return; }
             var postfix = typeof(DrunkMode_Patch).GetMethod("Postfix");
             harmony.Patch(original, postfix: new HarmonyMethod(postfix));
-            MelonLogger.Msg("[DrunkMode] Patched Vehicle.FixedUpdate");
+            ModLog.Debug("[DrunkMode] Patched Vehicle.FixedUpdate");
         }
 
         public static void Reset()

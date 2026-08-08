@@ -16,7 +16,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply();
-            MelonLogger.Msg("No Bail -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("No Bail -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void SetEnabled(bool enabled)
@@ -63,7 +63,7 @@ namespace DescendersModMenu.Mods
                     BindingFlags.Public | BindingFlags.Static);
 
                 harmony.Patch(resetMethod, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[NoBail] Patched Vehicle.Reset(bool).");
+                ModLog.Debug("[NoBail] Patched Vehicle.Reset(bool).");
             }
             catch (System.Exception ex)
             {

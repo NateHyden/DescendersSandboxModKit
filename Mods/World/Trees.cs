@@ -37,7 +37,7 @@ namespace DescendersModMenu.Mods
                 Object[] terrains = Object.FindObjectsOfType(_terrainType);
                 for (int i = 0; i < terrains.Length; i++)
                     _dtfProp.SetValue(terrains[i], showTrees, null);
-                MelonLogger.Msg("[Trees] drawTreesAndFoliage -> " + (showTrees ? "ON" : "OFF"));
+                ModLog.Feedback("[Trees] drawTreesAndFoliage -> " + (showTrees ? "ON" : "OFF"));
             }
             catch (System.Exception ex) { MelonLogger.Error("[Trees] Apply: " + ex.Message); }
         }

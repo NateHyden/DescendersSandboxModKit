@@ -23,7 +23,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[StickyTyres] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[StickyTyres] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void FixedTick()

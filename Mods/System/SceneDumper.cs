@@ -178,7 +178,7 @@ namespace DescendersModMenu.Mods
                         }
                     }
 
-                    MelonLogger.Msg("SceneDumper: FILE 1 done - " + processed + " GameObject(s) processed -> " + path);
+                    ModLog.Feedback("SceneDumper: FILE 1 done - " + processed + " GameObject(s) processed -> " + path);
                 }
 
                 // ── FILE 2: Vehicle forensics ─────────────────────────────────────────
@@ -202,7 +202,7 @@ namespace DescendersModMenu.Mods
                         }
                     }
 
-                    MelonLogger.Msg("SceneDumper: FILE 2 done -> " + path);
+                    ModLog.Feedback("SceneDumper: FILE 2 done -> " + path);
                 }
 
                 // ── FILE 3: Player forensics (PlayerInfoImpact + VehicleController) ──
@@ -254,7 +254,7 @@ namespace DescendersModMenu.Mods
                     }
                     }
 
-                    MelonLogger.Msg("SceneDumper: FILE 3 done -> " + path3);
+                    ModLog.Feedback("SceneDumper: FILE 3 done -> " + path3);
                 }
 
                 // ── FILE 4: All unique component types found in scene ─────────────────
@@ -293,7 +293,7 @@ namespace DescendersModMenu.Mods
                         sb.AppendLine(typeCounts[tn].ToString().PadLeft(5) + "x  " + tn);
                     }
 
-                    MelonLogger.Msg("SceneDumper: FILE 4 done -> " + path4);
+                    ModLog.Feedback("SceneDumper: FILE 4 done -> " + path4);
                 }
 
                 MelonLogger.Msg("SceneDumper: All files written to game directory.");

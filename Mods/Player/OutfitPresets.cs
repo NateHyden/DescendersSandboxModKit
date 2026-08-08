@@ -38,7 +38,7 @@ namespace DescendersModMenu.Mods
                     _presetIds[i] = ParseIds(val);
                 _presetNames[i] = _nameEntries[i].Value;
             }
-            MelonLogger.Msg("[OutfitPresets] Loaded from preferences.");
+            ModLog.Debug("[OutfitPresets] Loaded from preferences.");
         }
 
         // ── Accessors ─────────────────────────────────────────────────────
@@ -167,7 +167,7 @@ namespace DescendersModMenu.Mods
                 CustomizationItem[] toEquip = new CustomizationItem[found];
                 System.Array.Copy(items, toEquip, found);
                 _equipOutfit.Invoke(_pc, new object[] { toEquip, false });
-                MelonLogger.Msg("[OutfitPresets] Loaded slot " + slot + " (" + found + " items).");
+                ModLog.Debug("[OutfitPresets] Loaded slot " + slot + " (" + found + " items).");
                 return true;
             }
             catch (System.Exception ex) { MelonLogger.Error("[OutfitPresets] Load: " + ex.Message); return false; }

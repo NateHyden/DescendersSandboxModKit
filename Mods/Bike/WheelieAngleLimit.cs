@@ -17,7 +17,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[WheelieAngleLimit] -> " + (Enabled ? "ON (" + DisplayValue + ")" : "OFF"));
+            ModLog.Feedback("[WheelieAngleLimit] -> " + (Enabled ? "ON (" + DisplayValue + ")" : "OFF"));
         }
 
         public static void Increase() { if (Level < 10) Level++; }
@@ -35,7 +35,7 @@ namespace DescendersModMenu.Mods
                 MethodInfo postfix = typeof(WheelieAngleLimit_Patch).GetMethod("Postfix",
                     BindingFlags.Public | BindingFlags.Static);
                 harmony.Patch(target, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[WheelieAngleLimit] Patched Vehicle.FixedUpdate.");
+                ModLog.Debug("[WheelieAngleLimit] Patched Vehicle.FixedUpdate.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[WheelieAngleLimit] ApplyPatch: " + ex.Message); }
         }

@@ -51,7 +51,7 @@ namespace DescendersModMenu.Mods
                         _travelDefault = (float)_travelField.GetValue(wheels[i]);
                     _travelField.SetValue(wheels[i], _travelDefault * Mult(TravelLevel));
                 }
-                MelonLogger.Msg("[Suspension] Travel level " + TravelLevel);
+                ModLog.Debug("[Suspension] Travel level " + TravelLevel);
             }
             catch (System.Exception ex) { MelonLogger.Error("[Suspension] ApplyTravel: " + ex.Message); }
         }
@@ -83,7 +83,7 @@ namespace DescendersModMenu.Mods
                         _stiffDefault = (float)_stiffField.GetValue(wheels[i]);
                     _stiffField.SetValue(wheels[i], _stiffDefault * Mult(StiffnessLevel));
                 }
-                MelonLogger.Msg("[Suspension] Stiffness level " + StiffnessLevel);
+                ModLog.Debug("[Suspension] Stiffness level " + StiffnessLevel);
             }
             catch (System.Exception ex) { MelonLogger.Error("[Suspension] ApplyStiffness: " + ex.Message); }
         }
@@ -115,7 +115,7 @@ namespace DescendersModMenu.Mods
                         _dampDefault = (float)_dampField.GetValue(wheels[i]);
                     _dampField.SetValue(wheels[i], _dampDefault * Mult(DampingLevel));
                 }
-                MelonLogger.Msg("[Suspension] Damping level " + DampingLevel);
+                ModLog.Debug("[Suspension] Damping level " + DampingLevel);
             }
             catch (System.Exception ex) { MelonLogger.Error("[Suspension] ApplyDamping: " + ex.Message); }
         }

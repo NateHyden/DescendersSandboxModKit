@@ -24,7 +24,7 @@ namespace DescendersModMenu.Mods
                 Thread t = new Thread(DoFetch);
                 t.IsBackground = true;
                 t.Start();
-                MelonLogger.Msg("[SteamPlayerCount] Fetch started.");
+                ModLog.Debug("[SteamPlayerCount] Fetch started.");
             }
             catch (Exception ex)
             {
@@ -70,7 +70,7 @@ namespace DescendersModMenu.Mods
                 {
                     PlayerCount   = count;
                     DisplayValue  = count.ToString("N0"); // e.g. "1,234"
-                    MelonLogger.Msg("[SteamPlayerCount] " + DisplayValue + " players online.");
+                    ModLog.Debug("[SteamPlayerCount] " + DisplayValue + " players online.");
                 }
                 else
                 {

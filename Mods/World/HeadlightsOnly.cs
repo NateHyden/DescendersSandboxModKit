@@ -49,7 +49,7 @@ namespace DescendersModMenu.Mods
                 Apply();
             else
                 Restore();
-            MelonLogger.Msg("[HeadlightsOnly] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[HeadlightsOnly] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         private static void Apply()

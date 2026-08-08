@@ -38,7 +38,7 @@ namespace DescendersModMenu.Mods
         {
             SpinEnabled = !SpinEnabled;
             if (SpinEnabled) ApplySpin(); else RestoreSpin();
-            MelonLogger.Msg("[Movement] Spin -> " + (SpinEnabled ? "ON" : "OFF"));
+            ModLog.Feedback("[Movement] Spin -> " + (SpinEnabled ? "ON" : "OFF"));
         }
         public static void SpinIncrease() { if (SpinLevel < 10) { SpinLevel++; if (SpinEnabled) ApplySpin(); } }
         public static void SpinDecrease() { if (SpinLevel > 1)  { SpinLevel--; if (SpinEnabled) ApplySpin(); } }
@@ -56,7 +56,7 @@ namespace DescendersModMenu.Mods
                 if ((object)_spinField == null) { MelonLogger.Warning("[Movement] Spin field not found."); return; }
                 if (_spinDefault < 0f) _spinDefault = (float)_spinField.GetValue(c);
                 _spinField.SetValue(c, _spinDefault * Mult(SpinLevel));
-                MelonLogger.Msg("[Movement] Spin -> " + SpinLevel + " (" + (_spinDefault * Mult(SpinLevel)) + ")");
+                ModLog.Feedback("[Movement] Spin -> " + SpinLevel + " (" + (_spinDefault * Mult(SpinLevel)) + ")");
             }
             catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplySpin: " + ex.Message); }
         }
@@ -78,7 +78,7 @@ namespace DescendersModMenu.Mods
         {
             HopEnabled = !HopEnabled;
             if (HopEnabled) ApplyHop(); else RestoreHop();
-            MelonLogger.Msg("[Movement] Hop -> " + (HopEnabled ? "ON" : "OFF"));
+            ModLog.Feedback("[Movement] Hop -> " + (HopEnabled ? "ON" : "OFF"));
         }
         public static void HopIncrease() { if (HopLevel < 10) { HopLevel++; if (HopEnabled) ApplyHop(); } }
         public static void HopDecrease() { if (HopLevel > 1)  { HopLevel--; if (HopEnabled) ApplyHop(); } }
@@ -96,7 +96,7 @@ namespace DescendersModMenu.Mods
                 if ((object)_hopField == null) { MelonLogger.Warning("[Movement] Hop field not found."); return; }
                 if (_hopDefault < 0f) _hopDefault = (float)_hopField.GetValue(c);
                 _hopField.SetValue(c, _hopDefault * Mult(HopLevel));
-                MelonLogger.Msg("[Movement] Hop -> " + HopLevel + " (" + (_hopDefault * Mult(HopLevel)) + ")");
+                ModLog.Feedback("[Movement] Hop -> " + HopLevel + " (" + (_hopDefault * Mult(HopLevel)) + ")");
             }
             catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplyHop: " + ex.Message); }
         }
@@ -118,7 +118,7 @@ namespace DescendersModMenu.Mods
         {
             WheelieEnabled = !WheelieEnabled;
             if (WheelieEnabled) ApplyWheelie(); else RestoreWheelie();
-            MelonLogger.Msg("[Movement] Wheelie -> " + (WheelieEnabled ? "ON" : "OFF"));
+            ModLog.Feedback("[Movement] Wheelie -> " + (WheelieEnabled ? "ON" : "OFF"));
         }
         public static void WheelieIncrease() { if (WheelieLevel < 10) { WheelieLevel++; if (WheelieEnabled) ApplyWheelie(); } }
         public static void WheelieDecrease() { if (WheelieLevel > 1)  { WheelieLevel--; if (WheelieEnabled) ApplyWheelie(); } }
@@ -136,7 +136,7 @@ namespace DescendersModMenu.Mods
                 if ((object)_wheelieField == null) { MelonLogger.Warning("[Movement] Wheelie field not found."); return; }
                 if (_wheelieDefault < 0f) _wheelieDefault = (float)_wheelieField.GetValue(c);
                 _wheelieField.SetValue(c, _wheelieDefault * Mult(WheelieLevel));
-                MelonLogger.Msg("[Movement] Wheelie -> " + WheelieLevel + " (" + (_wheelieDefault * Mult(WheelieLevel)) + ")");
+                ModLog.Feedback("[Movement] Wheelie -> " + WheelieLevel + " (" + (_wheelieDefault * Mult(WheelieLevel)) + ")");
             }
             catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplyWheelie: " + ex.Message); }
         }
@@ -158,7 +158,7 @@ namespace DescendersModMenu.Mods
         {
             LeanEnabled = !LeanEnabled;
             if (LeanEnabled) ApplyLean(); else RestoreLean();
-            MelonLogger.Msg("[Movement] Lean -> " + (LeanEnabled ? "ON" : "OFF"));
+            ModLog.Feedback("[Movement] Lean -> " + (LeanEnabled ? "ON" : "OFF"));
         }
         public static void LeanIncrease() { if (LeanLevel < 10) { LeanLevel++; if (LeanEnabled) ApplyLean(); } }
         public static void LeanDecrease() { if (LeanLevel > 1)  { LeanLevel--; if (LeanEnabled) ApplyLean(); } }
@@ -176,7 +176,7 @@ namespace DescendersModMenu.Mods
                 if ((object)_leanField == null) { MelonLogger.Warning("[Movement] Lean field not found."); return; }
                 if (_leanDefault < 0f) _leanDefault = (float)_leanField.GetValue(c);
                 _leanField.SetValue(c, _leanDefault * Mult(LeanLevel));
-                MelonLogger.Msg("[Movement] Lean -> " + LeanLevel + " (" + (_leanDefault * Mult(LeanLevel)) + ")");
+                ModLog.Feedback("[Movement] Lean -> " + LeanLevel + " (" + (_leanDefault * Mult(LeanLevel)) + ")");
             }
             catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplyLean: " + ex.Message); }
         }
@@ -216,7 +216,7 @@ namespace DescendersModMenu.Mods
             FieldInfo f = c.GetType().GetField(name,
                 BindingFlags.Public | BindingFlags.Instance);
             if ((object)f != null)
-                MelonLogger.Msg("[Movement] Found field: " + name);
+                ModLog.Debug("[Movement] Found field: " + name);
             else
                 MelonLogger.Warning("[Movement] Field not found: " + name);
             return f;

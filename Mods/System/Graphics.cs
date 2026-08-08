@@ -54,7 +54,7 @@ namespace DescendersModMenu.Mods
                     { _ppb = all[i]; break; }
                 }
                 if ((object)_ppb == null) { MelonLogger.Warning("[Graphics] PostProcessingBehaviour not found."); return false; }
-                MelonLogger.Msg("[Graphics] Found PostProcessingBehaviour.");
+                ModLog.Debug("[Graphics] Found PostProcessingBehaviour.");
             }
 
             if ((object)_profile == null)
@@ -118,7 +118,7 @@ namespace DescendersModMenu.Mods
             BloomEnabled = !BloomEnabled;
             if (!EnsureRefs()) return;
             SetEnabled(_bloomField, BloomEnabled);
-            MelonLogger.Msg("[Graphics] Bloom -> " + BloomEnabled);
+            ModLog.Feedback("[Graphics] Bloom -> " + BloomEnabled);
         }
 
         public static void ToggleAO()
@@ -126,7 +126,7 @@ namespace DescendersModMenu.Mods
             AmbientOccEnabled = !AmbientOccEnabled;
             if (!EnsureRefs()) return;
             SetEnabled(_aoField, AmbientOccEnabled);
-            MelonLogger.Msg("[Graphics] AO -> " + AmbientOccEnabled);
+            ModLog.Feedback("[Graphics] AO -> " + AmbientOccEnabled);
         }
 
         public static void ToggleVignette()
@@ -134,7 +134,7 @@ namespace DescendersModMenu.Mods
             VignetteEnabled = !VignetteEnabled;
             if (!EnsureRefs()) return;
             SetEnabled(_vigField, VignetteEnabled);
-            MelonLogger.Msg("[Graphics] Vignette -> " + VignetteEnabled);
+            ModLog.Feedback("[Graphics] Vignette -> " + VignetteEnabled);
         }
 
         public static void ToggleDOF()
@@ -142,7 +142,7 @@ namespace DescendersModMenu.Mods
             DepthOfFieldEnabled = !DepthOfFieldEnabled;
             if (!EnsureRefs()) return;
             SetEnabled(_dofField, DepthOfFieldEnabled);
-            MelonLogger.Msg("[Graphics] DOF -> " + DepthOfFieldEnabled);
+            ModLog.Feedback("[Graphics] DOF -> " + DepthOfFieldEnabled);
         }
 
         public static void ToggleChromatic()
@@ -150,7 +150,7 @@ namespace DescendersModMenu.Mods
             ChromaticAbEnabled = !ChromaticAbEnabled;
             if (!EnsureRefs()) return;
             SetEnabled(_cabField, ChromaticAbEnabled);
-            MelonLogger.Msg("[Graphics] ChromaticAb -> " + ChromaticAbEnabled);
+            ModLog.Feedback("[Graphics] ChromaticAb -> " + ChromaticAbEnabled);
         }
 
         public static void SetQuality(int level)
@@ -196,7 +196,7 @@ namespace DescendersModMenu.Mods
                         QualitySettings.pixelLightCount = 8;
                         break;
                 }
-                MelonLogger.Msg("[Graphics] Quality -> " + QualityNames[level]);
+                ModLog.Feedback("[Graphics] Quality -> " + QualityNames[level]);
             }
             catch (System.Exception ex) { MelonLogger.Error("[Graphics] SetQuality: " + ex.Message); }
         }

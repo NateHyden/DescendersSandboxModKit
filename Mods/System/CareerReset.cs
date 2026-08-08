@@ -214,7 +214,7 @@ namespace DescendersModMenu.Mods
                 {
                     prefs.SetInt(key, 3);
                     changed++;
-                    MelonLogger.Msg("[CareerReset] (sponsor interest) " + key + ": " + before + " -> 3.");
+                    ModLog.Feedback("[CareerReset] (sponsor interest) " + key + ": " + before + " -> 3.");
                 }
             }
 
@@ -256,7 +256,7 @@ namespace DescendersModMenu.Mods
             try { prefs.Save(); }
             catch (Exception exSave) { MelonLogger.Warning("[CareerReset] (sponsor tier) prefs.Save() threw: " + exSave.Message); }
 
-            MelonLogger.Msg("[CareerReset] TEAMTASKSCOMPLETED: " + before + " -> 999. "
+            ModLog.Feedback("[CareerReset] TEAMTASKSCOMPLETED: " + before + " -> 999. "
                 + "Leave and re-enter the Sponsor Office screen to see it refresh.");
             return "Sponsor tier tasks " + before + "->999";
         }
@@ -352,7 +352,7 @@ namespace DescendersModMenu.Mods
                 cyFLnlM before = gd.GetTeamDivision();
                 gd.SetTeamDivision(cyFLnlM.Novice);
                 bool divisionChanged = before != cyFLnlM.Novice;
-                MelonLogger.Msg("[CareerReset] Sponsor division: " + before + " -> Novice "
+                ModLog.Feedback("[CareerReset] Sponsor division: " + before + " -> Novice "
                     + "(persisted via PrefsManager key \"SPONSORDIVISION\").");
 
                 // TOTALREP is the reputation/quest-progress counter UI_SponsorOffice itself reads
@@ -393,7 +393,7 @@ namespace DescendersModMenu.Mods
 
                     try { prefs.Save(); prefsOk = true; }
                     catch (Exception exSave) { MelonLogger.Warning("[CareerReset] prefs.Save() threw: " + exSave.Message); }
-                    MelonLogger.Msg("[CareerReset] TOTALREP: " + beforeRep + " -> 0. TEAMTASKSCOMPLETED: " + beforeTeamTasks
+                    ModLog.Feedback("[CareerReset] TOTALREP: " + beforeRep + " -> 0. TEAMTASKSCOMPLETED: " + beforeTeamTasks
                         + " -> 0. SPONSOR_1/2/3 cleared: " + sponsorNodesCleared + ".");
                 }
                 else
@@ -463,7 +463,7 @@ namespace DescendersModMenu.Mods
                 try { prefs.Save(); }
                 catch (Exception exSave) { MelonLogger.Warning("[CareerReset] AdjustRep prefs.Save() threw: " + exSave.Message); }
 
-                MelonLogger.Msg("[CareerReset] TOTALREP: " + before + " -> " + after + " (" + (amount >= 0 ? "+" : "") + amount + ")");
+                ModLog.Feedback("[CareerReset] TOTALREP: " + before + " -> " + after + " (" + (amount >= 0 ? "+" : "") + amount + ")");
 
                 // TOTALREP only drives sponsor-tier gating - it is NOT the value shown
                 // in the on-screen HUD counter (confirmed 2026-08-04: TOTALREP sits in
@@ -631,7 +631,7 @@ namespace DescendersModMenu.Mods
                 ObscuredInt afterOi = EncodeObscuredInt(afterInt);
                 repField.SetValue(statsObj, afterOi);
 
-                MelonLogger.Msg("[CareerReset] In-game rep (LgqK]Lp): " + beforeInt + " -> " + afterInt);
+                ModLog.Feedback("[CareerReset] In-game rep (LgqK]Lp): " + beforeInt + " -> " + afterInt);
                 LastResult = "In-Game Rep " + beforeInt + " -> " + afterInt;
                 return true;
             }
@@ -975,7 +975,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 SetCurrentTeamId(next.teamID);
-                MelonLogger.Msg("[CareerReset] Sponsor: " + currentId + " -> " + next.teamID + " (\"" + next.name + "\")");
+                ModLog.Feedback("[CareerReset] Sponsor: " + currentId + " -> " + next.teamID + " (\"" + next.name + "\")");
                 LastResult = "Sponsor: " + next.name;
             }
             catch (Exception ex)

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using MelonLoader;
 using UnityEngine;
+using DescendersModMenu.Mods;
 
 namespace DescendersModMenu.UI
 {
@@ -172,7 +173,7 @@ namespace DescendersModMenu.UI
                     UITheme.SliderFill = s.Accent;
                 }
 
-                MelonLogger.Msg("[ColorSchemeManager] Applied '" + s.Name + "' (index " + index + ").");
+                ModLog.Debug("[ColorSchemeManager] Applied '" + s.Name + "' (index " + index + ").");
             }
             catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] Apply: " + ex.Message); }
 
@@ -202,7 +203,7 @@ namespace DescendersModMenu.UI
                 if (!Directory.Exists(SaveFolder)) Directory.CreateDirectory(SaveFolder);
                 var data = new ColorSchemeSaveData { SchemeIndex = CurrentIndex };
                 File.WriteAllText(Path.Combine(SaveFolder, SaveFileName), JsonUtility.ToJson(data, true));
-                MelonLogger.Msg("[ColorSchemeManager] Saved scheme index " + CurrentIndex + ".");
+                ModLog.Debug("[ColorSchemeManager] Saved scheme index " + CurrentIndex + ".");
             }
             catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] Save: " + ex.Message); }
         }
@@ -218,11 +219,11 @@ namespace DescendersModMenu.UI
                 {
                     var data = JsonUtility.FromJson<ColorSchemeSaveData>(File.ReadAllText(path));
                     if (data != null) index = data.SchemeIndex;
-                    MelonLogger.Msg("[ColorSchemeManager] Loaded scheme index " + index + " from file.");
+                    ModLog.Debug("[ColorSchemeManager] Loaded scheme index " + index + " from file.");
                 }
                 else
                 {
-                    MelonLogger.Msg("[ColorSchemeManager] No colour scheme file — using default (Purple).");
+                    ModLog.Debug("[ColorSchemeManager] No colour scheme file — using default (Purple).");
                 }
             }
             catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] LoadAndApply read: " + ex.Message); }

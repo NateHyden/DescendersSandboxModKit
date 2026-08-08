@@ -31,7 +31,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             if (Enabled) Attach(); else Detach();
-            MelonLogger.Msg("[ExplodingProps] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[ExplodingProps] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void SetEnabled(bool enabled)

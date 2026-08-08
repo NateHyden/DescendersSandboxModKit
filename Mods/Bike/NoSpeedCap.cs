@@ -12,7 +12,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("NoSpeedCap -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("NoSpeedCap -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void SetEnabled(bool enabled)
@@ -42,7 +42,7 @@ namespace DescendersModMenu.Mods
                 );
 
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[NoSpeedCap] Patched VehicleController.FixedUpdate.");
+                ModLog.Debug("[NoSpeedCap] Patched VehicleController.FixedUpdate.");
             }
             catch (System.Exception ex)
             {
@@ -102,7 +102,7 @@ namespace DescendersModMenu.Mods
                 harmony.Patch(target,
                     prefix: new HarmonyMethod(prefix),
                     postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[NoSpeedCap] Patched successfully.");
+                ModLog.Debug("[NoSpeedCap] Patched successfully.");
             }
             catch (System.Exception ex)
             {

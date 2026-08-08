@@ -101,7 +101,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[WheelieHUD] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[WheelieHUD] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void Reset()

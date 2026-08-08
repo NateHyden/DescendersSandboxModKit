@@ -31,7 +31,7 @@ namespace DescendersModMenu.Mods
                 _weEnabledReverseSteer = false;
             }
 
-            MelonLogger.Msg("[MirrorMode] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[MirrorMode] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void Tick()

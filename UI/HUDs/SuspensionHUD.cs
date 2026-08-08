@@ -69,7 +69,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[SuspensionHUD] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[SuspensionHUD] -> " + (Enabled ? "ON" : "OFF"));
             SetTrickFeedVisible(!Enabled);
         }
 
@@ -83,7 +83,7 @@ namespace DescendersModMenu.Mods
                 return;
             }
             _repPopup.gameObject.SetActive(visible);
-            MelonLogger.Msg("[SuspensionHUD] Trick feed -> " + (visible ? "SHOWN" : "HIDDEN"));
+            ModLog.Feedback("[SuspensionHUD] Trick feed -> " + (visible ? "SHOWN" : "HIDDEN"));
         }
 
         // Cached type for UI_RepPopup — resolved once via assembly scan, avoids FindObjectsOfType
@@ -149,7 +149,7 @@ namespace DescendersModMenu.Mods
             _frontCalibMax = 0.01f;
             _rearCalibMax = 0.01f;
             _calibLogCount = 0;
-            MelonLogger.Msg("[SuspensionHUD] Cache cleared (Enabled=" + Enabled + ")");
+            ModLog.Debug("[SuspensionHUD] Cache cleared (Enabled=" + Enabled + ")");
         }
 
         /// <summary>Full reset — turns HUD off, restores trick feed, clears cache.</summary>
@@ -157,7 +157,7 @@ namespace DescendersModMenu.Mods
         {
             if (Enabled)
             {
-                MelonLogger.Msg("[SuspensionHUD] Reset -> OFF");
+                ModLog.Feedback("[SuspensionHUD] Reset -> OFF");
                 SetTrickFeedVisible(true); // restore trick feed before disabling
             }
             Enabled = false;
@@ -328,7 +328,7 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                MelonLogger.Msg("[SuspensionHUD] Player_Human found — searching for wheels...");
+                ModLog.Debug("[SuspensionHUD] Player_Human found — searching for wheels...");
 
                 // ── Approach A: named child transforms ────────────────
                 Transform frontT = player.transform.Find("wheel_front");

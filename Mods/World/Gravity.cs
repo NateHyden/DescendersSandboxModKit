@@ -29,7 +29,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 Physics.gravity = new Vector3(0f, Levels[Level - 1], 0f);
-                MelonLogger.Msg("[Gravity] Set to " + Levels[Level - 1]);
+                ModLog.Debug("[Gravity] Set to " + Levels[Level - 1]);
             }
             catch (System.Exception ex) { MelonLogger.Error("[Gravity] Apply: " + ex.Message); }
         }

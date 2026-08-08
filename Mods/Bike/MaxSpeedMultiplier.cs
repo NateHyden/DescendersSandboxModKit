@@ -20,7 +20,7 @@ namespace DescendersModMenu.Mods
             Enabled = !Enabled;
             if (Enabled) Apply();
             else Restore();
-            MelonLogger.Msg("[MaxSpeed] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
+            ModLog.Feedback("[MaxSpeed] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
         }
 
         public static void Increase() { if (Level < 10) Level++; if (Enabled) Apply(); }
@@ -51,7 +51,7 @@ namespace DescendersModMenu.Mods
                 if (f >= 0.001f && f <= 0.12f)
                 {
                     _field = fields[i];
-                    MelonLogger.Msg("[MaxSpeed] Found drag field: " + fields[i].Name + " = " + f);
+                    ModLog.Debug("[MaxSpeed] Found drag field: " + fields[i].Name + " = " + f);
                     return _field;
                 }
             }
@@ -74,7 +74,7 @@ namespace DescendersModMenu.Mods
                 float multiplier = 1f + (Level - 1) * 0.5f;
                 float newDrag = DefaultDrag / multiplier;
                 field.SetValue(vehicle, newDrag);
-                MelonLogger.Msg("[MaxSpeed] Level " + Level + " drag -> " + newDrag);
+                ModLog.Feedback("[MaxSpeed] Level " + Level + " drag -> " + newDrag);
             }
             catch (System.Exception ex) { MelonLogger.Error("[MaxSpeed] Apply: " + ex.Message); }
         }
@@ -113,7 +113,7 @@ namespace DescendersModMenu.Mods
                 if ((object)vehicle == null) return;
                 if ((object)_field == null) return;
                 _field.SetValue(vehicle, DefaultDrag);
-                MelonLogger.Msg("[MaxSpeed] Restored default drag: " + DefaultDrag);
+                ModLog.Debug("[MaxSpeed] Restored default drag: " + DefaultDrag);
             }
             catch { }
         }

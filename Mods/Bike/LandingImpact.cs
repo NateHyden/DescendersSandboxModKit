@@ -41,7 +41,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             if (Enabled) Apply(); else Restore();
-            MelonLogger.Msg("[LandingImpact] -> " + (Enabled ? "ON (threshold " + GetThreshold() + ")" : "OFF"));
+            ModLog.Feedback("[LandingImpact] -> " + (Enabled ? "ON (threshold " + GetThreshold() + ")" : "OFF"));
         }
 
         public static void Increase() { if (Level < 10) Level++; if (Enabled) Apply(); }
@@ -65,7 +65,7 @@ namespace DescendersModMenu.Mods
                 FieldInfo f = GetField(c);
                 if ((object)f == null) return;
                 f.SetValue(c, GetThreshold());
-                MelonLogger.Msg("[LandingImpact] Bail threshold -> " + GetThreshold());
+                ModLog.Feedback("[LandingImpact] Bail threshold -> " + GetThreshold());
             }
             catch (System.Exception ex)
             {
@@ -80,7 +80,7 @@ namespace DescendersModMenu.Mods
                 Cyclist c = GetCyclist();
                 if ((object)c == null || (object)_threshField == null) return;
                 _threshField.SetValue(c, DefaultThreshold);
-                MelonLogger.Msg("[LandingImpact] Restored default threshold: " + DefaultThreshold);
+                ModLog.Debug("[LandingImpact] Restored default threshold: " + DefaultThreshold);
             }
             catch { }
         }
@@ -132,7 +132,7 @@ namespace DescendersModMenu.Mods
                 BindingFlags.Public | BindingFlags.Instance);
             if ((object)_threshField != null)
             {
-                MelonLogger.Msg("[LandingImpact] Found bail threshold field by name.");
+                ModLog.Debug("[LandingImpact] Found bail threshold field by name.");
                 return _threshField;
             }
 
@@ -150,7 +150,7 @@ namespace DescendersModMenu.Mods
                 if (f >= 14f && f <= 16f)
                 {
                     _threshField = fields[i];
-                    MelonLogger.Msg("[LandingImpact] Found bail threshold via scan: "
+                    ModLog.Debug("[LandingImpact] Found bail threshold via scan: "
                         + fields[i].Name + " = " + f);
                     return _threshField;
                 }

@@ -22,7 +22,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             if (!Enabled) CancelImmediate();
-            MelonLogger.Msg("[SlowMoOnBail] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[SlowMoOnBail] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         // Called by SessionTrackers.OnBailDetected()
@@ -133,7 +133,7 @@ namespace DescendersModMenu.Mods
                 if ((object)m2 != null)
                     harmony.Patch(m2, postfix: new HarmonyLib.HarmonyMethod(postfix));
 
-                MelonLogger.Msg("[SlowMoOnBail] Patched respawn methods.");
+                ModLog.Debug("[SlowMoOnBail] Patched respawn methods.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[SlowMoOnBail] ApplyPatch: " + ex.Message); }
         }

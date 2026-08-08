@@ -49,7 +49,7 @@ namespace DescendersModMenu.Mods
                 if (!_captured) { _defaultScale = bm.localScale; _captured = true; }
                 bm.localScale = new Vector3(scale, scale, scale);
                 CurrentScale = scale;
-                MelonLogger.Msg("[BikeSize] Scale -> " + scale);
+                ModLog.Feedback("[BikeSize] Scale -> " + scale);
             }
             catch (System.Exception ex) { MelonLogger.Error("[BikeSize] Apply: " + ex.Message); }
         }

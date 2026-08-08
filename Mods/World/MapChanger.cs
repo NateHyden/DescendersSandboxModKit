@@ -88,7 +88,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 HasBikeParks = found > 0;
-                MelonLogger.Msg("[MapChanger] " + found + " bike parks + 10 base worlds = "
+                ModLog.Debug("[MapChanger] " + found + " bike parks + 10 base worlds = "
                     + _maps.Count + " total.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[MapChanger] BuildMapList: " + ex.Message); }
@@ -434,7 +434,7 @@ namespace DescendersModMenu.Mods
                     return false;
                 }
 
-                MelonLogger.Msg("[MapChanger] Reflection resolved OK. "
+                ModLog.Debug("[MapChanger] Reflection resolved OK. "
                     + "wiWlGz=" + _wiWlGzType.Name
                     + " sessionType=" + _rDRSType.Name);
                 return true;
@@ -469,7 +469,7 @@ namespace DescendersModMenu.Mods
                     "Patch_FreerideBikeParksRefresh",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                 harmony.Patch(target, postfix: new HarmonyLib.HarmonyMethod(postfix));
-                MelonLogger.Msg("[MapChanger] UI_FreerideBikeParks.OnEnable patch applied.");
+                ModLog.Debug("[MapChanger] UI_FreerideBikeParks.OnEnable patch applied.");
             }
             catch (System.Exception ex)
             {
@@ -481,7 +481,7 @@ namespace DescendersModMenu.Mods
         public static void Patch_FreerideBikeParksRefresh()
         {
             if (HasBikeParks) return; // already scanned — no need to repeat
-            MelonLogger.Msg("[MapChanger] Freeride screen opened — scanning bike parks...");
+            ModLog.Debug("[MapChanger] Freeride screen opened — scanning bike parks...");
             BuildMapList();
             try { MapPage.RebuildList(); } catch { }
         }

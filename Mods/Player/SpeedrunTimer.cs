@@ -19,7 +19,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply();
-            MelonLogger.Msg("[SpeedrunTimer] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[SpeedrunTimer] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void Apply()

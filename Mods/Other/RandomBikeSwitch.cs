@@ -49,7 +49,7 @@ namespace DescendersModMenu.Mods
             {
                 int hops = Random.Range(1, 5); // 1-4 — feels random without needing the total bike count
                 for (int i = 0; i < hops; i++) BikeSwitcher.NextBike();
-                MelonLogger.Msg("[RandomBikeSwitch] Switched (" + hops + " hop(s)) -> index " + BikeSwitcher.CurrentBikeIndex);
+                ModLog.Feedback("[RandomBikeSwitch] Switched (" + hops + " hop(s)) -> index " + BikeSwitcher.CurrentBikeIndex);
             }
             catch (System.Exception ex) { MelonLogger.Error("[RandomBikeSwitch] Tick: " + ex.Message); }
             ScheduleNext();

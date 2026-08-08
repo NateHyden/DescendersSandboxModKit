@@ -32,7 +32,7 @@ namespace DescendersModMenu.Mods
             Enabled = !Enabled;
             if (Enabled) Apply();
             else Restore();
-            MelonLogger.Msg("[FOV] -> " + (Enabled ? "ON (" + DisplayValue + ")" : "OFF"));
+            ModLog.Feedback("[FOV] -> " + (Enabled ? "ON (" + DisplayValue + ")" : "OFF"));
         }
 
         public static void Increase() { if (Level < 10) Level++; if (Enabled) Apply(); }
@@ -67,7 +67,7 @@ namespace DescendersModMenu.Mods
                     if (_defaults[i] < 0f)
                     {
                         _defaults[i] = ca.targetFOV;
-                        MelonLogger.Msg("[FOV] Captured default for camera " + i
+                        ModLog.Debug("[FOV] Captured default for camera " + i
                             + ": " + _defaults[i]);
                     }
 
@@ -94,7 +94,7 @@ namespace DescendersModMenu.Mods
                         ? _defaults[i]
                         : 85f;
                 }
-                MelonLogger.Msg("[FOV] Restored default FOV.");
+                ModLog.Debug("[FOV] Restored default FOV.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[FOV] Restore: " + ex.Message); }
         }

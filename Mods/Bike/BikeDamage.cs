@@ -72,7 +72,7 @@ namespace DescendersModMenu.Mods
                 ResetDamage();
             else
                 _offsetDir = (UnityEngine.Random.value > 0.5f) ? 1f : -1f;
-            MelonLogger.Msg("[BikeDamage] -> " + (Enabled ? "ON dir=" + _offsetDir : "OFF"));
+            ModLog.Feedback("[BikeDamage] -> " + (Enabled ? "ON dir=" + _offsetDir : "OFF"));
         }
 
         // Called by SessionTrackers.OnBailDetected()
@@ -345,7 +345,7 @@ namespace DescendersModMenu.Mods
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(
                     typeof(BikeDamage_SteerPatch).GetMethod(
                         "Postfix", BindingFlags.Public | BindingFlags.Static)));
-                MelonLogger.Msg("[BikeDamage] Patched VehicleController.FixedUpdate (steering offset).");
+                ModLog.Debug("[BikeDamage] Patched VehicleController.FixedUpdate (steering offset).");
             }
             catch (System.Exception ex) { MelonLogger.Error("[BikeDamage] ApplyPatch: " + ex.Message); }
         }

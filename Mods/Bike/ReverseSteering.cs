@@ -13,7 +13,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[ReverseSteering] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[ReverseSteering] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
@@ -34,7 +34,7 @@ namespace DescendersModMenu.Mods
                     "Postfix", BindingFlags.Public | BindingFlags.Static);
 
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[ReverseSteering] Patched VehicleController.FixedUpdate.");
+                ModLog.Debug("[ReverseSteering] Patched VehicleController.FixedUpdate.");
                 DiagnosticsManager.Report("ReverseSteering", true);
             }
             catch (System.Exception ex)

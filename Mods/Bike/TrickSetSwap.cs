@@ -84,11 +84,11 @@ namespace DescendersModMenu.Mods
                     _availableBikes.Add(bt);
                 }
 
-                MelonLogger.Msg("[TrickSetSwap] Discovered " + _availableBikes.Count + " bike type(s) with trick sets");
+                ModLog.Debug("[TrickSetSwap] Discovered " + _availableBikes.Count + " bike type(s) with trick sets");
                 for (int i = 0; i < _availableBikes.Count; i++)
                 {
                     var bt = _availableBikes[i];
-                    MelonLogger.Msg("[TrickSetSwap]   [" + i + "] " + bt.name + " (" + bt.overrideGestures.Length + " gestures)");
+                    ModLog.Debug("[TrickSetSwap]   [" + i + "] " + bt.name + " (" + bt.overrideGestures.Length + " gestures)");
                 }
             }
             catch (Exception ex)
@@ -152,7 +152,7 @@ namespace DescendersModMenu.Mods
                         if (string.Equals(f.FieldType.Name, "BikeType", StringComparison.Ordinal))
                         {
                             _bikeTypeField = f;
-                            MelonLogger.Msg("[TrickSetSwap] Cached BikeType field: " + f.Name);
+                            ModLog.Debug("[TrickSetSwap] Cached BikeType field: " + f.Name);
                             break;
                         }
                     }
@@ -197,7 +197,7 @@ namespace DescendersModMenu.Mods
 
             if ((object)source == (object)target)
             {
-                MelonLogger.Msg("[TrickSetSwap] Source bike (" + source.name + ") matches current bike — nothing to swap");
+                ModLog.Debug("[TrickSetSwap] Source bike (" + source.name + ") matches current bike — nothing to swap");
                 return;
             }
 
@@ -209,7 +209,7 @@ namespace DescendersModMenu.Mods
 
             int origLen = _originalGestures != null ? _originalGestures.Length : 0;
             int newLen = source.overrideGestures != null ? source.overrideGestures.Length : 0;
-            MelonLogger.Msg("[TrickSetSwap] -> ON  | target=" + target.name
+            ModLog.Feedback("[TrickSetSwap] -> ON  | target=" + target.name
                 + " (was " + origLen + " gestures) | source=" + source.name
                 + " (" + newLen + " gestures)");
         }
@@ -223,12 +223,12 @@ namespace DescendersModMenu.Mods
                 {
                     _patchedBike.overrideGestures = _originalGestures;
                     int restoredLen = _originalGestures != null ? _originalGestures.Length : 0;
-                    MelonLogger.Msg("[TrickSetSwap] -> OFF | restored " + _patchedBike.name
+                    ModLog.Feedback("[TrickSetSwap] -> OFF | restored " + _patchedBike.name
                         + " (" + restoredLen + " gestures)");
                 }
                 else
                 {
-                    MelonLogger.Msg("[TrickSetSwap] -> OFF (no snapshot to restore)");
+                    ModLog.Feedback("[TrickSetSwap] -> OFF (no snapshot to restore)");
                 }
             }
             catch (Exception ex)
@@ -291,7 +291,7 @@ namespace DescendersModMenu.Mods
         // BikeType-reference tracking go out of sync.
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
         {
-            MelonLogger.Msg("[TrickSetSwap] Auto-disable hooked via BikeSwitcher.SetBike (no Harmony patch needed)");
+            ModLog.Debug("[TrickSetSwap] Auto-disable hooked via BikeSwitcher.SetBike (no Harmony patch needed)");
         }
     }
 }

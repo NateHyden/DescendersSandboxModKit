@@ -91,7 +91,7 @@ namespace DescendersModMenu.Mods
                     System.Globalization.CultureInfo.InvariantCulture, out val))
                 {
                     SessionTopSpeed = val;
-                    MelonLogger.Msg("[TopSpeed] Loaded: " + val.ToString("F1") + " km/h");
+                    ModLog.Debug("[TopSpeed] Loaded: " + val.ToString("F1") + " km/h");
                 }
             }
             catch (Exception ex) { MelonLogger.Warning("[TopSpeed] Load: " + ex.Message); }

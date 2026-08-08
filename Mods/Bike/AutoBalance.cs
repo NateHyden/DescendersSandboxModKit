@@ -20,17 +20,17 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[AutoBalance] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[AutoBalance] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void StrengthIncrease()
         {
-            if (StrengthLevel < 10) { StrengthLevel++; MelonLogger.Msg("[AutoBalance] Strength -> " + StrengthLevel); }
+            if (StrengthLevel < 10) { StrengthLevel++; ModLog.Feedback("[AutoBalance] Strength -> " + StrengthLevel); }
         }
 
         public static void StrengthDecrease()
         {
-            if (StrengthLevel > 1) { StrengthLevel--; MelonLogger.Msg("[AutoBalance] Strength -> " + StrengthLevel); }
+            if (StrengthLevel > 1) { StrengthLevel--; ModLog.Feedback("[AutoBalance] Strength -> " + StrengthLevel); }
         }
 
         public static void SetStrengthLevel(int v) { StrengthLevel = System.Math.Max(1, System.Math.Min(10, v)); }
@@ -53,7 +53,7 @@ namespace DescendersModMenu.Mods
                     "Postfix", BindingFlags.Public | BindingFlags.Static);
 
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[AutoBalance] Patched Vehicle.FixedUpdate.");
+                ModLog.Debug("[AutoBalance] Patched Vehicle.FixedUpdate.");
                 DiagnosticsManager.Report("AutoBalance", true);
             }
             catch (System.Exception ex)

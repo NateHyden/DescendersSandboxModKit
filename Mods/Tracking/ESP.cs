@@ -48,25 +48,25 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("ESP -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("ESP -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void ToggleDistance()
         {
             ShowDistance = !ShowDistance;
-            MelonLogger.Msg("ESP Distance -> " + (ShowDistance ? "ON" : "OFF"));
+            ModLog.Feedback("ESP Distance -> " + (ShowDistance ? "ON" : "OFF"));
         }
 
         public static void ToggleTracers()
         {
             ShowTracers = !ShowTracers;
-            MelonLogger.Msg("ESP Tracers -> " + (ShowTracers ? "ON" : "OFF"));
+            ModLog.Feedback("ESP Tracers -> " + (ShowTracers ? "ON" : "OFF"));
         }
 
         public static void ToggleWorldObjects()
         {
             ShowWorldObjects = !ShowWorldObjects;
-            MelonLogger.Msg("ESP World Objects -> " + (ShowWorldObjects ? "ON" : "OFF"));
+            ModLog.Feedback("ESP World Objects -> " + (ShowWorldObjects ? "ON" : "OFF"));
             if (ShowWorldObjects) RefreshWorldTargets();
         }
 

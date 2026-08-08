@@ -24,7 +24,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[AirControl] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
+            ModLog.Feedback("[AirControl] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
         }
 
         public static void Increase() { if (Level < 10) Level++; }

@@ -55,7 +55,7 @@ namespace DescendersModMenu.Mods
             Enabled = !Enabled;
             if (Enabled) Enable();
             else Disable();
-            MelonLogger.Msg("[HoverMode] -> " + (Enabled ? "ON" : "OFF") + " height=" + DisplayHeight);
+            ModLog.Feedback("[HoverMode] -> " + (Enabled ? "ON" : "OFF") + " height=" + DisplayHeight);
         }
 
         private static void Enable()

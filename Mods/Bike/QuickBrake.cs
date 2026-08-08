@@ -23,7 +23,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[QuickBrake] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
+            ModLog.Feedback("[QuickBrake] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
         }
 
         public static void Increase() { if (Level < 10) Level++; }
@@ -45,7 +45,7 @@ namespace DescendersModMenu.Mods
                     "Postfix", BindingFlags.Public | BindingFlags.Static);
 
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[QuickBrake] Patched VehicleController.FixedUpdate.");
+                ModLog.Debug("[QuickBrake] Patched VehicleController.FixedUpdate.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[QuickBrake] ApplyPatch: " + ex.Message); }
         }

@@ -18,7 +18,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply();
-            MelonLogger.Msg("SlowMotion -> " + (Enabled ? "ON (" + DisplayValue + ")" : "OFF"));
+            ModLog.Feedback("SlowMotion -> " + (Enabled ? "ON (" + DisplayValue + ")" : "OFF"));
         }
 
         public static void Increase()

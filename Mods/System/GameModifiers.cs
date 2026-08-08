@@ -89,7 +89,7 @@ namespace DescendersModMenu.Mods
         {
             NoSpeedWobblesEnabled = !NoSpeedWobblesEnabled;
             ApplySpeedWobbles(NoSpeedWobblesEnabled ? 0.0f : 1.0f);
-            MelonLogger.Msg("[GameMod] NoSpeedWobbles -> " + (NoSpeedWobblesEnabled ? "ON" : "OFF"));
+            ModLog.Feedback("[GameMod] NoSpeedWobbles -> " + (NoSpeedWobblesEnabled ? "ON" : "OFF"));
         }
         private static void ApplySpeedWobbles(float value)
         {
@@ -141,7 +141,7 @@ namespace DescendersModMenu.Mods
                 MethodInfo postfix = typeof(NoSpeedWobbles_Patch).GetMethod("Postfix",
                     BindingFlags.Public | BindingFlags.Static);
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[GameMod] NoSpeedWobbles Vehicle patch applied.");
+                ModLog.Debug("[GameMod] NoSpeedWobbles Vehicle patch applied.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[GameMod] NoSpeedWobbles Vehicle patch: " + ex.Message); }
 
@@ -159,7 +159,7 @@ namespace DescendersModMenu.Mods
                 MethodInfo camPostfix = typeof(NoSpeedWobbles_CamPatch).GetMethod("Postfix",
                     BindingFlags.Public | BindingFlags.Static);
                 harmony.Patch(camFixedUpdate, postfix: new HarmonyMethod(camPostfix));
-                MelonLogger.Msg("[GameMod] NoSpeedWobbles BikeCamera patch applied.");
+                ModLog.Debug("[GameMod] NoSpeedWobbles BikeCamera patch applied.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[GameMod] NoSpeedWobbles BikeCamera patch: " + ex.Message); }
         }
@@ -187,7 +187,7 @@ namespace DescendersModMenu.Mods
                 PlayerInfoImpact pi = pm.GetPlayerImpact();
                 if ((object)pi == null) { MelonLogger.Warning("[GameMod] PlayerInfoImpact not found."); return; }
                 pi.AddGameModifier(target);
-                MelonLogger.Msg("[GameMod] " + modName + " level " + level + " (" + value + ")");
+                ModLog.Debug("[GameMod] " + modName + " level " + level + " (" + value + ")");
             }
             catch (System.Exception ex) { MelonLogger.Error("[GameMod] ApplyMod " + modName + ": " + ex.Message); Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
         }
@@ -210,10 +210,10 @@ namespace DescendersModMenu.Mods
                 GameModifier[] mods = modArrayField.GetValue(gameData) as GameModifier[];
                 if ((object)mods == null) { MelonLogger.Warning("[GameMod] DumpAllModifiers: mod array is null."); return; }
 
-                MelonLogger.Msg("[GameMod] === ALL GAME MODIFIERS (" + mods.Length + ") ===");
+                ModLog.Debug("[GameMod] === ALL GAME MODIFIERS (" + mods.Length + ") ===");
                 for (int i = 0; i < mods.Length; i++)
                 {
-                    if ((object)mods[i] == null) { MelonLogger.Msg("[GameMod]   [" + i + "] <null>"); continue; }
+                    if ((object)mods[i] == null) { ModLog.Debug("[GameMod]   [" + i + "] <null>"); continue; }
                     float curVal = -1f;
                     try
                     {
@@ -221,9 +221,9 @@ namespace DescendersModMenu.Mods
                             curVal = mods[i].modifiers[0].percentageValue;
                     }
                     catch { }
-                    MelonLogger.Msg("[GameMod]   [" + i + "] name=" + mods[i].name + " value=" + curVal);
+                    ModLog.Debug("[GameMod]   [" + i + "] name=" + mods[i].name + " value=" + curVal);
                 }
-                MelonLogger.Msg("[GameMod] === END DUMP ===");
+                ModLog.Debug("[GameMod] === END DUMP ===");
             }
             catch (System.Exception ex) { MelonLogger.Error("[GameMod] DumpAllModifiers: " + ex.Message); }
         }
@@ -254,7 +254,7 @@ namespace DescendersModMenu.Mods
                         && props[i].Name.Contains("kM"))
                     {
                         _wobbleProp = props[i];
-                        MelonLogger.Msg("[GameMod] NoSpeedWobbles found property: " + props[i].Name);
+                        ModLog.Debug("[GameMod] NoSpeedWobbles found property: " + props[i].Name);
                         break;
                     }
                 }

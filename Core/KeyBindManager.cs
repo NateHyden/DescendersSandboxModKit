@@ -251,7 +251,7 @@ namespace DescendersModMenu
                     if (fi < data.KeyCodes.Length) { _keyCodes[slot] = data.KeyCodes[fi]; loaded++; }
                 }
                 if (data.MenuOpenCode != 0) _menuOpenCode = data.MenuOpenCode;
-                MelonLogger.Msg("[KeyBindManager] Loaded " + loaded + " bindings from file. MenuOpenCode=" + _menuOpenCode);
+                ModLog.Debug("[KeyBindManager] Loaded " + loaded + " bindings from file. MenuOpenCode=" + _menuOpenCode);
             }
             catch (Exception ex) { MelonLogger.Error("[KeyBindManager] LoadBindings: " + ex.Message); }
         }

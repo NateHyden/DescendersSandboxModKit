@@ -104,7 +104,7 @@ namespace DescendersModMenu.Mods
                         if (def > 0f) _wheelRadiusField.SetValue(wheels[i], def * sc);
                     }
                 }
-                MelonLogger.Msg("[WheelSize] Individual F=" + FrontLevel + " R=" + RearLevel);
+                ModLog.Debug("[WheelSize] Individual F=" + FrontLevel + " R=" + RearLevel);
             }
             catch (System.Exception ex) { MelonLogger.Error("[WheelSize] ApplyIndividualLevels: " + ex.Message); }
         }
@@ -125,7 +125,7 @@ namespace DescendersModMenu.Mods
             IsIndividualMode = true;
             IsEnabled = false;
             ApplyIndividualLevels();
-            MelonLogger.Msg("[WheelSize] IndividualFromSave F=" + FrontLevel + " R=" + RearLevel);
+            ModLog.Debug("[WheelSize] IndividualFromSave F=" + FrontLevel + " R=" + RearLevel);
         }
 
         public static void ApplyLegacy(bool enabled, int mode)
@@ -223,7 +223,7 @@ namespace DescendersModMenu.Mods
                 }
                 Mode = mode;
                 if (mode == 0) { _cachedFrontBone = null; _cachedBackBone = null; }
-                MelonLogger.Msg("[WheelSize] Legacy -> " + LegacyLabels[mode]);
+                ModLog.Feedback("[WheelSize] Legacy -> " + LegacyLabels[mode]);
             }
             catch (System.Exception ex) { MelonLogger.Error("[WheelSize] SetLegacyMode: " + ex.Message); }
         }

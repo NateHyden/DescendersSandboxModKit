@@ -32,7 +32,7 @@ namespace DescendersModMenu.Mods
             }
             else
                 Apply();     // apply current level on enable
-            MelonLogger.Msg("[WideTyres] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[WideTyres] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void Increase()
@@ -40,7 +40,7 @@ namespace DescendersModMenu.Mods
             if (Level < 20)
             {
                 Level++;
-                MelonLogger.Msg("[WideTyres] Increase -> Level " + Level + " (" + Width + "x)");
+                ModLog.Feedback("[WideTyres] Increase -> Level " + Level + " (" + Width + "x)");
                 Apply(); // always apply so slider previews live
             }
         }
@@ -50,21 +50,21 @@ namespace DescendersModMenu.Mods
             if (Level > 1)
             {
                 Level--;
-                MelonLogger.Msg("[WideTyres] Decrease -> Level " + Level + " (" + Width + "x)");
+                ModLog.Feedback("[WideTyres] Decrease -> Level " + Level + " (" + Width + "x)");
                 Apply(); // always apply so slider previews live
             }
         }
 
         public static void SetLevel(int v) { Level = System.Math.Max(1, System.Math.Min(20, v)); }
 
-        // Called from OnLateUpdate every frame ù reapplies after BikeModel Animation component runs.
+        // Called from OnLateUpdate every frame ÔøΩ reapplies after BikeModel Animation component runs.
         // Reads Y scale (set by WheelSizeTick in Update) to preserve wheel size while adding width.
         public static void Tick()
         {
             if (!Enabled) return;
             try
             {
-                // Cache bones after first resolve ù Find + reflection every LateUpdate
+                // Cache bones after first resolve ÔøΩ Find + reflection every LateUpdate
                 // is painful on large open maps.
                 if ((object)_tickFront == null || (object)_tickBack == null
                     || _tickFront == null || _tickBack == null)
@@ -115,7 +115,7 @@ namespace DescendersModMenu.Mods
                     backBone.localScale = new Vector3(w * bs, bs, bs);
                 }
 
-                MelonLogger.Msg("[WideTyres] Width -> " + w + "x (level " + Level + ")");
+                ModLog.Feedback("[WideTyres] Width -> " + w + "x (level " + Level + ")");
             }
             catch (System.Exception ex)
             {
@@ -129,7 +129,7 @@ namespace DescendersModMenu.Mods
             {
                 Transform frontBone, backBone;
                 if (!GetBones(out frontBone, out backBone)) return;
-                // Preserve wheel size scale (Y) when resetting width ù only reset X back to match Y/Z
+                // Preserve wheel size scale (Y) when resetting width ÔøΩ only reset X back to match Y/Z
                 if ((object)frontBone != null)
                 {
                     float bs = frontBone.localScale.y;
@@ -186,9 +186,9 @@ namespace DescendersModMenu.Mods
                         if ((object)t == null) continue;
 
                         if (string.Equals(t.name, "backWheel_Jnt", System.StringComparison.Ordinal))
-                        { _backBoneField = fields[i]; MelonLogger.Msg("[WideTyres] Found back bone: " + fields[i].Name); }
+                        { _backBoneField = fields[i]; ModLog.Debug("[WideTyres] Found back bone: " + fields[i].Name); }
                         else if (string.Equals(t.name, "frontWheel_Jnt", System.StringComparison.Ordinal))
-                        { _frontBoneField = fields[i]; MelonLogger.Msg("[WideTyres] Found front bone: " + fields[i].Name); }
+                        { _frontBoneField = fields[i]; ModLog.Debug("[WideTyres] Found front bone: " + fields[i].Name); }
                     }
                 }
 

@@ -67,7 +67,7 @@ namespace DescendersModMenu.Mods
                     _sceneDefaultLevel = best;
                     _sceneDefaultCaptured = true;
                     Level = best;
-                    MelonLogger.Msg("[TimeOfDay] Scene default: " + hour + "h → Level " + best + " (" + Labels[best - 1] + ")");
+                    ModLog.Debug("[TimeOfDay] Scene default: " + hour + "h → Level " + best + " (" + Labels[best - 1] + ")");
                     return;
                 }
             }
@@ -117,7 +117,7 @@ namespace DescendersModMenu.Mods
                 if ((object)hourField != null)
                 {
                     hourField.SetValue(cycle, Hours[Level - 1]);
-                    MelonLogger.Msg("[TimeOfDay] Set to " + Labels[Level - 1] + " (" + Hours[Level - 1] + "h)");
+                    ModLog.Debug("[TimeOfDay] Set to " + Labels[Level - 1] + " (" + Hours[Level - 1] + "h)");
                     return;
                 }
 
@@ -127,7 +127,7 @@ namespace DescendersModMenu.Mods
                 if ((object)hourProp != null)
                 {
                     hourProp.SetValue(cycle, Hours[Level - 1], null);
-                    MelonLogger.Msg("[TimeOfDay] Set to " + Labels[Level - 1] + " (" + Hours[Level - 1] + "h)");
+                    ModLog.Debug("[TimeOfDay] Set to " + Labels[Level - 1] + " (" + Hours[Level - 1] + "h)");
                     return;
                 }
 

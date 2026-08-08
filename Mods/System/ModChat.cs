@@ -45,7 +45,7 @@ namespace DescendersModMenu.Mods
         {
             if (!Resolve()) return;
             Subscribe();
-            MelonLogger.Msg("[ModChat] Initialised. Event code: " + EventCode);
+            ModLog.Debug("[ModChat] Initialised. Event code: " + EventCode);
         }
 
         private static bool Resolve()
@@ -89,7 +89,7 @@ namespace DescendersModMenu.Mods
                 if ((object)_photonType == null)
                 { MelonLogger.Warning("[ModChat] PhotonNetwork type not found."); return false; }
 
-                MelonLogger.Msg("[ModChat] PhotonNetwork: " + _photonType.Name);
+                ModLog.Debug("[ModChat] PhotonNetwork: " + _photonType.Name);
 
                 // fu\u0080P\u0084yF — the static OnEvent delegate field
                 foreach (FieldInfo f in _photonType.GetFields(BindingFlags.Public | BindingFlags.Static))
@@ -131,9 +131,9 @@ namespace DescendersModMenu.Mods
                 for (int ai = 0; ai < htAsms.Length; ai++)
                     if (string.Equals(htAsms[ai].GetName().Name, "Photon3Unity3D", StringComparison.Ordinal))
                     { _photonHashtable = htAsms[ai].GetType("ExitGames.Client.Photon.Hashtable"); break; }
-                MelonLogger.Msg("[ModChat] PhotonHashtable=" + ((object)_photonHashtable != null ? _photonHashtable.FullName : "NOT FOUND"));
+                ModLog.Debug("[ModChat] PhotonHashtable=" + ((object)_photonHashtable != null ? _photonHashtable.FullName : "NOT FOUND"));
 
-                MelonLogger.Msg("[ModChat] raiseEvent=" + ((object)_raiseEvent != null)
+                ModLog.Debug("[ModChat] raiseEvent=" + ((object)_raiseEvent != null)
                     + " eventDelegate=" + ((object)_eventDelegate != null)
                     + " localPlayer=" + ((object)_localPlayer != null));
                 return true;

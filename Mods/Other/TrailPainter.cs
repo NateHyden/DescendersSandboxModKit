@@ -27,7 +27,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply(Enabled);
-            MelonLogger.Msg("[TrailPainter] -> " + (Enabled ? "ON colour=" + ColourNames[ColourIndex] : "OFF"));
+            ModLog.Feedback("[TrailPainter] -> " + (Enabled ? "ON colour=" + ColourNames[ColourIndex] : "OFF"));
         }
 
         public static void CycleColour()

@@ -339,7 +339,7 @@ namespace DescendersModMenu.BikeStats
                     TrickSetSwap.SetSourceByName(data.TrickSetSwapSourceName);
                 if (data.TrickSetSwapEnabled && !TrickSetSwap.Enabled) TrickSetSwap.Toggle();
 
-                MelonLogger.Msg("[StatsManager] Loaded from: " + SaveFile);
+                ModLog.Debug("[StatsManager] Loaded from: " + SaveFile);
             }
             catch (Exception ex) { MelonLogger.Error("[StatsManager] LoadStats: " + ex.Message); }
 
@@ -494,7 +494,7 @@ namespace DescendersModMenu.BikeStats
                 if (BoulderDodgeMode.Enabled) BoulderDodgeMode.Reset();
                 if (SurvivalMode.Enabled) SurvivalMode.Reset();
 
-                MelonLogger.Msg("[StatsManager] Reset to defaults.");
+                ModLog.Debug("[StatsManager] Reset to defaults.");
             }
             catch (Exception ex) { MelonLogger.Error("[StatsManager] ResetStats: " + ex.Message); }
 

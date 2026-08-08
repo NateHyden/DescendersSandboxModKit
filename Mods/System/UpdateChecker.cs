@@ -24,7 +24,7 @@ namespace DescendersModMenu.Mods
                 Thread thread = new Thread(DoCheck);
                 thread.IsBackground = true;
                 thread.Start();
-                MelonLogger.Msg("[UpdateChecker] Background check started.");
+                ModLog.Debug("[UpdateChecker] Background check started.");
             }
             catch (Exception ex)
             {
@@ -57,7 +57,7 @@ namespace DescendersModMenu.Mods
 
                 if (string.IsNullOrEmpty(output))
                 {
-                    MelonLogger.Msg("[UpdateChecker] Empty response.");
+                    ModLog.Debug("[UpdateChecker] Empty response.");
                     CheckComplete = true;
                     return;
                 }
@@ -67,7 +67,7 @@ namespace DescendersModMenu.Mods
 
                 if (string.IsNullOrEmpty(tag))
                 {
-                    MelonLogger.Msg("[UpdateChecker] Could not parse release tag.");
+                    ModLog.Debug("[UpdateChecker] Could not parse release tag.");
                     CheckComplete = true;
                     return;
                 }
@@ -79,7 +79,7 @@ namespace DescendersModMenu.Mods
                 LatestVersion = remoteClean;
                 DownloadUrl = url ?? "";
 
-                if (remoteClean != localClean)
+                if (IsNewer(remoteClean, localClean))
                 {
                     UpdateAvailable = true;
                     MelonLogger.Msg("[UpdateChecker] Update available: v" + remoteClean

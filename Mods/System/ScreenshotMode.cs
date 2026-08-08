@@ -69,7 +69,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             if (Enabled) _enableGrace = 10; // ignore input for 10 frames after enabling
-            MelonLogger.Msg("[ScreenshotMode] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[ScreenshotMode] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void TriggerScreenshot()
@@ -198,7 +198,7 @@ namespace DescendersModMenu.Mods
                 if ((object)_captureMethod != null)
                 {
                     _captureMethod.Invoke(null, new object[] { path, superSize });
-                    MelonLogger.Msg("[ScreenshotMode] Capture " + superSize + "x -> " + path);
+                    ModLog.Feedback("[ScreenshotMode] Capture " + superSize + "x -> " + path);
                 }
                 else MelonLogger.Error("[ScreenshotMode] CaptureScreenshot method not found.");
             }

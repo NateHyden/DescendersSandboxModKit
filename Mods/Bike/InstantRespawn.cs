@@ -14,7 +14,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[InstantRespawn] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[InstantRespawn] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         // Called by SessionTrackers.OnBailDetected()

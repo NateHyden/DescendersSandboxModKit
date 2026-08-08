@@ -27,7 +27,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[CompassAlwaysOn] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[CompassAlwaysOn] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void Reset()
@@ -69,7 +69,7 @@ namespace DescendersModMenu.Mods
                     "Postfix", BindingFlags.Public | BindingFlags.Static);
 
                 harmony.Patch(updateCompass, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[CompassAlwaysOn] Patched UI_InGame.UpdateCompass.");
+                ModLog.Debug("[CompassAlwaysOn] Patched UI_InGame.UpdateCompass.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[CompassAlwaysOn] ApplyPatch: " + ex.Message); }
         }
@@ -99,7 +99,7 @@ namespace DescendersModMenu.Mods
                     _searched = true;
                     _iconField = __instance.GetType().GetField(IconFieldName,
                         BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                    MelonLogger.Msg("[CompassAlwaysOn] icon field = "
+                    ModLog.Debug("[CompassAlwaysOn] icon field = "
                         + ((object)_iconField != null ? "found (" + _iconField.FieldType.Name + ")" : "NOT FOUND"));
                 }
                 if ((object)_iconField == null) return;

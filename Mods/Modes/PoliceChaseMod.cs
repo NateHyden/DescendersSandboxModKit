@@ -134,7 +134,7 @@ namespace DescendersModMenu.Mods
         public static void SetDifficulty(int d)
         {
             Difficulty = Mathf.Clamp(d, 0, 2);
-            MelonLogger.Msg("[PoliceChase] Difficulty -> " + DifficultyName);
+            ModLog.Feedback("[PoliceChase] Difficulty -> " + DifficultyName);
         }
 
         public static void ManualReset()

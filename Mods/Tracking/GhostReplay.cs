@@ -452,7 +452,7 @@ namespace DescendersModMenu.Mods
                 if ((object)m2 != null)
                     harmony.Patch(m2, postfix: new HarmonyLib.HarmonyMethod(postfix));
 
-                MelonLogger.Msg("[GhostReplay] Patched respawn methods.");
+                ModLog.Debug("[GhostReplay] Patched respawn methods.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[GhostReplay] ApplyPatch: " + ex.Message); }
         }

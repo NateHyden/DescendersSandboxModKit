@@ -31,16 +31,16 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             _buffer.Clear(); // start clean whichever way it's flipped
-            MelonLogger.Msg("[RubberBandSteering] -> " + (Enabled ? "ON " + LevelDisplay : "OFF"));
+            ModLog.Feedback("[RubberBandSteering] -> " + (Enabled ? "ON " + LevelDisplay : "OFF"));
         }
 
         public static void Increase()
         {
-            if (Level < 10) { Level++; MelonLogger.Msg("[RubberBandSteering] Level -> " + Level + " (" + LevelDisplay + ")"); }
+            if (Level < 10) { Level++; ModLog.Feedback("[RubberBandSteering] Level -> " + Level + " (" + LevelDisplay + ")"); }
         }
         public static void Decrease()
         {
-            if (Level > 1) { Level--; MelonLogger.Msg("[RubberBandSteering] Level -> " + Level + " (" + LevelDisplay + ")"); }
+            if (Level > 1) { Level--; ModLog.Feedback("[RubberBandSteering] Level -> " + Level + " (" + LevelDisplay + ")"); }
         }
         public static void SetLevel(int v) { Level = Mathf.Clamp(v, 1, 10); }
 
@@ -61,7 +61,7 @@ namespace DescendersModMenu.Mods
                     "Postfix", BindingFlags.Public | BindingFlags.Static);
 
                 harmony.Patch(original, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[RubberBandSteering] Patched VehicleController.FixedUpdate.");
+                ModLog.Debug("[RubberBandSteering] Patched VehicleController.FixedUpdate.");
                 DiagnosticsManager.Report("RubberBandSteering", true);
             }
             catch (System.Exception ex)

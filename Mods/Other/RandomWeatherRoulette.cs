@@ -80,7 +80,7 @@ namespace DescendersModMenu.Mods
             {
                 ApplyState(next);
                 LastFlipDisplay = next.ToString();
-                MelonLogger.Msg("[RandomWeatherRoulette] -> " + next);
+                ModLog.Feedback("[RandomWeatherRoulette] -> " + next);
             }
             catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] Tick: " + ex.Message); }
             ScheduleNext();

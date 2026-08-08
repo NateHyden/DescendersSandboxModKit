@@ -30,7 +30,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply(Enabled);
-            MelonLogger.Msg("[BigHeadMode] -> " + (Enabled ? "ON " + LevelDisplay : "OFF"));
+            ModLog.Feedback("[BigHeadMode] -> " + (Enabled ? "ON " + LevelDisplay : "OFF"));
         }
 
         public static void Increase() { if (Level < 20) { Level++; if (Enabled) ApplyScale(); } }

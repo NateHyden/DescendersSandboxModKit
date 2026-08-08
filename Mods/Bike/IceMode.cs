@@ -21,7 +21,7 @@ namespace DescendersModMenu.Mods
                 ApplyToRigidbody();
             else
                 RestoreRigidbody();
-            MelonLogger.Msg("[IceMode] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[IceMode] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         private static void ApplyToRigidbody()
@@ -81,7 +81,7 @@ namespace DescendersModMenu.Mods
                 {
                     harmony.Patch(wheelFU, postfix: new HarmonyMethod(
                         typeof(IceMode_WheelPatch).GetMethod("Postfix", BindingFlags.Public | BindingFlags.Static)));
-                    MelonLogger.Msg("[IceMode] Patched Wheel.FixedUpdate.");
+                    ModLog.Debug("[IceMode] Patched Wheel.FixedUpdate.");
                 }
                 else
                     MelonLogger.Warning("[IceMode] Wheel.FixedUpdate not found.");
@@ -94,7 +94,7 @@ namespace DescendersModMenu.Mods
                 {
                     harmony.Patch(vehicleFU, postfix: new HarmonyMethod(
                         typeof(IceMode_VehiclePatch).GetMethod("Postfix", BindingFlags.Public | BindingFlags.Static)));
-                    MelonLogger.Msg("[IceMode] Patched Vehicle.FixedUpdate.");
+                    ModLog.Debug("[IceMode] Patched Vehicle.FixedUpdate.");
                 }
                 else
                     MelonLogger.Warning("[IceMode] Vehicle.FixedUpdate not found.");
@@ -160,7 +160,7 @@ namespace DescendersModMenu.Mods
                     _groundGripProp = typeof(Vehicle).GetProperty(
                         "njDpmV", BindingFlags.Public | BindingFlags.Instance);
                     if ((object)_groundGripProp != null)
-                        MelonLogger.Msg("[IceMode] Found ground grip prop: njDpmV");
+                        ModLog.Debug("[IceMode] Found ground grip prop: njDpmV");
                     else
                         MelonLogger.Warning("[IceMode] Could not find ground grip prop: njDpmV");
                 }

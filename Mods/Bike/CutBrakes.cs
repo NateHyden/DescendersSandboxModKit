@@ -13,7 +13,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            MelonLogger.Msg("[CutBrakes] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[CutBrakes] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
@@ -31,7 +31,7 @@ namespace DescendersModMenu.Mods
                     "Postfix", BindingFlags.Public | BindingFlags.Static);
 
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[CutBrakes] Patched VehicleController.FixedUpdate.");
+                ModLog.Debug("[CutBrakes] Patched VehicleController.FixedUpdate.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[CutBrakes] ApplyPatch: " + ex.Message); }
         }

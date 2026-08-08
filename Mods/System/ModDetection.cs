@@ -60,7 +60,7 @@ namespace DescendersModMenu.Mods
                         if (string.Equals(types[i].Name, PhotonNetName, StringComparison.Ordinal))
                         {
                             _photonNetType = types[i];
-                            MelonLogger.Msg("[ModDetect] Found PhotonNetwork: " + types[i].Name.Length + " chars");
+                            ModLog.Debug("[ModDetect] Found PhotonNetwork: " + types[i].Name.Length + " chars");
                             break;
                         }
                     }
@@ -76,7 +76,7 @@ namespace DescendersModMenu.Mods
                             if (sfs.Length > 20)
                             {
                                 _photonNetType = types2[i];
-                                MelonLogger.Msg("[ModDetect] Found PhotonNetwork (fallback): " + types2[i].Name);
+                                ModLog.Debug("[ModDetect] Found PhotonNetwork (fallback): " + types2[i].Name);
                                 break;
                             }
                         }
@@ -98,9 +98,9 @@ namespace DescendersModMenu.Mods
                     if ((object)_localPlayer == null)
                     {
                         // Debug: log first few field names
-                        MelonLogger.Msg("[ModDetect] LocalPlayer not found. Fields (" + allFields.Length + "):");
+                        ModLog.Debug("[ModDetect] LocalPlayer not found. Fields (" + allFields.Length + "):");
                         for (int i = 0; i < allFields.Length && i < 8; i++)
-                            MelonLogger.Msg("[ModDetect]   [" + i + "] len=" + allFields[i].Name.Length + " type=" + allFields[i].FieldType.Name);
+                            ModLog.Debug("[ModDetect]   [" + i + "] len=" + allFields[i].Name.Length + " type=" + allFields[i].FieldType.Name);
                         _resolved = true;
                         return false;
                     }
@@ -122,7 +122,7 @@ namespace DescendersModMenu.Mods
                         if (string.Equals(methods[i].Name, SetPropsName, StringComparison.Ordinal))
                         {
                             _setProps = methods[i];
-                            MelonLogger.Msg("[ModDetect] Found SetCustomProperties");
+                            ModLog.Debug("[ModDetect] Found SetCustomProperties");
                             break;
                         }
                     }
@@ -141,7 +141,7 @@ namespace DescendersModMenu.Mods
                         {
                             if (string.Equals(props[i].Name, CustomPropsName, StringComparison.Ordinal))
                             {
-                                MelonLogger.Msg("[ModDetect] Found custom props as property");
+                                ModLog.Debug("[ModDetect] Found custom props as property");
                                 break;
                             }
                         }
@@ -149,7 +149,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 _resolved = (object)_setProps != null;
-                if (_resolved) MelonLogger.Msg("[ModDetect] Fully resolved");
+                if (_resolved) ModLog.Debug("[ModDetect] Fully resolved");
                 return _resolved;
             }
             catch (Exception ex)
@@ -199,7 +199,7 @@ namespace DescendersModMenu.Mods
                 _setProps.Invoke(localP, new object[] { ht, null, false });
 
                 _tagged = true;
-                MelonLogger.Msg("[ModDetect] Tagged local player with DescMM=" + ModVersion);
+                ModLog.Debug("[ModDetect] Tagged local player with DescMM=" + ModVersion);
             }
             catch (Exception ex)
             {
@@ -270,7 +270,7 @@ namespace DescendersModMenu.Mods
                     catch { }
                 }
 
-                MelonLogger.Msg("[ModDetect] Scan complete: " + _modUsers.Count + " mod user(s) found");
+                ModLog.Debug("[ModDetect] Scan complete: " + _modUsers.Count + " mod user(s) found");
             }
             catch (Exception ex)
             {

@@ -18,7 +18,7 @@ namespace DescendersModMenu.Mods
             Enabled = !Enabled;
             if (Enabled) Apply();
             else Restore();
-            MelonLogger.Msg("[Acceleration] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
+            ModLog.Feedback("[Acceleration] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
         }
 
         public static void Increase() { if (Level < 10) Level++; if (Enabled) Apply(); }
@@ -56,7 +56,7 @@ namespace DescendersModMenu.Mods
 
                 float multiplier = 1f + (Level - 1) * 0.5f;
                 _field.SetValue(vehicle, _originalValue * multiplier);
-                MelonLogger.Msg("[Acceleration] Level " + Level + " -> " + (_originalValue * multiplier));
+                ModLog.Feedback("[Acceleration] Level " + Level + " -> " + (_originalValue * multiplier));
             }
             catch (System.Exception ex) { MelonLogger.Error("[Acceleration] Apply: " + ex.Message); }
         }
@@ -100,7 +100,7 @@ namespace DescendersModMenu.Mods
                 if ((object)vehicle == null) return;
                 if ((object)_field == null) return;
                 _field.SetValue(vehicle, _originalValue);
-                MelonLogger.Msg("[Acceleration] Restored default: " + _originalValue);
+                ModLog.Debug("[Acceleration] Restored default: " + _originalValue);
             }
             catch { }
         }

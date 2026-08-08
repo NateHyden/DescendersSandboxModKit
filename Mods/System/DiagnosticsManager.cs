@@ -42,9 +42,24 @@ namespace DescendersModMenu.Mods
 
         public static void LogStartupSummary()
         {
-            MelonLogger.Msg("[Diagnostics] Startup: " + OKCount + " OK, " + FailCount
-                + " failed  |  Unity " + UnityVersion
-                + (UnityVersionMatch ? "" : " (built for " + BuiltForUnity + ")"));
+            // Quiet success path — only surface startup failures in MelonLoader.
+            if (FailCount > 0)
+            {
+                MelonLogger.Warning("[Diagnostics] Startup: " + FailCount + " failed, "
+                    + OKCount + " OK  |  Unity " + UnityVersion
+                    + (UnityVersionMatch ? "" : " (built for " + BuiltForUnity + ")"));
+                for (int i = 0; i < _statuses.Count; i++)
+                {
+                    if (!_statuses[i].OK)
+                        MelonLogger.Warning("[Diagnostics]   " + _statuses[i].Name
+                            + ": " + _statuses[i].Error);
+                }
+            }
+            else
+            {
+                ModLog.Debug("[Diagnostics] Startup: " + OKCount + " OK, 0 failed  |  Unity "
+                    + UnityVersion);
+            }
         }
 
         public static void LogError(string modName, Exception ex)

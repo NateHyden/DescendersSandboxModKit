@@ -231,7 +231,7 @@ namespace DescendersModMenu.Mods
                         if (props[i].Name.StartsWith("T"))
                         {
                             _onGroundProp = props[i];
-                            MelonLogger.Msg("[SessionTrackers] Found onGround prop: " + props[i].Name);
+                            ModLog.Debug("[SessionTrackers] Found onGround prop: " + props[i].Name);
                             break;
                         }
                     }
@@ -348,7 +348,7 @@ namespace DescendersModMenu.Mods
                     BindingFlags.Public | BindingFlags.Static);
 
                 harmony.Patch(bailMethod, postfix: new HarmonyMethod(postfix));
-                MelonLogger.Msg("[SessionTrackers] Patched Cyclist.Bail() for bail detection.");
+                ModLog.Debug("[SessionTrackers] Patched Cyclist.Bail() for bail detection.");
             }
             catch (System.Exception ex)
             {

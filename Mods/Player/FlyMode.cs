@@ -50,7 +50,7 @@ namespace DescendersModMenu.Mods
             Enabled = !Enabled;
             if (Enabled) Enable();
             else Disable();
-            MelonLogger.Msg("[FlyMode] -> " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[FlyMode] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         private static void Enable()
