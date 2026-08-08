@@ -50,6 +50,7 @@ namespace DescendersModMenu.BikeStats
         public int InAirCorrLevel = 1;
         public int FakieBalanceLevel = 1;
         public int PumpStrengthLevel = 1;
+        public int TweakSpeedLevel = 1;
         public int IcePhysicsLevel = 1;
 
         // ── World / Graphics ───────────────────────────────────────────

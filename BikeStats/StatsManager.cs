@@ -53,6 +53,7 @@ namespace DescendersModMenu.BikeStats
                     InAirCorrLevel = GameModifierMods.InAirCorrLevel,
                     FakieBalanceLevel = GameModifierMods.FakieBalanceLevel,
                     PumpStrengthLevel = GameModifierMods.PumpStrengthLevel,
+                    TweakSpeedLevel = GameModifierMods.TweakSpeedLevel,
                     IcePhysicsLevel = GameModifierMods.IcePhysicsLevel,
 
                     // World (NOT sky, NOT time of day — gravity only)
@@ -224,6 +225,7 @@ namespace DescendersModMenu.BikeStats
                 GameModifierMods.SetInAirCorrLevel(data.InAirCorrLevel);
                 GameModifierMods.SetFakieBalanceLevel(data.FakieBalanceLevel);
                 GameModifierMods.SetPumpStrengthLevel(data.PumpStrengthLevel);
+                GameModifierMods.SetTweakSpeedLevel(data.TweakSpeedLevel);
                 GameModifierMods.SetIcePhysicsLevel(data.IcePhysicsLevel);
                 FOV.SetLevel(data.FovLevel);
                 Gravity.SetLevel(data.GravityLevel);
@@ -384,6 +386,7 @@ namespace DescendersModMenu.BikeStats
                 GameModifierMods.SetInAirCorrLevel(5);
                 GameModifierMods.SetFakieBalanceLevel(5);
                 GameModifierMods.SetPumpStrengthLevel(5);
+                GameModifierMods.SetTweakSpeedLevel(5);
                 GameModifierMods.SetIcePhysicsLevel(5);
 
                 FOV.SetLevel(5);

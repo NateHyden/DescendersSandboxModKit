@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DescendersModMenu.BikeStats;
 using DescendersModMenu.Mods;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.UI
 {
@@ -56,24 +57,27 @@ namespace DescendersModMenu.UI
         private static Text smobVal, nswVal, compassVal;
         private static Image smobTrack, nswTrack, compassTrack;
         private static RectTransform smobKnob, nswKnob, compassKnob;
+        private static Text hoverVal, hoverHeightVal;
+        private static Image hoverTrack;
+        private static RectTransform hoverKnob;
         // No Speed Cap
         private static Image capBg, capBdr; private static Text capTxt;
         // ── Pages ─────────────────────────────────────────────────────
-        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21;
+        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22;
         private static int cur = 1;
 
         // Set before RebuildMenu() to reopen on a specific page id (e.g. 3 = Info/Customize)
         // instead of the default first tab. Consumed (reset to -1) on use.
         public static int PendingPage = -1;
 
-        private static readonly int[] PageOrder = { 17, 20, 1, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 3, 19 };
-        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "General", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Other", "Info/Customize", "Key Binds" };
-        private static readonly string[] GroupLabels = { null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
+        private static readonly int[] PageOrder = { 17, 20, 19, 3, 1, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22 };
+        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info/Customize", "General", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Other", "Perks" };
+        private static readonly string[] GroupLabels = { null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
 
-        private static Image[] _navBars = new Image[19];
-        private static Text[] _navTxts = new Text[19];
-        private static Image[] _navBgs = new Image[19];
-        private static Image[] _activeDots = new Image[19];
+        private static Image[] _navBars = new Image[20];
+        private static Text[] _navTxts = new Text[20];
+        private static Image[] _navBgs = new Image[20];
+        private static Image[] _activeDots = new Image[20];
         private static UnityEngine.UI.Image _infoTabDot;
 
         public static CanvasGroup RootCanvasGroup { get; private set; }
@@ -84,6 +88,9 @@ namespace DescendersModMenu.UI
         private static Image _hdrSaveImg, _hdrLoadImg, _hdrResetImg;
         private static Image _hdrFlashImg = null;
         private static float _hdrFlashTimer = 0f;
+        private static Text _telemetryTxt;
+        private static Image _telSwitchTrack;
+        private static RectTransform _telSwitchKnob;
 
         // ─────────────────────────────────────────────────────────────
         public static GameObject CreateMenu()
@@ -169,7 +176,7 @@ namespace DescendersModMenu.UI
                 var byrt = UIHelpers.RT(byTxt.gameObject);
                 byrt.anchorMin = new Vector2(1, 1); byrt.anchorMax = new Vector2(1, 1);
                 byrt.pivot = new Vector2(1, 1);
-                byrt.sizeDelta = new Vector2(160, 16);
+                byrt.sizeDelta = new Vector2(280, 14);
                 byrt.anchoredPosition = new Vector2(-8, -3);
                 byrt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
@@ -180,16 +187,128 @@ namespace DescendersModMenu.UI
                 var usrt = UIHelpers.RT(usTxt.gameObject);
                 usrt.anchorMin = new Vector2(1, 1); usrt.anchorMax = new Vector2(1, 1);
                 usrt.pivot = new Vector2(1, 1);
-                usrt.sizeDelta = new Vector2(220, 16);
-                usrt.anchoredPosition = new Vector2(-8, -19);
+                usrt.sizeDelta = new Vector2(280, 14);
+                usrt.anchoredPosition = new Vector2(-8, -17);
                 usTxt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
-                // SAVE / LOAD / RESET — centred in the gap between version badge and "Created by"
-                // Badge right edge ~346px, Created by left edge ~632px, gap centre ~489px.
-                // 3 × 52px buttons + 2 × 8px gaps = 172px. First left edge = 489 - 86 = 403px.
-                _hdrSaveImg = HeaderBtn(hdr.transform, "SAVE", 403f, () => { StatsManager.SaveStats(); FlashHeader(_hdrSaveImg); });
-                _hdrLoadImg = HeaderBtn(hdr.transform, "LOAD", 463f, () => { StatsManager.LoadStats(); RefreshAll(); FlashHeader(_hdrLoadImg); });
-                _hdrResetImg = HeaderBtn(hdr.transform, "RESET", 523f, () => { StatsManager.ResetStats(); RefreshAll(); FlashHeader(_hdrResetImg); });
+                // ── Telemetry: label + ON/OFF state + real toggle switch ──
+                var telLbl = UIHelpers.Txt("TelLbl", hdr.transform, "Telemetry", 9, FontStyle.Bold, TextAnchor.UpperRight, UIHelpers.TextMid);
+                var telLblRt = UIHelpers.RT(telLbl.gameObject);
+                telLblRt.anchorMin = new Vector2(1, 1); telLblRt.anchorMax = new Vector2(1, 1);
+                telLblRt.pivot = new Vector2(1, 1);
+                telLblRt.sizeDelta = new Vector2(60, 16);
+                telLblRt.anchoredPosition = new Vector2(-76, -35);
+                telLbl.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+                _telemetryTxt = UIHelpers.Txt("TelState", hdr.transform, "ON", 9, FontStyle.Bold, TextAnchor.UpperRight, UIHelpers.OnColor);
+                var telStateRt = UIHelpers.RT(_telemetryTxt.gameObject);
+                telStateRt.anchorMin = new Vector2(1, 1); telStateRt.anchorMax = new Vector2(1, 1);
+                telStateRt.pivot = new Vector2(1, 1);
+                telStateRt.sizeDelta = new Vector2(26, 16);
+                telStateRt.anchoredPosition = new Vector2(-40, -35);
+                _telemetryTxt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+                var telSwitch = UIHelpers.Obj("TelSwitch", hdr.transform);
+                var telSwRt = UIHelpers.RT(telSwitch);
+                telSwRt.anchorMin = new Vector2(1, 1); telSwRt.anchorMax = new Vector2(1, 1);
+                telSwRt.pivot = new Vector2(1, 1);
+                telSwRt.sizeDelta = new Vector2(28, 15);
+                telSwRt.anchoredPosition = new Vector2(-8, -34);
+                telSwitch.AddComponent<LayoutElement>().ignoreLayout = true;
+                _telSwitchTrack = telSwitch.AddComponent<Image>();
+                _telSwitchTrack.sprite = UIHelpers.TogSp; _telSwitchTrack.type = Image.Type.Sliced;
+
+                var telKnobObj = UIHelpers.Obj("K", telSwitch.transform);
+                var telKnobImg = telKnobObj.AddComponent<Image>();
+                telKnobImg.sprite = UIHelpers.KnobSp; telKnobImg.type = Image.Type.Sliced;
+                telKnobImg.raycastTarget = false;
+                _telSwitchKnob = UIHelpers.RT(telKnobObj);
+                _telSwitchKnob.anchorMin = new Vector2(0, 0.5f); _telSwitchKnob.anchorMax = new Vector2(0, 0.5f);
+                _telSwitchKnob.pivot = new Vector2(0, 0.5f);
+                _telSwitchKnob.sizeDelta = new Vector2(11, 11);
+                _telSwitchKnob.anchoredPosition = new Vector2(2, 0);
+
+                var telBtn = telSwitch.AddComponent<Button>();
+                telBtn.targetGraphic = _telSwitchTrack;
+                telBtn.onClick.AddListener(() => { Telemetry.Toggle(); RefreshTelemetryLabel(); });
+                var telBc = telBtn.colors;
+                telBc.normalColor = Color.white; telBc.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
+                telBc.pressedColor = new Color(0.7f, 0.7f, 0.7f, 1f); telBc.colorMultiplier = 1;
+                telBtn.colors = telBc;
+                RefreshTelemetryLabel();
+
+                // ── Telemetry explanation — dismissible. Skipped entirely
+                // once dismissed (nothing created, nothing to hide later).
+                //
+                // Button + text live as siblings inside a HorizontalLayoutGroup
+                // with a ContentSizeFitter, instead of manually computed pixel
+                // offsets between two independently-positioned elements. Two
+                // rounds of hand-measured/text-measured offsets both still
+                // left a gap — Unity's own layout system is what actually
+                // solves "size a container to fit its content and keep two
+                // elements adjacent" reliably, and it's already used
+                // successfully everywhere else in this codebase (feedback
+                // buttons, sidebar rows, etc.), so this delegates to that
+                // instead of guessing again.
+                if (!Telemetry.HeaderHintDismissed)
+                {
+                    var telRow = UIHelpers.Obj("TelExplRow", hdr.transform);
+                    var telRowRt = UIHelpers.RT(telRow);
+                    telRowRt.anchorMin = new Vector2(1, 1); telRowRt.anchorMax = new Vector2(1, 1);
+                    telRowRt.pivot = new Vector2(1, 1);
+                    telRowRt.anchoredPosition = new Vector2(-8, -51);
+                    telRowRt.sizeDelta = new Vector2(0, 20);
+                    telRow.AddComponent<LayoutElement>().ignoreLayout = true;
+                    var telRowHlg = telRow.AddComponent<HorizontalLayoutGroup>();
+                    telRowHlg.spacing = 6;
+                    telRowHlg.childAlignment = TextAnchor.MiddleRight;
+                    telRowHlg.childForceExpandWidth = false; telRowHlg.childForceExpandHeight = false;
+                    telRowHlg.childControlWidth = true; telRowHlg.childControlHeight = true;
+                    var telRowFitter = telRow.AddComponent<ContentSizeFitter>();
+                    telRowFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+                    // Dismiss button — first child, so it lands leftmost.
+                    var telDismissGo = UIHelpers.Obj("TelDismiss", telRow.transform);
+                    var telDismissImg = telDismissGo.AddComponent<Image>();
+                    telDismissImg.sprite = UIHelpers.BtnSp; telDismissImg.type = Image.Type.Sliced;
+                    telDismissImg.color = UIHelpers.RowBg;
+                    var telDismissLe = telDismissGo.AddComponent<LayoutElement>();
+                    telDismissLe.preferredWidth = 16; telDismissLe.preferredHeight = 16;
+                    telDismissLe.minWidth = 16; telDismissLe.minHeight = 16;
+                    var telDismissBtn = telDismissGo.AddComponent<Button>();
+                    telDismissBtn.targetGraphic = telDismissImg;
+                    var telDismissTxt = UIHelpers.Txt("X", telDismissGo.transform, "\u2715", 9,
+                        FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                    UIHelpers.Fill(UIHelpers.RT(telDismissTxt.gameObject));
+
+                    // Text — second child, right of the button.
+                    var telExpl = UIHelpers.Obj("TelExpl", telRow.transform);
+                    var telExplText = telExpl.AddComponent<Text>();
+                    telExplText.font = UIHelpers.GetFont();
+                    telExplText.fontSize = 9; telExplText.fontStyle = FontStyle.Normal;
+                    telExplText.alignment = TextAnchor.MiddleLeft;
+                    telExplText.color = Color.white;
+                    telExplText.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    telExplText.verticalOverflow = VerticalWrapMode.Overflow;
+                    telExplText.raycastTarget = false;
+                    telExplText.text = "Please read telemetry page in Info/Customize";
+                    var telExplLe = telExpl.AddComponent<LayoutElement>();
+                    telExplLe.preferredWidth = telExplText.preferredWidth;
+                    telExplLe.preferredHeight = 20;
+
+                    telDismissBtn.onClick.AddListener(() =>
+                    {
+                        Telemetry.DismissHeaderHint();
+                        UnityEngine.Object.Destroy(telRow);
+                    });
+                }
+
+                // SAVE / LOAD / RESET — centred in the gap between version badge and the
+                // right-hand info column. Shifted left of their old position now that the
+                // right column is wider (telemetry toggle + explanation need the room).
+                _hdrSaveImg = HeaderBtn(hdr.transform, "SAVE", 383f, () => { StatsManager.SaveStats(); FlashHeader(_hdrSaveImg); });
+                _hdrLoadImg = HeaderBtn(hdr.transform, "LOAD", 443f, () => { StatsManager.LoadStats(); RefreshAll(); FlashHeader(_hdrLoadImg); });
+                _hdrResetImg = HeaderBtn(hdr.transform, "RESET", 503f, () => { StatsManager.ResetStats(); RefreshAll(); FlashHeader(_hdrResetImg); });
 
                 // Body
                 var body = UIHelpers.Obj("Body", win.transform);
@@ -229,13 +348,14 @@ namespace DescendersModMenu.UI
                 sibCRT.anchorMin = new Vector2(0, 1); sibCRT.anchorMax = new Vector2(1, 1);
                 sibCRT.pivot = new Vector2(0.5f, 1); sibCRT.sizeDelta = new Vector2(0, 0);
                 sibSR.content = sibCRT;
+                UIHelpers.AddScrollbar(sibSR);
                 sibContent.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 var sVlg = sibContent.AddComponent<VerticalLayoutGroup>();
                 sVlg.spacing = 1; sVlg.padding = new RectOffset(4, 4, 2, 6);
                 sVlg.childAlignment = TextAnchor.UpperCenter;
                 sVlg.childForceExpandWidth = true; sVlg.childForceExpandHeight = false;
 
-                for (int i = 0; i < 19; i++)
+                for (int i = 0; i < 20; i++)
                 {
                     // ── Group separator ────────────────────────────────
                     if (GroupLabels[i] != null)
@@ -341,6 +461,7 @@ namespace DescendersModMenu.UI
                 pg18 = UIHelpers.Obj("P18", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg18)); ScreenshotPage.CreatePage(pg18.transform);
                 pg19 = UIHelpers.Obj("P19", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg19)); BindsPage.CreatePage(pg19.transform);
                 pg21 = UIHelpers.Obj("P21", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg21)); OtherPage.CreatePage(pg21.transform);
+                pg22 = UIHelpers.Obj("P22", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg22)); PerksPage.CreatePage(pg22.transform);
 
                 RefreshAll(); RefreshTabs();
                 Mods.MenuCustomiser.LoadFromFile();
@@ -534,6 +655,56 @@ namespace DescendersModMenu.UI
             compassVal = UIHelpers.Txt("CmpV", compassRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
             compassVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.Toggle(compassRow.transform, "CmpT", () => { CompassAlwaysOn.Toggle(); RefreshAll(); }, out compassTrack, out compassKnob);
+            FavouritesManager.RegisterStarButton("CompassAlwaysOn",
+                UIHelpers.StarBtn(compassRow.transform, "CompassAlwaysOn",
+                    () => FavouritesManager.Toggle("CompassAlwaysOn")));
+            var compassNote = UIHelpers.StatRow("", pg);
+            var compassNoteTxt = UIHelpers.Txt("CmpNote", compassNote.transform,
+                "Only points to something in Bike Park or Career.",
+                9, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+            compassNoteTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "CompassAlwaysOn",
+                DisplayName = "Show Compass",
+                TabBadge = "GEN",
+                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "CompassAlwaysOn", "Show Compass",
+                    () => CompassAlwaysOn.Enabled, () => CompassAlwaysOn.Toggle(), () => RefreshAll()),
+                IsActive = () => CompassAlwaysOn.Enabled
+            });
+
+            // ── Hover Mode ───────────────────────────────────────────
+            // Floats the bike a selectable height (meters, signed) above/below
+            // terrain via a spring-damper - not a rigid float, see HoverMode.cs.
+            var hoverRow = UIHelpers.StatRow("Hover Mode", pg);
+            hoverVal = UIHelpers.Txt("HovV", hoverRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            hoverVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(hoverRow.transform, "HovT", () => { HoverMode.Toggle(); RefreshAll(); }, out hoverTrack, out hoverKnob);
+            hoverHeightVal = UIHelpers.Txt("HovHV", hoverRow.transform, HoverMode.DisplayHeight, 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+            hoverHeightVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
+            UIHelpers.SmallBtn(hoverRow.transform, "-", () => { HoverMode.DecreaseHeight(); RefreshAll(); });
+            UIHelpers.SmallBtn(hoverRow.transform, "+", () => { HoverMode.IncreaseHeight(); RefreshAll(); });
+            FavouritesManager.RegisterStarButton("HoverMode",
+                UIHelpers.StarBtn(hoverRow.transform, "HoverMode",
+                    () => FavouritesManager.Toggle("HoverMode")));
+            var hoverNote = UIHelpers.StatRow("", pg);
+            var hoverNoteTxt = UIHelpers.Txt("HovNote", hoverNote.transform,
+                "Height is metres above ground - negative sinks below terrain.",
+                9, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+            hoverNoteTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "HoverMode",
+                DisplayName = "Hover Mode",
+                TabBadge = "GEN",
+                BuildControls = (fp) => FavsPage.BuildToggleIntensityStepper(fp, "HoverMode", "Hover Mode",
+                    () => HoverMode.Enabled, () => HoverMode.Toggle(),
+                    () => HoverMode.DisplayHeight, () => HoverMode.DecreaseHeight(), () => HoverMode.IncreaseHeight(),
+                    () => RefreshAll()),
+                IsActive = () => HoverMode.Enabled
+            });
 
             // ── QUICK ACTIONS ─────────────────────────────────────────
             UIHelpers.Divider(pg);
@@ -798,6 +969,27 @@ namespace DescendersModMenu.UI
             return im;
         }
 
+        // Updates the header telemetry label's text + colour to match the
+        // current MelonPreferences state. Called on build and on click.
+        // Now drives an actual switch (track colour + knob position), not
+        // just a text label — track is 28x15 with an 11px knob, so the
+        // on/off knob positions are sized for this specific switch rather
+        // than reusing UIHelpers.SetToggle (which assumes a 44x24 track).
+        private static void RefreshTelemetryLabel()
+        {
+            if (!_telemetryTxt) return;
+            bool on = Telemetry.Enabled;
+            _telemetryTxt.text = on ? "ON" : "OFF";
+            _telemetryTxt.color = on ? UIHelpers.OnColor : UIHelpers.OffColor;
+            if (_telSwitchTrack) _telSwitchTrack.color = on ? UIHelpers.TogOnTrack : UIHelpers.TogOffTrack;
+            if (_telSwitchKnob)
+            {
+                _telSwitchKnob.anchoredPosition = new Vector2(on ? 15f : 2f, 0f);
+                var knobImg = _telSwitchKnob.GetComponent<Image>();
+                if (knobImg) knobImg.color = on ? UIHelpers.TogKnobOn : UIHelpers.TogKnobOff;
+            }
+        }
+
         private static void BotBtn(string lbl, Transform p, Color bg, UnityEngine.Events.UnityAction clk)
         {
             var g = UIHelpers.Obj(lbl + "B", p);
@@ -823,7 +1015,8 @@ namespace DescendersModMenu.UI
                                     Mods.QuickBrake.Enabled || Mods.NoBail.Enabled ||
                                     Mods.AutoBalance.Enabled || Mods.FOV.Enabled ||
                                     Mods.SlowMotion.Enabled || Mods.SlowMoOnBail.Enabled ||
-                                    Mods.GameModifierMods.NoSpeedWobblesEnabled;
+                                    Mods.GameModifierMods.NoSpeedWobblesEnabled ||
+                                    Mods.CompassAlwaysOn.Enabled || Mods.HoverMode.Enabled;
                     case 6: return MovePage.IsAnyActive;
                     case 7: return WorldPage.IsAnyActive;
                     case 8: return BikePage.IsAnyActive;
@@ -837,6 +1030,7 @@ namespace DescendersModMenu.UI
                     case 19: return BindsPage.IsAnyActive;
                     case 20: return false;
                     case 21: return OtherPage.IsAnyActive;
+                    case 22: return false;
                     default: return false;
                 }
             }
@@ -868,8 +1062,9 @@ namespace DescendersModMenu.UI
             if (pg18) pg18.SetActive(cur == 18);
             if (pg19) pg19.SetActive(cur == 19);
             if (pg21) pg21.SetActive(cur == 21);
+            if (pg22) pg22.SetActive(cur == 22);
 
-            for (int i = 0; i < 19; i++)
+            for (int i = 0; i < 20; i++)
             {
                 bool on = PageOrder[i] == cur;
                 bool active = IsPageActive(PageOrder[i]);
@@ -881,6 +1076,7 @@ namespace DescendersModMenu.UI
             }
             if (cur == 2) EspPage.RefreshTexts();
             if (cur == 3) InfoPage.Refresh();
+            if (cur == 22) { Mods.PerkMenu.ForceReload(); PerksPage.Rebuild(); }
             if (_infoTabDot) _infoTabDot.color = DiagnosticsManager.FailCount > 0 ? UIHelpers.OffColor : UIHelpers.OnColor;
         }
 
@@ -980,6 +1176,12 @@ namespace DescendersModMenu.UI
             bool compass = CompassAlwaysOn.Enabled;
             if (compassVal) { compassVal.text = compass ? "ON" : "OFF"; compassVal.color = compass ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(compassTrack, compassKnob, compass);
+
+            // ── Hover Mode ────────────────────────────────────────────
+            bool hover = HoverMode.Enabled;
+            if (hoverVal) { hoverVal.text = hover ? "ON" : "OFF"; hoverVal.color = hover ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            if (hoverHeightVal) hoverHeightVal.text = HoverMode.DisplayHeight;
+            UIHelpers.SetToggle(hoverTrack, hoverKnob, hover);
 
             // ── Speedrun Timer ────────────────────────────────────────
             // ── Session live values ───────────────────────────────────

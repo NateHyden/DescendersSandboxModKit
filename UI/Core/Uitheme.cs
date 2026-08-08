@@ -14,10 +14,10 @@ namespace DescendersModMenu.UI
     public static class UITheme
     {
         // ── Layout ───────────────────────────────────────────────────
-        public const float WinW = 800f;
+        public const float WinW = 880f;
         public const float WinH = 660f;
         public const float SidebarW = 130f;
-        public const float HeaderH = 58f;
+        public const float HeaderH = 84f;
         public const float RowH = 36f;
         public const float RowGap = 3f;
         public const float RowPad = 12f;

@@ -2,6 +2,7 @@ using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -11,9 +12,20 @@ namespace DescendersModMenu.Mods
         public static int InAirCorrLevel { get; private set; } = 1;
         public static int FakieBalanceLevel { get; private set; } = 1;
         public static int PumpStrengthLevel { get; private set; } = 1;
+        public static int TweakSpeedLevel { get; private set; } = 1;
         public static int IcePhysicsLevel { get; private set; } = 1;
 
-        private static float Mult(int level) { return level * 0.333f + 0.667f; }
+        // WHEELIEBALANCE/AIRCORRECTION/FAKIEBALANCE/PUMPSTRENGTH/TWEAKSPEED
+        // are percentage-POINT deltas on GameModifier.percentageValue, not
+        // multipliers â€” confirmed via DumpAllModifiers before this mod ever
+        // touched them: true vanilla defaults were small integers like
+        // WHEELIEBALANCE=25, AIRCORRECTION=40, FAKIEBALANCE=-10 â€” nowhere
+        // near the old 1.0-4.0 range this used to write. That old scale was
+        // ~10-40x too small to have any real effect, which is the actual
+        // root cause behind "wheelie balance doesn't feel tunable."
+        // Level 5/6 = 0 (neutral), Level 1 = -90, Level 10 = +90.
+        private static float Delta(int level) { return (level - 5.5f) * 20f; }
+        public static string DeltaDisplay(int level) { return Delta(level).ToString("+0;-0") + "%"; }
 
         public static void WheelieBalanceIncrease() { if (WheelieBalanceLevel < 10) { WheelieBalanceLevel++; ApplyMod("WHEELIEBALANCE", WheelieBalanceLevel); } }
         public static void WheelieBalanceDecrease() { if (WheelieBalanceLevel > 1) { WheelieBalanceLevel--; ApplyMod("WHEELIEBALANCE", WheelieBalanceLevel); } }
@@ -46,6 +58,15 @@ namespace DescendersModMenu.Mods
             PumpStrengthLevel = System.Math.Max(1, System.Math.Min(10, v));
             ApplyMod("PUMPSTRENGTH", PumpStrengthLevel);
         }
+
+        public static void TweakSpeedIncrease() { if (TweakSpeedLevel < 10) { TweakSpeedLevel++; ApplyMod("TWEAKSPEED", TweakSpeedLevel); } }
+        public static void TweakSpeedDecrease() { if (TweakSpeedLevel > 1) { TweakSpeedLevel--; ApplyMod("TWEAKSPEED", TweakSpeedLevel); } }
+        public static void SetTweakSpeedLevel(int v)
+        {
+            TweakSpeedLevel = System.Math.Max(1, System.Math.Min(10, v));
+            ApplyMod("TWEAKSPEED", TweakSpeedLevel);
+        }
+
 
         public static void IcePhysicsIncrease() { if (IcePhysicsLevel < 10) { IcePhysicsLevel++; ApplyMod("OFFROADFRICTION", IcePhysicsLevel); } }
         public static void IcePhysicsDecrease() { if (IcePhysicsLevel > 1) { IcePhysicsLevel--; ApplyMod("OFFROADFRICTION", IcePhysicsLevel); } }
@@ -96,7 +117,7 @@ namespace DescendersModMenu.Mods
                     }
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[GameMod] SpeedWobbles: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[GameMod] SpeedWobbles: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
         }
 
         public static void NoSpeedWobblesReset()
@@ -106,7 +127,7 @@ namespace DescendersModMenu.Mods
             NoSpeedWobblesEnabled = false;
         }
 
-        // Direct patch on Vehicle.FixedUpdate — zeroes the steering wobble property
+        // Direct patch on Vehicle.FixedUpdate ï¿½ zeroes the steering wobble property
         // every physics frame when enabled. More reliable than the GameModifier route
         // because PlayerInfoImpact can reset modifiers on scene transitions.
         public static void ApplyNoSpeedWobblesPatch(HarmonyLib.Harmony harmony)
@@ -124,7 +145,7 @@ namespace DescendersModMenu.Mods
             }
             catch (System.Exception ex) { MelonLogger.Error("[GameMod] NoSpeedWobbles Vehicle patch: " + ex.Message); }
 
-            // Patch BikeCamera.FixedUpdate — calls RemoveCameraShake() every frame
+            // Patch BikeCamera.FixedUpdate ï¿½ calls RemoveCameraShake() every frame
             // to zero VgM\u007Fk\u0080u (shake velocity) and OXXnhI\u0081 (shake offset).
             // BikeCamera.FixedUpdate always calls the active camera mode function,
             // so this covers every camera view with a single patch.
@@ -159,7 +180,7 @@ namespace DescendersModMenu.Mods
                     if ((object)mods[i] != null && mods[i].name == modName)
                     { target = mods[i]; break; }
                 if ((object)target == null) { MelonLogger.Warning("[GameMod] Modifier not found: " + modName); return; }
-                float value = modName == "OFFROADFRICTION" ? IceMult(level) : Mult(level);
+                float value = modName == "OFFROADFRICTION" ? IceMult(level) : Delta(level);
                 target.modifiers[0].percentageValue = value;
                 PlayerManager pm = UnityEngine.Object.FindObjectOfType<PlayerManager>();
                 if ((object)pm == null) { MelonLogger.Warning("[GameMod] PlayerManager not found."); return; }
@@ -168,11 +189,47 @@ namespace DescendersModMenu.Mods
                 pi.AddGameModifier(target);
                 MelonLogger.Msg("[GameMod] " + modName + " level " + level + " (" + value + ")");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[GameMod] ApplyMod " + modName + ": " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[GameMod] ApplyMod " + modName + ": " + ex.Message); Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
+        }
+
+        // One-shot diagnostic â€” logs every entry in GameData's GameModifier[]
+        // array (name + current percentageValue). Only 6 of these are wired
+        // up today (WHEELIEBALANCE, AIRCORRECTION, FAKIEBALANCE, PUMPSTRENGTH,
+        // OFFROADFRICTION, SPEEDWOBBLES); this exists to find the exact
+        // string name for ones that aren't yet â€” e.g. "Tweak Speed" â€” without
+        // guessing and burning a build/test cycle on a wrong name.
+        public static void DumpAllModifiers()
+        {
+            try
+            {
+                GameData gameData = UnityEngine.Object.FindObjectOfType<GameData>();
+                if ((object)gameData == null) { MelonLogger.Warning("[GameMod] DumpAllModifiers: GameData not found."); return; }
+                FieldInfo modArrayField = gameData.GetType().GetField("\u0081jU\u0080h\u0084c",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if ((object)modArrayField == null) { MelonLogger.Warning("[GameMod] DumpAllModifiers: mod array field not found."); return; }
+                GameModifier[] mods = modArrayField.GetValue(gameData) as GameModifier[];
+                if ((object)mods == null) { MelonLogger.Warning("[GameMod] DumpAllModifiers: mod array is null."); return; }
+
+                MelonLogger.Msg("[GameMod] === ALL GAME MODIFIERS (" + mods.Length + ") ===");
+                for (int i = 0; i < mods.Length; i++)
+                {
+                    if ((object)mods[i] == null) { MelonLogger.Msg("[GameMod]   [" + i + "] <null>"); continue; }
+                    float curVal = -1f;
+                    try
+                    {
+                        if (mods[i].modifiers != null && mods[i].modifiers.Length > 0)
+                            curVal = mods[i].modifiers[0].percentageValue;
+                    }
+                    catch { }
+                    MelonLogger.Msg("[GameMod]   [" + i + "] name=" + mods[i].name + " value=" + curVal);
+                }
+                MelonLogger.Msg("[GameMod] === END DUMP ===");
+            }
+            catch (System.Exception ex) { MelonLogger.Error("[GameMod] DumpAllModifiers: " + ex.Message); }
         }
     }
 
-    // Postfix on Vehicle.FixedUpdate — directly zeros steering wobble property
+    // Postfix on Vehicle.FixedUpdate ï¿½ directly zeros steering wobble property
     // Z\u0082kM\u005DJM when NoSpeedWobbles is enabled. This fires every physics frame
     // so it can't be overwritten by PlayerInfoImpact resets.
     public static class NoSpeedWobbles_Patch
@@ -214,8 +271,8 @@ namespace DescendersModMenu.Mods
     {
         // Remove all camera-shake vectors produced by the speed wobble system.
         // These are separate from the CameraAngle.cameraShake field.
-        private static FieldInfo _shakeVel = null;   // VgM\u007Fk\u0080u  — Vector3
-        private static FieldInfo _shakeOff = null;   // OXXnhI\u0081  — Vector3
+        private static FieldInfo _shakeVel = null;   // VgM\u007Fk\u0080u  ï¿½ Vector3
+        private static FieldInfo _shakeOff = null;   // OXXnhI\u0081  ï¿½ Vector3
         private static bool _cached = false;
 
         public static void Postfix(BikeCamera __instance)

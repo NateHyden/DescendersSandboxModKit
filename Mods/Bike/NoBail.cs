@@ -2,6 +2,7 @@
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -38,7 +39,7 @@ namespace DescendersModMenu.Mods
                 if ((object)_cached == null) return;
                 _cached.Nobail(Enabled);
             }
-            catch (System.Exception ex) { MelonLogger.Error("NoBail.Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("NoBail.Apply: " + ex.Message); Telemetry.ReportErrorAsync(ex, "NoBail"); }
         }
 
         public static void ClearCache() { _cached = null; }
@@ -90,6 +91,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[NoBail] Postfix: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "NoBail");
             }
         }
     }

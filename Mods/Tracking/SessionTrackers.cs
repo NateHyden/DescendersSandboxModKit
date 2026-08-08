@@ -2,6 +2,7 @@ using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -122,6 +123,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[CP] Exception: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SessionTrackers.Checkpoint");
                 _cachedVE = null;
                 _cpIndexProp = null;
                 _cpPropSearchDone = false;

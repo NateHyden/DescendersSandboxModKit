@@ -2,6 +2,7 @@ using MelonLoader;
 using UnityEngine;
 using System.Reflection;
 using HarmonyLib;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -117,6 +118,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[WheelieAngleLimit] Postfix: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "WheelieAngleLimit");
             }
         }
 

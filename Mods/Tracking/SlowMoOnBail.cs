@@ -1,5 +1,6 @@
 using MelonLoader;
 using UnityEngine;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -105,7 +106,7 @@ namespace DescendersModMenu.Mods
                     Time.fixedDeltaTime = 0.02f * scale;
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[SlowMoOnBail] SetScale: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[SlowMoOnBail] SetScale: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SlowMoOnBail"); }
         }
 
         public static void Reset()

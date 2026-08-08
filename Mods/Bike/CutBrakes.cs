@@ -2,6 +2,7 @@ using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -78,7 +79,7 @@ namespace DescendersModMenu.Mods
                 // NYsPlot is public property on Vehicle - set directly
                 vehicle.NYsPlot = 0f;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[CutBrakes] Postfix: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[CutBrakes] Postfix: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CutBrakes"); }
         }
     }
 }

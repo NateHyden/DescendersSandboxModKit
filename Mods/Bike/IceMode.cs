@@ -2,6 +2,7 @@ using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -37,7 +38,7 @@ namespace DescendersModMenu.Mods
                 }
                 rb.angularDrag = 0f;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[IceMode] ApplyToRigidbody: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[IceMode] ApplyToRigidbody: " + ex.Message); Telemetry.ReportErrorAsync(ex, "IceMode"); }
         }
 
         private static void RestoreRigidbody()
@@ -50,7 +51,7 @@ namespace DescendersModMenu.Mods
                 rb.angularDrag = _savedAngularDrag;
                 MelonLogger.Msg("[IceMode] Restored angularDrag=" + _savedAngularDrag);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[IceMode] RestoreRigidbody: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[IceMode] RestoreRigidbody: " + ex.Message); Telemetry.ReportErrorAsync(ex, "IceMode"); }
         }
 
         private static Rigidbody GetRigidbody()

@@ -2,6 +2,7 @@ using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -144,6 +145,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[ReverseSteering] Postfix error: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ReverseSteering");
             }
         }
     }

@@ -18,10 +18,12 @@ namespace DescendersModMenu.UI
 
         private static Transform _contentRoot;
         private static ScrollRect _scrollRect;
+        private static bool _hasBuiltOnce = false;
 
         public static GameObject CreatePage(Transform parent)
         {
             GameObject pg = null;
+            _hasBuiltOnce = false; // fresh ScrollRect below — see Rebuild() for why this matters
             try
             {
                 pg = UIHelpers.Obj("PBinds", parent);
@@ -66,8 +68,19 @@ namespace DescendersModMenu.UI
             if ((object)_contentRoot == null) return;
             try
             {
-                // Preserve scroll position across state-change rebuilds
-                float savedScroll = (object)_scrollRect != null ? _scrollRect.verticalNormalizedPosition : 1f;
+                // Preserve scroll position across state-change rebuilds (e.g.
+                // clicking BIND, pressing a key) — but NOT on the very first
+                // build. _scrollRect already exists by the time this first
+                // runs (created moments earlier in CreatePage), but has no
+                // real content yet, so its verticalNormalizedPosition is
+                // whatever Unity's default happens to be for an empty
+                // ScrollRect — not a genuine "top". Reading that here was
+                // capturing that undefined value and reapplying it as if it
+                // were a real saved position, which is why the page always
+                // opened scrolled to the bottom.
+                float savedScroll = (!_hasBuiltOnce || (object)_scrollRect == null)
+                    ? 1f : _scrollRect.verticalNormalizedPosition;
+                _hasBuiltOnce = true;
 
                 for (int i = _contentRoot.childCount - 1; i >= 0; i--)
                     UnityEngine.Object.DestroyImmediate(_contentRoot.GetChild(i).gameObject);

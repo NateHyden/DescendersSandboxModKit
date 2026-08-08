@@ -475,7 +475,13 @@ namespace DescendersModMenu.UI
                 .AddComponent<LayoutElement>().preferredHeight = 1;
         }
 
-        public static void InfoBox(Transform p, string txt)
+        public static void InfoBox(Transform p, string txt) => InfoBox(p, txt, TextDim);
+
+        // Overload with an explicit text colour — the default InfoBox is
+        // always TextDim (used everywhere else in the UI), so this exists
+        // specifically for cases that need to stand out (e.g. white).
+        // Doesn't touch the existing calls or their colour at all.
+        public static void InfoBox(Transform p, string txt, Color textColor)
         {
             var bx = Panel("Inf", p, RowBg, RowSp);
             bx.AddComponent<LayoutElement>().preferredHeight = 34;
@@ -494,7 +500,7 @@ namespace DescendersModMenu.UI
             lbRT.offsetMax = new Vector2(2, -4);
             lbar.AddComponent<LayoutElement>().ignoreLayout = true;
 
-            var t = Txt("IT", bx.transform, txt, 10, FontStyle.Italic, TextAnchor.MiddleLeft, TextDim);
+            var t = Txt("IT", bx.transform, txt, 10, FontStyle.Italic, TextAnchor.MiddleLeft, textColor);
             t.horizontalOverflow = HorizontalWrapMode.Wrap;
             t.verticalOverflow = VerticalWrapMode.Truncate;
             Fill(RT(t.gameObject), 14, 12, 4, 4);

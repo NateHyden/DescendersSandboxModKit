@@ -130,6 +130,7 @@
     <Compile Include="Mods\Bike\BrakeFade.cs" />
     <Compile Include="Mods\Bike\CenterOfMass.cs" />
     <Compile Include="Mods\Bike\CutBrakes.cs" />
+    <Compile Include="Mods\Bike\HoverMode.cs" />
     <Compile Include="Mods\Bike\IceMode.cs" />
     <Compile Include="Mods\Bike\InstantRespawn.cs" />
     <Compile Include="Mods\Bike\LandingImpact.cs" />
@@ -185,10 +186,12 @@
     <Compile Include="Mods\System\SceneDumper.cs" />
     <Compile Include="Mods\System\ScreenshotMode.cs" />
     <Compile Include="Mods\System\CompassAlwaysOn.cs" />
+    <Compile Include="Mods\System\PerkMenu.cs" />
     <Compile Include="Mods\System\SlowMotion.cs" />
     <Compile Include="Mods\System\SteamPlayerCount.cs" />
     <Compile Include="Mods\System\TeleportToCheckpoint.cs" />
     <Compile Include="Mods\System\TeleportToPlayer.cs" />
+    <Compile Include="Mods\System\SpectateMode.cs" />
     <Compile Include="Mods\System\UIRemover.cs" />
     <Compile Include="Mods\System\UpdateChecker.cs" />
     <Compile Include="Mods\Bike\BikeSize.cs" />
@@ -204,6 +207,8 @@
     <Compile Include="Mods\Other\ChaosMode.cs" />
     <Compile Include="Mods\Other\RandomMutatorOnCheckpoint.cs" />
     <Compile Include="Mods\Other\RandomBikeSwitch.cs" />
+    <Compile Include="Mods\Other\RubberBandSteering.cs" />
+    <Compile Include="Mods\Other\RandomWeatherRoulette.cs" />
     <Compile Include="Mods\World\Fog.cs" />
     <Compile Include="Mods\World\Music.cs" />
     <Compile Include="Mods\World\Trees.cs" />
@@ -211,6 +216,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\KeyBindManager.cs" />
     <Compile Include="Core\ModEntry.cs" />
+    <Compile Include="Core\Telemetry.cs" />
+    <Compile Include="Core\TelemetryConfig.cs" Condition="Exists('Core\TelemetryConfig.cs')" />
     <Compile Include="UI\Core\ColorSchemeManager.cs" />
     <Compile Include="UI\Core\FavouritesManager.cs" />
     <Compile Include="UI\Core\Uitheme.cs" />
@@ -233,6 +240,7 @@
     <Compile Include="UI\Pages\SearchPage.cs" />
     <Compile Include="UI\Pages\SessionPage.cs" />
     <Compile Include="UI\Pages\BindsPage.cs" />
+    <Compile Include="UI\Pages\PerksPage.cs" />
     <Compile Include="UI\Pages\WorldPage.cs" />
     <Compile Include="UI\HUDs\PoliceHUD.cs" />
     <Compile Include="UI\HUDs\SessionHUD.cs" />

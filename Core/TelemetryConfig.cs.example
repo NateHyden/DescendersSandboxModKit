@@ -1,0 +1,23 @@
+// ============================================================
+// LOCAL SETUP — first time only (same pattern as GamePath.props)
+// ============================================================
+// Copy this file to TelemetryConfig.cs (same folder) and fill in
+// your real Discord webhook URL. TelemetryConfig.cs is gitignored
+// so it never gets committed to the public repo — but its value
+// DOES get compiled into the DLL you distribute, so telemetry
+// works automatically for anyone who downloads that DLL, without
+// them needing to edit any config file themselves.
+//
+// If this file is absent (e.g. a fresh clone with no local copy
+// made yet), Telemetry.cs falls back to an empty webhook via
+// reflection and telemetry is simply inert — safe default, no
+// build error.
+// ============================================================
+
+namespace DescendersModMenu
+{
+    internal static class TelemetryConfig
+    {
+        public const string WebhookUrl = "";
+    }
+}

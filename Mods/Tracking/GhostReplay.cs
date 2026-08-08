@@ -2,6 +2,7 @@ using MelonLoader;
 using UnityEngine;
 using System.Collections.Generic;
 using HarmonyLib;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -325,7 +326,7 @@ namespace DescendersModMenu.Mods
                 _ghostObj.SetActive(false);
                 MelonLogger.Msg("[GhostReplay] Ghost built.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[GhostReplay] BuildGhost: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[GhostReplay] BuildGhost: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostReplay"); }
         }
 
         private static void StripAndTint(GameObject go)

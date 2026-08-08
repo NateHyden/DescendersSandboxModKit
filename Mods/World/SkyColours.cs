@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Reflection;
 using HarmonyLib;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -319,7 +320,7 @@ namespace DescendersModMenu.Mods
                 }
                 MelonLogger.Msg("[SkyColours] Rain intensity x" + mult.ToString("F2") + " applied to " + applied + " systems.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[SkyColours] ApplyRainIntensity: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[SkyColours] ApplyRainIntensity: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SkyColours.Rain"); }
         }
 
         private static int _idSunSky = -1;
@@ -369,6 +370,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SkyColours] CaptureSceneDefaults: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SkyColours.SceneDefaults");
             }
         }
 
@@ -681,6 +683,7 @@ namespace DescendersModMenu.Mods
                 System.Exception inner = ex;
                 while (inner.InnerException != null) inner = inner.InnerException;
                 MelonLogger.Error("[SkyColours] ApplyStorm: " + inner.Message);
+                Telemetry.ReportErrorAsync(inner, "SkyColours.Storm");
             }
         }
 
@@ -860,6 +863,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SkyColours] ApplyIntensityToEffectList: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SkyColours.EffectList");
             }
         }
     }

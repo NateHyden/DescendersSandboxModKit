@@ -20,9 +20,12 @@ namespace DescendersModMenu.UI
         private static Text _hudTogVal;
         private static Image _hudTrack;
         private static RectTransform _hudKnob;
+        private static Text _specTogVal, _specTargetVal, _specDistVal;
+        private static Image _specTrack;
+        private static RectTransform _specKnob;
 
         public static bool IsAnyActive =>
-            SpeedrunTimer.Enabled || SessionHUD.Enabled;
+            SpeedrunTimer.Enabled || SessionHUD.Enabled || SpectateMode.Enabled;
 
         public static GameObject CreatePage(Transform parent)
         {
@@ -70,6 +73,30 @@ namespace DescendersModMenu.UI
                     RefreshAll();
                 }, out _hudTrack, out _hudKnob);
                 UIHelpers.InfoBox(c, "Displays session stats in the top-right corner while riding.");
+
+                UIHelpers.Divider(c);
+
+                // ── SPECTATE MODE ──────────────────────────────────────
+                UIHelpers.SectionHeader("SPECTATE MODE", c);
+                var specR = UIHelpers.StatRow("Spectate", c);
+                _specTogVal = UIHelpers.Txt("SpcTV", specR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _specTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(specR.transform, "SpcT", () => { SpectateMode.Toggle(); RefreshAll(); }, out _specTrack, out _specKnob);
+
+                var specTargetR = UIHelpers.StatRow("Watching", c);
+                _specTargetVal = UIHelpers.Txt("SpcTgV", specTargetR.transform, SpectateMode.StatusDisplay, 12,
+                    FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
+                _specTargetVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                UIHelpers.SmallBtn(specTargetR.transform, "<", () => { SpectateMode.Previous(); RefreshAll(); });
+                UIHelpers.SmallBtn(specTargetR.transform, ">", () => { SpectateMode.Next(); RefreshAll(); });
+
+                var specDistR = UIHelpers.StatRow("Camera Distance", c);
+                _specDistVal = UIHelpers.Txt("SpcDV", specDistR.transform, SpectateMode.Distance.ToString("0") + "m", 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+                _specDistVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
+                UIHelpers.SmallBtn(specDistR.transform, "-", () => { SpectateMode.DecreaseDistance(); RefreshAll(); });
+                UIHelpers.SmallBtn(specDistR.transform, "+", () => { SpectateMode.IncreaseDistance(); RefreshAll(); });
+                UIHelpers.InfoBox(c, "Chase-cams another connected player instead of your own bike. Multiplayer only — solo there's no one else to watch. Freezes your own bike while active.");
 
                 UIHelpers.Divider(c);
 
@@ -152,6 +179,7 @@ namespace DescendersModMenu.UI
                 // ── STAR BUTTONS (Favourites) ──────────────────────────
                 FavouritesManager.RegisterStarButton("ShowHUD", UIHelpers.StarBtn(hudr.transform, "ShowHUD", () => FavouritesManager.Toggle("ShowHUD")));
                 FavouritesManager.RegisterStarButton("SpeedrunTimer", UIHelpers.StarBtn(srtr.transform, "SpeedrunTimer", () => FavouritesManager.Toggle("SpeedrunTimer")));
+                FavouritesManager.RegisterStarButton("SpectateMode", UIHelpers.StarBtn(specR.transform, "SpectateMode", () => FavouritesManager.Toggle("SpectateMode")));
 
                 FavouritesManager.Register(new ModFavEntry {
                     Id = "ShowHUD", DisplayName = "Show HUD", TabBadge = "SESSION",
@@ -164,6 +192,12 @@ namespace DescendersModMenu.UI
                     BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "SpeedrunTimer", "Speedrun Timer",
                         () => SpeedrunTimer.Enabled, () => SpeedrunTimer.Toggle(), () => RefreshAll()),
                     IsActive = () => SpeedrunTimer.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "SpectateMode", DisplayName = "Spectate Mode", TabBadge = "SESSION",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "SpectateMode", "Spectate Mode",
+                        () => SpectateMode.Enabled, () => SpectateMode.Toggle(), () => RefreshAll()),
+                    IsActive = () => SpectateMode.Enabled
                 });
 
                 UIHelpers.AddScrollForwarders(c);
@@ -188,6 +222,12 @@ namespace DescendersModMenu.UI
             bool srt = SpeedrunTimer.Enabled;
             if (_srtVal) { _srtVal.text = srt ? "ON" : "OFF"; _srtVal.color = srt ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_srtTrack, _srtKnob, srt);
+
+            bool spec = SpectateMode.Enabled;
+            if (_specTogVal) { _specTogVal.text = spec ? "ON" : "OFF"; _specTogVal.color = spec ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_specTrack, _specKnob, spec);
+            if (_specTargetVal) _specTargetVal.text = SpectateMode.StatusDisplay;
+            if (_specDistVal) _specDistVal.text = SpectateMode.Distance.ToString("0") + "m";
         }
 
         public static void TickLive()

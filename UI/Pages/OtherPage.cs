@@ -23,10 +23,17 @@ namespace DescendersModMenu.UI
         // Random Mutator
         private static Text _mutatorVal; private static Image _mutatorTrack; private static RectTransform _mutatorKnob;
         private static Text _mutatorLastVal;
+        // Rubber Band Steering
+        private static Text _rubberVal; private static Image _rubberTrack; private static RectTransform _rubberKnob;
+        private static Text _rubberLvlVal;
+        // Random Weather Roulette
+        private static Text _weatherVal; private static Image _weatherTrack; private static RectTransform _weatherKnob;
+        private static Text _weatherLastVal;
 
         public static bool IsAnyActive =>
             TrailPainter.Enabled || ConfettiOnTrick.Enabled || BigHeadMode.Enabled ||
-            ChaosMode.Enabled || RandomBikeSwitch.Enabled || RandomMutatorOnCheckpoint.Enabled;
+            ChaosMode.Enabled || RandomBikeSwitch.Enabled || RandomMutatorOnCheckpoint.Enabled ||
+            RubberBandSteering.Enabled || RandomWeatherRoulette.Enabled;
 
         public static GameObject CreatePage(Transform parent)
         {
@@ -140,6 +147,36 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
+                UIHelpers.SectionHeader("STEERING", c);
+
+                var rubR = UIHelpers.StatRow("Rubber Band Steering", c);
+                _rubberVal = UIHelpers.Txt("RbV", rubR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _rubberVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(rubR.transform, "RbT", () => { RubberBandSteering.Toggle(); RefreshAll(); }, out _rubberTrack, out _rubberKnob);
+                _rubberLvlVal = UIHelpers.Txt("RbLV", rubR.transform, RubberBandSteering.LevelDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _rubberLvlVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
+                UIHelpers.SmallBtn(rubR.transform, "-", () => { RubberBandSteering.Decrease(); RefreshAll(); });
+                UIHelpers.SmallBtn(rubR.transform, "+", () => { RubberBandSteering.Increase(); RefreshAll(); });
+                FavouritesManager.RegisterStarButton("RubberBandSteering", UIHelpers.StarBtn(rubR.transform, "RubberBandSteering", () => FavouritesManager.Toggle("RubberBandSteering")));
+                UIHelpers.InfoBox(c, "Delays your steering and lean input so every move lands late — like riding on a rubber band. Level 1 = 50ms, Level 10 = 500ms.");
+
+                UIHelpers.Divider(c);
+
+                UIHelpers.SectionHeader("WEATHER", c);
+
+                var wthR = UIHelpers.StatRow("Random Weather Roulette", c);
+                _weatherVal = UIHelpers.Txt("WthV", wthR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _weatherVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(wthR.transform, "WthT", () => { RandomWeatherRoulette.Toggle(); RefreshAll(); }, out _weatherTrack, out _weatherKnob);
+                FavouritesManager.RegisterStarButton("RandomWeatherRoulette", UIHelpers.StarBtn(wthR.transform, "RandomWeatherRoulette", () => FavouritesManager.Toggle("RandomWeatherRoulette")));
+                UIHelpers.InfoBox(c, "Cycles between Storm, Fog, Moon Mode and Normal every 12-25 seconds instead of one fixed pick. Reverts to how it was when you turn this off.");
+                var wthLastR = UIHelpers.StatRow("Current weather", c);
+                _weatherLastVal = UIHelpers.Txt("WthLV", wthLastR.transform, RandomWeatherRoulette.LastFlipDisplay, 11,
+                    FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.TextDim);
+                _weatherLastVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 160;
+
+                UIHelpers.Divider(c);
+
                 // ── Favourites/Search registry ──────────────────────────
                 // RegisterStarButton (above) only wires the star icon on
                 // THIS page's own rows. Register(ModFavEntry) is the
@@ -214,6 +251,26 @@ namespace DescendersModMenu.UI
                         () => RandomMutatorOnCheckpoint.Enabled, () => { RandomMutatorOnCheckpoint.Toggle(); }, () => RefreshAll()),
                     IsActive = () => RandomMutatorOnCheckpoint.Enabled
                 });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "RubberBandSteering",
+                    DisplayName = "Rubber Band Steering",
+                    TabBadge = "OTHER",
+                    BuildControls = (p) => FavsPage.BuildToggleStepper(p, "RubberBandSteering", "Rubber Band Steering",
+                        () => RubberBandSteering.Enabled, () => { RubberBandSteering.Toggle(); },
+                        () => RubberBandSteering.Level, () => RubberBandSteering.Decrease(), () => RubberBandSteering.Increase(),
+                        1, 10, () => RefreshAll(), 5),
+                    IsActive = () => RubberBandSteering.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "RandomWeatherRoulette",
+                    DisplayName = "Random Weather Roulette",
+                    TabBadge = "OTHER",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "RandomWeatherRoulette", "Random Weather Roulette",
+                        () => RandomWeatherRoulette.Enabled, () => { RandomWeatherRoulette.Toggle(); }, () => RefreshAll()),
+                    IsActive = () => RandomWeatherRoulette.Enabled
+                });
 
                 RefreshAll();
                 UIHelpers.AddScrollForwarders(c);
@@ -232,6 +289,8 @@ namespace DescendersModMenu.UI
             ChaosMode.Reset();
             RandomBikeSwitch.Reset();
             RandomMutatorOnCheckpoint.Reset();
+            RubberBandSteering.Reset();
+            RandomWeatherRoulette.Reset();
         }
 
         public static void RefreshAll()
@@ -263,6 +322,16 @@ namespace DescendersModMenu.UI
             if (_mutatorVal) { _mutatorVal.text = muOn ? "ON" : "OFF"; _mutatorVal.color = muOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_mutatorTrack, _mutatorKnob, muOn);
             if (_mutatorLastVal) _mutatorLastVal.text = RandomMutatorOnCheckpoint.LastMutationDisplay;
+
+            bool rubOn = RubberBandSteering.Enabled;
+            if (_rubberVal) { _rubberVal.text = rubOn ? "ON" : "OFF"; _rubberVal.color = rubOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_rubberTrack, _rubberKnob, rubOn);
+            if (_rubberLvlVal) _rubberLvlVal.text = RubberBandSteering.LevelDisplay;
+
+            bool wthOn = RandomWeatherRoulette.Enabled;
+            if (_weatherVal) { _weatherVal.text = wthOn ? "ON" : "OFF"; _weatherVal.color = wthOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_weatherTrack, _weatherKnob, wthOn);
+            if (_weatherLastVal) _weatherLastVal.text = RandomWeatherRoulette.LastFlipDisplay;
         }
     }
 }

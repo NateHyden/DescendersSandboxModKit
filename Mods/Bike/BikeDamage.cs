@@ -2,6 +2,7 @@ using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -278,7 +279,7 @@ namespace DescendersModMenu.Mods
                     break;
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[BikeDamage] FindRearWheel: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[BikeDamage] FindRearWheel: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BikeDamage"); }
         }
 
         public static void ManualReset()

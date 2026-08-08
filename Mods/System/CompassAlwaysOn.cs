@@ -3,6 +3,7 @@ using MelonLoader;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -43,7 +44,14 @@ namespace DescendersModMenu.Mods
 
         public static FinishLine GetFinishLine()
         {
-            if ((object)_finishLine == null) _finishLine = Object.FindObjectOfType<FinishLine>();
+            // Unity's own == here, not (object) — same reasoning as the icon
+            // checks in the Postfix below. This is exactly the reference the
+            // Discord error report pointed at: Component:get_transform()
+            // throwing NullReferenceException from inside this method's
+            // caller, because a destroyed-but-not-truly-null FinishLine from
+            // the previous map was passing right through the old (object)
+            // cast check and getting cached as if it were still valid.
+            if (_finishLine == null) _finishLine = Object.FindObjectOfType<FinishLine>();
             return _finishLine;
         }
 
@@ -97,10 +105,18 @@ namespace DescendersModMenu.Mods
                 if ((object)_iconField == null) return;
 
                 Image icon = _iconField.GetValue(__instance) as Image;
-                if ((object)icon == null) return;
+                // Unity's own == here, deliberately NOT the (object) cast used
+                // everywhere else in this codebase. (object) checks only catch
+                // "never assigned" — they don't catch "destroyed" (Unity's fake-
+                // null pattern: the C# reference is non-null but the underlying
+                // native object is gone). Mid scene-transition, on "starting a
+                // new map", that's exactly the state this can be in, and only
+                // Unity's overloaded == correctly detects it.
+                if (icon == null) return;
+                if (icon.transform == null || icon.transform.parent == null) return;
 
                 FinishLine finish = CompassAlwaysOn.GetFinishLine();
-                if ((object)finish == null) { icon.gameObject.SetActive(false); return; }
+                if (finish == null) { icon.gameObject.SetActive(false); return; }
 
                 icon.transform.parent.gameObject.SetActive(true);
 
@@ -119,15 +135,27 @@ namespace DescendersModMenu.Mods
                 icon.rectTransform.anchoredPosition = new Vector2(x, 0f);
 
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player != null && (object)__instance.UspzMHw != null)
+                var distTxt = __instance.UspzMHw;
+                if ((object)player != null && distTxt != null)
                 {
-                    __instance.UspzMHw.text = Mathf.FloorToInt(
+                    distTxt.text = Mathf.FloorToInt(
                         (finish.transform.position - player.transform.position).magnitude) + "m";
                 }
 
                 icon.gameObject.SetActive(dot >= 0f);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[CompassAlwaysOn] Postfix: " + ex.Message); }
+            catch (UnityEngine.MissingReferenceException)
+            {
+                // Expected/benign: a reference from the scene we just left
+                // got destroyed a frame or two before ClearCache() ran.
+                // Transient — next frame re-fetches everything fresh. Not
+                // a real bug, so no log spam and no telemetry report.
+            }
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("[CompassAlwaysOn] Postfix: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CompassAlwaysOn");
+            }
         }
     }
 }

@@ -23,11 +23,30 @@ namespace DescendersModMenu.Mods
         // Reflection for zsEdyM} (body lean) — brace in name breaks direct access
         private static System.Reflection.PropertyInfo _bodyLeanProp = null;
 
+        // Camera.onPreRender is a static Unity event guaranteed to fire
+        // AFTER every LateUpdate() in the scene for that frame, right
+        // before the camera actually renders. LateTick below used to run
+        // from MelonLoader's OnLateUpdate hook on the assumption that ran
+        // after the game's own BikeCamera.LateUpdate() — that ordering
+        // between a mod hook and a native Unity component's own LateUpdate
+        // was never actually guaranteed, so some frames this code won the
+        // race and some frames BikeCamera won, alternating winners frame
+        // to frame — that's exactly what the reported jitter was.
+        // onPreRender removes the race: nothing can run after it.
+        private static bool _subscribed = false;
+        private static void EnsureSubscribed()
+        {
+            if (_subscribed) return;
+            Camera.onPreRender += OnPreRenderCamera;
+            _subscribed = true;
+        }
+
         public static void Toggle()
         {
             Enabled = !Enabled;
             if (Enabled)
             {
+                EnsureSubscribed();
                 _time = 0f;
                 _fovTime = 0f;
                 _steerTime = 0f;
@@ -69,22 +88,35 @@ namespace DescendersModMenu.Mods
             _steerTime += Time.deltaTime * 0.7f;
         }
 
-        // Called from OnLateUpdate — AFTER BikeCamera.LateUpdate sets FOV
+        // Called from OnLateUpdate — accumulates timers only now. Actual
+        // camera writes moved to OnPreRenderCamera (see EnsureSubscribed).
         public static void LateTick()
         {
             if (!Enabled) return;
-
             _fovTime += Time.deltaTime * 0.4f;
             _camRollTime += Time.deltaTime * 0.18f;
+        }
 
-            if ((object)_cam == null) _cam = Camera.main;
-            if ((object)_cam == null) return;
+        private static void OnPreRenderCamera(Camera cam)
+        {
+            if (!Enabled) return;
+            if ((object)cam == null || (object)Camera.main == null || cam != Camera.main) return;
 
-            // ── FOV breathing via CameraAngle.targetFOV ───────────────────
+            _cam = cam;
+
+            // ── FOV breathing ──────────────────────────────────────────────
             float fovWobble = Mathf.Sin(_fovTime * Mathf.PI * 2f) * 10f
                             + Mathf.Sin(_fovTime * Mathf.PI * 3.3f) * 5f;
+            // Write BOTH: targetFOV in case anything else legitimately reads
+            // it, but fieldOfView directly too — writing only targetFOV left
+            // the actual visible zoom entirely dependent on whatever/whenever
+            // BikeCamera itself chooses to consume that field, which we don't
+            // control or know the timing of. Direct write makes us the
+            // final, guaranteed authority on the rendered value, exactly
+            // like the camera roll write below already was.
             if ((object)_cachedAngle != null)
                 _cachedAngle.targetFOV = _baseFOV + fovWobble;
+            _cam.fieldOfView = _baseFOV + fovWobble;
 
             // ── Camera roll ───────────────────────────────────────────────
             float roll = Mathf.Sin(_camRollTime * Mathf.PI * 2f) * 14f

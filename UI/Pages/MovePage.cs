@@ -21,6 +21,10 @@ namespace DescendersModMenu.UI
         private static Image _wbTrack, _iacTrack;
         private static RectTransform _wbKnob, _iacKnob;
 
+        // ── Wheelie Balance / Tweak Speed (GameModifiers) ─────────────
+        private static Text _gmWbVal, _gmTsVal;
+        private static Image _gmWbBar, _gmTsBar;
+
         // ── Wheelie HUD row fields ────────────────────────────────────
         private static GameObject _whRow;
         private static Text _whTogVal;
@@ -185,6 +189,24 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(fbr.transform, "-", () => { GameModifierMods.PumpStrengthDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(fbr.transform, "+", () => { GameModifierMods.PumpStrengthIncrease(); RefreshAll(); });
 
+                // Wheelie Balance
+                var gmWbR = UIHelpers.StatRow("Wheelie Balance", pg6);
+                _gmWbBar = UIHelpers.MakeBar("GmWbB", gmWbR.transform, (GameModifierMods.WheelieBalanceLevel - 1) / 9f);
+                _gmWbVal = UIHelpers.Txt("GmWbV", gmWbR.transform, GameModifierMods.DeltaDisplay(GameModifierMods.WheelieBalanceLevel), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _gmWbVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
+                UIHelpers.SmallBtn(gmWbR.transform, "-", () => { GameModifierMods.WheelieBalanceDecrease(); RefreshAll(); });
+                UIHelpers.SmallBtn(gmWbR.transform, "+", () => { GameModifierMods.WheelieBalanceIncrease(); RefreshAll(); });
+                UIHelpers.InfoBox(pg6, "How forgiving wheelie balance is. Level 5/6 = vanilla. Lower = twitchier, higher = more assisted.");
+
+                // Tweak Speed
+                var gmTsR = UIHelpers.StatRow("Tweak Speed", pg6);
+                _gmTsBar = UIHelpers.MakeBar("GmTsB", gmTsR.transform, (GameModifierMods.TweakSpeedLevel - 1) / 9f);
+                _gmTsVal = UIHelpers.Txt("GmTsV", gmTsR.transform, GameModifierMods.DeltaDisplay(GameModifierMods.TweakSpeedLevel), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _gmTsVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
+                UIHelpers.SmallBtn(gmTsR.transform, "-", () => { GameModifierMods.TweakSpeedDecrease(); RefreshAll(); });
+                UIHelpers.SmallBtn(gmTsR.transform, "+", () => { GameModifierMods.TweakSpeedIncrease(); RefreshAll(); });
+                UIHelpers.InfoBox(pg6, "How fast you can tweak/adjust your bike pose mid-trick. Level 5/6 = vanilla.");
+
                 // Near Miss Sensitivity
                 var nmr = UIHelpers.StatRow("Near Miss Sensitivity", pg6);
                 _nmBar = UIHelpers.MakeBar("NmB", nmr.transform, (NearMissSensitivity.Level - 1) / 9f);
@@ -245,6 +267,8 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("WheelieHUD", UIHelpers.StarBtn(whr.transform, "WheelieHUD", () => FavouritesManager.Toggle("WheelieHUD")));
                 FavouritesManager.RegisterStarButton("AirControl", UIHelpers.StarBtn(iacr.transform, "AirControl", () => FavouritesManager.Toggle("AirControl")));
                 FavouritesManager.RegisterStarButton("PumpStrength", UIHelpers.StarBtn(fbr.transform, "PumpStrength", () => FavouritesManager.Toggle("PumpStrength")));
+                FavouritesManager.RegisterStarButton("GmWheelieBalance", UIHelpers.StarBtn(gmWbR.transform, "GmWheelieBalance", () => FavouritesManager.Toggle("GmWheelieBalance")));
+                FavouritesManager.RegisterStarButton("TweakSpeed", UIHelpers.StarBtn(gmTsR.transform, "TweakSpeed", () => FavouritesManager.Toggle("TweakSpeed")));
                 FavouritesManager.RegisterStarButton("NearMiss", UIHelpers.StarBtn(nmr.transform, "NearMiss", () => FavouritesManager.Toggle("NearMiss")));
                 Transform comHdr = pg6.Find("CENTER OF MASSH");
                 if ((object)comHdr != null)
@@ -341,6 +365,28 @@ namespace DescendersModMenu.UI
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
+                    Id = "GmWheelieBalance",
+                    DisplayName = "Wheelie Balance",
+                    TabBadge = "MOVE",
+                    BuildControls = (p) => FavsPage.BuildSliderOnly(p, "GmWheelieBalance", "Wheelie Balance",
+                        () => GameModifierMods.WheelieBalanceLevel, () => GameModifierMods.WheelieBalanceIncrease(), () => GameModifierMods.WheelieBalanceDecrease(),
+                        () => (GameModifierMods.WheelieBalanceLevel - 1) / 9f, () => RefreshAll(),
+                        () => GameModifierMods.DeltaDisplay(GameModifierMods.WheelieBalanceLevel), () => GameModifierMods.WheelieBalanceLevel != 5),
+                    IsActive = () => GameModifierMods.WheelieBalanceLevel != 5
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "TweakSpeed",
+                    DisplayName = "Tweak Speed",
+                    TabBadge = "MOVE",
+                    BuildControls = (p) => FavsPage.BuildSliderOnly(p, "TweakSpeed", "Tweak Speed",
+                        () => GameModifierMods.TweakSpeedLevel, () => GameModifierMods.TweakSpeedIncrease(), () => GameModifierMods.TweakSpeedDecrease(),
+                        () => (GameModifierMods.TweakSpeedLevel - 1) / 9f, () => RefreshAll(),
+                        () => GameModifierMods.DeltaDisplay(GameModifierMods.TweakSpeedLevel), () => GameModifierMods.TweakSpeedLevel != 5),
+                    IsActive = () => GameModifierMods.TweakSpeedLevel != 5
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
                     Id = "NearMiss",
                     DisplayName = "Near Miss Sensitivity",
                     TabBadge = "MOVE",
@@ -407,6 +453,8 @@ namespace DescendersModMenu.UI
             if (AirControl.Enabled) AirControl.Toggle();
             AirControl.SetLevel(5);
             GameModifierMods.SetPumpStrengthLevel(5);
+            GameModifierMods.SetWheelieBalanceLevel(5);
+            GameModifierMods.SetTweakSpeedLevel(5);
             if (NearMissSensitivity.Enabled) NearMissSensitivity.Toggle();
             NearMissSensitivity.SetLevel(5);
             CenterOfMass.SetLR(0f); CenterOfMass.SetFB(0f); CenterOfMass.SetUD(0f);
@@ -461,6 +509,14 @@ namespace DescendersModMenu.UI
             // ── Pump Strength ─────────────────────────────────────────
             if (psVal) psVal.text = GameModifierMods.PumpStrengthLevel.ToString();
             UIHelpers.SetBar(psBar, (GameModifierMods.PumpStrengthLevel - 1) / 9f);
+
+            // ── Wheelie Balance (GameModifiers) ───────────────────────
+            if (_gmWbVal) _gmWbVal.text = GameModifierMods.DeltaDisplay(GameModifierMods.WheelieBalanceLevel);
+            UIHelpers.SetBar(_gmWbBar, (GameModifierMods.WheelieBalanceLevel - 1) / 9f);
+
+            // ── Tweak Speed (GameModifiers) ───────────────────────────
+            if (_gmTsVal) _gmTsVal.text = GameModifierMods.DeltaDisplay(GameModifierMods.TweakSpeedLevel);
+            UIHelpers.SetBar(_gmTsBar, (GameModifierMods.TweakSpeedLevel - 1) / 9f);
 
             // ── Center of Mass ────────────────────────────────────────
             if (_comLRVal) _comLRVal.text = CenterOfMass.DisplayLR;

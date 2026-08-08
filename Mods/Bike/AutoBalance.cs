@@ -2,6 +2,7 @@ using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -84,7 +85,7 @@ namespace DescendersModMenu.Mods
                 Rigidbody rb = __instance.GetComponent<Rigidbody>();
                 if ((object)rb == null) return;
 
-                // Roll-only correction using world-space vectors — no Euler angles,
+                // Roll-only correction using world-space vectors ï¿½ no Euler angles,
                 // so no gimbal lock during backflips/frontflips.
                 //
                 // "No roll" means the bike's local RIGHT axis is horizontal (no Y component).
@@ -99,7 +100,7 @@ namespace DescendersModMenu.Mods
 
                 // The component of 'right' that we want to eliminate is its Y part.
                 // Project 'right' onto the horizontal plane, then find the rotation
-                // from current right to that horizontal right — around forward axis only.
+                // from current right to that horizontal right ï¿½ around forward axis only.
                 Vector3 rightFlat = new Vector3(right.x, 0f, right.z);
                 if (rightFlat.sqrMagnitude < 0.001f) return; // near-vertical forward, skip
 
@@ -108,7 +109,7 @@ namespace DescendersModMenu.Mods
                 // Angle between current right and flat right, signed around forward axis
                 float rollAngle = Vector3.SignedAngle(right, rightFlat, forward);
 
-                // Apply corrective rotation — slerp a fraction of the roll error per frame
+                // Apply corrective rotation ï¿½ slerp a fraction of the roll error per frame
                 float correction = rollAngle * AutoBalance.Strength * Time.fixedDeltaTime;
                 Quaternion corrective = Quaternion.AngleAxis(correction, forward);
                 rb.MoveRotation(corrective * rb.rotation);
@@ -116,6 +117,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[AutoBalance] Postfix: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "AutoBalance");
             }
         }
     }

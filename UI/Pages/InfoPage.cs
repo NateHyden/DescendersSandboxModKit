@@ -2,6 +2,7 @@
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.UI
 {
@@ -37,6 +38,14 @@ namespace DescendersModMenu.UI
         private static Text _unityMatchTxt;
         private static Text _mlVersionTxt;
         private static Text _careerResultTxt;
+        private static Text _telemetryStatusTxt;
+
+        // ── Feedback / bug report / feature request ─────────────────────
+        private static int _feedbackCategory = 2; // 0=Bug Report, 1=Feature Request, 2=Feedback (default)
+        private static readonly string[] _feedbackCatNames = { "Bug Report", "Feature Request", "Feedback" };
+        private static Image[] _feedbackCatBgs = new Image[3];
+        private static InputField _feedbackInput;
+        private static Text _feedbackStatusTxt;
         private static Text _sponsorVal;
         private static Text _repVal;
         private static UnityEngine.UI.Button _repMinus, _repPlus;
@@ -214,6 +223,159 @@ namespace DescendersModMenu.UI
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeader("COMMUNITY", vlg.transform);
             _steamPlayerTxt = MakeInfoRow("Steam Players Online", vlg.transform);
+
+            // ── Telemetry ────────────────────────────────────────────
+            // Plain-language explanation, split into short InfoBox chunks
+            // (InfoBox is sized for a sentence or two, not a paragraph).
+            // Toggle itself lives in the header — this page just explains
+            // what it actually does, since "read the telemetry page" is
+            // what the header now points people to.
+            UIHelpers.Divider(vlg.transform);
+            UIHelpers.SectionHeader("TELEMETRY", vlg.transform);
+            _telemetryStatusTxt = MakeInfoRow("Status", vlg.transform);
+            UIHelpers.InfoBox(vlg.transform, "Helps me find and fix bugs faster. When the mod loads, or if something goes wrong, a small error report is sent to my Discord.", Color.white);
+            UIHelpers.InfoBox(vlg.transform, "Sent: mod version, platform (Steam/Xbox), MelonLoader version, which mods you have loaded, and - if something breaks - which mod and the error details.", Color.white);
+
+            var telOffRow = UIHelpers.Obj("TelOffNotice", vlg.transform);
+            var telOffLe = telOffRow.AddComponent<LayoutElement>();
+            telOffLe.preferredHeight = 48; telOffLe.minHeight = 48; telOffLe.flexibleHeight = 0;
+            var telOffTxt = UIHelpers.Txt("TelOffTxt", telOffRow.transform,
+                "TURN IT ON AND OFF ANYTIME WITH THE TOGGLE AT THE TOP - THIS IS THE BEST WAY TO SUPPORT BUG REPORTING IF YOU RUN INTO THEM",
+                13, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
+            telOffTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            telOffTxt.verticalOverflow = VerticalWrapMode.Overflow;
+            UIHelpers.Fill(UIHelpers.RT(telOffTxt.gameObject), 4, 4, 0, 0);
+
+            UIHelpers.InfoBox(vlg.transform, "Tip: click the small X next to the header hint to dismiss it for good - it won't come back.", Color.white);
+
+            // ── Feedback / bug report / feature request ──────────────────
+            // Independent of the telemetry toggle above — this is an active
+            // choice (typing a message and hitting Send), not passive
+            // collection, so it works even with telemetry off.
+            UIHelpers.Divider(vlg.transform);
+            UIHelpers.SectionHeader("FEEDBACK", vlg.transform);
+            UIHelpers.InfoBox(vlg.transform, "Report a bug, request a feature, or send Feedback - sent straight to my Discord.", Color.white);
+
+            var catRow = UIHelpers.Obj("FeedbackCatRow", vlg.transform);
+            var catLe = catRow.AddComponent<LayoutElement>();
+            catLe.preferredHeight = 28; catLe.minHeight = 28; catLe.flexibleHeight = 0;
+            var catHlg = catRow.AddComponent<HorizontalLayoutGroup>();
+            catHlg.spacing = 6; catHlg.childForceExpandWidth = true; catHlg.childForceExpandHeight = true;
+
+            for (int c = 0; c < 3; c++)
+            {
+                int idx = c;
+                var catBtnGo = UIHelpers.Obj("Cat" + c, catRow.transform);
+                var catImg = catBtnGo.AddComponent<Image>();
+                catImg.sprite = UIHelpers.BtnSp; catImg.type = Image.Type.Sliced;
+                _feedbackCatBgs[c] = catImg;
+                var catBtn = catBtnGo.AddComponent<Button>();
+                catBtn.targetGraphic = catImg;
+                catBtn.onClick.AddListener(() => { _feedbackCategory = idx; RefreshFeedbackCategoryButtons(); });
+                var catTxt = UIHelpers.Txt("T", catBtnGo.transform, _feedbackCatNames[c], 10,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
+                UIHelpers.Fill(UIHelpers.RT(catTxt.gameObject));
+            }
+
+            var inputGo = UIHelpers.Obj("FeedbackInputBox", vlg.transform);
+            var inputImg = inputGo.AddComponent<Image>();
+            inputImg.sprite = UIHelpers.RowSp; inputImg.type = Image.Type.Sliced; inputImg.color = UIHelpers.RowBg;
+            var inputLe = inputGo.AddComponent<LayoutElement>();
+            inputLe.preferredHeight = 70; inputLe.minHeight = 70; inputLe.flexibleHeight = 0;
+
+            var inputBd = UIHelpers.Panel("Bd", inputGo.transform, UIHelpers.RowBorder, UIHelpers.RowSp);
+            inputBd.GetComponent<Image>().raycastTarget = false;
+            UIHelpers.Fill(UIHelpers.RT(inputBd));
+            inputBd.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            _feedbackInput = inputGo.AddComponent<InputField>();
+            _feedbackInput.lineType = InputField.LineType.MultiLineNewline;
+            _feedbackInput.characterLimit = 500;
+
+            var inputTextGo = UIHelpers.Obj("Text", inputGo.transform);
+            var inputTextComp = inputTextGo.AddComponent<Text>();
+            inputTextComp.font = UIHelpers.GetFont();
+            inputTextComp.fontSize = 12;
+            inputTextComp.color = Color.white;
+            inputTextComp.supportRichText = false;
+            inputTextComp.alignment = TextAnchor.UpperLeft;
+            inputTextComp.horizontalOverflow = HorizontalWrapMode.Wrap;
+            inputTextComp.verticalOverflow = VerticalWrapMode.Overflow;
+            UIHelpers.Fill(UIHelpers.RT(inputTextGo), 20, 8, 6, 6);
+            _feedbackInput.textComponent = inputTextComp;
+
+            var placeholderGo = UIHelpers.Obj("Placeholder", inputGo.transform);
+            var placeholderComp = placeholderGo.AddComponent<Text>();
+            placeholderComp.font = UIHelpers.GetFont();
+            placeholderComp.fontSize = 12;
+            placeholderComp.fontStyle = FontStyle.Italic;
+            placeholderComp.color = UIHelpers.TextDim;
+            placeholderComp.text = "Type your message here...";
+            placeholderComp.alignment = TextAnchor.UpperLeft;
+            placeholderComp.horizontalOverflow = HorizontalWrapMode.Wrap;
+            placeholderComp.verticalOverflow = VerticalWrapMode.Overflow;
+            UIHelpers.Fill(UIHelpers.RT(placeholderGo), 20, 8, 6, 6);
+            _feedbackInput.placeholder = placeholderComp;
+
+            // Explicit caret settings — without these the caret can end up
+            // invisible/non-blinking against a dark background even though
+            // typing itself works fine.
+            _feedbackInput.customCaretColor = true;
+            _feedbackInput.caretColor = Color.white;
+            _feedbackInput.caretWidth = 2;
+            _feedbackInput.caretBlinkRate = 0.85f;
+            _feedbackInput.selectionColor = new Color(UIHelpers.Accent.r, UIHelpers.Accent.g, UIHelpers.Accent.b, 0.4f);
+
+            // Manual blink indicator — the built-in caret above still isn't
+            // reliably visible at runtime in this old Unity/Mono build
+            // (same class of issue as the Scrollbar note in UIHelpers.cs).
+            // A small dot that blinks while the field is focused is a much
+            // more robust "you're in type mode" signal than fighting
+            // Unity's internal caret rendering further.
+            var caretDotGo = UIHelpers.Obj("CaretBlink", inputGo.transform);
+            var caretDotImg = caretDotGo.AddComponent<Image>();
+            caretDotImg.sprite = UIHelpers.DotSp;
+            caretDotImg.color = UIHelpers.OnColor;
+            caretDotImg.raycastTarget = false;
+            caretDotImg.enabled = false;
+            var caretDotRt = UIHelpers.RT(caretDotGo);
+            // Left edge, aligned vertically with the first line of text
+            // (which starts at the same 8px left padding used by the Text
+            // and Placeholder components above, and ~6px top padding).
+            caretDotRt.anchorMin = new Vector2(0, 1); caretDotRt.anchorMax = new Vector2(0, 1);
+            caretDotRt.pivot = new Vector2(0, 1);
+            caretDotRt.sizeDelta = new Vector2(8, 8);
+            caretDotRt.anchoredPosition = new Vector2(6, -10);
+            caretDotGo.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            var sendRow = UIHelpers.Obj("FeedbackSendRow", vlg.transform);
+            var sendLe = sendRow.AddComponent<LayoutElement>();
+            sendLe.preferredHeight = 30; sendLe.minHeight = 30; sendLe.flexibleHeight = 0;
+            var sendHlg = sendRow.AddComponent<HorizontalLayoutGroup>();
+            sendHlg.spacing = 8; sendHlg.childAlignment = TextAnchor.MiddleLeft;
+            sendHlg.childForceExpandWidth = false; sendHlg.childForceExpandHeight = true;
+
+            var sendBtn = UIHelpers.Btn("SendBtn", sendRow.transform, "SEND", new Vector2(80, 28), 11,
+                OnFeedbackSendClicked, UIHelpers.Accent, Color.black);
+            var sendBtnLe = sendBtn.gameObject.AddComponent<LayoutElement>();
+            sendBtnLe.preferredWidth = 80; sendBtnLe.preferredHeight = 28; sendBtnLe.flexibleHeight = 0;
+
+            _feedbackStatusTxt = UIHelpers.Txt("FeedbackStatus", sendRow.transform, "", 10,
+                FontStyle.Italic, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+            var statusLe = _feedbackStatusTxt.gameObject.AddComponent<LayoutElement>();
+            statusLe.flexibleWidth = 1; statusLe.preferredHeight = 28;
+
+            // Runs its own Update() loop — handles the caret blink and
+            // polls the send result continuously, independent of
+            // InfoPage.Refresh() (which only fires on tab-switch/save/load
+            // events, not every frame — that's why "Sending..." was
+            // getting stuck even after the message had actually sent).
+            var updater = sendRow.gameObject.AddComponent<FeedbackPanelUpdater>();
+            updater.InputField = _feedbackInput;
+            updater.CaretDot = caretDotImg;
+            updater.StatusText = _feedbackStatusTxt;
+
+            RefreshFeedbackCategoryButtons();
 
             // ── Diagnostics - gated behind DevLock (tap header 7x within 3s).
             // Content lives in its own container so unlocking just toggles
@@ -531,6 +693,37 @@ namespace DescendersModMenu.UI
             RefreshCareerResult();
         }
 
+        // ── Feedback panel handlers ────────────────────────────────────
+        private static void RefreshFeedbackCategoryButtons()
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                if (!_feedbackCatBgs[i]) continue;
+                _feedbackCatBgs[i].color = (i == _feedbackCategory) ? UIHelpers.Accent : UIHelpers.RowBg;
+                var txt = _feedbackCatBgs[i].GetComponentInChildren<Text>();
+                if (txt) txt.color = (i == _feedbackCategory) ? Color.black : UIHelpers.TextMid;
+            }
+        }
+
+        private static void OnFeedbackSendClicked()
+        {
+            if (!_feedbackInput) return;
+            string msg = _feedbackInput.text != null ? _feedbackInput.text.Trim() : "";
+            if (string.IsNullOrEmpty(msg))
+            {
+                if (_feedbackStatusTxt) { _feedbackStatusTxt.text = "Type something first!"; _feedbackStatusTxt.color = UIHelpers.OffColor; }
+                return;
+            }
+            if (!Telemetry.CanSendFeedback())
+            {
+                if (_feedbackStatusTxt) { _feedbackStatusTxt.text = "Please wait a moment before sending again."; _feedbackStatusTxt.color = UIHelpers.OffColor; }
+                return;
+            }
+            Telemetry.SendFeedbackAsync(_feedbackCatNames[_feedbackCategory], msg);
+            _feedbackInput.text = "";
+            if (_feedbackStatusTxt) { _feedbackStatusTxt.text = "Sending..."; _feedbackStatusTxt.color = UIHelpers.TextDim; }
+        }
+
         // ── Dev Diagnostics tap-to-unlock (gates Scene Dump / Bike Unlock Status) ──
         private static void HandleDevDiagTap()
         {
@@ -836,9 +1029,96 @@ namespace DescendersModMenu.UI
                         ? UIHelpers.OffColor : UIHelpers.Accent;
                 }
 
+                // Telemetry status — mirrors the header toggle
+                if (_telemetryStatusTxt)
+                {
+                    bool telOn = Telemetry.Enabled;
+                    _telemetryStatusTxt.text = telOn ? "ON" : "OFF";
+                    _telemetryStatusTxt.color = telOn ? UIHelpers.OnColor : UIHelpers.OffColor;
+                }
+
+                // Feedback send status — real result polled back from the
+                // background thread that actually did the POST, not an
+                // optimistic guess made the instant Send was clicked.
+                if (_feedbackStatusTxt)
+                {
+                    switch (Telemetry.GetFeedbackState())
+                    {
+                        case Telemetry.FeedbackSendState.Success:
+                            _feedbackStatusTxt.text = "Sent - thank you!";
+                            _feedbackStatusTxt.color = UIHelpers.OnColor;
+                            break;
+                        case Telemetry.FeedbackSendState.Failed:
+                            _feedbackStatusTxt.text = "Failed to send - please try again.";
+                            _feedbackStatusTxt.color = UIHelpers.OffColor;
+                            break;
+                        // Idle/Sending — leave whatever's already showing
+                        // ("Sending...", or a validation message) alone.
+                    }
+                }
+
             }
             catch (System.Exception ex) { MelonLogger.Error("InfoPage.Refresh: " + ex.Message); }
         }
 
+    }
+
+    // Runs continuously via Update() — deliberately independent of
+    // InfoPage.Refresh(), which only fires on specific events (tab
+    // switches, save/load), not every frame. Two jobs: blink a dot while
+    // the feedback InputField is focused (since Unity's built-in caret
+    // isn't reliably visible at runtime in this old Unity/Mono build),
+    // and poll Telemetry's feedback-send state so the status text updates
+    // promptly instead of getting stuck on "Sending..." until something
+    // else happens to trigger a refresh.
+    public class FeedbackPanelUpdater : MonoBehaviour
+    {
+        public InputField InputField;
+        public Image CaretDot;
+        public Text StatusText;
+
+        private float _blinkTimer;
+        private const float BlinkInterval = 0.5f;
+        private Telemetry.FeedbackSendState _lastSeenState = Telemetry.FeedbackSendState.Idle;
+
+        private void Update()
+        {
+            if ((object)InputField != null && (object)CaretDot != null)
+            {
+                if (InputField.isFocused)
+                {
+                    _blinkTimer += Time.deltaTime;
+                    if (_blinkTimer >= BlinkInterval)
+                    {
+                        _blinkTimer -= BlinkInterval;
+                        CaretDot.enabled = !CaretDot.enabled;
+                    }
+                }
+                else if (CaretDot.enabled || _blinkTimer != 0f)
+                {
+                    CaretDot.enabled = false;
+                    _blinkTimer = 0f;
+                }
+            }
+
+            if ((object)StatusText != null)
+            {
+                var state = Telemetry.GetFeedbackState();
+                if (state != _lastSeenState)
+                {
+                    _lastSeenState = state;
+                    if (state == Telemetry.FeedbackSendState.Success)
+                    {
+                        StatusText.text = "Sent - thank you!";
+                        StatusText.color = UIHelpers.OnColor;
+                    }
+                    else if (state == Telemetry.FeedbackSendState.Failed)
+                    {
+                        StatusText.text = "Failed to send - please try again.";
+                        StatusText.color = UIHelpers.OffColor;
+                    }
+                }
+            }
+        }
     }
 }

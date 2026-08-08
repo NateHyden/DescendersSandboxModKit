@@ -2,6 +2,7 @@ using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
+using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
@@ -126,6 +127,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[QuickBrake] Postfix: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "QuickBrake");
                 _vehicleField = null; _rb = null;
             }
         }

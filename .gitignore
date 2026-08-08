@@ -362,5 +362,10 @@ MigrationBackup/
 # Descenders ModMenu build output
 Output/
 
+# Local machine-specific secrets — never commit these.
+# Each has a committed .example template showing the expected shape.
+GamePath.props
+Core/TelemetryConfig.cs
+
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
