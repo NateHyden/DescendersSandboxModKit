@@ -96,7 +96,7 @@ namespace DescendersModMenu.UI
                 _specDistVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
                 UIHelpers.SmallBtn(specDistR.transform, "-", () => { SpectateMode.DecreaseDistance(); RefreshAll(); });
                 UIHelpers.SmallBtn(specDistR.transform, "+", () => { SpectateMode.IncreaseDistance(); RefreshAll(); });
-                UIHelpers.InfoBox(c, "Chase-cams another connected player instead of your own bike. Multiplayer only — solo there's no one else to watch. Freezes your own bike while active.");
+                UIHelpers.InfoBox(c, "Chase-cams another connected player (transform follow — doesn't touch their physics). Multiplayer only. Locks your controls while active.");
 
                 UIHelpers.Divider(c);
 

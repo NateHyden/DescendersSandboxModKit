@@ -28,6 +28,11 @@ namespace DescendersModMenu.Mods
 
         public static List<PlayerEntry> ScanForPlayers()
         {
+            return ScanForPlayers(true);
+        }
+
+        public static List<PlayerEntry> ScanForPlayers(bool log)
+        {
             List<PlayerEntry> results = new List<PlayerEntry>();
 
             try
@@ -49,7 +54,8 @@ namespace DescendersModMenu.Mods
                     results.Add(new PlayerEntry(name, root));
                 }
 
-                MelonLogger.Msg("[TeleportToPlayer] Found " + results.Count + " player(s).");
+                if (log)
+                    MelonLogger.Msg("[TeleportToPlayer] Found " + results.Count + " player(s).");
             }
             catch (Exception ex)
             {

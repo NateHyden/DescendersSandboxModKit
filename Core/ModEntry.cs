@@ -50,20 +50,20 @@ namespace DescendersModMenu
 
         public override void OnInitializeMelon()
         {
-            MelonLogger.Msg("OnApplicationStart");
-            try { CodeStage.AntiCheat.Detectors.InjectionDetector.Dispose(); MelonLogger.Msg("AntiCheat disposed: InjectionDetector"); }
+            MelonLogger.Msg(BuildInfo.Name + " v" + BuildInfo.Version + " starting");
+            try { CodeStage.AntiCheat.Detectors.InjectionDetector.Dispose(); }
             catch (System.Exception ex) { MelonLogger.Warning("AntiCheat dispose failed (InjectionDetector): " + ex.Message); }
-            try { CodeStage.AntiCheat.Detectors.ObscuredCheatingDetector.Dispose(); MelonLogger.Msg("AntiCheat disposed: ObscuredCheatingDetector"); }
+            try { CodeStage.AntiCheat.Detectors.ObscuredCheatingDetector.Dispose(); }
             catch (System.Exception ex) { MelonLogger.Warning("AntiCheat dispose failed (ObscuredCheatingDetector): " + ex.Message); }
-            try { CodeStage.AntiCheat.Detectors.SpeedHackDetector.Dispose(); MelonLogger.Msg("AntiCheat disposed: SpeedHackDetector"); }
+            try { CodeStage.AntiCheat.Detectors.SpeedHackDetector.Dispose(); }
             catch (System.Exception ex) { MelonLogger.Warning("AntiCheat dispose failed (SpeedHackDetector): " + ex.Message); }
-            try { CodeStage.AntiCheat.Detectors.TimeCheatingDetector.Dispose(); MelonLogger.Msg("AntiCheat disposed: TimeCheatingDetector"); }
+            try { CodeStage.AntiCheat.Detectors.TimeCheatingDetector.Dispose(); }
             catch (System.Exception ex) { MelonLogger.Warning("AntiCheat dispose failed (TimeCheatingDetector): " + ex.Message); }
-            try { CodeStage.AntiCheat.Detectors.WallHackDetector.Dispose(); MelonLogger.Msg("AntiCheat disposed: WallHackDetector"); }
+            try { CodeStage.AntiCheat.Detectors.WallHackDetector.Dispose(); }
             catch (System.Exception ex) { MelonLogger.Warning("AntiCheat dispose failed (WallHackDetector): " + ex.Message); }
 
             harmony = new HarmonyLib.Harmony("DescendersModMenu.Patches");
-            try { harmony.PatchAll(); MelonLogger.Msg("Harmony patches applied."); DiagnosticsManager.Report("Harmony", true); }
+            try { harmony.PatchAll(); DiagnosticsManager.Report("Harmony", true); }
             catch (System.Exception ex) { MelonLogger.Error("PatchAll failed: " + ex.Message); DiagnosticsManager.Report("Harmony", false, ex.Message); }
             try { NoSpeedCap.ApplyPatch(harmony); DiagnosticsManager.Report("NoSpeedCap", true); }
             catch (System.Exception ex) { MelonLogger.Error("NoSpeedCap.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("NoSpeedCap", false, ex.Message); }
@@ -111,6 +111,8 @@ namespace DescendersModMenu
             catch (System.Exception ex) { MelonLogger.Error("SlowMoOnBail.ApplyPatch: " + ex.Message); }
             try { CompassAlwaysOn.ApplyPatch(harmony); DiagnosticsManager.Report("CompassAlwaysOn", true); }
             catch (System.Exception ex) { MelonLogger.Error("CompassAlwaysOn.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("CompassAlwaysOn", false, ex.Message); }
+            try { SpectateMode.ApplyPatch(harmony); DiagnosticsManager.Report("SpectateModePatch", true); }
+            catch (System.Exception ex) { MelonLogger.Error("SpectateMode.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("SpectateModePatch", false, ex.Message); }
             try { OutfitPresets.Init(); }
             catch (System.Exception ex) { MelonLogger.Error("OutfitPresets.Init: " + ex.Message); }
             try { ModChat.Init(); }
@@ -132,7 +134,6 @@ namespace DescendersModMenu
 
         public override void OnLateInitializeMelon()
         {
-            MelonLogger.Msg("OnApplicationLateStart");
             DiagnosticsManager.Report("SlowMotion", true); DiagnosticsManager.Report("FOV", true);
             DiagnosticsManager.Report("ESP", true); DiagnosticsManager.Report("NoBail", true);
             DiagnosticsManager.Report("Acceleration", true); DiagnosticsManager.Report("MaxSpeed", true);
@@ -159,12 +160,14 @@ namespace DescendersModMenu
             catch (System.Exception ex) { MelonLogger.Warning("FavouritesManager.LoadFromFile: " + ex.Message); }
 
             // Load key bindings
-            try { KeyBindManager.LoadBindings(); MelonLogger.Msg("KeyBindManager.LoadBindings OK."); }
+            try { KeyBindManager.LoadBindings(); }
             catch (System.Exception ex) { MelonLogger.Warning("KeyBindManager.LoadBindings: " + ex.Message); }
 
             // Load colour scheme (applies to UITheme before the menu is ever built)
-            try { UI.ColorSchemeManager.LoadAndApply(); MelonLogger.Msg("ColorSchemeManager.LoadAndApply OK."); }
+            try { UI.ColorSchemeManager.LoadAndApply(); }
             catch (System.Exception ex) { MelonLogger.Warning("ColorSchemeManager.LoadAndApply: " + ex.Message); }
+
+            DiagnosticsManager.LogStartupSummary();
 
             // Check for updates on a background thread
             try { UpdateChecker.CheckAsync(); } catch { }
@@ -177,13 +180,11 @@ namespace DescendersModMenu
 
         public override void OnSceneWasLoaded(int buildindex, string sceneName)
         {
-            MelonLogger.Msg("OnSceneWasLoaded: " + buildindex + " | " + sceneName);
             GhostReplay.OnSceneLoaded();
         }
 
         public override void OnSceneWasInitialized(int buildindex, string sceneName)
         {
-            MelonLogger.Msg("OnSceneWasInitialized: " + buildindex + " | " + sceneName);
             SkyColours.CaptureSceneDefaults();
             GraphicsSettings.CaptureDefaultQuality();
             TimeOfDay.CaptureSceneDefault();
@@ -205,8 +206,6 @@ namespace DescendersModMenu
         // ================================================================
         public override void OnSceneWasUnloaded(int buildIndex, string sceneName)
         {
-            MelonLogger.Msg("OnSceneWasUnloaded: " + buildIndex + " | " + sceneName);
-
             // MenuWindow.CreateMenu() builds a plain GameObject with no
             // DontDestroyOnLoad, so Unity destroys the whole menu (and every
             // star button) on scene load. FavouritesManager's _starButtons

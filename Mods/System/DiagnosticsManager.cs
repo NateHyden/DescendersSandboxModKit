@@ -31,13 +31,20 @@ namespace DescendersModMenu.Mods
         public static void Report(string name, bool ok, string error = "")
         {
             _statuses.Add(new ModStatus(name, ok, error));
-            if (ok)
-                MelonLogger.Msg("[Diagnostics] " + name + ": OK");
-            else
+            // Successes are batched into LogStartupSummary — only failures
+            // hit the MelonLoader console so startup isn't a wall of OK lines.
+            if (!ok)
             {
                 MelonLogger.Warning("[Diagnostics] " + name + ": FAILED - " + error);
                 WriteToFile(name, error, "");
             }
+        }
+
+        public static void LogStartupSummary()
+        {
+            MelonLogger.Msg("[Diagnostics] Startup: " + OKCount + " OK, " + FailCount
+                + " failed  |  Unity " + UnityVersion
+                + (UnityVersionMatch ? "" : " (built for " + BuiltForUnity + ")"));
         }
 
         public static void LogError(string modName, Exception ex)
