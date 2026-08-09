@@ -69,7 +69,8 @@ namespace DescendersModMenu.UI
 
         public static void RebuildList()
         {
-            if ((object)_listRoot == null) return;
+            // Unity fake-null: (object)_listRoot == null misses destroyed menu after scene change.
+            if (!_listRoot) { _listRoot = null; return; }
             try
             {
                 // Clear everything
@@ -212,6 +213,12 @@ namespace DescendersModMenu.UI
             }
             catch (System.Exception ex)
             {
+                // Stale menu after scene unload — drop refs quietly; next CreatePage rebuilds.
+                if (ex is MissingReferenceException || ex is System.NullReferenceException)
+                {
+                    ClearUiRefs();
+                    return;
+                }
                 LogFullException("MapPage.RebuildList", ex);
             }
         }
@@ -346,6 +353,8 @@ namespace DescendersModMenu.UI
 
         public static void ClearUiRefs()
         {
+            _listRoot = null;
+            _statusText = null;
             _seedInputText = null;
             _seedCursor = null;
             _seedBoxRect = null;
