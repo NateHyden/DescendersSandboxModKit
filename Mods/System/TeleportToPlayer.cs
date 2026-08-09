@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -60,6 +61,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[TeleportToPlayer] ScanForPlayers failed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "TeleportToPlayer");
             }
 
             return results;
@@ -156,6 +158,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[TeleportToPlayer] TeleportTo failed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "TeleportToPlayer");
                 return false;
             }
         }

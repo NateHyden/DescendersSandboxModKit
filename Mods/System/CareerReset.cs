@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using System;
 using System.Reflection;
 using CodeStage.AntiCheat.ObscuredTypes;
@@ -44,16 +45,16 @@ namespace DescendersModMenu.Mods
             string oldStyleMsg = null, nodeMsg = null, sponsorInterestMsg = null, sponsorTierMsg = null;
 
             try { oldStyleMsg = TryCompleteOldStyleMissions(); }
-            catch (Exception ex) { MelonLogger.Error("[CareerReset] (legacy) crashed: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[CareerReset] (legacy) crashed: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "CareerReset"); }
 
             try { nodeMsg = TryCompleteViaProgressNodes(); }
-            catch (Exception ex) { MelonLogger.Error("[CareerReset] (nodes) crashed: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[CareerReset] (nodes) crashed: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "CareerReset"); }
 
             try { sponsorInterestMsg = TryCompleteSponsorInterestNodes(); }
-            catch (Exception ex) { MelonLogger.Error("[CareerReset] (sponsor interest) crashed: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[CareerReset] (sponsor interest) crashed: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "CareerReset"); }
 
             try { sponsorTierMsg = TryMaxSponsorTier(); }
-            catch (Exception ex) { MelonLogger.Error("[CareerReset] (sponsor tier) crashed: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[CareerReset] (sponsor tier) crashed: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "CareerReset"); }
 
             string combined = "";
             if (oldStyleMsg != null) combined += (combined.Length > 0 ? "; " : "") + oldStyleMsg;
@@ -235,7 +236,7 @@ namespace DescendersModMenu.Mods
         {
             string msg = null;
             try { msg = TryMaxSponsorTier(); }
-            catch (Exception ex) { MelonLogger.Error("[CareerReset] (sponsor tier) crashed: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[CareerReset] (sponsor tier) crashed: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "CareerReset"); }
             LastResult = msg ?? "Nothing to raise - see log";
         }
 
@@ -332,6 +333,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] ResetLevelProgress: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 LastResult = "Error - see log";
             }
         }
@@ -412,6 +414,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] ResetSponsorProgress: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 LastResult = "Error - see log";
             }
         }
@@ -427,7 +430,7 @@ namespace DescendersModMenu.Mods
                 PrefsManager prefs = prefsInstance as PrefsManager;
                 if ((object)prefs == null) return 0;
                 try { return prefs.GetInt("TOTALREP"); }
-                catch (Exception ex) { MelonLogger.Error("[CareerReset] CurrentRep get: " + ex.Message); return 0; }
+                catch (Exception ex) { MelonLogger.Error("[CareerReset] CurrentRep get: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CareerReset"); return 0; }
             }
         }
 
@@ -477,6 +480,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] AdjustRep: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 LastResult = "Error - see log";
             }
         }
@@ -531,7 +535,7 @@ namespace DescendersModMenu.Mods
                     if ((object)p == null) return 0;
                     return (int)p.GetValue(null, null);
                 }
-                catch (Exception ex) { MelonLogger.Error("[CareerReset] LiveRepValue get: " + ex.Message); return 0; }
+                catch (Exception ex) { MelonLogger.Error("[CareerReset] LiveRepValue get: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CareerReset"); return 0; }
             }
         }
 
@@ -558,6 +562,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] AdjustLiveRep: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 return false;
             }
         }
@@ -582,7 +587,7 @@ namespace DescendersModMenu.Mods
                     if (!TryGetInGameRepField(pii, out oi)) return 0;
                     return DecodeObscuredInt(oi);
                 }
-                catch (Exception ex) { MelonLogger.Error("[CareerReset] CurrentInGameRep get: " + ex.Message); return 0; }
+                catch (Exception ex) { MelonLogger.Error("[CareerReset] CurrentInGameRep get: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CareerReset"); return 0; }
             }
         }
 
@@ -638,6 +643,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] AdjustInGameRep: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 LastResult = "Error - see log";
                 return false;
             }
@@ -749,6 +755,7 @@ namespace DescendersModMenu.Mods
                 catch (Exception ex)
                 {
                     MelonLogger.Error("[CareerReset] UnlockAllEnabled get: " + ex.Message);
+                    Telemetry.ReportErrorAsync(ex, "CareerReset");
                     return false;
                 }
             }
@@ -792,15 +799,15 @@ namespace DescendersModMenu.Mods
                     catch (Exception exSave) { MelonLogger.Warning("[CareerReset] ToggleUnlockAll prefs.Save() threw: " + exSave.Message); }
                 }
 
-                MelonLogger.Msg("[CareerReset] Unlock All (bikes + gear): " + newVal
-                    + " | verify readback: " + cm.mZVyMyX
-                    + " | NOTE: the shed/customization grid may cache lock icons at build time - "
-                    + "if items still show locked, leave and re-enter that screen to force a rebuild.");
+                ModLog.Feedback("[CareerReset] Unlock All -> " + (newVal ? "ON" : "OFF"));
+                MelonLogger.Msg("[CareerReset] Unlock All verify readback: " + cm.mZVyMyX
+                    + " | NOTE: shed/customization grid may cache lock icons — re-enter that screen if needed.");
                 LastResult = "Unlock All " + (newVal ? "ON - all bikes/gear unlocked" : "OFF");
             }
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] ToggleUnlockAll: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 LastResult = "Error - see log";
             }
         }
@@ -857,6 +864,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] DumpBikeUnlockStatus: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 LastResult = "Error - see log";
                 return LastResult;
             }
@@ -915,7 +923,7 @@ namespace DescendersModMenu.Mods
             PropertyInfo p = GetCurrentTeamProp();
             if ((object)p == null) return 0;
             try { return (int)p.GetValue(null, null); }
-            catch (Exception ex) { MelonLogger.Error("[CareerReset] GetCurrentTeamId: " + ex.Message); return 0; }
+            catch (Exception ex) { MelonLogger.Error("[CareerReset] GetCurrentTeamId: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CareerReset"); return 0; }
         }
 
         private static void SetCurrentTeamId(int id)
@@ -923,7 +931,7 @@ namespace DescendersModMenu.Mods
             PropertyInfo p = GetCurrentTeamProp();
             if ((object)p == null) return;
             try { p.SetValue(null, id, null); }
-            catch (Exception ex) { MelonLogger.Error("[CareerReset] SetCurrentTeamId: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[CareerReset] SetCurrentTeamId: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "CareerReset"); }
         }
 
         public static string CurrentSponsorName
@@ -942,7 +950,7 @@ namespace DescendersModMenu.Mods
 
                     return "Unknown (id " + currentId + ")";
                 }
-                catch (Exception ex) { MelonLogger.Error("[CareerReset] CurrentSponsorName: " + ex.Message); return "Error"; }
+                catch (Exception ex) { MelonLogger.Error("[CareerReset] CurrentSponsorName: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CareerReset"); return "Error"; }
             }
         }
 
@@ -981,6 +989,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] StepSponsor: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 LastResult = "Error - see log";
             }
         }
@@ -1010,6 +1019,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] Reading mission group field failed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 return null;
             }
         }
@@ -1053,6 +1063,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] FindFieldByType(" + owner.Name + ", " + fieldType.Name + "): " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 return null;
             }
         }
@@ -1111,6 +1122,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[CareerReset] FindSingletonInstance(" + t.Name + "): " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
                 return null;
             }
         }

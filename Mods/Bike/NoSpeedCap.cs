@@ -1,6 +1,7 @@
-﻿using System.Reflection;
+using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -47,6 +48,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[NoSpeedCap] VC Patch failed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "NoSpeedCap");
             }
         }
 
@@ -107,6 +109,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[NoSpeedCap] Patch failed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "NoSpeedCap");
             }
         }
     }

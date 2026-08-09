@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
@@ -68,6 +68,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[NoBail] ApplyPatch: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "NoBail");
             }
         }
     }

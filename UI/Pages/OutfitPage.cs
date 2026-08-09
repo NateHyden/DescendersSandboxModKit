@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 using DescendersModMenu.Mods;
@@ -259,7 +260,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.AddScrollForwarders(c);
                 RefreshAll();
             }
-            catch (System.Exception ex) { MelonLogger.Error("OutfitPage: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("OutfitPage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "OutfitPage"); }
         }
 
         // Deliberately UnityAction, not System.Action - the real root cause turned out to be
@@ -302,7 +303,7 @@ namespace DescendersModMenu.UI
                 pushState.Invoke(sm, new object[] { System.Enum.Parse(vtType, "Customization") });
                 MelonLogger.Msg("[Page11] Going to shed. Was in: " + _stateBeforeShed);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Page11] GoToShed: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Page11] GoToShed: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "OutfitPage"); }
         }
 
         private static void LeaveShed()
@@ -333,7 +334,7 @@ namespace DescendersModMenu.UI
                 if ((object)popState != null) popState.Invoke(sm, null);
                 MelonLogger.Msg("[Page11] PopState fallback.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Page11] LeaveShed: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Page11] LeaveShed: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "OutfitPage"); }
         }
 
         public static bool IsRenaming => _renamingSlot >= 0;

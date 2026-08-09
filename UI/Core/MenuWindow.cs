@@ -97,7 +97,7 @@ namespace DescendersModMenu.UI
         {
             try
             {
-                if (UIHelpers.GetFont() == null) { MelonLogger.Error("Font null"); return null; }
+                if (UIHelpers.GetFont() == null) { MelonLogger.Error("Font null"); Telemetry.ReportErrorAsync(new System.Exception("Font null"), "MenuWindow"); return null; }
                 cur = (PendingPage >= 0) ? PendingPage : 1;
                 PendingPage = -1;
                 FavouritesManager.ClearStarButtons();
@@ -437,10 +437,10 @@ namespace DescendersModMenu.UI
                 pg1 = UIHelpers.Obj("P1", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg1)); BuildPage1(pg1.transform);
                 pg2 = UIHelpers.Obj("P2", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg2));
                 try { EspPage.CreatePage(pg2.transform); }
-                catch (System.Exception espEx) { MelonLogger.Error("CreateMenu: EspPage failed - " + espEx); }
+                catch (System.Exception espEx) { MelonLogger.Error("CreateMenu: EspPage failed - " + espEx);  Telemetry.ReportErrorAsync(espEx, "MenuWindow"); }
                 pg3 = UIHelpers.Obj("P3", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg3));
                 try { InfoPage.CreatePage(pg3.transform); }
-                catch (System.Exception infoEx) { MelonLogger.Error("CreateMenu: InfoPage failed - " + infoEx); }
+                catch (System.Exception infoEx) { MelonLogger.Error("CreateMenu: InfoPage failed - " + infoEx);  Telemetry.ReportErrorAsync(infoEx, "MenuWindow"); }
                 pg6 = UIHelpers.Obj("P6", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg6)); MovePage.CreatePage(pg6.transform);
                 pg7 = UIHelpers.Obj("P7", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg7)); WorldPage.CreatePage(pg7.transform);
                 pg8 = UIHelpers.Obj("P8", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg8)); BikePage.CreatePage(pg8.transform);
@@ -448,7 +448,7 @@ namespace DescendersModMenu.UI
                 pg10 = UIHelpers.Obj("P10", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg10)); GraphicsPage.CreatePage(pg10.transform);
                 pg11 = UIHelpers.Obj("P11", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg11));
                 try { OutfitPage.CreatePage(pg11.transform); }
-                catch (System.Exception outfitEx) { MelonLogger.Error("CreateMenu: OutfitPage failed - " + outfitEx); }
+                catch (System.Exception outfitEx) { MelonLogger.Error("CreateMenu: OutfitPage failed - " + outfitEx);  Telemetry.ReportErrorAsync(outfitEx, "MenuWindow"); }
                 pg12 = UIHelpers.Obj("P12", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg12)); ChatPage.CreatePage(pg12.transform);
                 pg13 = UIHelpers.Obj("P13", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg13)); ModesPage.CreatePage(pg13.transform);
                 pg14 = UIHelpers.Obj("P14", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg14)); GhostPage.CreatePage(pg14.transform);
@@ -468,7 +468,7 @@ namespace DescendersModMenu.UI
                 cv.SetActive(false);
                 return cv;
             }
-            catch (System.Exception ex) { MelonLogger.Error("CreateMenu: " + ex); return null; }
+            catch (System.Exception ex) { MelonLogger.Error("CreateMenu: " + ex); Telemetry.ReportErrorAsync(ex, "MenuWindow"); return null; }
         }
 
         // ── Page 1 (General) ──────────────────────────────────────────
@@ -747,7 +747,7 @@ namespace DescendersModMenu.UI
                     Vector3 launchVec = player.transform.forward * 80f + Vector3.up * 20f;
                     setVel.Invoke(v, new object[] { launchVec });
                 }
-                catch (System.Exception ex) { MelonLogger.Error("[SuperLaunch] " + ex.Message); }
+                catch (System.Exception ex) { MelonLogger.Error("[SuperLaunch] " + ex.Message);  Telemetry.ReportErrorAsync(ex, "MenuWindow"); }
             }, 60);
             UIHelpers.InfoBox(pg, "Launch: fires you forward at high speed.");
 
@@ -940,7 +940,7 @@ namespace DescendersModMenu.UI
                             if ((object)setVel == null) return;
                             setVel.Invoke(v, new object[] { player.transform.forward * 80f + Vector3.up * 20f });
                         }
-                        catch (System.Exception ex) { MelonLogger.Error("[SuperLaunch] " + ex.Message); }
+                        catch (System.Exception ex) { MelonLogger.Error("[SuperLaunch] " + ex.Message);  Telemetry.ReportErrorAsync(ex, "MenuWindow"); }
                     }, 60);
                 },
                 IsActive = () => false

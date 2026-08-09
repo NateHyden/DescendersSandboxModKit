@@ -1,5 +1,6 @@
 using System.Reflection;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -53,7 +54,7 @@ namespace DescendersModMenu.Mods
                 }
                 ModLog.Debug("[Suspension] Travel level " + TravelLevel);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Suspension] ApplyTravel: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Suspension] ApplyTravel: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Suspension"); }
         }
 
         // ── Stiffness ─────────────────────────────────────────────────────
@@ -85,7 +86,7 @@ namespace DescendersModMenu.Mods
                 }
                 ModLog.Debug("[Suspension] Stiffness level " + StiffnessLevel);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Suspension] ApplyStiffness: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Suspension] ApplyStiffness: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Suspension"); }
         }
 
         // ── Damping ───────────────────────────────────────────────────────
@@ -117,7 +118,7 @@ namespace DescendersModMenu.Mods
                 }
                 ModLog.Debug("[Suspension] Damping level " + DampingLevel);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Suspension] ApplyDamping: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Suspension] ApplyDamping: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Suspension"); }
         }
 
         private static Wheel[] GetWheels()

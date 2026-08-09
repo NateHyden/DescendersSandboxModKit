@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -76,7 +77,7 @@ namespace DescendersModMenu.Mods
                 }
                 MelonLogger.Msg("[NearMiss] nearMissDistance=" + distance + " applied to " + count + " instance(s).");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[NearMiss] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[NearMiss] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "NearMissSensitivity"); }
         }
     }
 }

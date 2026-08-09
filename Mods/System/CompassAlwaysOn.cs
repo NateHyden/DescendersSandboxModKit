@@ -71,7 +71,7 @@ namespace DescendersModMenu.Mods
                 harmony.Patch(updateCompass, postfix: new HarmonyMethod(postfix));
                 ModLog.Debug("[CompassAlwaysOn] Patched UI_InGame.UpdateCompass.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[CompassAlwaysOn] ApplyPatch: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[CompassAlwaysOn] ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "CompassAlwaysOn"); }
         }
     }
 

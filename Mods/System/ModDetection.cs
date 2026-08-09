@@ -6,25 +6,36 @@ using MelonLoader;
 
 namespace DescendersModMenu.Mods
 {
+    // Tags the local Photon player with custom property DescMM=<version>, then
+    // scans the room for anyone else carrying that key (other Sandbox users).
+    //
+    // PhotonNetwork (upVWa…) exposes LocalPlayer / playerList as PROPERTIES,
+    // not fields — older FieldInfo lookups silently failed and left the lobby
+    // count at 0 forever.
     internal static class ModDetection
     {
         public const string PropKey = "DescMM";
-        public const string ModVersion = "1.2.0";
 
-        private static Type _photonNetType;    // upVWa84E
-        private static FieldInfo _localPlayer; // gQ`083tus
-        private static FieldInfo _allPlayers;  // CoH||EDq
-        private static MethodInfo _setProps;   // KxvEguU
-        private static FieldInfo _propsField;  // ttXJk{h
+        // Keep in sync with the shipped menu version so UI labels match.
+        public static string ModVersion => BuildInfo.Version;
+
+        private static Type _photonNetType;
+        private static PropertyInfo _localPlayerProp; // gQ`tus
+        private static PropertyInfo _allPlayersProp;  // CoH|~Dq
+        private static MethodInfo _setProps;          // KxvEguU
+        private static PropertyInfo _propsProp;       // ttXJk{h on player
+        private static PropertyInfo _nickProp;        // DiQND€L on player
         private static bool _resolved;
         private static bool _tagged;
+        private static float _nextScanTime;
+        private const float ScanInterval = 2.5f;
 
-        // Obfuscated names — exact unicode from decompiler
         private static readonly string PhotonNetName = "upVWa\u0084E";
         private static readonly string LocalPlayerName = "gQ\u0060\u0083tus";
         private static readonly string AllPlayersName = "CoH\u007C\u007EDq";
         private static readonly string SetPropsName = "KxvEguU";
         private static readonly string CustomPropsName = "ttXJk\u007Bh";
+        private static readonly string NickNameName = "DiQND\u0080L";
 
         public class ModUser
         {
@@ -35,21 +46,19 @@ namespace DescendersModMenu.Mods
         private static readonly List<ModUser> _modUsers = new List<ModUser>();
         public static IList<ModUser> ModUsers { get { return _modUsers; } }
 
-        // ── Resolve Photon types via reflection ─────────────────────────
         private static bool Resolve()
         {
-            if (_resolved) return (object)_setProps != null;
+            if (_resolved) return (object)_setProps != null && (object)_localPlayerProp != null;
 
             try
             {
-                // Step 1: Find the type (only once)
                 if ((object)_photonNetType == null)
                 {
                     Assembly asm = null;
                     Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
                     for (int i = 0; i < assemblies.Length; i++)
                     {
-                        if (assemblies[i].GetName().Name == "Assembly-CSharp")
+                        if (string.Equals(assemblies[i].GetName().Name, "Assembly-CSharp", StringComparison.Ordinal))
                         { asm = assemblies[i]; break; }
                     }
                     if ((object)asm == null) return false;
@@ -60,164 +69,111 @@ namespace DescendersModMenu.Mods
                         if (string.Equals(types[i].Name, PhotonNetName, StringComparison.Ordinal))
                         {
                             _photonNetType = types[i];
-                            ModLog.Debug("[ModDetect] Found PhotonNetwork: " + types[i].Name.Length + " chars");
                             break;
                         }
                     }
-
-                    if ((object)_photonNetType == null)
-                    {
-                        // Fallback: find any static class with a "RaiseEvent" error string
-                        Type[] types2 = asm.GetTypes();
-                        for (int i = 0; i < types2.Length; i++)
-                        {
-                            if (!types2[i].IsClass || !types2[i].IsAbstract || !types2[i].IsSealed) continue;
-                            FieldInfo[] sfs = types2[i].GetFields(BindingFlags.Public | BindingFlags.Static);
-                            if (sfs.Length > 20)
-                            {
-                                _photonNetType = types2[i];
-                                ModLog.Debug("[ModDetect] Found PhotonNetwork (fallback): " + types2[i].Name);
-                                break;
-                            }
-                        }
-                    }
-
                     if ((object)_photonNetType == null) { _resolved = true; return false; }
 
-                    // Get field references
-                    FieldInfo[] allFields = _photonNetType.GetFields(BindingFlags.Public | BindingFlags.Static);
-                    for (int i = 0; i < allFields.Length; i++)
-                    {
-                        string fn = allFields[i].Name;
-                        if (string.Equals(fn, LocalPlayerName, StringComparison.Ordinal))
-                            _localPlayer = allFields[i];
-                        else if (string.Equals(fn, AllPlayersName, StringComparison.Ordinal))
-                            _allPlayers = allFields[i];
-                    }
+                    _localPlayerProp = _photonNetType.GetProperty(LocalPlayerName, BindingFlags.Public | BindingFlags.Static);
+                    _allPlayersProp = _photonNetType.GetProperty(AllPlayersName, BindingFlags.Public | BindingFlags.Static);
 
-                    if ((object)_localPlayer == null)
+                    if ((object)_localPlayerProp == null)
                     {
-                        // Debug: log first few field names
-                        ModLog.Debug("[ModDetect] LocalPlayer not found. Fields (" + allFields.Length + "):");
-                        for (int i = 0; i < allFields.Length && i < 8; i++)
-                            ModLog.Debug("[ModDetect]   [" + i + "] len=" + allFields[i].Name.Length + " type=" + allFields[i].FieldType.Name);
                         _resolved = true;
                         return false;
                     }
                 }
 
-                // Step 2: Get local player instance (may be null if not in room yet)
-                if ((object)_localPlayer == null) { _resolved = true; return false; }
+                object localP = _localPlayerProp.GetValue(null, null);
+                if ((object)localP == null) return false; // not in a room yet
 
-                object localP = _localPlayer.GetValue(null);
-                if ((object)localP == null) return false; // Not in room yet — will retry
-
-                // Step 3: Resolve methods on the player type (only once)
                 if ((object)_setProps == null)
                 {
                     Type playerType = localP.GetType();
-                    MethodInfo[] methods = playerType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
-                    for (int i = 0; i < methods.Length; i++)
-                    {
-                        if (string.Equals(methods[i].Name, SetPropsName, StringComparison.Ordinal))
-                        {
-                            _setProps = methods[i];
-                            ModLog.Debug("[ModDetect] Found SetCustomProperties");
-                            break;
-                        }
-                    }
-
-                    // Find custom props field/property
-                    FieldInfo[] fields = playerType.GetFields(BindingFlags.Public | BindingFlags.Instance);
-                    for (int i = 0; i < fields.Length; i++)
-                    {
-                        if (string.Equals(fields[i].Name, CustomPropsName, StringComparison.Ordinal))
-                        { _propsField = fields[i]; break; }
-                    }
-                    if ((object)_propsField == null)
-                    {
-                        PropertyInfo[] props = playerType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                        for (int i = 0; i < props.Length; i++)
-                        {
-                            if (string.Equals(props[i].Name, CustomPropsName, StringComparison.Ordinal))
-                            {
-                                ModLog.Debug("[ModDetect] Found custom props as property");
-                                break;
-                            }
-                        }
-                    }
+                    _setProps = playerType.GetMethod(SetPropsName, BindingFlags.Public | BindingFlags.Instance);
+                    _propsProp = playerType.GetProperty(CustomPropsName, BindingFlags.Public | BindingFlags.Instance);
+                    _nickProp = playerType.GetProperty(NickNameName, BindingFlags.Public | BindingFlags.Instance);
                 }
 
                 _resolved = (object)_setProps != null;
-                if (_resolved) ModLog.Debug("[ModDetect] Fully resolved");
                 return _resolved;
             }
             catch (Exception ex)
             {
                 MelonLogger.Error("[ModDetect] Resolve failed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModDetection");
                 return false;
             }
         }
 
-        // ── Tag local player with mod property ──────────────────────────
         public static void TagLocalPlayer()
         {
-            if (_tagged) return;
             try
             {
+                // Custom props + RaiseEvent only matter inside a Photon room.
+                if (!ModChat.InRoom)
+                {
+                    _tagged = false;
+                    return;
+                }
+
                 if (!Resolve()) return;
 
-                object localP = _localPlayer.GetValue(null);
-                if ((object)localP == null) return;
+                object localP = _localPlayerProp.GetValue(null, null);
+                if ((object)localP == null)
+                {
+                    _tagged = false;
+                    return;
+                }
 
-                // Create a Hashtable with our mod key
-                // ExitGames.Client.Photon.Hashtable extends System Hashtable
-                // We need to find the type and create an instance
-                Type htType = null;
-                Type playerType = localP.GetType();
+                if (_tagged) return;
+
                 ParameterInfo[] parms = _setProps.GetParameters();
-                if (parms.Length > 0)
-                    htType = parms[0].ParameterType;
-
-                if ((object)htType == null) { MelonLogger.Warning("[ModDetect] Could not find Hashtable type"); return; }
+                Type htType = parms.Length > 0 ? parms[0].ParameterType : null;
+                if ((object)htType == null) return;
 
                 object ht = Activator.CreateInstance(htType);
-                // Hashtable inherits IDictionary, use Add or indexer
                 MethodInfo addMethod = htType.GetMethod("Add", new Type[] { typeof(object), typeof(object) });
                 if ((object)addMethod != null)
-                {
                     addMethod.Invoke(ht, new object[] { PropKey, ModVersion });
-                }
                 else
                 {
-                    // Try indexer
-                    htType.GetProperty("Item").SetValue(ht, ModVersion, new object[] { PropKey });
+                    PropertyInfo item = htType.GetProperty("Item");
+                    if ((object)item != null)
+                        item.SetValue(ht, ModVersion, new object[] { PropKey });
                 }
 
-                // Call SetCustomProperties with optional params
                 // KxvEguU(Hashtable, Hashtable = null, bool = false)
                 _setProps.Invoke(localP, new object[] { ht, null, false });
-
                 _tagged = true;
-                ModLog.Debug("[ModDetect] Tagged local player with DescMM=" + ModVersion);
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[ModDetect] TagLocalPlayer failed: " + ex.Message);
+                MelonLogger.Error("[ModDetect] TagLocalPlayer failed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModDetection");
             }
         }
 
-        // ── Scan all players for mod users ──────────────────────────────
+        // Call on scene unload so the next lobby re-tags.
+        public static void ResetTag()
+        {
+            _tagged = false;
+            _modUsers.Clear();
+            _nextScanTime = 0f;
+        }
+
         public static void Scan()
         {
             _modUsers.Clear();
 
             try
             {
+                if (!ModChat.InRoom)
+                    return;
                 if (!Resolve()) return;
-                if ((object)_allPlayers == null) return;
+                if ((object)_allPlayersProp == null) return;
 
-                object playersObj = _allPlayers.GetValue(null);
+                object playersObj = _allPlayersProp.GetValue(null, null);
                 if ((object)playersObj == null) return;
 
                 Array players = playersObj as Array;
@@ -230,52 +186,65 @@ namespace DescendersModMenu.Mods
 
                     try
                     {
-                        // Get custom properties hashtable
                         object props = null;
                         Type pType = player.GetType();
 
-                        // Try field first
-                        FieldInfo pf = pType.GetField(CustomPropsName,
-                            BindingFlags.Public | BindingFlags.Instance);
-                        if ((object)pf != null)
-                        {
-                            props = pf.GetValue(player);
-                        }
-                        else
-                        {
-                            // Try property
-                            PropertyInfo pp = pType.GetProperty(CustomPropsName,
-                                BindingFlags.Public | BindingFlags.Instance);
-                            if ((object)pp != null)
-                                props = pp.GetValue(player, null);
-                        }
+                        PropertyInfo pp = _propsProp;
+                        if ((object)pp == null)
+                            pp = pType.GetProperty(CustomPropsName, BindingFlags.Public | BindingFlags.Instance);
+
+                        if ((object)pp != null)
+                            props = pp.GetValue(player, null);
 
                         if ((object)props == null) continue;
 
-                        // Check for our key — props is a Hashtable
                         IDictionary dict = props as IDictionary;
                         if ((object)dict == null) continue;
-
                         if (!dict.Contains(PropKey)) continue;
 
                         object verObj = dict[PropKey];
                         string version = (object)verObj != null ? verObj.ToString() : "?";
-
-                        // Get player name via ToString()
-                        string name = player.ToString();
-                        if (string.IsNullOrEmpty(name)) name = "Unknown";
-
+                        string name = GetPlayerName(player, pType);
                         _modUsers.Add(new ModUser { Name = name, Version = version });
                     }
                     catch { }
                 }
-
-                ModLog.Debug("[ModDetect] Scan complete: " + _modUsers.Count + " mod user(s) found");
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[ModDetect] Scan failed: " + ex.Message);
+                MelonLogger.Error("[ModDetect] Scan failed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModDetection");
             }
+        }
+
+        // Periodic refresh for Chat / Teleport count without needing a button mash.
+        public static void Tick()
+        {
+            TagLocalPlayer();
+            float now = UnityEngine.Time.unscaledTime;
+            if (now < _nextScanTime) return;
+            _nextScanTime = now + ScanInterval;
+            Scan();
+        }
+
+        private static string GetPlayerName(object player, Type pType)
+        {
+            try
+            {
+                PropertyInfo nick = _nickProp;
+                if ((object)nick == null)
+                    nick = pType.GetProperty(NickNameName, BindingFlags.Public | BindingFlags.Instance);
+                if ((object)nick != null)
+                {
+                    object n = nick.GetValue(player, null);
+                    string s = n != null ? n.ToString() : null;
+                    if (!string.IsNullOrEmpty(s)) return s;
+                }
+            }
+            catch { }
+
+            string fallback = player.ToString();
+            return string.IsNullOrEmpty(fallback) ? "Unknown" : fallback;
         }
     }
 }

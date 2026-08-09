@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.UI
@@ -55,7 +56,7 @@ namespace DescendersModMenu.UI
                     MenuWindow.RootCanvasGroup.alpha = Mods.MenuCustomiser.CurrentOpacity;
                 MelonLogger.Msg("[MenuUI] RebuildMenu complete. wasVisible=" + wasVisible);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[MenuUI] RebuildMenu: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[MenuUI] RebuildMenu: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "MenuUI"); }
         }
     }
 }

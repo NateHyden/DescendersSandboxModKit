@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -301,6 +302,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("Scene dump failed: " + ex);
+                Telemetry.ReportErrorAsync(ex, "SceneDumper");
             }
             finally
             {

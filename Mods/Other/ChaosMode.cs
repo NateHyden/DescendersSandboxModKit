@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -57,7 +58,7 @@ namespace DescendersModMenu.Mods
                 LastFlipDisplay = PoolNames[idx] + " " + (GetPoolEnabled(idx) ? "ON" : "OFF");
                 MelonLogger.Msg("[ChaosMode] Flipped " + LastFlipDisplay);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[ChaosMode] Flip " + PoolNames[idx] + ": " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[ChaosMode] Flip " + PoolNames[idx] + ": " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ChaosMode"); }
             ScheduleNext();
         }
 
@@ -90,7 +91,7 @@ namespace DescendersModMenu.Mods
             for (int i = 0; i < PoolCount; i++)
             {
                 try { if (GetPoolEnabled(i) != _snapshot[i]) TogglePool(i); }
-                catch (System.Exception ex) { MelonLogger.Error("[ChaosMode] Restore " + PoolNames[i] + ": " + ex.Message); }
+                catch (System.Exception ex) { MelonLogger.Error("[ChaosMode] Restore " + PoolNames[i] + ": " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ChaosMode"); }
             }
             _hasSnapshot = false;
         }

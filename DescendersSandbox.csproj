@@ -142,12 +142,14 @@
     <Compile Include="Mods\Bike\ReverseSteering.cs" />
     <Compile Include="Mods\Bike\StickyTyres.cs" />
     <Compile Include="Mods\Bike\Suspension.cs" />
+    <Compile Include="Mods\Bike\BouncyBike.cs" />
     <Compile Include="Mods\Bike\TrickMultiplier.cs" />
     <Compile Include="Mods\Bike\TrickSetSwap.cs" />
     <Compile Include="Mods\Bike\TyrePressure.cs" />
     <Compile Include="Mods\Bike\WheelieAngleLimit.cs" />
     <Compile Include="Mods\Bike\WideTyres.cs" />
     <Compile Include="Mods\World\AvalancheMode.cs" />
+    <Compile Include="Mods\World\BlizzardDial.cs" />
     <Compile Include="Mods\World\BoulderDodgeMode.cs" />
     <Compile Include="Mods\World\CameraShake.cs" />
     <Compile Include="Mods\World\EarthquakeMode.cs" />
@@ -224,6 +226,7 @@
     <Compile Include="UI\Core\FavouritesManager.cs" />
     <Compile Include="UI\Core\Uitheme.cs" />
     <Compile Include="UI\Pages\OtherPage.cs" />
+    <Compile Include="UI\HUDs\ChatHUD.cs" />
     <Compile Include="UI\HUDs\GhostHUD.cs" />
     <Compile Include="UI\Pages\AvalanchePage.cs" />
     <Compile Include="UI\Pages\BikePage.cs" />

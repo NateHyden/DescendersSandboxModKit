@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -60,7 +61,7 @@ namespace DescendersModMenu.UI
 
                 RebuildList();
             }
-            catch (Exception ex) { MelonLogger.Error("SearchPage.CreatePage: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("SearchPage.CreatePage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "SearchPage"); }
             return pg;
         }
 
@@ -209,6 +210,7 @@ namespace DescendersModMenu.UI
             catch (Exception ex)
             {
                 MelonLogger.Error("SearchPage.RebuildList: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SearchPage");
             }
         }
 

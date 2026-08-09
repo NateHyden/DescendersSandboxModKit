@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -55,7 +56,7 @@ namespace DescendersModMenu.Mods
                 _handler.enabled = true;
             }
             catch (Exception ex)
-            { MelonLogger.Error("[ExplodingProps] Attach: " + ex.Message); }
+            { MelonLogger.Error("[ExplodingProps] Attach: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ExplodingProps"); }
         }
 
         private static void Detach()
@@ -151,7 +152,7 @@ namespace DescendersModMenu.Mods
                     break;
                 }
             }
-            catch (Exception ex) { MelonLogger.Error("[ExplodingProps] CacheReflection: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[ExplodingProps] CacheReflection: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ExplodingProps"); }
         }
 
         private void PlayCrashSound()

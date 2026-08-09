@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -149,6 +150,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[SpeedWatcher] Save failed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SpeedWatcher");
             }
         }
     }

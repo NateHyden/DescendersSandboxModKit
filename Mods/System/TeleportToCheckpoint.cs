@@ -1,5 +1,6 @@
-﻿using System.Reflection;
+using System.Reflection;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -31,7 +32,7 @@ namespace DescendersModMenu.Mods
                 respawn.Invoke(pii, new object[] { true }); // true = skip CanRespawn check
                 MelonLogger.Msg("[TeleportCP] RespawnOnTrack called.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[TeleportCP] Teleport: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[TeleportCP] Teleport: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TeleportToCheckpoint"); }
         }
 
         // ── Checkpoint count ─────────────────────────────────────────
@@ -96,7 +97,7 @@ namespace DescendersModMenu.Mods
                 }
                 MelonLogger.Msg("[TeleportCP] Teleported to checkpoint #" + index + " at " + dest);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[TeleportCP] TeleportByIndex: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[TeleportCP] TeleportByIndex: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TeleportToCheckpoint"); }
         }
     }
 }

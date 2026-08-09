@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -84,6 +85,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[HoverMode] Enable: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "HoverMode");
                 Enabled = false;
             }
         }
@@ -94,7 +96,7 @@ namespace DescendersModMenu.Mods
             {
                 if ((object)_rb != null) _rb.useGravity = _savedGravity;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[HoverMode] Disable: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[HoverMode] Disable: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "HoverMode"); }
 
             _vehicle = null;
             _rb = null;
@@ -123,6 +125,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[HoverMode] FixedTick: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "HoverMode");
                 Enabled = false;
                 Disable();
             }

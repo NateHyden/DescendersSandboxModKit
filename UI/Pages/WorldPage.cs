@@ -1,5 +1,6 @@
 using DescendersModMenu.Mods;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,6 +11,13 @@ namespace DescendersModMenu.UI
         // ── Sky Colours ───────────────────────────────────────────────────
         private static Image _stormTrack; private static RectTransform _stormKnob;
         private static Text _stormVal, _skyPresetVal;
+
+        // ── Blizzard Dial ────────────────────────────────────────────────
+        private static GameObject _bzRow;
+        private static Text _bzVal;
+        private static Image _bzTrack; private static RectTransform _bzKnob;
+        private static Text _bzSnowVal, _bzSeasonVal;
+        private static UnityEngine.UI.Button _bzSnowMinus, _bzSnowPlus;
 
         private static Text _gravityVal;
         private static Image _gravityBar;
@@ -45,6 +53,7 @@ namespace DescendersModMenu.UI
 
         public static bool IsAnyActive =>
             SkyColours.CurrentPreset != 0 || SkyColours.StormEnabled ||
+            BlizzardDial.Enabled ||
             Gravity.Level != 5 ||
             Trees.Enabled || Music.Enabled || Fog.Enabled ||
             TurboWind.Enabled || ExplodingProps.Enabled || HeadlightsOnly.Enabled;
@@ -114,6 +123,32 @@ namespace DescendersModMenu.UI
                 _stormVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(stmr.transform, "StmT", () => { SkyColours.ToggleStorm(); RefreshAll(); }, out _stormTrack, out _stormKnob);
 
+
+                UIHelpers.Divider(pg7);
+
+                // ── WEATHER (Blizzard Dial) ────────────────────────────
+                UIHelpers.SectionHeader("WEATHER", pg7);
+
+                _bzRow = UIHelpers.StatRow("Blizzard Dial", pg7);
+                _bzVal = UIHelpers.Txt("BzV", _bzRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _bzVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(_bzRow.transform, "BzT", () => { BlizzardDial.Toggle(); RefreshAll(); }, out _bzTrack, out _bzKnob);
+
+                var bzsr = UIHelpers.StatRow("Snow Amount", pg7);
+                _bzSnowMinus = UIHelpers.SmallBtn(bzsr.transform, "-", () => { BlizzardDial.DecreaseSnow(); RefreshAll(); });
+                _bzSnowVal = UIHelpers.Txt("BzSV", bzsr.transform, BlizzardDial.SnowLevel.ToString(), 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+                _bzSnowVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
+                _bzSnowPlus = UIHelpers.SmallBtn(bzsr.transform, "+", () => { BlizzardDial.IncreaseSnow(); RefreshAll(); });
+
+                var bzser = UIHelpers.StatRow("Season", pg7);
+                UIHelpers.SmallBtn(bzser.transform, "\u25C0", () => { BlizzardDial.PrevSeason(); RefreshAll(); });
+                _bzSeasonVal = UIHelpers.Txt("BzSeV", bzser.transform, BlizzardDial.SeasonDisplay, 11,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _bzSeasonVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 56;
+                UIHelpers.SmallBtn(bzser.transform, "\u25B6", () => { BlizzardDial.NextSeason(); RefreshAll(); });
+
+                UIHelpers.InfoBox(pg7, "Thick snow mesh with wheel ruts (path packs down + darkens). Amount = thickness, Season = tint. Hides grass while on.");
 
                 UIHelpers.Divider(pg7);
 
@@ -214,14 +249,14 @@ namespace DescendersModMenu.UI
                 UIHelpers.ActionBtnOrange(jr.transform, "Jump", () =>
                 {
                     try { DevCommandsGameplay.JumpToFinish(); }
-                    catch (System.Exception ex) { MelonLogger.Error("[JumpToFinish]: " + ex.Message); }
+                    catch (System.Exception ex) { MelonLogger.Error("[JumpToFinish]: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WorldPage"); }
                 }, 60);
 
                 var sr = UIHelpers.StatRow("Skip Song", pg7);
                 UIHelpers.ActionBtn(sr.transform, "Skip", () =>
                 {
                     try { DevCommandsGameplay.SkipSong(); }
-                    catch (System.Exception ex) { MelonLogger.Error("[SkipSong]: " + ex.Message); }
+                    catch (System.Exception ex) { MelonLogger.Error("[SkipSong]: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WorldPage"); }
                 }, 60);
 
                 // ── STAR BUTTONS (Favourites) ──────────────────────────
@@ -235,6 +270,7 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("Fog", UIHelpers.StarBtn(fogr.transform, "Fog", () => FavouritesManager.Toggle("Fog")));
                 FavouritesManager.RegisterStarButton("HeadlightsOnly", UIHelpers.StarBtn(_hlRow.transform, "HeadlightsOnly", () => FavouritesManager.Toggle("HeadlightsOnly")));
                 FavouritesManager.RegisterStarButton("SkyColour", UIHelpers.StarBtn(skpr.transform, "SkyColour", () => FavouritesManager.Toggle("SkyColour")));
+                FavouritesManager.RegisterStarButton("BlizzardDial", UIHelpers.StarBtn(_bzRow.transform, "BlizzardDial", () => FavouritesManager.Toggle("BlizzardDial")));
 
                 // ── FACTORY REGISTRATIONS (World tab mods) ─────────────
                 FavouritesManager.Register(new ModFavEntry
@@ -338,11 +374,27 @@ namespace DescendersModMenu.UI
                     },
                     IsActive = () => SkyColours.CurrentPreset != 0
                 });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "BlizzardDial",
+                    DisplayName = "Blizzard Dial",
+                    TabBadge = "WORLD",
+                    BuildControls = (p) => {
+                        var row = UIHelpers.StatRow("Blizzard Dial", p);
+                        var val = UIHelpers.Txt("BzFV", row.transform, BlizzardDial.Enabled ? "ON" : "OFF", 11,
+                            FontStyle.Bold, TextAnchor.MiddleCenter, BlizzardDial.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor);
+                        val.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                        Image favTrack; RectTransform favKnob;
+                        UIHelpers.Toggle(row.transform, "BzFT", () => { BlizzardDial.Toggle(); RefreshAll(); FavsPage.RefreshFavourites(); },
+                            out favTrack, out favKnob);
+                    },
+                    IsActive = () => BlizzardDial.Enabled
+                });
 
                 RefreshAll();
                 UIHelpers.AddScrollForwarders(pg7);
             }
-            catch (System.Exception ex) { MelonLogger.Error("WorldPage.CreatePage: " + ex.Message); return null; }
+            catch (System.Exception ex) { MelonLogger.Error("WorldPage.CreatePage: " + ex.Message); Telemetry.ReportErrorAsync(ex, "WorldPage"); return null; }
             return pg;
         }
 
@@ -366,6 +418,7 @@ namespace DescendersModMenu.UI
             Trees.Reset();
             Music.Reset();
             Fog.Reset();
+            BlizzardDial.Reset();
             if (HeadlightsOnly.Enabled) HeadlightsOnly.Toggle();
         }
 
@@ -399,6 +452,15 @@ namespace DescendersModMenu.UI
             bool storm = SkyColours.StormEnabled;
             if (_stormVal) { _stormVal.text = storm ? "ON" : "OFF"; _stormVal.color = storm ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_stormTrack, _stormKnob, storm);
+
+            // Blizzard Dial
+            bool bzOn = BlizzardDial.Enabled;
+            if (_bzVal) { _bzVal.text = bzOn ? "ON" : "OFF"; _bzVal.color = bzOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_bzTrack, _bzKnob, bzOn);
+            if (_bzSnowVal) _bzSnowVal.text = BlizzardDial.SnowLevel.ToString();
+            if (_bzSeasonVal) _bzSeasonVal.text = BlizzardDial.SeasonDisplay;
+            if ((object)_bzSnowMinus != null) _bzSnowMinus.interactable = BlizzardDial.SnowLevel > 1;
+            if ((object)_bzSnowPlus != null) _bzSnowPlus.interactable = BlizzardDial.SnowLevel < 10;
         }
     }
 }

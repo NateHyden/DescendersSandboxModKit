@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -76,7 +77,7 @@ namespace DescendersModMenu.Mods
                 if (on) ApplyScale();
                 else _headBone.localScale = _defaultScale;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[BigHeadMode] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[BigHeadMode] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "BigHeadMode"); }
         }
 
         private static void ApplyScale()

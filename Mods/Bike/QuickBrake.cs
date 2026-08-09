@@ -47,7 +47,7 @@ namespace DescendersModMenu.Mods
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
                 ModLog.Debug("[QuickBrake] Patched VehicleController.FixedUpdate.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[QuickBrake] ApplyPatch: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[QuickBrake] ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "QuickBrake"); }
         }
 
         public static void Reset() { Enabled = false; }

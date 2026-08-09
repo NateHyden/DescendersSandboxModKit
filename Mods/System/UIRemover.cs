@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -71,6 +72,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[UIRemover] Apply: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "UIRemover");
             }
         }
 

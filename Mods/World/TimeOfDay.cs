@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
 
@@ -71,7 +72,7 @@ namespace DescendersModMenu.Mods
                     return;
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[TimeOfDay] CaptureSceneDefault: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[TimeOfDay] CaptureSceneDefault: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
         }
 
         // Used by Save/Load � stores the level without touching the game world
@@ -133,7 +134,7 @@ namespace DescendersModMenu.Mods
 
                 MelonLogger.Warning("[TimeOfDay] Hour field/property not found on Cycle.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[TimeOfDay] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[TimeOfDay] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
         }
     }
 }

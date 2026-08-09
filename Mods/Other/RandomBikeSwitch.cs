@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -51,7 +52,7 @@ namespace DescendersModMenu.Mods
                 for (int i = 0; i < hops; i++) BikeSwitcher.NextBike();
                 ModLog.Feedback("[RandomBikeSwitch] Switched (" + hops + " hop(s)) -> index " + BikeSwitcher.CurrentBikeIndex);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomBikeSwitch] Tick: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[RandomBikeSwitch] Tick: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomBikeSwitch"); }
             ScheduleNext();
         }
 
@@ -59,7 +60,7 @@ namespace DescendersModMenu.Mods
         {
             if (!_hasSnapshot) return;
             try { BikeSwitcher.SetBike(_snapshotIndex); }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomBikeSwitch] RestoreSnapshot: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[RandomBikeSwitch] RestoreSnapshot: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomBikeSwitch"); }
             _hasSnapshot = false;
         }
 

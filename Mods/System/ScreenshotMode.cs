@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using System.IO;
 using UnityEngine;
 
@@ -120,7 +121,7 @@ namespace DescendersModMenu.Mods
                         }
                         MelonLogger.Msg("[ScreenshotMode] Hidden " + _hiddenCanvases.Count + " canvas(es).");
                     }
-                    catch (System.Exception ex) { MelonLogger.Error("[Screenshot] HideCanvases: " + ex.Message); }
+                    catch (System.Exception ex) { MelonLogger.Error("[Screenshot] HideCanvases: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ScreenshotMode"); }
 
                     _state = 2; _wait = 2;
                     break;
@@ -200,20 +201,21 @@ namespace DescendersModMenu.Mods
                     _captureMethod.Invoke(null, new object[] { path, superSize });
                     ModLog.Feedback("[ScreenshotMode] Capture " + superSize + "x -> " + path);
                 }
-                else MelonLogger.Error("[ScreenshotMode] CaptureScreenshot method not found.");
+                else { MelonLogger.Error("[ScreenshotMode] CaptureScreenshot method not found."); Telemetry.ReportErrorAsync(new System.Exception("[ScreenshotMode] CaptureScreenshot method not found."), "ScreenshotMode"); }
             }
             catch (System.Reflection.TargetInvocationException tex)
             {
                 var inner = tex.InnerException ?? tex;
                 MelonLogger.Error("[ScreenshotMode] Capture: " + inner.Message);
+                Telemetry.ReportErrorAsync(new System.Exception("[ScreenshotMode] Capture: " + inner.Message), "ScreenshotMode");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[ScreenshotMode] Capture: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[ScreenshotMode] Capture: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ScreenshotMode"); }
         }
 
         private static void EnsureFolder()
         {
             try { if (!Directory.Exists(SaveFolder)) Directory.CreateDirectory(SaveFolder); }
-            catch (System.Exception ex) { MelonLogger.Error("[ScreenshotMode] EnsureFolder: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[ScreenshotMode] EnsureFolder: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ScreenshotMode"); }
         }
 
         private static void LoadPreview(string path)
@@ -232,9 +234,14 @@ namespace DescendersModMenu.Mods
                     PreviewTexture = tex;
                     MelonLogger.Msg("[ScreenshotMode] Preview loaded: " + tex.width + "x" + tex.height);
                 }
-                else { MelonLogger.Error("[ScreenshotMode] LoadImage failed."); Object.Destroy(tex); }
+                else
+                {
+                    MelonLogger.Error("[ScreenshotMode] LoadImage failed.");
+                    Telemetry.ReportErrorAsync(new System.Exception("[ScreenshotMode] LoadImage failed."), "ScreenshotMode");
+                    Object.Destroy(tex);
+                }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[ScreenshotMode] LoadPreview: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[ScreenshotMode] LoadPreview: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ScreenshotMode"); }
         }
 
         private static bool InControlDPadUp()

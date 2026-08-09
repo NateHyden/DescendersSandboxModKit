@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
 
@@ -128,6 +129,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[FlyMode] Enable: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "FlyMode");
                 Enabled = false;
             }
         }
@@ -158,6 +160,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[FlyMode] Disable: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "FlyMode");
             }
 
             _vehicle = null;
@@ -229,6 +232,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[FlyMode] Tick: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "FlyMode");
                 Enabled = false;
                 Disable();
             }

@@ -231,7 +231,7 @@ namespace DescendersModMenu
                 File.WriteAllText(Path.Combine(SaveFolder, SaveFileName), JsonUtility.ToJson(data, true));
                 MelonLogger.Msg("[KeyBindManager] Saved " + ModIds.Length + " bindings.");
             }
-            catch (Exception ex) { MelonLogger.Error("[KeyBindManager] SaveBindings: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[KeyBindManager] SaveBindings: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "KeyBindManager"); }
         }
 
         public static void LoadBindings()
@@ -253,7 +253,7 @@ namespace DescendersModMenu
                 if (data.MenuOpenCode != 0) _menuOpenCode = data.MenuOpenCode;
                 ModLog.Debug("[KeyBindManager] Loaded " + loaded + " bindings from file. MenuOpenCode=" + _menuOpenCode);
             }
-            catch (Exception ex) { MelonLogger.Error("[KeyBindManager] LoadBindings: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[KeyBindManager] LoadBindings: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "KeyBindManager"); }
         }
 
         // Set by BindsPage.OnGUI when a key is committed, to suppress firing that
@@ -332,7 +332,7 @@ namespace DescendersModMenu
                     default: MelonLogger.Warning("[KeyBindManager] Unknown mod id: " + id);      break;
                 }
             }
-            catch (Exception ex) { MelonLogger.Error("[KeyBindManager] FireMod(" + id + "): " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[KeyBindManager] FireMod(" + id + "): " + ex.Message);  Telemetry.ReportErrorAsync(ex, "KeyBindManager"); }
         }
 
         private static void DoSuperLaunch()

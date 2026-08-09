@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -51,7 +52,7 @@ namespace DescendersModMenu.Mods
                 CurrentScale = scale;
                 ModLog.Feedback("[BikeSize] Scale -> " + scale);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[BikeSize] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[BikeSize] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "BikeSize"); }
         }
 
         public static void ResetToDefault()
@@ -64,7 +65,7 @@ namespace DescendersModMenu.Mods
                 Transform bm = player.transform.Find("BikeModel");
                 if ((object)bm != null) bm.localScale = _defaultScale;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[BikeSize] ResetToDefault: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[BikeSize] ResetToDefault: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "BikeSize"); }
         }
     }
 }

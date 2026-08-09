@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 using DescendersModMenu.Mods;
@@ -103,6 +104,7 @@ namespace DescendersModMenu.UI
             catch (System.Exception ex)
             {
                 MelonLogger.Error("ModesPage.CreatePage: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModesPage");
             }
         }
 
@@ -230,6 +232,7 @@ namespace DescendersModMenu.UI
             catch (System.Exception ex)
             {
                 MelonLogger.Error("ModesPage.BuildEarthquakePage: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModesPage");
             }
         }
 
@@ -343,6 +346,7 @@ namespace DescendersModMenu.UI
             catch (System.Exception ex)
             {
                 MelonLogger.Error("ModesPage.BuildPoliceChasePage: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModesPage");
             }
         }
 
@@ -478,6 +482,7 @@ namespace DescendersModMenu.UI
             catch (System.Exception ex)
             {
                 MelonLogger.Error("ModesPage.BuildTrickAttackPage: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModesPage");
             }
         }
 
@@ -625,7 +630,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.AddScrollForwarders(c);
                 RefreshBoulderDodge();
             }
-            catch (System.Exception ex) { MelonLogger.Error("ModesPage.BuildBoulderDodgePage: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("ModesPage.BuildBoulderDodgePage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ModesPage"); }
         }
 
         private static void RefreshBoulderDodge()
@@ -718,7 +723,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.AddScrollForwarders(c);
                 RefreshSurvival();
             }
-            catch (System.Exception ex) { MelonLogger.Error("ModesPage.BuildSurvivalPage: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("ModesPage.BuildSurvivalPage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ModesPage"); }
         }
 
         private static void RefreshSurvival()

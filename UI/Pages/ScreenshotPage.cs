@@ -1,5 +1,6 @@
-﻿using DescendersModMenu.Mods;
+using DescendersModMenu.Mods;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -145,7 +146,7 @@ namespace DescendersModMenu.UI
 
                 RefreshAll();
             }
-            catch (System.Exception ex) { MelonLogger.Error("ScreenshotPage.CreatePage: " + ex.Message); return null; }
+            catch (System.Exception ex) { MelonLogger.Error("ScreenshotPage.CreatePage: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ScreenshotPage"); return null; }
             return pg;
         }
 

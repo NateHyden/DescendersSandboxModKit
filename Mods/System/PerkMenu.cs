@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -60,7 +61,7 @@ namespace DescendersModMenu.Mods
                 MelonLogger.Msg("[PerkMenu] Loaded " + (_allPerks != null ? _allPerks.Length : 0)
                     + " perk(s) from GameData." + _rosterField.Name);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[PerkMenu] LoadRoster: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[PerkMenu] LoadRoster: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "PerkMenu"); }
         }
 
         // Category badge art (colored shield/circle per Green/Blue/Yellow class) -
@@ -205,6 +206,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[PerkMenu] Grant: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "PerkMenu");
                 LastResult = "Error - see log";
             }
         }
@@ -227,6 +229,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[PerkMenu] Remove: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "PerkMenu");
                 LastResult = "Error - see log";
             }
         }
@@ -263,6 +266,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[PerkMenu] ClearAllPerks: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "PerkMenu");
                 LastResult = "Error - see log";
             }
         }

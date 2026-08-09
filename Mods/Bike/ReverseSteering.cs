@@ -40,6 +40,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[ReverseSteering] ApplyPatch: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ReverseSteering");
                 DiagnosticsManager.Report("ReverseSteering", false, ex.Message);
             }
         }

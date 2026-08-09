@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using DescendersModMenu.Mods;
@@ -44,7 +45,7 @@ namespace DescendersModMenu.UI
                 _pointerStart = eventData.position;
                 _anchoredStart = _target.anchoredPosition;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[WindowDrag] OnBeginDrag: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[WindowDrag] OnBeginDrag: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WindowDragHandler"); }
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -56,7 +57,7 @@ namespace DescendersModMenu.UI
                 Vector2 delta = (eventData.position - _pointerStart) / scale;
                 _target.anchoredPosition = ClampToScreen(_anchoredStart + delta);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[WindowDrag] OnDrag: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[WindowDrag] OnDrag: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WindowDragHandler"); }
         }
 
         public void OnEndDrag(PointerEventData eventData)
@@ -66,7 +67,7 @@ namespace DescendersModMenu.UI
             {
                 MenuCustomiser.SetCustomPosition(_target.anchoredPosition.x, _target.anchoredPosition.y);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[WindowDrag] OnEndDrag: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[WindowDrag] OnEndDrag: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WindowDragHandler"); }
         }
 
         private void SnapToTopLeftPivotPreservingPosition()

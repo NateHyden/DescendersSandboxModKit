@@ -59,6 +59,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[AutoBalance] ApplyPatch: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "AutoBalance");
                 DiagnosticsManager.Report("AutoBalance", false, ex.Message);
             }
         }

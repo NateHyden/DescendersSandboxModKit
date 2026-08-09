@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using System.Reflection;
 using UnityEngine;
 
@@ -120,6 +121,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[WideTyres] Apply: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "WideTyres");
             }
         }
 
@@ -146,6 +148,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[WideTyres] ResetBones: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "WideTyres");
             }
         }
 

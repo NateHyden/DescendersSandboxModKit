@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -59,7 +60,7 @@ namespace DescendersModMenu.Mods
                 LastMutationDisplay = ModNames[idx] + " -> " + level;
                 MelonLogger.Msg("[RandomMutator] Checkpoint mutation: " + LastMutationDisplay);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomMutator] OnCheckpoint: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[RandomMutator] OnCheckpoint: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomMutatorOnCheckpoint"); }
         }
 
         private static void RestoreSnapshot()
@@ -73,7 +74,7 @@ namespace DescendersModMenu.Mods
                 GameModifierMods.SetPumpStrengthLevel(_snapPump);
                 GameModifierMods.SetIcePhysicsLevel(_snapIce);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomMutator] RestoreSnapshot: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[RandomMutator] RestoreSnapshot: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomMutatorOnCheckpoint"); }
             _hasSnapshot = false;
         }
 

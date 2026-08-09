@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -90,7 +91,7 @@ namespace DescendersModMenu.Mods
                     }
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[TrailPainter] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[TrailPainter] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TrailPainter"); }
         }
 
         private static void ApplyColour()

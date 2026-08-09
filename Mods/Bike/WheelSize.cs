@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -50,6 +51,18 @@ namespace DescendersModMenu.Mods
                 }
             }
             catch { }
+        }
+
+        public static void Toggle()
+        {
+            IsEnabled = !IsEnabled;
+            if (IsEnabled)
+            {
+                IsIndividualMode = false;
+                ApplyLevel(Level);
+            }
+            else Reset();
+            ModLog.Feedback("[WheelSize] -> " + (IsEnabled ? "ON" : "OFF"));
         }
 
         // ── Apply level (both wheels) ─────────────────────────────────
@@ -106,7 +119,7 @@ namespace DescendersModMenu.Mods
                 }
                 ModLog.Debug("[WheelSize] Individual F=" + FrontLevel + " R=" + RearLevel);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[WheelSize] ApplyIndividualLevels: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[WheelSize] ApplyIndividualLevels: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WheelSize"); }
         }
 
         // ── Save/load helpers ─────────────────────────────────────────
@@ -185,7 +198,7 @@ namespace DescendersModMenu.Mods
                 }
                 MelonLogger.Msg("[WheelSize] Level=" + Level + " scale=" + scale);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[WheelSize] ApplyScaleDirectly: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[WheelSize] ApplyScaleDirectly: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WheelSize"); }
         }
 
         private static void SetLegacyMode(int mode)
@@ -225,7 +238,7 @@ namespace DescendersModMenu.Mods
                 if (mode == 0) { _cachedFrontBone = null; _cachedBackBone = null; }
                 ModLog.Feedback("[WheelSize] Legacy -> " + LegacyLabels[mode]);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[WheelSize] SetLegacyMode: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[WheelSize] SetLegacyMode: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WheelSize"); }
         }
 
         private static void CacheBoneFields(BikeAnimation anim)

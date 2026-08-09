@@ -1,5 +1,6 @@
 using System.Reflection;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -76,7 +77,7 @@ namespace DescendersModMenu.Mods
                 field.SetValue(vehicle, newDrag);
                 ModLog.Feedback("[MaxSpeed] Level " + Level + " drag -> " + newDrag);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[MaxSpeed] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[MaxSpeed] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "MaxSpeedMultiplier"); }
         }
 
         // Same silent-overwrite race as Acceleration - the game's own bike-stat

@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -13,6 +14,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply(!Enabled); // true = play, false = mute
+            ModLog.Feedback("[Music] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void Apply(bool play)
@@ -44,15 +46,13 @@ namespace DescendersModMenu.Mods
                         if (vol is float) _savedVolume = (float)vol;
                     }
                     setMethod.Invoke(mgr, new object[] { musicEnum, 0f });
-                    MelonLogger.Msg("[Music] Muted. Saved volume: " + _savedVolume);
                 }
                 else
                 {
                     setMethod.Invoke(mgr, new object[] { musicEnum, _savedVolume });
-                    MelonLogger.Msg("[Music] Restored volume: " + _savedVolume);
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Music] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Music] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Music"); }
         }
 
         public static void Reset()

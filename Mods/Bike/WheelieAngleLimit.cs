@@ -37,7 +37,7 @@ namespace DescendersModMenu.Mods
                 harmony.Patch(target, postfix: new HarmonyMethod(postfix));
                 ModLog.Debug("[WheelieAngleLimit] Patched Vehicle.FixedUpdate.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[WheelieAngleLimit] ApplyPatch: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[WheelieAngleLimit] ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WheelieAngleLimit"); }
         }
 
         public static void Reset() { Enabled = false; WheelieAngleLimit_Patch.ResetGrace(); }

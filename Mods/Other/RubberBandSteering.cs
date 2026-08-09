@@ -67,6 +67,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[RubberBandSteering] ApplyPatch: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "RubberBandSteering");
                 DiagnosticsManager.Report("RubberBandSteering", false, ex.Message);
             }
         }

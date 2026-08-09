@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -399,7 +400,7 @@ namespace DescendersModMenu.Mods
             {
                 try { _cyclist.Bail(); }
                 catch (System.Exception ex)
-                { MelonLogger.Error("[PoliceChase] Bail failed: " + ex.Message); }
+                { MelonLogger.Error("[PoliceChase] Bail failed: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PoliceChaseMod"); }
             }
 
             // Zero out player rigidbody velocity for a hard stop feel

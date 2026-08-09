@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -82,7 +83,7 @@ namespace DescendersModMenu.Mods
                 LastFlipDisplay = next.ToString();
                 ModLog.Feedback("[RandomWeatherRoulette] -> " + next);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] Tick: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] Tick: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette"); }
             ScheduleNext();
         }
 
@@ -120,7 +121,7 @@ namespace DescendersModMenu.Mods
                 RenderSettings.fog = true;
                 RenderSettings.fogDensity = HeavyFogDensity;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] ApplyFog: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] ApplyFog: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette"); }
         }
 
         private static void RestoreFog()
@@ -131,7 +132,7 @@ namespace DescendersModMenu.Mods
                 RenderSettings.fog = _savedFogState;
                 RenderSettings.fogDensity = _savedFogDensity;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] RestoreFog: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] RestoreFog: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette"); }
             _fogOverrideActive = false;
         }
 
@@ -143,7 +144,7 @@ namespace DescendersModMenu.Mods
                 if (_snapStorm && !SkyColours.StormEnabled) SkyColours.ToggleStorm();
                 if (_snapMoon && !MoonMode.IsActive) MoonMode.Toggle();
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] RestoreSnapshot: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] RestoreSnapshot: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette"); }
             _hasSnapshot = false;
         }
 

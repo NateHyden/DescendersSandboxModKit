@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using DescendersModMenu.UI;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -179,6 +180,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[MenuCustomiser] LoadFromFile: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "MenuCustomiser");
                 Apply();
             }
         }
@@ -206,6 +208,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[MenuCustomiser] SaveToFile: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "MenuCustomiser");
             }
         }
     }

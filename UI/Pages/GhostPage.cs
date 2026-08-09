@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 using DescendersModMenu.Mods;
@@ -133,7 +134,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.AddScrollForwarders(c);
                 RefreshAll();
             }
-            catch (System.Exception ex) { MelonLogger.Error("GhostPage: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("GhostPage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "GhostPage"); }
         }
 
         private static void AddInstruction(Transform parent, string num, string text)

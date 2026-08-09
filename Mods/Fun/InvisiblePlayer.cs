@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -12,6 +13,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply(Enabled);
+            ModLog.Feedback("[InvisiblePlayer] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void SetEnabled(bool v)
@@ -45,7 +47,7 @@ namespace DescendersModMenu.Mods
                     }
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[InvisiblePlayer] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[InvisiblePlayer] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "InvisiblePlayer"); }
         }
     }
 }

@@ -190,7 +190,7 @@ namespace DescendersModMenu.Mods
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
                 ModLog.Debug("[BrakeFade] Patched VehicleController.FixedUpdate.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[BrakeFade] ApplyPatch: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[BrakeFade] ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "BrakeFade"); }
         }
 
         // ── AddHeat — called from BrakeFade_Patch with real brake value ──

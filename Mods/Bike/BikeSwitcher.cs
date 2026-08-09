@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Reflection;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -231,6 +232,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("BikeSwitcher.SetBike failed: " + ex);
+                Telemetry.ReportErrorAsync(ex, "BikeSwitcher");
             }
         }
 
@@ -261,6 +263,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("BikeSwitcher.GetPlayerImpact failed: " + ex);
+                Telemetry.ReportErrorAsync(ex, "BikeSwitcher");
                 return null;
             }
         }
@@ -302,6 +305,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("BikeSwitcher.GetPreferredBikeIndex failed: " + ex);
+                Telemetry.ReportErrorAsync(ex, "BikeSwitcher");
                 return 0;
             }
         }
@@ -338,6 +342,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("BikeSwitcher.SetPreferredBikeIndex failed: " + ex);
+                Telemetry.ReportErrorAsync(ex, "BikeSwitcher");
             }
         }
     }

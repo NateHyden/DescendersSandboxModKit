@@ -1,5 +1,6 @@
 using System.Reflection;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -58,7 +59,7 @@ namespace DescendersModMenu.Mods
                 _field.SetValue(vehicle, _originalValue * multiplier);
                 ModLog.Feedback("[Acceleration] Level " + Level + " -> " + (_originalValue * multiplier));
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Acceleration] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Acceleration] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Acceleration"); }
         }
 
         // Confirmed via scene dump 2026-08-04: the game's own bike-stat init runs

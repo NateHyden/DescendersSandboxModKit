@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -23,6 +24,7 @@ namespace DescendersModMenu.Mods
                     Suspension.SetTravelLevel(10);
                     Suspension.SetDampingLevel(1);
                     IsActive = true;
+                    ModLog.Feedback("[MoonMode] -> ON");
                 }
                 else
                 {
@@ -30,9 +32,10 @@ namespace DescendersModMenu.Mods
                     Suspension.SetTravelLevel(_savedTravelLevel > 0 ? _savedTravelLevel : 5);
                     Suspension.SetDampingLevel(_savedDampingLevel > 0 ? _savedDampingLevel : 5);
                     IsActive = false;
+                    ModLog.Feedback("[MoonMode] -> OFF");
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[MoonMode] Toggle: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[MoonMode] Toggle: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "MoonMode"); }
         }
     }
 }

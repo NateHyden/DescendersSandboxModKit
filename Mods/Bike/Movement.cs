@@ -1,5 +1,6 @@
 using System.Reflection;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -58,7 +59,7 @@ namespace DescendersModMenu.Mods
                 _spinField.SetValue(c, _spinDefault * Mult(SpinLevel));
                 ModLog.Feedback("[Movement] Spin -> " + SpinLevel + " (" + (_spinDefault * Mult(SpinLevel)) + ")");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplySpin: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplySpin: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Movement"); }
         }
 
         private static void RestoreSpin()
@@ -98,7 +99,7 @@ namespace DescendersModMenu.Mods
                 _hopField.SetValue(c, _hopDefault * Mult(HopLevel));
                 ModLog.Feedback("[Movement] Hop -> " + HopLevel + " (" + (_hopDefault * Mult(HopLevel)) + ")");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplyHop: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplyHop: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Movement"); }
         }
 
         private static void RestoreHop()
@@ -138,7 +139,7 @@ namespace DescendersModMenu.Mods
                 _wheelieField.SetValue(c, _wheelieDefault * Mult(WheelieLevel));
                 ModLog.Feedback("[Movement] Wheelie -> " + WheelieLevel + " (" + (_wheelieDefault * Mult(WheelieLevel)) + ")");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplyWheelie: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplyWheelie: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Movement"); }
         }
 
         private static void RestoreWheelie()
@@ -178,7 +179,7 @@ namespace DescendersModMenu.Mods
                 _leanField.SetValue(c, _leanDefault * Mult(LeanLevel));
                 ModLog.Feedback("[Movement] Lean -> " + LeanLevel + " (" + (_leanDefault * Mult(LeanLevel)) + ")");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplyLean: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Movement] ApplyLean: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Movement"); }
         }
 
         private static void RestoreLean()

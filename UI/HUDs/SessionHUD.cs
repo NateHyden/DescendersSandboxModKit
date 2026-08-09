@@ -1,3 +1,4 @@
+using DescendersModMenu.Mods;
 using UnityEngine;
 
 namespace DescendersModMenu.UI
@@ -5,6 +6,12 @@ namespace DescendersModMenu.UI
     public static class SessionHUD
     {
         public static bool Enabled = false;
+
+        public static void Toggle()
+        {
+            Enabled = !Enabled;
+            ModLog.Feedback("[SessionHUD] -> " + (Enabled ? "ON" : "OFF"));
+        }
 
         private static Texture2D _tex;
         private static Texture2D Tex

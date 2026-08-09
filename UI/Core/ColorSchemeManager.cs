@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using DescendersModMenu.Mods;
 
@@ -175,12 +176,12 @@ namespace DescendersModMenu.UI
 
                 ModLog.Debug("[ColorSchemeManager] Applied '" + s.Name + "' (index " + index + ").");
             }
-            catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] Apply: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ColorSchemeManager"); }
 
             if (rebuildMenu)
             {
                 try { MenuUI.RebuildMenu(); }
-                catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] RebuildMenu: " + ex.Message); }
+                catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] RebuildMenu: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ColorSchemeManager"); }
             }
         }
 
@@ -205,7 +206,7 @@ namespace DescendersModMenu.UI
                 File.WriteAllText(Path.Combine(SaveFolder, SaveFileName), JsonUtility.ToJson(data, true));
                 ModLog.Debug("[ColorSchemeManager] Saved scheme index " + CurrentIndex + ".");
             }
-            catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] Save: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] Save: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ColorSchemeManager"); }
         }
 
         // ── Called once at startup, before the menu is ever built ──────
@@ -226,7 +227,7 @@ namespace DescendersModMenu.UI
                     ModLog.Debug("[ColorSchemeManager] No colour scheme file — using default (Purple).");
                 }
             }
-            catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] LoadAndApply read: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[ColorSchemeManager] LoadAndApply read: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ColorSchemeManager"); }
 
             Apply(index, false);
         }

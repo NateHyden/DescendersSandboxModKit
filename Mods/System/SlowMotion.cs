@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -72,7 +73,7 @@ namespace DescendersModMenu.Mods
                     Time.fixedDeltaTime = 0.02f * scale;
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("SlowMotion.SetScale: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("SlowMotion.SetScale: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "SlowMotion"); }
 
         }
     }

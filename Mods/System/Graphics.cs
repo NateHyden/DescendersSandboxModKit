@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
 
@@ -110,7 +111,7 @@ namespace DescendersModMenu.Mods
                 else
                     MelonLogger.Warning("[Graphics] 'enabled' property not found on model.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Graphics] SetEnabled: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Graphics] SetEnabled: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Graphics"); }
         }
 
         public static void ToggleBloom()
@@ -118,7 +119,7 @@ namespace DescendersModMenu.Mods
             BloomEnabled = !BloomEnabled;
             if (!EnsureRefs()) return;
             SetEnabled(_bloomField, BloomEnabled);
-            ModLog.Feedback("[Graphics] Bloom -> " + BloomEnabled);
+            ModLog.Feedback("[Graphics] Bloom -> " + (BloomEnabled ? "ON" : "OFF"));
         }
 
         public static void ToggleAO()
@@ -126,7 +127,7 @@ namespace DescendersModMenu.Mods
             AmbientOccEnabled = !AmbientOccEnabled;
             if (!EnsureRefs()) return;
             SetEnabled(_aoField, AmbientOccEnabled);
-            ModLog.Feedback("[Graphics] AO -> " + AmbientOccEnabled);
+            ModLog.Feedback("[Graphics] AO -> " + (AmbientOccEnabled ? "ON" : "OFF"));
         }
 
         public static void ToggleVignette()
@@ -134,7 +135,7 @@ namespace DescendersModMenu.Mods
             VignetteEnabled = !VignetteEnabled;
             if (!EnsureRefs()) return;
             SetEnabled(_vigField, VignetteEnabled);
-            ModLog.Feedback("[Graphics] Vignette -> " + VignetteEnabled);
+            ModLog.Feedback("[Graphics] Vignette -> " + (VignetteEnabled ? "ON" : "OFF"));
         }
 
         public static void ToggleDOF()
@@ -142,7 +143,7 @@ namespace DescendersModMenu.Mods
             DepthOfFieldEnabled = !DepthOfFieldEnabled;
             if (!EnsureRefs()) return;
             SetEnabled(_dofField, DepthOfFieldEnabled);
-            ModLog.Feedback("[Graphics] DOF -> " + DepthOfFieldEnabled);
+            ModLog.Feedback("[Graphics] DOF -> " + (DepthOfFieldEnabled ? "ON" : "OFF"));
         }
 
         public static void ToggleChromatic()
@@ -150,7 +151,7 @@ namespace DescendersModMenu.Mods
             ChromaticAbEnabled = !ChromaticAbEnabled;
             if (!EnsureRefs()) return;
             SetEnabled(_cabField, ChromaticAbEnabled);
-            ModLog.Feedback("[Graphics] ChromaticAb -> " + ChromaticAbEnabled);
+            ModLog.Feedback("[Graphics] ChromaticAb -> " + (ChromaticAbEnabled ? "ON" : "OFF"));
         }
 
         public static void SetQuality(int level)
@@ -198,7 +199,7 @@ namespace DescendersModMenu.Mods
                 }
                 ModLog.Feedback("[Graphics] Quality -> " + QualityNames[level]);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Graphics] SetQuality: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Graphics] SetQuality: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Graphics"); }
         }
 
         public static int GetCurrentQuality()

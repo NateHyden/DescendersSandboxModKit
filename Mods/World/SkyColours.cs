@@ -1,4 +1,4 @@
-﻿using MelonLoader;
+using MelonLoader;
 using UnityEngine;
 using System.Reflection;
 using HarmonyLib;
@@ -432,6 +432,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SkyColours] [1/4] TOD_Sky patch FAILED: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SkyColours");
             }
 
             // ── 2. EffectList.TLJ (prefix+postfix) ───────────────────────
@@ -458,6 +459,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SkyColours] [2/4] TLJ patch FAILED: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SkyColours");
             }
 
             // ── 3. EffectList.LateUpdate (storm enforcement) ─────────────
@@ -479,6 +481,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SkyColours] [3/4] EffectList.LateUpdate patch FAILED: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SkyColours");
             }
 
             // ── 4. EffectList.UpdateEnvironmentStates ─────────────────────
@@ -500,6 +503,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SkyColours] [4/4] UES patch FAILED: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SkyColours");
             }
 
             ModLog.Debug("[SkyColours] Patch complete: " + patchCount + "/4 succeeded.");

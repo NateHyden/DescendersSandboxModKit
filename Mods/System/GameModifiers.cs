@@ -143,7 +143,7 @@ namespace DescendersModMenu.Mods
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
                 ModLog.Debug("[GameMod] NoSpeedWobbles Vehicle patch applied.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[GameMod] NoSpeedWobbles Vehicle patch: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[GameMod] NoSpeedWobbles Vehicle patch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
 
             // Patch BikeCamera.FixedUpdate � calls RemoveCameraShake() every frame
             // to zero VgM\u007Fk\u0080u (shake velocity) and OXXnhI\u0081 (shake offset).
@@ -161,7 +161,7 @@ namespace DescendersModMenu.Mods
                 harmony.Patch(camFixedUpdate, postfix: new HarmonyMethod(camPostfix));
                 ModLog.Debug("[GameMod] NoSpeedWobbles BikeCamera patch applied.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[GameMod] NoSpeedWobbles BikeCamera patch: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[GameMod] NoSpeedWobbles BikeCamera patch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
         }
 
         public static void ApplyMod(string modName, int level)
@@ -225,7 +225,7 @@ namespace DescendersModMenu.Mods
                 }
                 ModLog.Debug("[GameMod] === END DUMP ===");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[GameMod] DumpAllModifiers: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[GameMod] DumpAllModifiers: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
         }
     }
 

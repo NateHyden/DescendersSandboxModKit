@@ -1,4 +1,4 @@
-﻿using DescendersModMenu.Mods;
+using DescendersModMenu.Mods;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
@@ -150,6 +150,7 @@ namespace DescendersModMenu.UI
             catch (System.Exception ex)
             {
                 MelonLogger.Error("InfoPage.CreatePage: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "InfoPage");
                 return null;
             }
             return pg;
@@ -995,13 +996,23 @@ namespace DescendersModMenu.UI
         // ── Tick ──────────────────────────────────────────────────────
         public static void Tick()
         {
-            if ((object)_custSavedRow != null)
+            if (_custSavedRow)
                 _custSavedRow.SetActive(Mods.MenuCustomiser.ShowSavedIndicator);
 
             // Refresh system tab once steam fetch completes
             if (_steamPlayerTxt && Mods.SteamPlayerCount.FetchComplete
                 && _steamPlayerTxt.text == "...")
                 Refresh();
+        }
+
+        public static void ClearUiRefs()
+        {
+            _custSavedRow = null;
+            _steamPlayerTxt = null;
+            _unityVersionTxt = null;
+            _mlVersionTxt = null;
+            _unityMatchTxt = null;
+            _telemetryStatusTxt = null;
         }
 
         // ── Refresh / Rebuild ─────────────────────────────────────────
@@ -1058,7 +1069,7 @@ namespace DescendersModMenu.UI
                 }
 
             }
-            catch (System.Exception ex) { MelonLogger.Error("InfoPage.Refresh: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("InfoPage.Refresh: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "InfoPage"); }
         }
 
     }

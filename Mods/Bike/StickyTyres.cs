@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -59,6 +60,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[StickyTyres] FixedTick: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "StickyTyres");
             }
         }
 

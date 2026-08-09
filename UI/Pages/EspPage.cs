@@ -1,5 +1,6 @@
 using DescendersModMenu.Mods;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -116,7 +117,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.ActionBtnOrange(cpr.transform, "Teleport", () =>
                 {
                     try { TeleportToCheckpoint.Teleport(); }
-                    catch (System.Exception ex) { MelonLogger.Error("[TeleportCP]: " + ex.Message); }
+                    catch (System.Exception ex) { MelonLogger.Error("[TeleportCP]: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "EspPage"); }
                 }, 76);
 
                 // ── Teleport by index ─────────────────────────────
@@ -154,7 +155,7 @@ namespace DescendersModMenu.UI
                 var mdr = UIHelpers.StatRow("Detect Mod Users", pg.transform);
                 UIHelpers.ActionBtn(mdr.transform, "Scan", () => { ModDetection.Scan(); RefreshModUsers(); }, 52);
 
-                _modUsersText = UIHelpers.Txt("MUT", pg.transform, "Press Scan to detect mod users", 11,
+                _modUsersText = UIHelpers.Txt("MUT", pg.transform, "Scanning lobby for mod users...", 11,
                     FontStyle.Normal, TextAnchor.UpperLeft, UIHelpers.TextMid);
                 _modUsersText.horizontalOverflow = HorizontalWrapMode.Wrap;
                 _modUsersText.verticalOverflow = VerticalWrapMode.Truncate;
@@ -209,7 +210,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.AddScrollbar(scrollRect);
                 UIHelpers.AddScrollForwarders(pg.transform);
             }
-            catch (System.Exception ex) { MelonLogger.Error("EspPage.CreatePage: " + ex.Message); return null; }
+            catch (System.Exception ex) { MelonLogger.Error("EspPage.CreatePage: " + ex.Message); Telemetry.ReportErrorAsync(ex, "EspPage"); return null; }
             return pg;
         }
 
@@ -220,11 +221,28 @@ namespace DescendersModMenu.UI
             Upd(tracVal, tracTrk, tracKnb, ESP.ShowTracers);
             Upd(worldVal, worldTrk, worldKnb, ESP.ShowWorldObjects);
             RefreshCpIndex();
+            RefreshModUsers();
+        }
+
+        // Keep the lobby list in sync with ModDetection's periodic Scan().
+        public static void Tick()
+        {
+            if (!_modUsersText) return;
+            RefreshModUsers();
+        }
+
+        public static void ClearUiRefs()
+        {
+            espVal = distVal = tracVal = worldVal = null;
+            espTrk = distTrk = tracTrk = worldTrk = null;
+            espKnb = distKnb = tracKnb = worldKnb = null;
+            _modUsersText = null;
+            _cpIndexText = null;
         }
 
         private static void RefreshModUsers()
         {
-            if ((object)_modUsersText == null) return;
+            if (!_modUsersText) return;
             var users = ModDetection.ModUsers;
             if (users.Count == 0)
             {

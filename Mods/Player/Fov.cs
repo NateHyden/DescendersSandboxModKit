@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using System;
 using System.Reflection;
 using UnityEngine;
@@ -74,7 +75,7 @@ namespace DescendersModMenu.Mods
                     ca.targetFOV = target;
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[FOV] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[FOV] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Fov"); }
         }
 
         // Called when toggled OFF — restores each camera to its captured default.
@@ -96,7 +97,7 @@ namespace DescendersModMenu.Mods
                 }
                 ModLog.Debug("[FOV] Restored default FOV.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[FOV] Restore: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[FOV] Restore: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Fov"); }
         }
 
         // Scene unload / reset

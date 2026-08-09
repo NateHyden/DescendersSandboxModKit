@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 using DescendersModMenu.Mods;
@@ -174,7 +175,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.AddScrollForwarders(c);
                 RefreshAll();
             }
-            catch (System.Exception ex) { MelonLogger.Error("AvalanchePage: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("AvalanchePage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "AvalanchePage"); }
         }
 
         // ── Cycle row: Label  [<]  Value  [>] ─────────────────────────

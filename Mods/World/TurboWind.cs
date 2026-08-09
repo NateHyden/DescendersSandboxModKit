@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -16,6 +17,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply(Enabled);
+            ModLog.Feedback("[TurboWind] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void Apply(bool enabled)
@@ -53,7 +55,7 @@ namespace DescendersModMenu.Mods
                     MelonLogger.Msg("[TurboWind] OFF");
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[TurboWind] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[TurboWind] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TurboWind"); }
         }
 
         public static void Reset()

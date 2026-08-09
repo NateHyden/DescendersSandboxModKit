@@ -151,17 +151,18 @@ namespace DescendersModMenu.UI
         // ── Toggle ────────────────────────────────────────────────────
         public static void Toggle(string id)
         {
+            string name = DisplayLabel(id);
             if (_favourites.ContainsKey(id))
             {
                 _favourites.Remove(id);
                 _orderedFavs.Remove(id);
-                ModLog.Debug("[Favs] Removed: " + id);
+                ModLog.Feedback("[Favs] Removed: " + name);
             }
             else
             {
                 _favourites[id] = 0;
                 _orderedFavs.Add(id);
-                ModLog.Debug("[Favs] Added: " + id);
+                ModLog.Feedback("[Favs] Added: " + name);
             }
             SaveToFile();
             RefreshAllStars();
@@ -173,10 +174,18 @@ namespace DescendersModMenu.UI
         {
             _favourites.Clear();
             _orderedFavs.Clear();
-            ModLog.Debug("[Favs] Cleared all favourites.");
+            ModLog.Feedback("[Favs] Cleared all favourites.");
             SaveToFile();
             RefreshAllStars();
             FavsPage.MarkDirty();
+        }
+
+        private static string DisplayLabel(string id)
+        {
+            ModFavEntry e;
+            if (_registry.TryGetValue(id, out e) && !string.IsNullOrEmpty(e.DisplayName))
+                return e.DisplayName;
+            return id;
         }
 
         // ── Load / Save ───────────────────────────────────────────────

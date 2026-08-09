@@ -1,5 +1,6 @@
 using DescendersModMenu.Mods;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -435,7 +436,7 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.AddScrollForwarders(pg6);
             }
-            catch (System.Exception ex) { MelonLogger.Error("MovePage.CreatePage: " + ex.Message); return null; }
+            catch (System.Exception ex) { MelonLogger.Error("MovePage.CreatePage: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MovePage"); return null; }
             return pg;
         }
 

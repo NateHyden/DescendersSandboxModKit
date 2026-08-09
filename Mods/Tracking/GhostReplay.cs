@@ -454,7 +454,7 @@ namespace DescendersModMenu.Mods
 
                 ModLog.Debug("[GhostReplay] Patched respawn methods.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[GhostReplay] ApplyPatch: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[GhostReplay] ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "GhostReplay"); }
         }
     }
 

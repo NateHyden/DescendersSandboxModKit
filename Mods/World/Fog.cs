@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -14,6 +15,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply(!Enabled); // true = fog on, false = fog off
+            ModLog.Feedback("[Fog] -> " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void Apply(bool fogOn)
@@ -29,16 +31,14 @@ namespace DescendersModMenu.Mods
                     }
                     RenderSettings.fog = false;
                     RenderSettings.fogDensity = 0f;
-                    MelonLogger.Msg("[Fog] Disabled");
                 }
                 else
                 {
                     RenderSettings.fog = _savedState;
                     RenderSettings.fogDensity = _savedDensity >= 0f ? _savedDensity : 0.01f;
-                    MelonLogger.Msg("[Fog] Restored density: " + RenderSettings.fogDensity);
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Fog] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Fog] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Fog"); }
         }
 
         public static void Reset()

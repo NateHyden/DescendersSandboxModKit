@@ -1,5 +1,6 @@
 using System.Reflection;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -93,7 +94,7 @@ namespace DescendersModMenu.Mods
                 }
                 MelonLogger.Msg("[CameraShake] Applied shake=" + shake + " to " + count + " CameraAngle(s).");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[CameraShake] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[CameraShake] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "CameraShake"); }
         }
     }
 }

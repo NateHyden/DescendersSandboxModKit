@@ -1,5 +1,6 @@
 using DescendersModMenu.Mods;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,6 +11,12 @@ namespace DescendersModMenu.UI
         // ── Suspension ────────────────────────────────────────────────
         private static Text _travelVal, _stiffVal, _dampVal;
         private static Image _travelBar, _stiffBar, _dampBar;
+
+        // ── Bouncy Bike ───────────────────────────────────────────────
+        private static GameObject _bbRow2;
+        private static Text _bbVal, _bbLvlVal;
+        private static Image _bbTrack; private static RectTransform _bbKnob;
+        private static UnityEngine.UI.Button _bbMinus2, _bbPlus2;
 
 
         private static Text _bikeSizeLvlVal;
@@ -100,6 +107,7 @@ namespace DescendersModMenu.UI
 
         public static bool IsAnyActive =>
             Suspension.TravelLevel != 5 || Suspension.StiffnessLevel != 5 || Suspension.DampingLevel != 5 ||
+            BouncyBike.Enabled ||
             WheelSize.IsEnabled || WheelSize.IsIndividualMode || InvisibleBike.Enabled || BikeSize.IsModified ||
             WideTyres.Enabled || StickyTyres.Enabled ||
             ReverseSteering.Enabled || IceMode.Enabled || CutBrakes.Enabled ||
@@ -109,6 +117,7 @@ namespace DescendersModMenu.UI
         public static void GlobalReset()
         {
             if (InvisibleBike.Enabled) InvisibleBike.SetEnabled(false);
+            BouncyBike.Reset();
             WheelSize.Reset();
             BikeSize.ResetToDefault();
             BikeSize.Level = 10;
@@ -187,6 +196,18 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.InfoBox(pg8, "Level 5 = default. Travel = how much the fork/shock moves. Stiffness = spring resistance. Damping = how fast it settles.");
 
+                _bbRow2 = UIHelpers.StatRow("Bouncy Bike", pg8);
+                var bb2 = _bbRow2;
+                _bbVal = UIHelpers.Txt("BbV2", bb2.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _bbVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(bb2.transform, "BbT2", () => { BouncyBike.Toggle(); RefreshAll(); }, out _bbTrack, out _bbKnob);
+                _bbMinus2 = UIHelpers.SmallBtn(bb2.transform, "-", () => { BouncyBike.DecreaseLevel(); RefreshAll(); });
+                _bbLvlVal = UIHelpers.Txt("BbL2", bb2.transform, BouncyBike.BouncinessLevel.ToString(), 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+                _bbLvlVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
+                _bbPlus2 = UIHelpers.SmallBtn(bb2.transform, "+", () => { BouncyBike.IncreaseLevel(); RefreshAll(); });
+                UIHelpers.InfoBox(pg8, "Bounces the bike off the ground on landing — bigger falls bounce higher, and it naturally fades out over a few bounces just like a real ball. Level 1 = barely bounces, 10 = superball. Hard bounces can trigger the game's own crash detection — pairs well with a higher Landing Impact threshold or No Bail.");
+
                 UIHelpers.Divider(pg8);
 
                 // ── BIKE SIZE ─────────────────────────────────────────
@@ -233,13 +254,7 @@ namespace DescendersModMenu.UI
                 _wheelSizeTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(gwr.transform, "WsT", () =>
                 {
-                    WheelSize.IsEnabled = !WheelSize.IsEnabled;
-                    if (WheelSize.IsEnabled)
-                    {
-                        WheelSize.IsIndividualMode = false; // both-wheels takes over
-                        WheelSize.ApplyLevel(WheelSize.Level);
-                    }
-                    else WheelSize.Reset();
+                    WheelSize.Toggle();
                     RefreshAll();
                 }, out _wheelSizeTrack, out _wheelSizeKnob);
                 _wheelSizeMinus2 = UIHelpers.SmallBtn(gwr.transform, "◀", () =>
@@ -463,6 +478,7 @@ namespace DescendersModMenu.UI
                 if ((object)suspHdr != null)
                     FavouritesManager.RegisterStarButton("Suspension", UIHelpers.StarBtnAbs(suspHdr, "Suspension", () => FavouritesManager.Toggle("Suspension")));
                 FavouritesManager.RegisterStarButton("BikeSize", UIHelpers.StarBtn(szr.transform, "BikeSize", () => FavouritesManager.Toggle("BikeSize")));
+                FavouritesManager.RegisterStarButton("BouncyBike", UIHelpers.StarBtn(_bbRow2.transform, "BouncyBike", () => FavouritesManager.Toggle("BouncyBike")));
                 FavouritesManager.RegisterStarButton("InvisibleBike", UIHelpers.StarBtn(_invisBikeRow.transform, "InvisibleBike", () => FavouritesManager.Toggle("InvisibleBike")));
                 FavouritesManager.RegisterStarButton("WheelSize", UIHelpers.StarBtn(_wheelSizeRow.transform, "WheelSize", () => FavouritesManager.Toggle("WheelSize")));
                 FavouritesManager.RegisterStarButton("FrontWheelSize", UIHelpers.StarBtn(_frontWheelRow.transform, "FrontWheelSize", () => FavouritesManager.Toggle("FrontWheelSize")));
@@ -496,6 +512,20 @@ namespace DescendersModMenu.UI
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
+                    Id = "BouncyBike",
+                    DisplayName = "Bouncy Bike",
+                    TabBadge = "BIKE",
+                    BuildControls = (p) => FavsPage.BuildToggleStepper(p, "BouncyBike", "Bouncy Bike",
+                        () => BouncyBike.Enabled,
+                        () => BouncyBike.Toggle(),
+                        () => BouncyBike.BouncinessLevel,
+                        () => BouncyBike.DecreaseLevel(),
+                        () => BouncyBike.IncreaseLevel(),
+                        1, 10, () => RefreshAll(), 5),
+                    IsActive = () => BouncyBike.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
                     Id = "BikeSize",
                     DisplayName = "Bike Size",
                     TabBadge = "BIKE",
@@ -522,7 +552,7 @@ namespace DescendersModMenu.UI
                     TabBadge = "BIKE",
                     BuildControls = (p) => FavsPage.BuildToggleStepper(p, "WheelSize", "Wheel Size",
                         () => WheelSize.IsEnabled,
-                        () => { WheelSize.IsEnabled = !WheelSize.IsEnabled; if (WheelSize.IsEnabled) { WheelSize.IsIndividualMode = false; WheelSize.ApplyLevel(WheelSize.Level); } else WheelSize.Reset(); },
+                        () => { WheelSize.Toggle(); },
                         () => WheelSize.Level,
                         () => { if (WheelSize.Level > 1) { WheelSize.Level--; if (WheelSize.IsEnabled) WheelSize.ApplyLevel(WheelSize.Level); } },
                         () => { if (WheelSize.Level < 20) { WheelSize.Level++; if (WheelSize.IsEnabled) WheelSize.ApplyLevel(WheelSize.Level); } },
@@ -680,7 +710,7 @@ namespace DescendersModMenu.UI
                 RefreshAll();
                 UIHelpers.AddScrollForwarders(pg8);
             }
-            catch (System.Exception ex) { MelonLogger.Error("BikePage.CreatePage: " + ex.Message); return null; }
+            catch (System.Exception ex) { MelonLogger.Error("BikePage.CreatePage: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BikePage"); return null; }
             return pg;
         }
 
@@ -705,6 +735,7 @@ namespace DescendersModMenu.UI
             Suspension.SetTravelLevel(5);
             Suspension.SetStiffnessLevel(5);
             Suspension.SetDampingLevel(5);
+            BouncyBike.Reset();
             if (InvisibleBike.Enabled) InvisibleBike.SetEnabled(false);
             WheelSize.Reset();
             if (WideTyres.Enabled) WideTyres.Toggle();
@@ -736,6 +767,14 @@ namespace DescendersModMenu.UI
             UIHelpers.SetBar(_travelBar, (Suspension.TravelLevel - 1) / 9f);
             UIHelpers.SetBar(_stiffBar, (Suspension.StiffnessLevel - 1) / 9f);
             UIHelpers.SetBar(_dampBar, (Suspension.DampingLevel - 1) / 9f);
+
+            // Bouncy Bike
+            bool bbOn = BouncyBike.Enabled;
+            if (_bbVal) { _bbVal.text = bbOn ? "ON" : "OFF"; _bbVal.color = bbOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_bbTrack, _bbKnob, bbOn);
+            if (_bbLvlVal) _bbLvlVal.text = BouncyBike.BouncinessLevel.ToString();
+            if ((object)_bbMinus2 != null) _bbMinus2.interactable = BouncyBike.BouncinessLevel > 1;
+            if ((object)_bbPlus2 != null) _bbPlus2.interactable = BouncyBike.BouncinessLevel < 10;
 
             // Bike Size level
             if (_bikeSizeLvlVal) _bikeSizeLvlVal.text = BikeSize.Level.ToString();

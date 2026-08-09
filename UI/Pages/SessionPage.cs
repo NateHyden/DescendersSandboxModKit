@@ -1,5 +1,6 @@
 using DescendersModMenu.Mods;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -69,7 +70,7 @@ namespace DescendersModMenu.UI
                 _hudTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(hudr.transform, "HdT", () =>
                 {
-                    SessionHUD.Enabled = !SessionHUD.Enabled;
+                    SessionHUD.Toggle();
                     RefreshAll();
                 }, out _hudTrack, out _hudKnob);
                 UIHelpers.InfoBox(c, "Displays session stats in the top-right corner while riding.");
@@ -184,7 +185,7 @@ namespace DescendersModMenu.UI
                 FavouritesManager.Register(new ModFavEntry {
                     Id = "ShowHUD", DisplayName = "Show HUD", TabBadge = "SESSION",
                     BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "ShowHUD", "Show HUD",
-                        () => SessionHUD.Enabled, () => { SessionHUD.Enabled = !SessionHUD.Enabled; }, () => RefreshAll()),
+                        () => SessionHUD.Enabled, () => { SessionHUD.Toggle(); }, () => RefreshAll()),
                     IsActive = () => SessionHUD.Enabled
                 });
                 FavouritesManager.Register(new ModFavEntry {
@@ -202,7 +203,7 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.AddScrollForwarders(c);
             }
-            catch (System.Exception ex) { MelonLogger.Error("SessionPage.CreatePage: " + ex.Message); return null; }
+            catch (System.Exception ex) { MelonLogger.Error("SessionPage.CreatePage: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionPage"); return null; }
             return pg;
         }
 

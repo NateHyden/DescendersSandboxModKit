@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 using DescendersModMenu.Mods;
@@ -17,6 +18,9 @@ namespace DescendersModMenu.UI
         public static bool IsChatFocused => _chatFocused;
         private static Text _chatCursor = null;
         private static RectTransform _chatBoxRect = null;
+        private static Text _hudTogVal = null;
+        private static Image _hudTrack = null;
+        private static RectTransform _hudKnob = null;
 
         private const int DisplayChars = 48;
 
@@ -73,6 +77,24 @@ namespace DescendersModMenu.UI
                 var badgeTxt = UIHelpers.Txt("BT", badge.transform, "EXPERIMENTAL", 9,
                     FontStyle.Bold, TextAnchor.MiddleCenter, new Color(1f, 0.55f, 0.1f, 1f));
                 UIHelpers.Fill(UIHelpers.RT(badgeTxt.gameObject));
+
+                // Spacer pushes the on-screen overlay toggle to the right
+                var hdrSpacer = UIHelpers.Obj("HdrSp", hdrRow.transform);
+                hdrSpacer.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+                var hudLbl = UIHelpers.Txt("HudLbl", hdrRow.transform, "On-Screen", 10,
+                    FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextMid);
+                hudLbl.gameObject.AddComponent<LayoutElement>().preferredWidth = 68;
+                _hudTogVal = UIHelpers.Txt("HudVal", hdrRow.transform,
+                    ChatHUD.Enabled ? "ON" : "OFF", 11, FontStyle.Bold, TextAnchor.MiddleRight,
+                    ChatHUD.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor);
+                _hudTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(hdrRow.transform, "ChatHudT", () =>
+                {
+                    ChatHUD.Toggle();
+                    RefreshHudToggle();
+                }, out _hudTrack, out _hudKnob);
+                UIHelpers.SetToggle(_hudTrack, _hudKnob, ChatHUD.Enabled);
 
                 // ── Online row ────────────────────────────────────────
                 var onlineRow = UIHelpers.Obj("ORow", pg.transform);
@@ -179,29 +201,29 @@ namespace DescendersModMenu.UI
 
                 RebuildMessages();
             }
-            catch (System.Exception ex) { MelonLogger.Error("ChatPage: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("ChatPage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ChatPage"); }
         }
 
         // ── Everything below this line is UNCHANGED from the original ─
 
         public static void Tick()
         {
+            // Menu is destroyed on scene unload — Unity fake-null must use Unity ==,
+            // not (object)x == null, or every Tick throws MissingReferenceException.
+            if (!_inputText) return;
+
             if (ModChat.HasNewMessages) { RebuildMessages(); ModChat.ClearNewFlag(); }
-            if ((object)_inputText == null) return;
 
             // Click-away to unfocus
             if (_chatFocused && Input.GetMouseButtonDown(0))
             {
-                if ((object)_chatBoxRect != null)
-                {
-                    Vector2 mp = Input.mousePosition;
-                    if (!RectTransformUtility.RectangleContainsScreenPoint(_chatBoxRect, mp, null))
-                        _chatFocused = false;
-                }
+                if (_chatBoxRect
+                    && !RectTransformUtility.RectangleContainsScreenPoint(_chatBoxRect, Input.mousePosition, null))
+                    _chatFocused = false;
             }
 
             // Cursor pulse
-            if ((object)_chatCursor != null)
+            if (_chatCursor)
             {
                 _chatCursor.gameObject.SetActive(_chatFocused);
                 if (_chatFocused)
@@ -213,9 +235,24 @@ namespace DescendersModMenu.UI
                 }
             }
 
-            if (_statusText) _statusText.text = _inputBuffer.Length + "/" + ModChat.MaxLength
-                + " characters — Click box to type — Only visible to mod users";
-            if (_onlineText) _onlineText.text = "● " + ModDetection.ModUsers.Count + " mod users online in this session";
+            if (_statusText)
+            {
+                if (!ModChat.InRoom)
+                    _statusText.text = "Photon: " + ModChat.ConnectionStateLabel
+                        + " - need a Casual multiplayer room";
+                else
+                    _statusText.text = _inputBuffer.Length + "/" + ModChat.MaxLength
+                        + " characters - Click box to type - Only visible to mod users";
+            }
+            if (_onlineText)
+            {
+                if (!ModChat.InRoom)
+                    _onlineText.text = "○ Not in Photon room (" + ModChat.ConnectionStateLabel
+                        + ", players=" + ModChat.PlayerListCount + ")";
+                else
+                    _onlineText.text = "● " + ModDetection.ModUsers.Count + " mod users online in this session";
+            }
+            RefreshHudToggle();
 
             if (!_chatFocused) return;
 
@@ -241,6 +278,23 @@ namespace DescendersModMenu.UI
             }
         }
 
+        // Menu GameObject is destroyed on scene change — drop stale Unity refs.
+        public static void ClearUiRefs()
+        {
+            _chatScroll = null;
+            _chatContent = null;
+            _inputText = null;
+            _statusText = null;
+            _onlineText = null;
+            _chatCursor = null;
+            _chatBoxRect = null;
+            _hudTogVal = null;
+            _hudTrack = null;
+            _hudKnob = null;
+            _chatFocused = false;
+            _inputBuffer = "";
+        }
+
         private static void SendMessage()
         {
             string msg = _inputBuffer.Trim();
@@ -253,7 +307,7 @@ namespace DescendersModMenu.UI
 
         private static void RebuildMessages()
         {
-            if ((object)_chatContent == null) return;
+            if (!_chatContent) return;
             for (int i = _chatContent.childCount - 1; i >= 0; i--)
                 GameObject.Destroy(_chatContent.GetChild(i).gameObject);
             foreach (var msg in ModChat.Messages)
@@ -288,5 +342,16 @@ namespace DescendersModMenu.UI
         }
 
         public static void RefreshAll() => RebuildMessages();
+
+        private static void RefreshHudToggle()
+        {
+            if ((object)_hudTogVal != null)
+            {
+                _hudTogVal.text = ChatHUD.Enabled ? "ON" : "OFF";
+                _hudTogVal.color = ChatHUD.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor;
+            }
+            if ((object)_hudTrack != null)
+                UIHelpers.SetToggle(_hudTrack, _hudKnob, ChatHUD.Enabled);
+        }
     }
 }

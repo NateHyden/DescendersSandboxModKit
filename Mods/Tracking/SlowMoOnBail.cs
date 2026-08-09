@@ -135,7 +135,7 @@ namespace DescendersModMenu.Mods
 
                 ModLog.Debug("[SlowMoOnBail] Patched respawn methods.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[SlowMoOnBail] ApplyPatch: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[SlowMoOnBail] ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "SlowMoOnBail"); }
         }
     }
 

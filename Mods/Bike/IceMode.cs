@@ -104,6 +104,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[IceMode] ApplyPatch: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "IceMode");
                 DiagnosticsManager.Report("IceMode", false, ex.Message);
             }
         }

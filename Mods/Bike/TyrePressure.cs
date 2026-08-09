@@ -1,5 +1,6 @@
 using HarmonyLib;
 using MelonLoader;
+using DescendersModMenu;
 using System.Reflection;
 using UnityEngine;
 
@@ -99,6 +100,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[TyrePressure] ApplyPatch: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "TyrePressure");
                 DiagnosticsManager.Report("TyrePressure", false, ex.Message);
             }
         }

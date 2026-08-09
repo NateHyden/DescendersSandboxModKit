@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -50,7 +51,7 @@ namespace DescendersModMenu.Mods
                 cyclist.localScale = new Vector3(scale, scale, scale);
                 CurrentScale = scale;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[PlayerSize] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[PlayerSize] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "PlayerSize"); }
         }
 
         public static void ResetToDefault()
@@ -63,7 +64,7 @@ namespace DescendersModMenu.Mods
                 Transform cyclist = player.transform.Find("Cyclist");
                 if ((object)cyclist != null) cyclist.localScale = _defaultScale;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[PlayerSize] ResetToDefault: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[PlayerSize] ResetToDefault: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "PlayerSize"); }
         }
     }
 }

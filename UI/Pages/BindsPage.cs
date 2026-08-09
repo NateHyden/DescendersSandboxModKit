@@ -1,5 +1,6 @@
 using System;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -59,7 +60,7 @@ namespace DescendersModMenu.UI
                 _contentRoot = content.transform;
                 Rebuild();
             }
-            catch (Exception ex) { MelonLogger.Error("[BindsPage] CreatePage: " + ex); }
+            catch (Exception ex) { MelonLogger.Error("[BindsPage] CreatePage: " + ex);  Telemetry.ReportErrorAsync(ex, "BindsPage"); }
             return pg;
         }
 
@@ -118,7 +119,7 @@ namespace DescendersModMenu.UI
                 Canvas.ForceUpdateCanvases();
                 if ((object)_scrollRect != null) _scrollRect.verticalNormalizedPosition = savedScroll;
             }
-            catch (Exception ex) { MelonLogger.Error("[BindsPage] Rebuild: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[BindsPage] Rebuild: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "BindsPage"); }
         }
 
         private static void BuildMenuOpenRow()

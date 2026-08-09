@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using DescendersModMenu.Mods;
 using DescendersModMenu.UI;
@@ -91,6 +92,8 @@ namespace DescendersModMenu.BikeStats
                     FovEnabled = FOV.Enabled,
                     AutoBalanceEnabled = AutoBalance.Enabled,
                     AutoBalanceStrengthLevel = AutoBalance.StrengthLevel,
+                    BouncyBikeEnabled = BouncyBike.Enabled,
+                    BouncyBikeLevel = BouncyBike.BouncinessLevel,
                     NoSpeedWobblesEnabled = GameModifierMods.NoSpeedWobblesEnabled,
 
                     // Movement toggles
@@ -177,7 +180,7 @@ namespace DescendersModMenu.BikeStats
                 File.WriteAllText(SaveFile, json);
                 MelonLogger.Msg("[StatsManager] Saved to: " + SaveFile);
             }
-            catch (Exception ex) { MelonLogger.Error("[StatsManager] SaveStats: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[StatsManager] SaveStats: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "StatsManager"); }
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -256,6 +259,8 @@ namespace DescendersModMenu.BikeStats
                 if (data.FovEnabled && !FOV.Enabled) FOV.Toggle();
                 AutoBalance.SetStrengthLevel(data.AutoBalanceStrengthLevel);
                 if (data.AutoBalanceEnabled && !AutoBalance.Enabled) AutoBalance.Toggle();
+                BouncyBike.SetLevel(data.BouncyBikeLevel);
+                if (data.BouncyBikeEnabled && !BouncyBike.Enabled) BouncyBike.Toggle();
                 if (data.NoSpeedWobblesEnabled && !GameModifierMods.NoSpeedWobblesEnabled) GameModifierMods.NoSpeedWobblesToggle();
 
                 if (data.SpinEnabled && !Movement.SpinEnabled) Movement.ToggleSpin();
@@ -341,7 +346,7 @@ namespace DescendersModMenu.BikeStats
 
                 ModLog.Debug("[StatsManager] Loaded from: " + SaveFile);
             }
-            catch (Exception ex) { MelonLogger.Error("[StatsManager] LoadStats: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[StatsManager] LoadStats: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "StatsManager"); }
 
             // Refresh all pages
             try { MovePage.RefreshAll(); } catch { }
@@ -422,6 +427,7 @@ namespace DescendersModMenu.BikeStats
                 if (FOV.Enabled) FOV.Toggle();
                 if (AutoBalance.Enabled) AutoBalance.Toggle();
                 AutoBalance.SetStrengthLevel(5);
+                BouncyBike.Reset();
                 if (GameModifierMods.NoSpeedWobblesEnabled) GameModifierMods.NoSpeedWobblesToggle();
 
                 if (Movement.SpinEnabled) Movement.ToggleSpin();
@@ -496,7 +502,7 @@ namespace DescendersModMenu.BikeStats
 
                 ModLog.Debug("[StatsManager] Reset to defaults.");
             }
-            catch (Exception ex) { MelonLogger.Error("[StatsManager] ResetStats: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[StatsManager] ResetStats: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "StatsManager"); }
 
             try { MovePage.RefreshAll(); } catch { }
             try { WorldPage.RefreshAll(); } catch { }

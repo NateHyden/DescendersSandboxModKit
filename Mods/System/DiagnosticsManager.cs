@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using MelonLoader;
 using UnityEngine;
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -68,12 +69,15 @@ namespace DescendersModMenu.Mods
             string stack = (object)ex != null ? ex.StackTrace : "";
             MelonLogger.Error("[" + modName + "] " + msg);
             WriteToFile(modName, msg, stack);
+            if ((object)ex != null)
+                Telemetry.ReportErrorAsync(ex, modName);
         }
 
         public static void LogError(string modName, string error)
         {
             MelonLogger.Error("[" + modName + "] " + error);
             WriteToFile(modName, error, "");
+            Telemetry.ReportErrorAsync(new Exception(error), modName);
         }
 
         private static void WriteToFile(string modName, string error, string stackTrace)

@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using System.Reflection;
 using UnityEngine;
 
@@ -65,6 +66,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SpeedrunTimer] Apply: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SpeedrunTimer");
             }
         }
 
@@ -118,6 +120,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SpeedrunTimer] ResetTime: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SpeedrunTimer");
             }
         }
 

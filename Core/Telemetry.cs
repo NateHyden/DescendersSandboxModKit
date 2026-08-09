@@ -178,8 +178,11 @@ namespace DescendersModMenu
                 string platform = GetPlatform();
                 string mlVer = GetMelonLoaderVersion();
                 string mods = Sanitise(GetLoadedMods(), 350);
+                string rawName = GetPhotonLocalPlayerName();
+                if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
+                string playerName = Sanitise(rawName, 32);
 
-                Thread t = new Thread(() => DoPostError(exType, exMsg, stack, mod, platform, mlVer, mods));
+                Thread t = new Thread(() => DoPostError(exType, exMsg, stack, mod, platform, mlVer, mods, playerName));
                 t.IsBackground = true;
                 t.Start();
             }
@@ -288,8 +291,11 @@ namespace DescendersModMenu
                 string platform = GetPlatform();
                 string mlVer = GetMelonLoaderVersion();
                 string mods = Sanitise(GetLoadedMods(), 300);
+                string rawName = GetPhotonLocalPlayerName();
+                if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
+                string playerName = Sanitise(rawName, 32);
 
-                Thread t = new Thread(() => DoPostInitFailures(safe, extra, platform, mlVer, mods));
+                Thread t = new Thread(() => DoPostInitFailures(safe, extra, platform, mlVer, mods, playerName));
                 t.IsBackground = true;
                 t.Start();
             }
@@ -331,10 +337,20 @@ namespace DescendersModMenu
 
         // ── Background thread — error report ──────────────────────────
         private static void DoPostError(string exType, string exMsg, string stack,
-            string mod, string platform, string mlVer, string mods)
+            string mod, string platform, string mlVer, string mods, string playerName)
         {
             try
             {
+                // Refresh name on the worker if the caller only had "unknown"
+                // (e.g. error fired before Photon/Steam nick was ready).
+                if (string.IsNullOrEmpty(playerName) || string.Equals(playerName, "unknown", StringComparison.Ordinal))
+                {
+                    WaitForSteamReady();
+                    string rawName = GetPhotonLocalPlayerName();
+                    if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
+                    playerName = Sanitise(rawName, 32);
+                }
+
                 string json =
                     "{\"embeds\":[{" +
                         "\"color\":16711680," +
@@ -342,6 +358,7 @@ namespace DescendersModMenu
                         "\"fields\":[" +
                             "{\"name\":\"Exception\",\"value\":\"" + Sanitise(exType, 100) + "\",\"inline\":false}," +
                             "{\"name\":\"Message\",\"value\":\"" + exMsg + "\",\"inline\":false}," +
+                            "{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}," +
                             "{\"name\":\"Active Mod\",\"value\":\"" + mod + "\",\"inline\":true}," +
                             "{\"name\":\"Platform\",\"value\":\"" + Sanitise(platform, 16) + "\",\"inline\":true}," +
                             "{\"name\":\"MelonLoader\",\"value\":\"" + Sanitise(mlVer, 16) + "\",\"inline\":true}," +
@@ -357,11 +374,20 @@ namespace DescendersModMenu
 
         // ── Background thread — batched init-failure report ────────────
         private static void DoPostInitFailures(List<string> failures, string extra,
-            string platform, string mlVer, string mods)
+            string platform, string mlVer, string mods, string playerName)
         {
             try
             {
+                if (string.IsNullOrEmpty(playerName) || string.Equals(playerName, "unknown", StringComparison.Ordinal))
+                {
+                    WaitForSteamReady();
+                    string rawName = GetPhotonLocalPlayerName();
+                    if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
+                    playerName = Sanitise(rawName, 32);
+                }
+
                 List<string> fields = new List<string>();
+                fields.Add("{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}");
                 fields.Add("{\"name\":\"Platform\",\"value\":\"" + Sanitise(platform, 16) + "\",\"inline\":true}");
                 fields.Add("{\"name\":\"MelonLoader\",\"value\":\"" + Sanitise(mlVer, 16) + "\",\"inline\":true}");
                 fields.Add("{\"name\":\"Failed Count\",\"value\":\"" + Sanitise(failures.Count + extra, 20) + "\",\"inline\":true}");

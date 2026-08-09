@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
 
@@ -69,12 +70,14 @@ namespace DescendersModMenu.Mods
                 _accumulated = 0;
                 _snapshotScore = 0;
                 _prevRawCombo = 0;
+                ModLog.Feedback("[TrickAttack] -> ON");
             }
             else
             {
                 CurrentState = State.Off;
                 ScoreGained = 0;
                 TimeRemaining = 0f;
+                ModLog.Feedback("[TrickAttack] -> OFF");
             }
         }
 

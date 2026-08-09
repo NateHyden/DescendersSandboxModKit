@@ -1,5 +1,6 @@
 using System.Reflection;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -108,7 +109,7 @@ namespace DescendersModMenu.Mods
                     _multiplierProp.SetValue(tricks, (float)target, null);
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[TrickMultiplier] Tick: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[TrickMultiplier] Tick: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TrickMultiplier"); }
         }
 
         public static void Reset()

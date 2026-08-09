@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -31,7 +32,7 @@ namespace DescendersModMenu.Mods
                 Physics.gravity = new Vector3(0f, Levels[Level - 1], 0f);
                 ModLog.Debug("[Gravity] Set to " + Levels[Level - 1]);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[Gravity] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[Gravity] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Gravity"); }
         }
 
         public static void Reset()

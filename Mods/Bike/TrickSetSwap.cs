@@ -1,5 +1,6 @@
 using HarmonyLib;
 using MelonLoader;
+using DescendersModMenu;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -94,6 +95,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[TrickSetSwap] RefreshAvailableBikes: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "TrickSetSwap");
             }
         }
 
@@ -126,6 +128,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[TrickSetSwap] GetPlayerImpact: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "TrickSetSwap");
                 return null;
             }
         }
@@ -168,6 +171,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[TrickSetSwap] GetCurrentPlayerBikeType: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "TrickSetSwap");
                 return null;
             }
         }
@@ -234,6 +238,7 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 MelonLogger.Error("[TrickSetSwap] Disable restore failed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "TrickSetSwap");
             }
             finally
             {

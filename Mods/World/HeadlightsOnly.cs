@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -109,7 +110,7 @@ namespace DescendersModMenu.Mods
                     BikeTorch.Apply();
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Error("[HeadlightsOnly] Apply: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[HeadlightsOnly] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "HeadlightsOnly"); }
         }
 
         private static void Restore()
@@ -147,7 +148,7 @@ namespace DescendersModMenu.Mods
                 if (!_torchWasEnabled && BikeTorch.Enabled)
                     BikeTorch.Toggle();
             }
-            catch (System.Exception ex) { MelonLogger.Error("[HeadlightsOnly] Restore: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[HeadlightsOnly] Restore: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "HeadlightsOnly"); }
         }
 
         private static void CacheLights()
@@ -174,7 +175,7 @@ namespace DescendersModMenu.Mods
                 }
                 MelonLogger.Msg("[HeadlightsOnly] Cached " + count + " directional light(s).");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[HeadlightsOnly] CacheLights: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[HeadlightsOnly] CacheLights: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "HeadlightsOnly"); }
         }
 
         // Called on scene unload — restore and clear caches

@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using HarmonyLib;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -292,6 +293,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SpectateMode] Enable: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SpectateMode");
                 Enabled = false;
             }
         }
@@ -317,7 +319,7 @@ namespace DescendersModMenu.Mods
                     _toggleCtrl.Invoke(_localVc, new object[] { true, true });
                 NoBail.SetEnabled(_savedNoBail);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[SpectateMode] Disable: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[SpectateMode] Disable: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "SpectateMode"); }
 
             RestorePoseOverride();
             RestoreBikeCameras();
@@ -424,6 +426,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SpectateMode] RebuildTargetList: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SpectateMode");
             }
         }
 
@@ -679,6 +682,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SpectateMode] OnPreRender: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SpectateMode");
                 Enabled = false;
                 Disable();
             }

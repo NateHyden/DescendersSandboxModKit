@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
 
@@ -139,7 +140,7 @@ namespace DescendersModMenu.Mods
                 MelonLogger.Msg("[OutfitPresets] Saved slot " + slot + " (" + equipped.Length + " items) to disk.");
                 return true;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[OutfitPresets] Save: " + ex.Message); return false; }
+            catch (System.Exception ex) { MelonLogger.Error("[OutfitPresets] Save: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OutfitPresets"); return false; }
         }
 
         // ── Load ──────────────────────────────────────────────────────────
@@ -170,7 +171,7 @@ namespace DescendersModMenu.Mods
                 ModLog.Debug("[OutfitPresets] Loaded slot " + slot + " (" + found + " items).");
                 return true;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[OutfitPresets] Load: " + ex.Message); return false; }
+            catch (System.Exception ex) { MelonLogger.Error("[OutfitPresets] Load: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OutfitPresets"); return false; }
         }
 
         public static void Reset()

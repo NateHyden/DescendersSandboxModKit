@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -81,7 +82,7 @@ namespace DescendersModMenu.UI
                 _lastMousePos = Input.mousePosition;
                 go.SetActive(false);
             }
-            catch (Exception ex) { MelonLogger.Error("[GamepadCursor] Init: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[GamepadCursor] Init: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "GamepadCursor"); }
         }
 
         void Update()
@@ -133,7 +134,7 @@ namespace DescendersModMenu.UI
 
                 if ((object)dev != null) HandleActionButton(dev);
             }
-            catch (Exception ex) { MelonLogger.Error("[GamepadCursor] Update: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[GamepadCursor] Update: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "GamepadCursor"); }
         }
 
         private PointerEventData BuildPointerData()

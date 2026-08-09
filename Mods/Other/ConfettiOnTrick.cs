@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -26,7 +27,7 @@ namespace DescendersModMenu.Mods
             if (!Enabled) return;
             if (airtime < AirtimeThreshold) return;
             try { SpawnBurst(); }
-            catch (System.Exception ex) { MelonLogger.Error("[ConfettiOnTrick] SpawnBurst: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[ConfettiOnTrick] SpawnBurst: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ConfettiOnTrick"); }
         }
 
         private static readonly Color[] ConfettiColours = new Color[]

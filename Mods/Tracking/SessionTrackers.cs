@@ -353,6 +353,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SessionTrackers] ApplyBailPatch: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SessionTrackers");
             }
         }
         public static void ApplyCheckpointPatch(HarmonyLib.Harmony harmony)

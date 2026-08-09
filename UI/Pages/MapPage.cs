@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 using DescendersModMenu.Mods;
@@ -62,6 +63,7 @@ namespace DescendersModMenu.UI
             catch (System.Exception ex)
             {
                 MelonLogger.Error("MapPage.CreatePage: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "MapPage");
             }
         }
 
@@ -224,9 +226,11 @@ namespace DescendersModMenu.UI
         {
             string msg = string.IsNullOrEmpty(ex.Message) ? "(empty)" : ex.Message;
             MelonLogger.Error("[" + context + "] " + ex.GetType().FullName + ": " + msg);
+            Telemetry.ReportErrorAsync(new System.Exception("[" + context + "] " + ex.GetType().FullName + ": " + msg), "MapPage");
 
             string trace = ex.StackTrace;
             MelonLogger.Error("[" + context + "] StackTrace: " + (string.IsNullOrEmpty(trace) ? "(none)" : trace));
+            Telemetry.ReportErrorAsync(new System.Exception("[" + context + "] StackTrace: " + (string.IsNullOrEmpty(trace) ? "(none)" : trace)), "MapPage");
 
             System.Exception inner = ex.InnerException;
             int depth = 0;
@@ -234,8 +238,10 @@ namespace DescendersModMenu.UI
             {
                 string innerMsg = string.IsNullOrEmpty(inner.Message) ? "(empty)" : inner.Message;
                 MelonLogger.Error("[" + context + "] InnerException[" + depth + "]: " + inner.GetType().FullName + ": " + innerMsg);
+                Telemetry.ReportErrorAsync(new System.Exception("[" + context + "] InnerException[" + depth + "]: " + inner.GetType().FullName + ": " + innerMsg), "MapPage");
                 if (!string.IsNullOrEmpty(inner.StackTrace))
                     MelonLogger.Error("[" + context + "] InnerException[" + depth + "] StackTrace: " + inner.StackTrace);
+                    Telemetry.ReportErrorAsync(new System.Exception("[" + context + "] InnerException[" + depth + "] StackTrace: " + inner.StackTrace), "MapPage");
                 inner = inner.InnerException;
                 depth++;
             }
@@ -246,6 +252,7 @@ namespace DescendersModMenu.UI
             string name = "?";
             try { name = MapChanger.GetName(index); } catch { }
             MelonLogger.Error("MapPage.RebuildList: row " + index + " (" + kind + ", name=\"" + name + "\") failed to build - continuing with the rest of the list.");
+            Telemetry.ReportErrorAsync(new System.Exception("MapPage.RebuildList: row " + index + " (" + kind + ", name=\"" + name + "\") failed to build - continuing with the rest of the list."), "MapPage");
             LogFullException("MapPage.RebuildList row " + index, ex);
         }
 
@@ -277,21 +284,18 @@ namespace DescendersModMenu.UI
 
         public static void SeedTick()
         {
-            if ((object)_seedInputText == null) return;
+            if (!_seedInputText) return;
 
             // Click-away to unfocus
             if (_seedFocused && Input.GetMouseButtonDown(0))
             {
-                if ((object)_seedBoxRect != null)
-                {
-                    Vector2 mp = Input.mousePosition;
-                    if (!RectTransformUtility.RectangleContainsScreenPoint(_seedBoxRect, mp, null))
-                        _seedFocused = false;
-                }
+                if (_seedBoxRect
+                    && !RectTransformUtility.RectangleContainsScreenPoint(_seedBoxRect, Input.mousePosition, null))
+                    _seedFocused = false;
             }
 
             // Cursor pulse
-            if ((object)_seedCursor != null)
+            if (_seedCursor)
             {
                 _seedCursor.gameObject.SetActive(_seedFocused);
                 if (_seedFocused)
@@ -318,7 +322,7 @@ namespace DescendersModMenu.UI
                     {
                         _seedBuffer = "";
                         _seedFocused = false;
-                        if ((object)_seedInputText != null) { _seedInputText.text = "Enter seed number..."; _seedInputText.color = UIHelpers.TextDim; }
+                        if (_seedInputText) { _seedInputText.text = "Enter seed number..."; _seedInputText.color = UIHelpers.TextDim; }
                         MelonLogger.Msg("[MapChanger] Loading seed via Enter: " + s);
                         MapChanger.LoadFromSeed(s);
                     }
@@ -340,9 +344,19 @@ namespace DescendersModMenu.UI
             }
         }
 
+        public static void ClearUiRefs()
+        {
+            _seedInputText = null;
+            _seedCursor = null;
+            _seedBoxRect = null;
+            _currentSeedText = null;
+            _seedFocused = false;
+            _seedBuffer = "";
+        }
+
         private static void RefreshCurrentSeed()
         {
-            if ((object)_currentSeedText == null) return;
+            if (!_currentSeedText) return;
 
             // Try to read the live session seed first — works regardless of how
             // the map was loaded (normal session, friend's world, or mod load)
@@ -354,7 +368,7 @@ namespace DescendersModMenu.UI
             }
             else
             {
-                _currentSeedText.text = "— not in a session";
+                _currentSeedText.text = "- not in a session";
                 _currentSeedText.color = UIHelpers.TextDim;
             }
         }

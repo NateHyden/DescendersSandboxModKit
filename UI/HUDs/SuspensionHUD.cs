@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using System.Reflection;
 using UnityEngine;
 
@@ -131,6 +132,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SuspensionHUD] EnsureRepPopup: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SuspensionHUD");
             }
         }
 
@@ -360,6 +362,7 @@ namespace DescendersModMenu.Mods
 
                     if (wCount == 0)
                         MelonLogger.Error("[SuspensionHUD] No Wheel components found on Player_Human subtree. HUD will not function.");
+                        Telemetry.ReportErrorAsync(new System.Exception("[SuspensionHUD] No Wheel components found on Player_Human subtree. HUD will not function."), "SuspensionHUD");
                 }
 
                 // ── Cache the reflection field ────────────────────────
@@ -368,6 +371,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SuspensionHUD] EnsureWheels exception: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SuspensionHUD");
             }
         }
 
@@ -455,10 +459,12 @@ namespace DescendersModMenu.Mods
                     MelonLogger.Msg("[SuspensionHUD]   field[" + i + "]: " + nonPubFields[i].Name + " (" + nonPubFields[i].FieldType.Name + ")");
 
                 MelonLogger.Error("[SuspensionHUD] Could not resolve suspension compression field. Bars will show 0.");
+                Telemetry.ReportErrorAsync(new System.Exception("[SuspensionHUD] Could not resolve suspension compression field. Bars will show 0."), "SuspensionHUD");
             }
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SuspensionHUD] EnsureField exception: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SuspensionHUD");
             }
         }
 
@@ -475,6 +481,7 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex)
             {
                 MelonLogger.Error("[SuspensionHUD] GetCompression: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "SuspensionHUD");
                 return 0f;
             }
         }

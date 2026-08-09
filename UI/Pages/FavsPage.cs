@@ -1,5 +1,6 @@
 using System;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 using DescendersModMenu.Mods;
@@ -33,15 +34,36 @@ namespace DescendersModMenu.UI
         public static void Tick()
         {
             if (!_dirty) return;
-            if ((object)_contentRoot == null) return;
-            Transform t = _contentRoot;
-            bool visible = true;
-            while ((object)t != null)
+            try
             {
-                if (!t.gameObject.activeSelf) { visible = false; break; }
-                t = t.parent;
+                // Unity fake-null: destroyed menu Transform still fails (object)==null.
+                if (!_contentRoot) { ClearUiRefs(); return; }
+                Transform t = _contentRoot;
+                bool visible = true;
+                while (t)
+                {
+                    if (!t.gameObject.activeSelf) { visible = false; break; }
+                    t = t.parent;
+                }
+                if (visible) { Rebuild(); _dirty = false; }
             }
-            if (visible) { Rebuild(); _dirty = false; }
+            catch (MissingReferenceException)
+            {
+                ClearUiRefs();
+                _dirty = false;
+            }
+            catch (NullReferenceException)
+            {
+                // Destroyed Unity objects sometimes surface as NRE on get_gameObject.
+                ClearUiRefs();
+                _dirty = false;
+            }
+        }
+
+        public static void ClearUiRefs()
+        {
+            _contentRoot = null;
+            _scrollRect = null;
         }
 
         /// <summary>Called when Favourites tab becomes visible via tab-switch. Rebuilds if needed.</summary>
@@ -100,7 +122,7 @@ namespace DescendersModMenu.UI
                 // registry entry — has finished building.
                 _dirty = true;
             }
-            catch (Exception ex) { MelonLogger.Error("[FavsPage] CreatePage: " + ex); }
+            catch (Exception ex) { MelonLogger.Error("[FavsPage] CreatePage: " + ex);  Telemetry.ReportErrorAsync(ex, "FavsPage"); }
             return pg;
         }
 

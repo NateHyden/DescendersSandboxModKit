@@ -33,7 +33,7 @@ namespace DescendersModMenu.Mods
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
                 ModLog.Debug("[CutBrakes] Patched VehicleController.FixedUpdate.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[CutBrakes] ApplyPatch: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[CutBrakes] ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "CutBrakes"); }
         }
 
         public static void Reset()

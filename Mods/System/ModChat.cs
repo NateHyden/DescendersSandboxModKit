@@ -1,4 +1,6 @@
 using MelonLoader;
+using DescendersModMenu;
+using DescendersModMenu.UI;
 using UnityEngine;
 using System;
 using System.Collections;
@@ -32,20 +34,156 @@ namespace DescendersModMenu.Mods
         private static FieldInfo _eventDelegate = null; // fu\u0080P\u0084yF
         private static MethodInfo _raiseEvent = null; // nO\u0084yY\u005Bu
         private static object _defaultOptions = null; // \u005Ex\u0080gl\u007DS.qK\u005DlINI
-        private static FieldInfo _localPlayer = null; // gQ`\u0083tus
+        private static PropertyInfo _localPlayer = null; // gQ`\u0083tus (property, not field)
+        private static PropertyInfo _nickName = null; // DiQND€L on Photon player
+        private static PropertyInfo _inRoom = null; // La€lETO
+        private static PropertyInfo _connectionState = null; // W}ikkp€
         private static System.Type _photonHashtable = null; // ExitGames.Client.Photon.Hashtable
         private static bool _subscribed = false;
         private static bool _resolved = false;
+        private static bool _photonAccessEnabled = false; // don't touch PhotonNetwork statics until game is ready
+        private static bool _initRequested = false;
+        private static string _trackedRoomKey = null; // null until first sample; clears chat on lobby/room change
+
+        // True when PhotonNetwork.inRoom — RaiseEvent only works then.
+        public static bool InRoom
+        {
+            get
+            {
+                try
+                {
+                    if (!_photonAccessEnabled || !Resolve()) return false;
+                    if ((object)_inRoom == null) return false;
+                    object v = _inRoom.GetValue(null, null);
+                    return v is bool && (bool)v;
+                }
+                catch { return false; }
+            }
+        }
+
+        public static string ConnectionStateLabel
+        {
+            get
+            {
+                try
+                {
+                    if (!_photonAccessEnabled) return "waiting-for-game";
+                    if (!Resolve()) return "unresolved";
+                    if ((object)_connectionState == null) return "unknown";
+                    object v = _connectionState.GetValue(null, null);
+                    return (object)v != null ? v.ToString() : "null";
+                }
+                catch (Exception ex) { return "err:" + ex.Message; }
+            }
+        }
+
+        public static int PlayerListCount
+        {
+            get
+            {
+                try
+                {
+                    if (!_photonAccessEnabled || !Resolve() || (object)_photonType == null) return -1;
+                    PropertyInfo pl = _photonType.GetProperty("CoH\u007C\u007EDq", BindingFlags.Public | BindingFlags.Static);
+                    if ((object)pl == null) return -1;
+                    object arr = pl.GetValue(null, null);
+                    Array a = arr as Array;
+                    return (object)a != null ? a.Length : -1;
+                }
+                catch { return -1; }
+            }
+        }
+
+        public static string RoomName
+        {
+            get
+            {
+                try
+                {
+                    if (!_photonAccessEnabled || !Resolve() || (object)_photonType == null) return "";
+                    PropertyInfo roomProp = _photonType.GetProperty("wkT\u0080REz", BindingFlags.Public | BindingFlags.Static);
+                    if ((object)roomProp == null) return "";
+                    object room = roomProp.GetValue(null, null);
+                    if ((object)room == null) return "";
+                    // Room.Name is usually ToString or a name property — try common patterns
+                    PropertyInfo nameProp = room.GetType().GetProperty("name", BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                    if ((object)nameProp == null)
+                        nameProp = room.GetType().GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);
+                    if ((object)nameProp != null)
+                    {
+                        object n = nameProp.GetValue(room, null);
+                        if ((object)n != null) return n.ToString();
+                    }
+                    return room.ToString();
+                }
+                catch { return ""; }
+            }
+        }
+
+        public static bool OfflineMode
+        {
+            get
+            {
+                try
+                {
+                    if (!_photonAccessEnabled || !Resolve() || (object)_photonType == null) return false;
+                    PropertyInfo off = _photonType.GetProperty("CEcjsH\u0083", BindingFlags.Public | BindingFlags.Static);
+                    if ((object)off == null) return false;
+                    object v = off.GetValue(null, null);
+                    return v is bool && (bool)v;
+                }
+                catch { return false; }
+            }
+        }
 
         // Delegate wrapper — stored to allow unsubscription
         private static Delegate _handlerDelegate = null;
 
         // ── Init ──────────────────────────────────────────────────────────
+        // Do NOT touch PhotonNetwork statics during MelonLoader init — that
+        // runs PhotonNetwork's static ctor and creates PhotonMono before the
+        // game is ready, which can leave the peer stuck on ConnectingToNameServer.
         public static void Init()
         {
+            _initRequested = true;
+        }
+
+        // Call once the player/session is up (after "Sandbox loaded").
+        public static void EnablePhotonAccess()
+        {
+            if (_photonAccessEnabled) return;
+            _photonAccessEnabled = true;
+            if (_initRequested)
+                EnsureSubscribed();
+        }
+
+        public static void Tick()
+        {
+            if (!_photonAccessEnabled) return;
+            EnsureSubscribed();
+            CheckLobbyChanged();
+        }
+
+        private static void CheckLobbyChanged()
+        {
+            string key = InRoom ? ("in:" + RoomName) : "out";
+            if (_trackedRoomKey == null)
+            {
+                _trackedRoomKey = key;
+                return;
+            }
+            if (string.Equals(_trackedRoomKey, key, StringComparison.Ordinal))
+                return;
+
+            _trackedRoomKey = key;
+            ClearMessages();
+        }
+
+        private static void EnsureSubscribed()
+        {
+            if (_subscribed) return;
             if (!Resolve()) return;
             Subscribe();
-            ModLog.Debug("[ModChat] Initialised. Event code: " + EventCode);
         }
 
         private static bool Resolve()
@@ -87,20 +225,46 @@ namespace DescendersModMenu.Mods
                 }
 
                 if ((object)_photonType == null)
-                { MelonLogger.Warning("[ModChat] PhotonNetwork type not found."); return false; }
+                { MelonLogger.Error("[ModChat] PhotonNetwork type not found."); Telemetry.ReportErrorAsync(new Exception("PhotonNetwork type not found"), "ModChat"); return false; }
 
-                ModLog.Debug("[ModChat] PhotonNetwork: " + _photonType.Name);
-
-                // fu\u0080P\u0084yF — the static OnEvent delegate field
-                foreach (FieldInfo f in _photonType.GetFields(BindingFlags.Public | BindingFlags.Static))
+                // fu\u0080P\u0084yF — field-like OnEventCall event. The compiler emits a
+                // *private* backing field; Public-only GetFields never sees it.
+                foreach (FieldInfo f in _photonType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
                 {
                     if ((object)f.FieldType.BaseType != null && string.Equals(f.FieldType.BaseType.FullName, typeof(MulticastDelegate).FullName, StringComparison.Ordinal))
                     {
                         var invoke = f.FieldType.GetMethod("Invoke");
                         if ((object)invoke == null) continue;
                         var p = invoke.GetParameters();
-                        if (p.Length == 3 && string.Equals(p[0].ParameterType.FullName, typeof(byte).FullName, StringComparison.Ordinal))
+                        if (p.Length == 3 && string.Equals(p[0].ParameterType.FullName, typeof(byte).FullName, StringComparison.Ordinal)
+                            && string.Equals(p[1].ParameterType.FullName, typeof(object).FullName, StringComparison.Ordinal)
+                            && string.Equals(p[2].ParameterType.FullName, typeof(int).FullName, StringComparison.Ordinal))
                         { _eventDelegate = f; break; }
+                    }
+                }
+
+                // Fallback: locate private backing field via the public EventInfo name
+                if ((object)_eventDelegate == null)
+                {
+                    foreach (EventInfo ev in _photonType.GetEvents(BindingFlags.Public | BindingFlags.Static))
+                    {
+                        Type ht = ev.EventHandlerType;
+                        if ((object)ht == null) continue;
+                        var invoke = ht.GetMethod("Invoke");
+                        if ((object)invoke == null) continue;
+                        var p = invoke.GetParameters();
+                        if (p.Length == 3 && string.Equals(p[0].ParameterType.FullName, typeof(byte).FullName, StringComparison.Ordinal)
+                            && string.Equals(p[1].ParameterType.FullName, typeof(object).FullName, StringComparison.Ordinal)
+                            && string.Equals(p[2].ParameterType.FullName, typeof(int).FullName, StringComparison.Ordinal))
+                        {
+                            _eventDelegate = _photonType.GetField(ev.Name, BindingFlags.NonPublic | BindingFlags.Static);
+                            if ((object)_eventDelegate == null)
+                            {
+                                MelonLogger.Error("[ModChat] OnEventCall backing field missing: " + ev.Name);
+                                Telemetry.ReportErrorAsync(new Exception("OnEventCall backing field missing: " + ev.Name), "ModChat");
+                            }
+                            break;
+                        }
                     }
                 }
 
@@ -122,23 +286,28 @@ namespace DescendersModMenu.Mods
                         if (string.Equals(f.FieldType.FullName, optType.FullName, StringComparison.Ordinal)) { _defaultOptions = f.GetValue(null); break; }
                 }
 
-                // Local player field
-                _localPlayer = _photonType.GetField("gQ\u0060\u0083tus",
+                // Local player is a PROPERTY on PhotonNetwork (upVWa…)
+                _localPlayer = _photonType.GetProperty("gQ\u0060\u0083tus",
                     BindingFlags.Public | BindingFlags.Static);
+
+                // inRoom + connectionStateDetailed for diagnostics / gating
+                _inRoom = _photonType.GetProperty("La\u0080lETO", BindingFlags.Public | BindingFlags.Static);
+                _connectionState = _photonType.GetProperty("W\u007Dikkp\u0080", BindingFlags.Public | BindingFlags.Static);
 
                 // Cache Photon Hashtable type
                 Assembly[] htAsms = AppDomain.CurrentDomain.GetAssemblies();
                 for (int ai = 0; ai < htAsms.Length; ai++)
                     if (string.Equals(htAsms[ai].GetName().Name, "Photon3Unity3D", StringComparison.Ordinal))
                     { _photonHashtable = htAsms[ai].GetType("ExitGames.Client.Photon.Hashtable"); break; }
-                ModLog.Debug("[ModChat] PhotonHashtable=" + ((object)_photonHashtable != null ? _photonHashtable.FullName : "NOT FOUND"));
 
-                ModLog.Debug("[ModChat] raiseEvent=" + ((object)_raiseEvent != null)
-                    + " eventDelegate=" + ((object)_eventDelegate != null)
-                    + " localPlayer=" + ((object)_localPlayer != null));
-                return true;
+                return (object)_raiseEvent != null;
             }
-            catch (Exception ex) { MelonLogger.Error("[ModChat] Resolve: " + ex.Message); return false; }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[ModChat] Resolve: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModChat");
+                return false;
+            }
         }
 
         private static void Subscribe()
@@ -158,9 +327,8 @@ namespace DescendersModMenu.Mods
                     (object)existing != null ? Delegate.Combine(existing, _handlerDelegate) : _handlerDelegate);
 
                 _subscribed = true;
-                MelonLogger.Msg("[ModChat] Subscribed to Photon events.");
             }
-            catch (Exception ex) { MelonLogger.Error("[ModChat] Subscribe: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[ModChat] Subscribe: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ModChat"); }
         }
 
         private static void Unsubscribe()
@@ -173,7 +341,7 @@ namespace DescendersModMenu.Mods
                     _eventDelegate.SetValue(null, Delegate.Remove(existing, _handlerDelegate));
                 _subscribed = false;
             }
-            catch (Exception ex) { MelonLogger.Error("[ModChat] Unsubscribe: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[ModChat] Unsubscribe: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ModChat"); }
         }
 
         // ── Photon event handler ──────────────────────────────────────────
@@ -196,9 +364,8 @@ namespace DescendersModMenu.Mods
                     IsSelf = false
                 };
                 AddMessage(cm);
-                MelonLogger.Msg("[ModChat] <" + name + "> " + msg);
             }
-            catch (Exception ex) { MelonLogger.Error("[ModChat] OnPhotonEvent: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[ModChat] OnPhotonEvent: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ModChat"); }
         }
 
         // ── Send ──────────────────────────────────────────────────────────
@@ -206,38 +373,57 @@ namespace DescendersModMenu.Mods
         {
             if (string.IsNullOrEmpty(message)) return false;
             if (message.Length > MaxLength) message = message.Substring(0, MaxLength);
-            if (!Resolve()) { MelonLogger.Warning("[ModChat] Send: Resolve() failed."); return false; }
-            if ((object)_raiseEvent == null) { MelonLogger.Warning("[ModChat] Send: _raiseEvent is null."); return false; }
+            if (!_photonAccessEnabled) EnablePhotonAccess();
+            if (!Resolve())
+            {
+                MelonLogger.Error("[ModChat] Send: Resolve() failed.");
+                Telemetry.ReportErrorAsync(new Exception("ModChat Send Resolve failed"), "ModChat");
+                return false;
+            }
+            if ((object)_raiseEvent == null)
+            {
+                MelonLogger.Error("[ModChat] Send: RaiseEvent is null.");
+                Telemetry.ReportErrorAsync(new Exception("ModChat RaiseEvent null"), "ModChat");
+                return false;
+            }
 
             try
             {
-                MelonLogger.Msg("[ModChat] Send start. msg='" + message + "'");
                 string playerName = GetLocalPlayerName();
-                MelonLogger.Msg("[ModChat] Send: player='" + playerName + "'");
+                bool inRoom = InRoom;
 
-                // Photon requires ExitGames.Client.Photon.Hashtable, not System.Collections.Hashtable
-                // Find it via reflection from the Photon3Unity3D assembly
+                // Always show locally + toast — even if Photon rejects the network send.
+                AddMessage(new ChatMessage
+                {
+                    PlayerName = playerName,
+                    Text = message,
+                    Time = DateTime.Now.ToString("HH:mm"),
+                    IsSelf = true
+                });
+
+                if (!inRoom)
+                    return true;
+
                 System.Collections.IDictionary ht = null;
                 try
                 {
                     if ((object)_photonHashtable != null)
-                    {
                         ht = System.Activator.CreateInstance(_photonHashtable) as System.Collections.IDictionary;
-                        MelonLogger.Msg("[ModChat] Using Photon Hashtable: " + _photonHashtable.FullName);
-                    }
                 }
-                catch (Exception htEx) { MelonLogger.Warning("[ModChat] Photon Hashtable fallback: " + htEx.Message); }
+                catch (Exception htEx)
+                {
+                    MelonLogger.Error("[ModChat] Photon Hashtable: " + htEx.Message);
+                    Telemetry.ReportErrorAsync(htEx, "ModChat");
+                }
 
                 if ((object)ht == null)
                 {
-                    MelonLogger.Warning("[ModChat] Could not create Photon Hashtable!");
-                    return false;
+                    MelonLogger.Error("[ModChat] Could not create Photon Hashtable.");
+                    Telemetry.ReportErrorAsync(new Exception("Photon Hashtable create failed"), "ModChat");
+                    return true;
                 }
                 ht["n"] = playerName;
                 ht["m"] = message;
-
-                MelonLogger.Msg("[ModChat] Send: invoking " + _raiseEvent.Name
-                    + " defaultOptions=" + (_defaultOptions != null ? _defaultOptions.GetType().Name : "null"));
 
                 object result = null;
                 try
@@ -250,30 +436,23 @@ namespace DescendersModMenu.Mods
                     Exception inner = tie.InnerException;
                     MelonLogger.Error("[ModChat] Send TargetInvocationException: "
                         + ((object)inner != null ? inner.GetType().Name + ": " + inner.Message : "null inner"));
-                    if ((object)inner != null)
-                        MelonLogger.Error("[ModChat] Inner stack: " + inner.StackTrace);
-                    return false;
+                    Telemetry.ReportErrorAsync(tie, "ModChat");
+                    return true;
                 }
 
                 bool sent = result is bool && (bool)result;
-                MelonLogger.Msg("[ModChat] Send result=" + sent);
-
-                if (sent)
+                if (!sent)
                 {
-                    AddMessage(new ChatMessage
-                    {
-                        PlayerName = playerName,
-                        Text = message,
-                        Time = DateTime.Now.ToString("HH:mm"),
-                        IsSelf = true
-                    });
+                    MelonLogger.Error("[ModChat] RaiseEvent returned false (inRoom=" + InRoom
+                        + " state=" + ConnectionStateLabel + ")");
+                    Telemetry.ReportErrorAsync(new Exception("RaiseEvent returned false"), "ModChat");
                 }
-                return sent;
+                return true;
             }
             catch (Exception ex)
             {
-                MelonLogger.Error("[ModChat] Send outer: " + ex.GetType().Name + ": " + ex.Message);
-                MelonLogger.Error("[ModChat] Send stack: " + ex.StackTrace);
+                MelonLogger.Error("[ModChat] Send: " + ex.GetType().Name + ": " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModChat");
                 return false;
             }
         }
@@ -282,6 +461,25 @@ namespace DescendersModMenu.Mods
         {
             try
             {
+                // Prefer Photon NickName (DiQND€L) — works for single-word names too.
+                if ((object)_localPlayer != null)
+                {
+                    object player = _localPlayer.GetValue(null, null);
+                    if ((object)player != null)
+                    {
+                        if ((object)_nickName == null)
+                            _nickName = player.GetType().GetProperty("DiQND\u0080L",
+                                BindingFlags.Public | BindingFlags.Instance);
+                        if ((object)_nickName != null)
+                        {
+                            object nick = _nickName.GetValue(player, null);
+                            string s = nick != null ? nick.ToString() : null;
+                            if (!string.IsNullOrEmpty(s)) return s;
+                        }
+                    }
+                }
+
+                // Fallback: scrape PhotonView owner string (letter required; space optional).
                 PlayerManager pm = GameObject.FindObjectOfType<PlayerManager>();
                 if ((object)pm == null) return "Unknown";
                 PlayerInfoImpact pip = pm.GetPlayerImpact();
@@ -306,20 +504,13 @@ namespace DescendersModMenu.Mods
                                 if ((object)val == null) continue;
                                 string s = val.ToString();
                                 if (string.IsNullOrEmpty(s)) continue;
-                                // Skip Unity built-in props
                                 if (string.Equals(props[j].Name, "tag", StringComparison.Ordinal)) continue;
                                 if (string.Equals(props[j].Name, "name", StringComparison.Ordinal)) continue;
-                                // Skip anything with path/object chars
                                 if (s.IndexOf('/') >= 0 || s.IndexOf('(') >= 0 || s.IndexOf('.') >= 0) continue;
-                                // Must contain a letter AND a space (i.e. "Kareem Pie" not "1825" or "True")
-                                bool hasLetter = false, hasSpace = false;
+                                bool hasLetter = false;
                                 for (int k = 0; k < s.Length; k++)
-                                {
-                                    if (char.IsLetter(s[k])) hasLetter = true;
-                                    if (char.IsWhiteSpace(s[k])) hasSpace = true;
-                                }
-                                if (!hasLetter || !hasSpace) continue;
-                                MelonLogger.Msg("[ModChat] GetName='" + s + "' prop=" + props[j].Name + " type=" + props[j].PropertyType.Name);
+                                    if (char.IsLetter(s[k])) { hasLetter = true; break; }
+                                if (!hasLetter) continue;
                                 return s;
                             }
                             catch { }
@@ -328,9 +519,8 @@ namespace DescendersModMenu.Mods
                     }
                     t = t.BaseType;
                 }
-                MelonLogger.Warning("[ModChat] GetName: not found");
             }
-            catch (Exception ex) { MelonLogger.Warning("[ModChat] GetLocalPlayerName: " + ex.Message); }
+            catch { }
             return "Unknown";
         }
 
@@ -340,10 +530,34 @@ namespace DescendersModMenu.Mods
             if (_messages.Count > MaxMessages)
                 _messages.RemoveAt(0);
             HasNewMessages = true;
+            MelonLogger.Msg("[ModChat] <" + msg.PlayerName + "> " + msg.Text);
+            try { ChatHUD.Notify(msg); }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[ModChat] ChatHUD.Notify: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModChat");
+            }
         }
 
-        public static void ClearMessages() => _messages.Clear();
+        public static void ClearMessages()
+        {
+            if (_messages.Count == 0)
+            {
+                try { ChatHUD.Reset(); } catch { }
+                return;
+            }
+            _messages.Clear();
+            HasNewMessages = true;
+            try { ChatHUD.Reset(); } catch { }
+        }
 
-        public static void Reset() => Unsubscribe();
+        public static void Reset()
+        {
+            _trackedRoomKey = null;
+            ClearMessages();
+            if (!_photonAccessEnabled) return;
+            if (_subscribed) return;
+            EnsureSubscribed();
+        }
     }
 }

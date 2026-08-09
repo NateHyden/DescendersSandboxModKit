@@ -347,7 +347,7 @@ namespace DescendersModMenu.Mods
                         "Postfix", BindingFlags.Public | BindingFlags.Static)));
                 ModLog.Debug("[BikeDamage] Patched VehicleController.FixedUpdate (steering offset).");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[BikeDamage] ApplyPatch: " + ex.Message); }
+            catch (System.Exception ex) { MelonLogger.Error("[BikeDamage] ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "BikeDamage"); }
         }
     }
 

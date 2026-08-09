@@ -45,6 +45,10 @@ namespace DescendersModMenu.BikeStats
         public int SuspStiffnessLevel = 5;
         public int SuspDampingLevel = 5;
 
+        // ── Bouncy Bike ────────────────────────────────────────────────
+        public bool BouncyBikeEnabled = false;
+        public int BouncyBikeLevel = 5;
+
         // ── Game Modifiers ─────────────────────────────────────────────
         public int WheelieBalanceLevel = 1;
         public int InAirCorrLevel = 1;

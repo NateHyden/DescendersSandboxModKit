@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
 using DescendersModMenu.Mods;
@@ -57,7 +58,7 @@ namespace DescendersModMenu.UI
                 _contentRoot = content.transform;
                 Rebuild();
             }
-            catch (Exception ex) { MelonLogger.Error("[PerksPage] CreatePage: " + ex); }
+            catch (Exception ex) { MelonLogger.Error("[PerksPage] CreatePage: " + ex);  Telemetry.ReportErrorAsync(ex, "PerksPage"); }
             return pg;
         }
 
@@ -156,7 +157,7 @@ namespace DescendersModMenu.UI
                     }
                 }
             }
-            catch (Exception ex) { MelonLogger.Error("[PerksPage] Rebuild: " + ex.Message); }
+            catch (Exception ex) { MelonLogger.Error("[PerksPage] Rebuild: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "PerksPage"); }
         }
 
         // Compact reference row for something already active - name + small icon
