@@ -4,15 +4,18 @@
 **Descenders**, built with MelonLoader. It's not a cheat tool for
 competitive play — it's a client-side sandbox for **Free Ride and Bike
 Park** sessions, letting you tweak bike physics, adjust world settings,
-and drop in custom game modes like Earthquake, Police Chase, and Trick
-Attack.
+drop in custom game modes like Earthquake, Police Chase, and Trick Attack,
+and — separately — edit your own career progression if you want to.
 
-> ⚠️ This mod is intended for use in **Free Ride and Bike Park** sessions
-> only. Features will not work in career mode, events, or online lobbies —
-> it's a sandbox for messing around solo or with friends offline, not a
-> competitive advantage tool.
+> ⚠️ Features are intended for **Free Ride and Bike Park** sessions
+> only and will not work in events or online lobbies — it's a sandbox for
+> messing around solo or with friends offline, not a competitive advantage
+> tool. The **Career** tools are the one exception: those are built
+> specifically to edit career-mode progression (missions, rep, sponsors,
+> unlocks) and only make sense there.
 
-Press **F6 OR DPAD DOWN** in-game to open the menu.
+Press **F6 OR DPAD DOWN** in-game to open the menu (fully rebindable to
+any controller button — see Key Binds below).
 
 ---
 
@@ -42,17 +45,21 @@ Tune every aspect of how your bike handles.
 - **Invisible Bike** — Hide the bike mesh
 - **Bike Damage** — Visual damage tinting on bail
 - **Bike Torch** — Toggle the headlight
+- **Suspension HUD** — On-screen readout of live suspension compression
 
 ### 🎮 Movement & Controls
 - **Spin Force** — Amplify bar spins
 - **Hop Force** — Adjust bunny hop height
 - **Wheelie Force** — Make wheelies easier or harder
+- **Wheelie Balance** — Adjust how easy it is to hold a wheelie steady
 - **Wheelie Angle Limit** — Cap or expand how far back you can lean
 - **Wheelie HUD** — On-screen angle readout while wheeling
 - **Lean Strength** — Adjust mid-air lean sensitivity
-- **Air Control** — Fine tune how much you can steer in the air
+- **Air Control / Air Correction** — Fine tune how much you can steer in the air
 - **Pump Strength** — Adjust how effective pumping through terrain is
+- **Tweak Speed** — Adjust how quickly bike tweaks/adjustments respond
 - **Reverse Steering** — Flip your handlebar input
+- **Rubber Band Steering** — Delays your steering and lean input for a loose, floaty feel — like riding on a rubber band
 - **Cut Brakes** — Disable braking entirely
 - **Near Miss Sensitivity** — Change how close is "close enough" for near miss scoring
 - **Center of Mass** — Shift weight distribution on the bike
@@ -61,12 +68,13 @@ Tune every aspect of how your bike handles.
 ### 🌍 World
 - **Gravity** — Crank it up for moon physics or down for heavy riding
 - **Time of Day** — Scrub through the day/night cycle
-- **Sky Colours** — Tint the sky and lighting
+- **Sky Colours** — Tint the sky and lighting with several presets
 - **Fog** — Add atmospheric fog
 - **Trees & Foliage** — Toggle environmental props
 - **Turbo Wind** — Crank up wind intensity
 - **Exploding Props** — Props launch on impact
 - **Storm** — Toggle storm weather
+- **Headlights Only** — Kill all ambient/directional lighting so only your headlight illuminates the world
 
 ### 🗺️ Map
 - **Map Changer** — Load any base game map or bike park instantly
@@ -78,12 +86,27 @@ Tune every aspect of how your bike handles.
 - **Moon Mode** — Low gravity preset
 - **Mirror Mode** — Flip the world horizontally
 - **Fly Mode** — Detach from the ground and fly freely
+- **Hover Mode** — Float your bike at an adjustable height above the terrain
 - **Drunk Mode** — Wobbly, disorienting controls
 - **Camera Shake** — Add intensity to the camera
 - **FOV** — Adjust field of view
 
+### 🎪 Other (chaos & extras)
+- **Trail Painter** — Leaves a coloured trail behind your bike, cycle through colours
+- **Confetti on Trick Landing** — Confetti burst every time you stick a trick
+- **Airhorn** — Just what it sounds like
+- **Big Head Mode** — Adjustable head size
+- **Chaos Mode** — Randomly flips Ice/Mirror/Drunk/Reverse Steering every few seconds — everything reverts cleanly when turned off
+- **Random Bike Switch** — Automatically swaps your bike every few seconds
+- **Random Mutator on Checkpoint** — Rolls a random modifier each time you hit a checkpoint
+- **Random Weather Roulette** — Cycles between Storm, Fog, Moon Mode, and Normal every 12–25 seconds instead of one fixed pick
+
 ### 👗 Outfit
 - **Outfit Presets** — Save and load full rider outfit combinations
+
+### ⭐ Perks
+- Instantly grant or remove any of the game's own crew-member perks, without having to earn them
+- **Clear All** — Strip every active perk in one click
 
 ### 💬 Chat
 - In-menu chat system for communicating with other Descenders Sandbox users nearby
@@ -96,21 +119,24 @@ Custom game modes you can run in free ride:
 - **Trick Attack Mode** — Race to hit a score target before time runs out
 - **Boulder Dodge Mode** — Boulders rain down — dodge them for as long as you can
 - **Survival Mode** — Stay on your bike and don't bail
+- **Avalanche Mode** — Outrun a rolling hazard chasing you down the mountain
 
 ### 👻 Ghost Replay
 - Record a run and replay your ghost alongside you for self-competition
 
 ### 🎯 Teleport
 - **Visual Player Finder** — Spot nearby players with tracers and distance display
+- **World Object Finder** — Highlights collectibles, shortcuts, boost pads, hazards, and checkpoints
 - **Teleport to Player** — Jump to another player's position
 - **Teleport to Checkpoint** — Jump to any checkpoint in the map
 
 ### 📸 Screenshot
-- **Screenshot Mode** — Hide the HUD and UI for clean captures, triggered via D-Pad Up on controller
+- **Screenshot Mode** — Hide the HUD and UI for clean captures, triggered via D-Pad Up on controller or F11 on keyboard
 
 ### 🖥️ Session
 - **Session HUD** — On-screen tracker showing current run stats, top speed, longest airtime, peak G-force, bails, and session timer
 - **Speedrun Timer** — A clean on-screen timer for self-timed runs
+- **Spectate Mode** — Watch another connected player instead of riding yourself. Cycle between players, adjust the camera distance, turn on anytime while playing with others
 
 ### 🎨 Graphics
 - **Bloom, Ambient Occlusion, Depth of Field, Vignette, Chromatic Aberration** — Toggle post processing effects individually
@@ -118,7 +144,7 @@ Custom game modes you can run in free ride:
 - **Hide Game HUD** — Remove the in-game interface
 
 ### ⭐ Favourites
-Pin any setting to your Favourites tab for quick access without digging through menus.
+Pin any setting to your Favourites tab for quick access without digging through menus. A dedicated Search tab lets you find any setting by name.
 
 ### ⌨️ Key Binds
 
@@ -126,9 +152,33 @@ Bind any key on your keyboard to toggle mods or trigger actions without opening 
 
 - 51 bindable actions covering every toggle, mode, and one-shot action in the mod
 - Default bindings: **F2** = Slow Motion, **F3** = Ghost Replay Toggle, **F4** = Ghost Replay Save
+- The menu-open button itself is also bindable — to any keyboard key **or** controller button (default D-Pad Down), not fixed to F6/D-Pad Down anymore
 - Bindings are saved automatically and loaded on every launch
 - Conflict detection — if a key is already in use, you'll be prompted to steal it or cancel
 - Bindings work whenever the menu is closed and no text field is focused
+
+### 🎛️ Customise
+- **Position** — Centre, Top Left, or Top Right
+- **Scale** — Resize the whole menu
+- **Opacity** — Adjust menu transparency
+- **Colour Scheme** — Pick from a set of accent-colour presets, applies instantly and saves automatically
+
+### 🏆 Career Progression
+
+Separate from the free-ride sandbox tools above — these are save-editing
+tools for your own single-player career save. 
+
+- **Complete All Missions** — Instantly complete every mission
+- **Level Reset** — Wipe level progress
+- **Sponsor Reset / Switch Sponsor / Max Sponsor Level** — Reset, change, or max out your sponsor progression
+- **Unlock All (Bikes + Gear)** — Unlock or lock every bike and gear item instantly
+- **Adjust Total Rep / In-Game Rep** — Manually add or subtract rep, with an adjustable step multiplier
+
+### ℹ️ System
+- **Engine & mod info** — Unity version, MelonLoader version, mod version, at a glance
+- **Steam player count** — See how many steam players are playing Descenders right now
+- **Telemetry (opt-in)** — Used for bug reporting - Sends a small report to the developer's Discord when something breaks, to help find and fix bugs faster. Toggle on/off anytime; the exact data sent is explained in-menu - Nothing Personal
+- **Feedback** — Send a bug report, feature request, or general feedback straight from the menu to Discord for viewing
 
 ---
 
