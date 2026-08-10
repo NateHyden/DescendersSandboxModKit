@@ -246,10 +246,39 @@ namespace DescendersModMenu.UI
                 UIHelpers.SectionHeader("LEVEL", pg7);
 
                 var jr = UIHelpers.StatRow("Jump to Finish", pg7);
+                var jumpStatusTxt = UIHelpers.Txt("JumpStatus", jr.transform, "",
+                    9, FontStyle.Italic, TextAnchor.MiddleRight, UIHelpers.TextDim);
+                jumpStatusTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 130;
                 UIHelpers.ActionBtnOrange(jr.transform, "Jump", () =>
                 {
-                    try { DevCommandsGameplay.JumpToFinish(); }
-                    catch (System.Exception ex) { MelonLogger.Error("[JumpToFinish]: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WorldPage"); }
+                    try
+                    {
+                        // DevCommandsGameplay.JumpToFinish() is a native game dev-command
+                        // that internally calls FinishLine.GetAFinishLine() and dereferences
+                        // the result with no null check - throws NullReferenceException on
+                        // any map with no race/finish structure (most freeride/sandbox/bike
+                        // park maps). Confirmed via IL dump 2026-08-10 after a live crash
+                        // report. Pre-checking here so the player gets a clear reason instead
+                        // of a silent dead click, instead of only catching after the fact.
+                        var fl = FinishLine.GetAFinishLine();
+                        if ((object)fl == null)
+                        {
+                            MelonLogger.Msg("[JumpToFinish] No FinishLine found on this level - nothing to jump to.");
+                            jumpStatusTxt.text = "No finish line here";
+                            jumpStatusTxt.color = UIHelpers.Orange;
+                            return;
+                        }
+
+                        DevCommandsGameplay.JumpToFinish();
+                        jumpStatusTxt.text = "";
+                    }
+                    catch (System.Exception ex)
+                    {
+                        MelonLogger.Error("[JumpToFinish]: " + ex.Message);
+                        Telemetry.ReportErrorAsync(ex, "WorldPage");
+                        jumpStatusTxt.text = "Failed - see log";
+                        jumpStatusTxt.color = UIHelpers.Orange;
+                    }
                 }, 60);
 
                 var sr = UIHelpers.StatRow("Skip Song", pg7);

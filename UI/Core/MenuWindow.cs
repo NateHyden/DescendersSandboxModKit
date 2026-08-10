@@ -63,21 +63,21 @@ namespace DescendersModMenu.UI
         // No Speed Cap
         private static Image capBg, capBdr; private static Text capTxt;
         // ── Pages ─────────────────────────────────────────────────────
-        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22;
+        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22, pg23;
         private static int cur = 1;
 
         // Set before RebuildMenu() to reopen on a specific page id (e.g. 3 = Info/Customize)
         // instead of the default first tab. Consumed (reset to -1) on use.
         public static int PendingPage = -1;
 
-        private static readonly int[] PageOrder = { 17, 20, 19, 3, 1, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22 };
-        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info/Customize", "General", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Other", "Perks" };
-        private static readonly string[] GroupLabels = { null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
+        private static readonly int[] PageOrder = { 17, 20, 19, 3, 1, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22 };
+        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info/Customize", "General", "Xbox Workshop", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Other", "Perks" };
+        private static readonly string[] GroupLabels = { null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
 
-        private static Image[] _navBars = new Image[20];
-        private static Text[] _navTxts = new Text[20];
-        private static Image[] _navBgs = new Image[20];
-        private static Image[] _activeDots = new Image[20];
+        private static Image[] _navBars = new Image[21];
+        private static Text[] _navTxts = new Text[21];
+        private static Image[] _navBgs = new Image[21];
+        private static Image[] _activeDots = new Image[21];
         private static UnityEngine.UI.Image _infoTabDot;
 
         public static CanvasGroup RootCanvasGroup { get; private set; }
@@ -355,7 +355,7 @@ namespace DescendersModMenu.UI
                 sVlg.childAlignment = TextAnchor.UpperCenter;
                 sVlg.childForceExpandWidth = true; sVlg.childForceExpandHeight = false;
 
-                for (int i = 0; i < 20; i++)
+                for (int i = 0; i < 21; i++)
                 {
                     // ── Group separator ────────────────────────────────
                     if (GroupLabels[i] != null)
@@ -462,6 +462,7 @@ namespace DescendersModMenu.UI
                 pg19 = UIHelpers.Obj("P19", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg19)); BindsPage.CreatePage(pg19.transform);
                 pg21 = UIHelpers.Obj("P21", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg21)); OtherPage.CreatePage(pg21.transform);
                 pg22 = UIHelpers.Obj("P22", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg22)); PerksPage.CreatePage(pg22.transform);
+                pg23 = UIHelpers.Obj("P23", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg23)); XboxWorkshopPage.CreatePage(pg23.transform);
 
                 RefreshAll(); RefreshTabs();
                 Mods.MenuCustomiser.LoadFromFile();
@@ -1031,6 +1032,7 @@ namespace DescendersModMenu.UI
                     case 20: return false;
                     case 21: return OtherPage.IsAnyActive;
                     case 22: return false;
+                    case 23: return false;
                     default: return false;
                 }
             }
@@ -1063,8 +1065,9 @@ namespace DescendersModMenu.UI
             if (pg19) pg19.SetActive(cur == 19);
             if (pg21) pg21.SetActive(cur == 21);
             if (pg22) pg22.SetActive(cur == 22);
+            if (pg23) pg23.SetActive(cur == 23);
 
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 21; i++)
             {
                 bool on = PageOrder[i] == cur;
                 bool active = IsPageActive(PageOrder[i]);

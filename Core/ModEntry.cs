@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "1.5.5";
+        public const string Version = "1.6.0";
         public const string DownloadLink = null;
     }
 
