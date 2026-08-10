@@ -15,11 +15,14 @@ and — separately — edit your own career progression if you want to.
 > unlocks) and only make sense there.
 
 Press **F6 OR DPAD DOWN** in-game to open the menu (fully rebindable to
-any controller button — see Key Binds below).
+any controller button — see Key Binds below). XBOX/GamesPass users can now access and download mod.io maps via the XboxWorkshop tab!
 
 ---
 
 ## Features
+
+### 🚲 mod.io custom maps
+Download and play Mod.io Customs maps on Xbox/GamesPass on PC
 
 ### 🚲 Bike Physics
 Tune every aspect of how your bike handles.
