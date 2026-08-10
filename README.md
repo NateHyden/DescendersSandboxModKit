@@ -21,7 +21,7 @@ any controller button — see Key Binds below). XBOX/GamesPass users can now acc
 
 ## Features
 
-### 🚲 mod.io custom maps
+### 🗺️ mod.io custom maps for Xbox/Games pass users!
 Download and play Mod.io Customs maps on Xbox/GamesPass on PC
 
 ### 🚲 Bike Physics
