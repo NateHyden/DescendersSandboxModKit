@@ -1,3 +1,0 @@
-﻿
-  DescendersSandbox -> C:\Users\Natha\source\repos\DescendersSandbox\Output\DescendersSandbox.dll
-          1 file(s) copied.
