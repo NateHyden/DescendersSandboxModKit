@@ -34,7 +34,7 @@ namespace DescendersModMenu.Mods
                 {
                     _savedAngularDrag = rb.angularDrag;
                     _defaultsSaved = true;
-                    MelonLogger.Msg("[IceMode] Saved angularDrag=" + _savedAngularDrag);
+                    ModLog.Debug("[IceMode] Saved angularDrag=" + _savedAngularDrag);
                 }
                 rb.angularDrag = 0f;
             }
@@ -49,7 +49,7 @@ namespace DescendersModMenu.Mods
                 Rigidbody rb = GetRigidbody();
                 if ((object)rb == null) return;
                 rb.angularDrag = _savedAngularDrag;
-                MelonLogger.Msg("[IceMode] Restored angularDrag=" + _savedAngularDrag);
+                ModLog.Debug("[IceMode] Restored angularDrag=" + _savedAngularDrag);
             }
             catch (System.Exception ex) { MelonLogger.Error("[IceMode] RestoreRigidbody: " + ex.Message); Telemetry.ReportErrorAsync(ex, "IceMode"); }
         }
@@ -57,7 +57,7 @@ namespace DescendersModMenu.Mods
         private static Rigidbody GetRigidbody()
         {
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) { MelonLogger.Warning("[IceMode] Player_Human not found."); return null; }
+            if ((object)player == null) { ModLog.Warn("[IceMode] Player_Human not found."); return null; }
             return player.GetComponent<Rigidbody>();
         }
 
@@ -84,7 +84,7 @@ namespace DescendersModMenu.Mods
                     ModLog.Debug("[IceMode] Patched Wheel.FixedUpdate.");
                 }
                 else
-                    MelonLogger.Warning("[IceMode] Wheel.FixedUpdate not found.");
+                    ModLog.Warn("[IceMode] Wheel.FixedUpdate not found.");
 
                 // Patch Vehicle.FixedUpdate — zero averaged grip (eSXpeQc) every frame
                 MethodInfo vehicleFU = typeof(Vehicle).GetMethod(
@@ -97,7 +97,7 @@ namespace DescendersModMenu.Mods
                     ModLog.Debug("[IceMode] Patched Vehicle.FixedUpdate.");
                 }
                 else
-                    MelonLogger.Warning("[IceMode] Vehicle.FixedUpdate not found.");
+                    ModLog.Warn("[IceMode] Vehicle.FixedUpdate not found.");
 
                 DiagnosticsManager.Report("IceMode", true);
             }
@@ -163,7 +163,7 @@ namespace DescendersModMenu.Mods
                     if ((object)_groundGripProp != null)
                         ModLog.Debug("[IceMode] Found ground grip prop: njDpmV");
                     else
-                        MelonLogger.Warning("[IceMode] Could not find ground grip prop: njDpmV");
+                        ModLog.Warn("[IceMode] Could not find ground grip prop: njDpmV");
                 }
 
                 if ((object)_groundGripProp != null)

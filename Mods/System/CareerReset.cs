@@ -63,7 +63,7 @@ namespace DescendersModMenu.Mods
             if (sponsorTierMsg != null) combined += (combined.Length > 0 ? "; " : "") + sponsorTierMsg;
             if (combined.Length == 0) combined = "Nothing to complete - see log";
 
-            MelonLogger.Msg("[CareerReset] Complete All Missions finished: " + combined);
+            ModLog.Debug("[CareerReset] Complete All Missions finished: " + combined);
             LastResult = combined;
         }
 
@@ -76,14 +76,14 @@ namespace DescendersModMenu.Mods
             MissionsManager mm = UnityEngine.Object.FindObjectOfType<MissionsManager>();
             if ((object)mm == null)
             {
-                MelonLogger.Msg("[CareerReset] (legacy) MissionsManager not found in scene.");
+                ModLog.Debug("[CareerReset] (legacy) MissionsManager not found in scene.");
                 return null;
             }
 
             MissionGroup[] groups = GetMissionGroups(mm);
             if (groups == null || groups.Length == 0)
             {
-                MelonLogger.Msg("[CareerReset] (legacy) MissionsManager found but holds no mission "
+                ModLog.Debug("[CareerReset] (legacy) MissionsManager found but holds no mission "
                     + "groups - this system looks unused in the current build.");
                 return null;
             }
@@ -114,13 +114,13 @@ namespace DescendersModMenu.Mods
                     }
                     catch (Exception ex)
                     {
-                        MelonLogger.Warning("[CareerReset] (legacy) SetMissionComplete failed for mission '"
+                        ModLog.Warn("[CareerReset] (legacy) SetMissionComplete failed for mission '"
                             + SafeId(md) + "': " + ex.Message);
                     }
                 }
             }
 
-            MelonLogger.Msg("[CareerReset] (legacy) " + completedCount + " newly completed, "
+            ModLog.Debug("[CareerReset] (legacy) " + completedCount + " newly completed, "
                 + alreadyDoneCount + " already done, " + totalMissions + " total mission(s) across "
                 + groupsTouched + " group(s).");
             if (totalMissions == 0) return null;
@@ -138,7 +138,7 @@ namespace DescendersModMenu.Mods
             GameData gd = UnityEngine.Object.FindObjectOfType<GameData>();
             if ((object)gd == null)
             {
-                MelonLogger.Warning("[CareerReset] (nodes) GameData not found in scene.");
+                ModLog.Warn("[CareerReset] (nodes) GameData not found in scene.");
                 return null;
             }
 
@@ -146,21 +146,21 @@ namespace DescendersModMenu.Mods
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             if ((object)ppField == null)
             {
-                MelonLogger.Warning("[CareerReset] (nodes) No PlayerProgress field found on GameData.");
+                ModLog.Warn("[CareerReset] (nodes) No PlayerProgress field found on GameData.");
                 return null;
             }
 
             PlayerProgress pp = ppField.GetValue(gd) as PlayerProgress;
             if ((object)pp == null)
             {
-                MelonLogger.Warning("[CareerReset] (nodes) PlayerProgress field on GameData was null.");
+                ModLog.Warn("[CareerReset] (nodes) PlayerProgress field on GameData was null.");
                 return null;
             }
 
             ProgressNode[] nodes = pp.progressNodes;
             if (nodes == null || nodes.Length == 0)
             {
-                MelonLogger.Warning("[CareerReset] (nodes) progressNodes array was empty.");
+                ModLog.Warn("[CareerReset] (nodes) progressNodes array was empty.");
                 return null;
             }
 
@@ -175,7 +175,7 @@ namespace DescendersModMenu.Mods
             PrefsManager prefs = prefsInstance as PrefsManager;
             if ((object)prefs == null)
             {
-                MelonLogger.Warning("[CareerReset] (nodes) Could not resolve a PrefsManager instance.");
+                ModLog.Warn("[CareerReset] (nodes) Could not resolve a PrefsManager instance.");
                 return null;
             }
 
@@ -183,9 +183,9 @@ namespace DescendersModMenu.Mods
             int before = prefs.GetInt("TOTALREP");
             prefs.SetInt("TOTALREP", target);
             try { prefs.Save(); }
-            catch (Exception exSave) { MelonLogger.Warning("[CareerReset] (nodes) prefs.Save() threw: " + exSave.Message); }
+            catch (Exception exSave) { ModLog.Warn("[CareerReset] (nodes) prefs.Save() threw: " + exSave.Message); }
 
-            MelonLogger.Msg("[CareerReset] (nodes) " + nodes.Length + " progress node(s) found, highest needs "
+            ModLog.Debug("[CareerReset] (nodes) " + nodes.Length + " progress node(s) found, highest needs "
                 + maxRep + " reputation. TOTALREP: " + before + " -> " + target + ".");
             return nodes.Length + " progress node(s) unlocked (reputation set to " + target + ")";
         }
@@ -202,7 +202,7 @@ namespace DescendersModMenu.Mods
             PrefsManager prefs = prefsInstance as PrefsManager;
             if ((object)prefs == null)
             {
-                MelonLogger.Warning("[CareerReset] (sponsor interest) Could not resolve a PrefsManager instance.");
+                ModLog.Warn("[CareerReset] (sponsor interest) Could not resolve a PrefsManager instance.");
                 return null;
             }
 
@@ -220,7 +220,7 @@ namespace DescendersModMenu.Mods
             }
 
             try { prefs.Save(); }
-            catch (Exception exSave) { MelonLogger.Warning("[CareerReset] (sponsor interest) prefs.Save() threw: " + exSave.Message); }
+            catch (Exception exSave) { ModLog.Warn("[CareerReset] (sponsor interest) prefs.Save() threw: " + exSave.Message); }
 
             if (changed == 0) return null;
             return changed + " sponsor track(s) marked interested (3/3)";
@@ -246,7 +246,7 @@ namespace DescendersModMenu.Mods
             PrefsManager prefs = prefsInstance as PrefsManager;
             if ((object)prefs == null)
             {
-                MelonLogger.Warning("[CareerReset] (sponsor tier) Could not resolve a PrefsManager instance.");
+                ModLog.Warn("[CareerReset] (sponsor tier) Could not resolve a PrefsManager instance.");
                 return null;
             }
 
@@ -255,7 +255,7 @@ namespace DescendersModMenu.Mods
 
             prefs.SetInt("TEAMTASKSCOMPLETED", 999);
             try { prefs.Save(); }
-            catch (Exception exSave) { MelonLogger.Warning("[CareerReset] (sponsor tier) prefs.Save() threw: " + exSave.Message); }
+            catch (Exception exSave) { ModLog.Warn("[CareerReset] (sponsor tier) prefs.Save() threw: " + exSave.Message); }
 
             ModLog.Feedback("[CareerReset] TEAMTASKSCOMPLETED: " + before + " -> 999. "
                 + "Leave and re-enter the Sponsor Office screen to see it refresh.");
@@ -270,7 +270,7 @@ namespace DescendersModMenu.Mods
                 MissionsManager mm = UnityEngine.Object.FindObjectOfType<MissionsManager>();
                 if ((object)mm == null)
                 {
-                    MelonLogger.Warning("[CareerReset] ResetLevelProgress: MissionsManager not found in scene.");
+                    ModLog.Warn("[CareerReset] ResetLevelProgress: MissionsManager not found in scene.");
                     LastResult = "MissionsManager not found";
                     return;
                 }
@@ -304,7 +304,7 @@ namespace DescendersModMenu.Mods
                 }
                 else
                 {
-                    MelonLogger.Warning("[CareerReset] ResetLevelProgress: could not enumerate mission groups - "
+                    ModLog.Warn("[CareerReset] ResetLevelProgress: could not enumerate mission groups - "
                         + "live IsComplete flags were not touched, only MissionsManager.Reload() ran.");
                 }
 
@@ -315,17 +315,17 @@ namespace DescendersModMenu.Mods
                 try
                 {
                     mm.Reload();
-                    MelonLogger.Msg("[CareerReset] MissionsManager.Reload() called - internal completion/claim lists cleared.");
+                    ModLog.Debug("[CareerReset] MissionsManager.Reload() called - internal completion/claim lists cleared.");
                 }
                 catch (Exception ex)
                 {
-                    MelonLogger.Warning("[CareerReset] mm.Reload() threw: " + ex.Message);
+                    ModLog.Warn("[CareerReset] mm.Reload() threw: " + ex.Message);
                 }
 
-                MelonLogger.Msg("[CareerReset] Reset Level Progress: cleared IsComplete on "
+                ModLog.Debug("[CareerReset] Reset Level Progress: cleared IsComplete on "
                     + clearedCount + "/" + totalMissions + " mission(s). Group/tour lock state is derived "
                     + "from mission completion, so it resets as a side effect of this.");
-                MelonLogger.Msg("[CareerReset] NOTE: this resets the live session state immediately. "
+                ModLog.Debug("[CareerReset] NOTE: this resets the live session state immediately. "
                     + "If completed missions reappear after a full game restart, the persisted PrefsManager "
                     + "blob (key \"MissionsData\") needs clearing too - flag it and we'll add that next.");
                 LastResult = "Cleared " + clearedCount + " mission(s)";
@@ -346,7 +346,7 @@ namespace DescendersModMenu.Mods
                 GameData gd = UnityEngine.Object.FindObjectOfType<GameData>();
                 if ((object)gd == null)
                 {
-                    MelonLogger.Warning("[CareerReset] ResetSponsorProgress: GameData not found in scene.");
+                    ModLog.Warn("[CareerReset] ResetSponsorProgress: GameData not found in scene.");
                     LastResult = "GameData not found";
                     return;
                 }
@@ -394,17 +394,17 @@ namespace DescendersModMenu.Mods
                     }
 
                     try { prefs.Save(); prefsOk = true; }
-                    catch (Exception exSave) { MelonLogger.Warning("[CareerReset] prefs.Save() threw: " + exSave.Message); }
+                    catch (Exception exSave) { ModLog.Warn("[CareerReset] prefs.Save() threw: " + exSave.Message); }
                     ModLog.Feedback("[CareerReset] TOTALREP: " + beforeRep + " -> 0. TEAMTASKSCOMPLETED: " + beforeTeamTasks
                         + " -> 0. SPONSOR_1/2/3 cleared: " + sponsorNodesCleared + ".");
                 }
                 else
                 {
-                    MelonLogger.Warning("[CareerReset] Could not resolve a live PrefsManager instance - "
+                    ModLog.Warn("[CareerReset] Could not resolve a live PrefsManager instance - "
                         + "TOTALREP was not touched. Division reset above still applies.");
                 }
 
-                MelonLogger.Msg("[CareerReset] Reset Sponsor Progress complete.");
+                ModLog.Debug("[CareerReset] Reset Sponsor Progress complete.");
                 if (!divisionChanged && sponsorNodesCleared == 0 && (beforeRep == 0 || !prefsOk))
                     LastResult = "Already at Novice / 0 rep / 0 sponsor nodes - nothing to reset";
                 else
@@ -454,7 +454,7 @@ namespace DescendersModMenu.Mods
                 PrefsManager prefs = prefsInstance as PrefsManager;
                 if ((object)prefs == null)
                 {
-                    MelonLogger.Warning("[CareerReset] AdjustRep: Could not resolve a PrefsManager instance.");
+                    ModLog.Warn("[CareerReset] AdjustRep: Could not resolve a PrefsManager instance.");
                     LastResult = "PrefsManager not found";
                     return;
                 }
@@ -464,7 +464,7 @@ namespace DescendersModMenu.Mods
                 if (after < 0) after = 0;
                 prefs.SetInt("TOTALREP", after);
                 try { prefs.Save(); }
-                catch (Exception exSave) { MelonLogger.Warning("[CareerReset] AdjustRep prefs.Save() threw: " + exSave.Message); }
+                catch (Exception exSave) { ModLog.Warn("[CareerReset] AdjustRep prefs.Save() threw: " + exSave.Message); }
 
                 ModLog.Feedback("[CareerReset] TOTALREP: " + before + " -> " + after + " (" + (amount >= 0 ? "+" : "") + amount + ")");
 
@@ -520,7 +520,7 @@ namespace DescendersModMenu.Mods
                 _backendRepProp = typeof(DevCommandsBackEnd).GetProperty("M\u0083\u007B\u007E\u005DEe",
                     BindingFlags.Public | BindingFlags.Static);
                 if ((object)_backendRepProp == null)
-                    MelonLogger.Warning("[CareerReset] LiveRepValue: DevCommandsBackEnd.M{~]Ee property not found.");
+                    ModLog.Warn("[CareerReset] LiveRepValue: DevCommandsBackEnd.M{~]Ee property not found.");
             }
             return _backendRepProp;
         }
@@ -546,7 +546,7 @@ namespace DescendersModMenu.Mods
                 PropertyInfo p = GetBackendRepProp();
                 if ((object)p == null)
                 {
-                    MelonLogger.Warning("[CareerReset] AdjustLiveRep: backend rep property not found.");
+                    ModLog.Warn("[CareerReset] AdjustLiveRep: backend rep property not found.");
                     return false;
                 }
 
@@ -555,7 +555,7 @@ namespace DescendersModMenu.Mods
                 if (after < 0) after = 0;
                 p.SetValue(null, after, null);
 
-                MelonLogger.Msg("[CareerReset] Live rep (backend, Steam-submitted as \"reputation_s2_\"): "
+                ModLog.Debug("[CareerReset] Live rep (backend, Steam-submitted as \"reputation_s2_\"): "
                     + before + " -> " + after);
                 return true;
             }
@@ -598,7 +598,7 @@ namespace DescendersModMenu.Mods
                 PlayerInfoImpact pii = FindLocalPlayerInfoImpact();
                 if ((object)pii == null)
                 {
-                    MelonLogger.Warning("[CareerReset] AdjustInGameRep: local PlayerInfoImpact not found (not in a session?).");
+                    ModLog.Warn("[CareerReset] AdjustInGameRep: local PlayerInfoImpact not found (not in a session?).");
                     LastResult = "Not in a session";
                     return false;
                 }
@@ -607,7 +607,7 @@ namespace DescendersModMenu.Mods
                     BindingFlags.Public | BindingFlags.Instance);
                 if ((object)statsField == null)
                 {
-                    MelonLogger.Warning("[CareerReset] AdjustInGameRep: stats sub-object field (d]kxXXv) not found on PlayerInfoImpact.");
+                    ModLog.Warn("[CareerReset] AdjustInGameRep: stats sub-object field (d]kxXXv) not found on PlayerInfoImpact.");
                     LastResult = "Field not found";
                     return false;
                 }
@@ -615,7 +615,7 @@ namespace DescendersModMenu.Mods
                 object statsObj = statsField.GetValue(pii);
                 if (statsObj == null)
                 {
-                    MelonLogger.Warning("[CareerReset] AdjustInGameRep: stats sub-object was null on this instance.");
+                    ModLog.Warn("[CareerReset] AdjustInGameRep: stats sub-object was null on this instance.");
                     LastResult = "Stats object null";
                     return false;
                 }
@@ -624,7 +624,7 @@ namespace DescendersModMenu.Mods
                     BindingFlags.Public | BindingFlags.Instance);
                 if ((object)repField == null)
                 {
-                    MelonLogger.Warning("[CareerReset] AdjustInGameRep: LgqK]Lp field not found on stats sub-object.");
+                    ModLog.Warn("[CareerReset] AdjustInGameRep: LgqK]Lp field not found on stats sub-object.");
                     LastResult = "Field not found";
                     return false;
                 }
@@ -780,7 +780,7 @@ namespace DescendersModMenu.Mods
                 CustomizationManager cm = UnityEngine.Object.FindObjectOfType<CustomizationManager>();
                 if ((object)cm == null)
                 {
-                    MelonLogger.Warning("[CareerReset] ToggleUnlockAll: CustomizationManager not found in scene.");
+                    ModLog.Warn("[CareerReset] ToggleUnlockAll: CustomizationManager not found in scene.");
                     LastResult = "CustomizationManager not found";
                     return;
                 }
@@ -796,11 +796,11 @@ namespace DescendersModMenu.Mods
                 if ((object)prefs != null)
                 {
                     try { prefs.Save(); }
-                    catch (Exception exSave) { MelonLogger.Warning("[CareerReset] ToggleUnlockAll prefs.Save() threw: " + exSave.Message); }
+                    catch (Exception exSave) { ModLog.Warn("[CareerReset] ToggleUnlockAll prefs.Save() threw: " + exSave.Message); }
                 }
 
                 ModLog.Feedback("[CareerReset] Unlock All -> " + (newVal ? "ON" : "OFF"));
-                MelonLogger.Msg("[CareerReset] Unlock All verify readback: " + cm.mZVyMyX
+                ModLog.Debug("[CareerReset] Unlock All verify readback: " + cm.mZVyMyX
                     + " | NOTE: shed/customization grid may cache lock icons — re-enter that screen if needed.");
                 LastResult = "Unlock All " + (newVal ? "ON - all bikes/gear unlocked" : "OFF");
             }
@@ -826,13 +826,13 @@ namespace DescendersModMenu.Mods
                 CustomizationManager cm = UnityEngine.Object.FindObjectOfType<CustomizationManager>();
                 if ((object)cm == null)
                 {
-                    MelonLogger.Warning("[CareerReset] DumpBikeUnlockStatus: CustomizationManager not found in scene.");
+                    ModLog.Warn("[CareerReset] DumpBikeUnlockStatus: CustomizationManager not found in scene.");
                     return "CustomizationManager not found";
                 }
 
                 CustomizationItem[] allItems = Resources.FindObjectsOfTypeAll<CustomizationItem>();
-                MelonLogger.Msg("[CareerReset] === Bike Unlock Status Dump ===");
-                MelonLogger.Msg("[CareerReset] UnlockAllEnabled (mZVyMyX) = " + cm.mZVyMyX
+                ModLog.Debug("[CareerReset] === Bike Unlock Status Dump ===");
+                ModLog.Debug("[CareerReset] UnlockAllEnabled (mZVyMyX) = " + cm.mZVyMyX
                     + " | " + allItems.Length + " total CustomizationItem asset(s) loaded");
 
                 int shown = 0;
@@ -847,9 +847,9 @@ namespace DescendersModMenu.Mods
 
                     bool unlocked = false;
                     try { unlocked = cm.IsItemUnlocked(item); }
-                    catch (Exception exItem) { MelonLogger.Warning("[CareerReset]   IsItemUnlocked threw for \"" + item.displayName + "\": " + exItem.Message); }
+                    catch (Exception exItem) { ModLog.Warn("[CareerReset]   IsItemUnlocked threw for \"" + item.displayName + "\": " + exItem.Message); }
 
-                    MelonLogger.Msg("[CareerReset]   itemID=" + item.itemID
+                    ModLog.Debug("[CareerReset]   itemID=" + item.itemID
                         + " name=\"" + item.displayName + "\""
                         + " slot=" + slotName
                         + " rarity=" + item.rarity
@@ -857,7 +857,7 @@ namespace DescendersModMenu.Mods
                     shown++;
                 }
 
-                MelonLogger.Msg("[CareerReset] === End dump: " + shown + " bike-slot item(s) ===");
+                ModLog.Debug("[CareerReset] === End dump: " + shown + " bike-slot item(s) ===");
                 LastResult = "Logged " + shown + " bike item(s) - check MelonLoader log";
                 return LastResult;
             }
@@ -898,7 +898,7 @@ namespace DescendersModMenu.Mods
                 _currentTeamProp = typeof(DevCommandsBackEnd).GetProperty("lno\u0082zMq",
                     BindingFlags.Public | BindingFlags.Static);
                 if ((object)_currentTeamProp == null)
-                    MelonLogger.Warning("[CareerReset] Switch Sponsor: DevCommandsBackEnd.lno]zMq property not found.");
+                    ModLog.Warn("[CareerReset] Switch Sponsor: DevCommandsBackEnd.lno]zMq property not found.");
             }
             return _currentTeamProp;
         }
@@ -911,7 +911,7 @@ namespace DescendersModMenu.Mods
             FieldInfo teamsField = typeof(GameData).GetField("D\u0083nWNgg", BindingFlags.Public | BindingFlags.Instance);
             if ((object)teamsField == null)
             {
-                MelonLogger.Warning("[CareerReset] Switch Sponsor: team list field (D]nWNgg) not found on GameData.");
+                ModLog.Warn("[CareerReset] Switch Sponsor: team list field (D]nWNgg) not found on GameData.");
                 return new TeamInfo[0];
             }
 
@@ -964,7 +964,7 @@ namespace DescendersModMenu.Mods
                 TeamInfo[] teams = GetAllTeams();
                 if (teams.Length == 0)
                 {
-                    MelonLogger.Warning("[CareerReset] StepSponsor: no teams found - GameData not in scene yet?");
+                    ModLog.Warn("[CareerReset] StepSponsor: no teams found - GameData not in scene yet?");
                     LastResult = "No teams found";
                     return;
                 }
@@ -1045,17 +1045,17 @@ namespace DescendersModMenu.Mods
 
                 if (matchCount == 0)
                 {
-                    MelonLogger.Warning("[CareerReset] No field of type " + fieldType.Name
+                    ModLog.Warn("[CareerReset] No field of type " + fieldType.Name
                         + " found on " + owner.Name + " (flags=" + flags + "). Dumping candidate fields for manual ID:");
                     for (int i = 0; i < fields.Length; i++)
-                        MelonLogger.Msg("    " + fields[i].FieldType.Name + "  " + fields[i].Name);
+                        ModLog.Debug("    " + fields[i].FieldType.Name + "  " + fields[i].Name);
                     return null;
                 }
                 if (matchCount > 1)
-                    MelonLogger.Warning("[CareerReset] " + matchCount + " fields of type " + fieldType.Name
+                    ModLog.Warn("[CareerReset] " + matchCount + " fields of type " + fieldType.Name
                         + " found on " + owner.Name + " - using the first one: " + match.Name);
                 else
-                    MelonLogger.Msg("[CareerReset] Found field '" + match.Name + "' (" + fieldType.Name
+                    ModLog.Debug("[CareerReset] Found field '" + match.Name + "' (" + fieldType.Name
                         + ") on " + owner.Name + ".");
 
                 return match;
@@ -1082,10 +1082,10 @@ namespace DescendersModMenu.Mods
                     UnityEngine.Object found = UnityEngine.Object.FindObjectOfType(t);
                     if ((object)found != null)
                     {
-                        MelonLogger.Msg("[CareerReset] Found " + t.Name + " instance via FindObjectOfType.");
+                        ModLog.Debug("[CareerReset] Found " + t.Name + " instance via FindObjectOfType.");
                         return found;
                     }
-                    MelonLogger.Warning("[CareerReset] FindObjectOfType(" + t.Name + ") returned null, trying static member scan...");
+                    ModLog.Warn("[CareerReset] FindObjectOfType(" + t.Name + ") returned null, trying static member scan...");
                 }
 
                 PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Static);
@@ -1096,7 +1096,7 @@ namespace DescendersModMenu.Mods
                         object val = props[i].GetValue(null, null);
                         if ((object)val != null)
                         {
-                            MelonLogger.Msg("[CareerReset] Found " + t.Name + " instance via static property '" + props[i].Name + "'.");
+                            ModLog.Debug("[CareerReset] Found " + t.Name + " instance via static property '" + props[i].Name + "'.");
                             return val;
                         }
                     }
@@ -1110,13 +1110,13 @@ namespace DescendersModMenu.Mods
                         object val = fields[i].GetValue(null);
                         if ((object)val != null)
                         {
-                            MelonLogger.Msg("[CareerReset] Found " + t.Name + " instance via static field '" + fields[i].Name + "'.");
+                            ModLog.Debug("[CareerReset] Found " + t.Name + " instance via static field '" + fields[i].Name + "'.");
                             return val;
                         }
                     }
                 }
 
-                MelonLogger.Warning("[CareerReset] Could not resolve a singleton instance for " + t.Name + ".");
+                ModLog.Warn("[CareerReset] Could not resolve a singleton instance for " + t.Name + ".");
                 return null;
             }
             catch (Exception ex)

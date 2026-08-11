@@ -77,7 +77,7 @@ namespace DescendersModMenu.Mods
         {
             if (_state != 0) return;
             _state = 1; _wait = 1;
-            MelonLogger.Msg("[ScreenshotMode] Triggered.");
+            ModLog.Debug("[ScreenshotMode] Triggered.");
         }
 
         public static void Tick()
@@ -119,7 +119,7 @@ namespace DescendersModMenu.Mods
                             cv.gameObject.SetActive(false);
                             _hiddenCanvases.Add(cv);
                         }
-                        MelonLogger.Msg("[ScreenshotMode] Hidden " + _hiddenCanvases.Count + " canvas(es).");
+                        ModLog.Debug("[ScreenshotMode] Hidden " + _hiddenCanvases.Count + " canvas(es).");
                     }
                     catch (System.Exception ex) { MelonLogger.Error("[Screenshot] HideCanvases: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ScreenshotMode"); }
 
@@ -141,7 +141,7 @@ namespace DescendersModMenu.Mods
                 case 5:
                     // Frame B — capture 1x preview in a separate frame
                     Capture(PreviewPath, 1);
-                    MelonLogger.Msg("[ScreenshotMode] Preview capture queued.");
+                    ModLog.Debug("[ScreenshotMode] Preview capture queued.");
                     _state = 3; _wait = 15; // give both files time to start writing
                     break;
 
@@ -163,14 +163,14 @@ namespace DescendersModMenu.Mods
                     _previewPolls++;
                     if (File.Exists(PreviewPath))
                     {
-                        MelonLogger.Msg("[ScreenshotMode] Preview ready after " + _previewPolls + " poll(s).");
+                        ModLog.Debug("[ScreenshotMode] Preview ready after " + _previewPolls + " poll(s).");
                         LoadPreview(PreviewPath);
                         _state = 0;
                         try { UI.ScreenshotPage.RefreshAll(); } catch { }
                     }
                     else if (_previewPolls >= 30)
                     {
-                        MelonLogger.Warning("[ScreenshotMode] Preview timed out. Use Reload Preview.");
+                        ModLog.Warn("[ScreenshotMode] Preview timed out. Use Reload Preview.");
                         _state = 0;
                     }
                     else { _wait = 6; }
@@ -222,17 +222,17 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                if (!File.Exists(path)) { MelonLogger.Warning("[ScreenshotMode] Preview not found."); return; }
+                if (!File.Exists(path)) { ModLog.Warn("[ScreenshotMode] Preview not found."); return; }
                 byte[] bytes = File.ReadAllBytes(path);
-                MelonLogger.Msg("[ScreenshotMode] Preview bytes: " + bytes.Length);
-                if (bytes == null || bytes.Length == 0) { MelonLogger.Warning("[ScreenshotMode] Preview empty."); return; }
+                ModLog.Debug("[ScreenshotMode] Preview bytes: " + bytes.Length);
+                if (bytes == null || bytes.Length == 0) { ModLog.Warn("[ScreenshotMode] Preview empty."); return; }
 
                 if ((object)PreviewTexture != null) Object.Destroy(PreviewTexture);
                 var tex = new Texture2D(2, 2);
                 if (tex.LoadImage(bytes))
                 {
                     PreviewTexture = tex;
-                    MelonLogger.Msg("[ScreenshotMode] Preview loaded: " + tex.width + "x" + tex.height);
+                    ModLog.Debug("[ScreenshotMode] Preview loaded: " + tex.width + "x" + tex.height);
                 }
                 else
                 {
@@ -257,7 +257,7 @@ namespace DescendersModMenu.Mods
                         mgrType = asm.GetType("InControl.InputManager");
                         if ((object)mgrType != null) break;
                     }
-                    if ((object)mgrType == null) { MelonLogger.Warning("[ScreenshotMode] InControl not found."); return false; }
+                    if ((object)mgrType == null) { ModLog.Warn("[ScreenshotMode] InControl not found."); return false; }
                     _activeDeviceProp = mgrType.GetProperty("ActiveDevice",
                         System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                 }
@@ -286,7 +286,7 @@ namespace DescendersModMenu.Mods
         {
             if (LastPath.Length > 0)
             {
-                MelonLogger.Msg("[ScreenshotMode] ForceReload preview.");
+                ModLog.Debug("[ScreenshotMode] ForceReload preview.");
                 LoadPreview(PreviewPath);
             }
         }

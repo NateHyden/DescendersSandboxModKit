@@ -138,7 +138,7 @@ namespace DescendersModMenu
                     default: return false;
                 }
             }
-            catch (Exception ex) { MelonLogger.Warning("[KeyBindManager] IsControllerPressed(" + code + "): " + ex.Message); return false; }
+            catch (Exception ex) { ModLog.Warn("[KeyBindManager] IsControllerPressed(" + code + "): " + ex.Message); return false; }
         }
 
         public static bool AnyControllerPressed(out int code)
@@ -229,7 +229,7 @@ namespace DescendersModMenu
                     MenuOpenCode = _menuOpenCode
                 };
                 File.WriteAllText(Path.Combine(SaveFolder, SaveFileName), JsonUtility.ToJson(data, true));
-                MelonLogger.Msg("[KeyBindManager] Saved " + ModIds.Length + " bindings.");
+                ModLog.Debug("[KeyBindManager] Saved " + ModIds.Length + " bindings.");
             }
             catch (Exception ex) { MelonLogger.Error("[KeyBindManager] SaveBindings: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "KeyBindManager"); }
         }
@@ -240,9 +240,9 @@ namespace DescendersModMenu
             try
             {
                 string path = Path.Combine(SaveFolder, SaveFileName);
-                if (!File.Exists(path)) { MelonLogger.Msg("[KeyBindManager] No bindings file — using defaults (F2/F3/F4)."); return; }
+                if (!File.Exists(path)) { ModLog.Debug("[KeyBindManager] No bindings file — using defaults (F2/F3/F4)."); return; }
                 var data = JsonUtility.FromJson<BindingsData>(File.ReadAllText(path));
-                if (data == null || data.ModIds == null || data.KeyCodes == null) { MelonLogger.Warning("[KeyBindManager] Corrupt bindings file — using defaults."); return; }
+                if (data == null || data.ModIds == null || data.KeyCodes == null) { ModLog.Warn("[KeyBindManager] Corrupt bindings file — using defaults."); return; }
                 int loaded = 0;
                 for (int fi = 0; fi < data.ModIds.Length; fi++)
                 {
@@ -329,7 +329,7 @@ namespace DescendersModMenu
                     case "BoulderDodge":       BoulderDodgeMode.Toggle();                         break;
                     case "SurvivalMode":       SurvivalMode.Toggle();                             break;
                     case "TrickAttack":        TrickAttackMode.Toggle();                          break;
-                    default: MelonLogger.Warning("[KeyBindManager] Unknown mod id: " + id);      break;
+                    default: ModLog.Warn("[KeyBindManager] Unknown mod id: " + id);      break;
                 }
             }
             catch (Exception ex) { MelonLogger.Error("[KeyBindManager] FireMod(" + id + "): " + ex.Message);  Telemetry.ReportErrorAsync(ex, "KeyBindManager"); }
@@ -338,12 +338,12 @@ namespace DescendersModMenu
         private static void DoSuperLaunch()
         {
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) { MelonLogger.Msg("[KeyBindManager] SuperLaunch: no Player_Human"); return; }
+            if ((object)player == null) { ModLog.Debug("[KeyBindManager] SuperLaunch: no Player_Human"); return; }
             Vehicle v = player.GetComponent<Vehicle>();
-            if ((object)v == null) { MelonLogger.Msg("[KeyBindManager] SuperLaunch: no Vehicle"); return; }
+            if ((object)v == null) { ModLog.Debug("[KeyBindManager] SuperLaunch: no Vehicle"); return; }
             var setVel = typeof(Vehicle).GetMethod("SetVelocity",
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            if ((object)setVel == null) { MelonLogger.Warning("[KeyBindManager] SuperLaunch: SetVelocity not found"); return; }
+            if ((object)setVel == null) { ModLog.Warn("[KeyBindManager] SuperLaunch: SetVelocity not found"); return; }
             setVel.Invoke(v, new object[] { player.transform.forward * 80f + Vector3.up * 20f });
         }
     }

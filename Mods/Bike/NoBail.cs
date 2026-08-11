@@ -55,7 +55,7 @@ namespace DescendersModMenu.Mods
 
                 if ((object)resetMethod == null)
                 {
-                    MelonLogger.Warning("[NoBail] Vehicle.Reset(bool) not found.");
+                    ModLog.Warn("[NoBail] Vehicle.Reset(bool) not found.");
                     return;
                 }
 

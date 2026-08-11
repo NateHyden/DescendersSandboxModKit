@@ -47,7 +47,7 @@ namespace DescendersModMenu.Mods
             {
                 GameObject player = GameObject.Find("Player_Human");
                 if ((object)player == null)
-                { MelonLogger.Warning("[ExplodingProps] Player_Human not found."); return; }
+                { ModLog.Warn("[ExplodingProps] Player_Human not found."); return; }
 
                 _handler = player.GetComponent<PropCollisionHandler>();
                 if ((object)_handler == null)
@@ -81,7 +81,7 @@ namespace DescendersModMenu.Mods
         {
             if (Enabled && IsCareerScene(sceneName))
             {
-                MelonLogger.Msg("[ExplodingProps] Career map detected — disabling.");
+                ModLog.Debug("[ExplodingProps] Career map detected — disabling.");
                 Enabled = false;
                 Detach();
             }

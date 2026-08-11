@@ -34,19 +34,19 @@ namespace DescendersModMenu.Mods
                 // BEFORE switching — otherwise the modified array would stay applied to
                 // the bike type we're leaving and re-appear next time we switch back to it.
                 try { if (TrickSetSwap.Enabled) TrickSetSwap.Disable(); }
-                catch (Exception tssEx) { MelonLogger.Warning("BikeSwitcher: TrickSetSwap.Disable failed: " + tssEx.Message); }
+                catch (Exception tssEx) { ModLog.Warn("BikeSwitcher: TrickSetSwap.Disable failed: " + tssEx.Message); }
 
                 GameData gameData = UnityEngine.Object.FindObjectOfType<GameData>();
                 if (object.ReferenceEquals(gameData, null))
                 {
-                    MelonLogger.Warning("BikeSwitcher: GameData not found.");
+                    ModLog.Warn("BikeSwitcher: GameData not found.");
                     return;
                 }
 
                 PlayerInfoImpact player = GetPlayerImpact();
                 if (object.ReferenceEquals(player, null))
                 {
-                    MelonLogger.Warning("BikeSwitcher: PlayerInfoImpact not found.");
+                    ModLog.Warn("BikeSwitcher: PlayerInfoImpact not found.");
                     return;
                 }
 
@@ -67,7 +67,7 @@ namespace DescendersModMenu.Mods
 
                 if (object.ReferenceEquals(playerObject, null))
                 {
-                    MelonLogger.Warning("BikeSwitcher: Player_Human GameObject not found.");
+                    ModLog.Warn("BikeSwitcher: Player_Human GameObject not found.");
                     return;
                 }
 
@@ -77,7 +77,7 @@ namespace DescendersModMenu.Mods
 
                 if (object.ReferenceEquals(customization, null))
                 {
-                    MelonLogger.Warning("BikeSwitcher: PlayerCustomization not found on Player_Human.");
+                    ModLog.Warn("BikeSwitcher: PlayerCustomization not found on Player_Human.");
                     return;
                 }
 
@@ -102,14 +102,14 @@ namespace DescendersModMenu.Mods
 
                 if (object.ReferenceEquals(bikeArrayField, null))
                 {
-                    MelonLogger.Warning("BikeSwitcher: BikeType[] field not found on GameData.");
+                    ModLog.Warn("BikeSwitcher: BikeType[] field not found on GameData.");
                     return;
                 }
 
                 BikeType[] bikes = bikeArrayField.GetValue(gameData) as BikeType[];
                 if (object.ReferenceEquals(bikes, null) || bikes.Length == 0)
                 {
-                    MelonLogger.Warning("BikeSwitcher: bike array is null or empty.");
+                    ModLog.Warn("BikeSwitcher: bike array is null or empty.");
                     return;
                 }
 
@@ -122,7 +122,7 @@ namespace DescendersModMenu.Mods
                 BikeType selectedBike = bikes[index];
                 if (object.ReferenceEquals(selectedBike, null))
                 {
-                    MelonLogger.Warning("BikeSwitcher: selected bike is null.");
+                    ModLog.Warn("BikeSwitcher: selected bike is null.");
                     return;
                 }
 
@@ -138,7 +138,7 @@ namespace DescendersModMenu.Mods
                 }
                 else
                 {
-                    MelonLogger.Warning("BikeSwitcher: SetBikeTypeFromNum method not found.");
+                    ModLog.Warn("BikeSwitcher: SetBikeTypeFromNum method not found.");
                 }
 
                 // Force-write the BikeType field too, just in case
@@ -175,7 +175,7 @@ namespace DescendersModMenu.Mods
                 }
                 else
                 {
-                    MelonLogger.Warning("BikeSwitcher: RefreshBikeMesh method not found.");
+                    ModLog.Warn("BikeSwitcher: RefreshBikeMesh method not found.");
                 }
 
                 // Debug: check whether a Bike slot item actually exists
@@ -243,7 +243,7 @@ namespace DescendersModMenu.Mods
                 PlayerManager playerManager = UnityEngine.Object.FindObjectOfType<PlayerManager>();
                 if (object.ReferenceEquals(playerManager, null))
                 {
-                    MelonLogger.Warning("BikeSwitcher: PlayerManager not found.");
+                    ModLog.Warn("BikeSwitcher: PlayerManager not found.");
                     return null;
                 }
 
@@ -254,7 +254,7 @@ namespace DescendersModMenu.Mods
 
                 if (object.ReferenceEquals(getPlayerImpactMethod, null))
                 {
-                    MelonLogger.Warning("BikeSwitcher: GetPlayerImpact method not found.");
+                    ModLog.Warn("BikeSwitcher: GetPlayerImpact method not found.");
                     return null;
                 }
 
@@ -272,7 +272,7 @@ namespace DescendersModMenu.Mods
         {
             PrefsManager prefs = UnityEngine.Object.FindObjectOfType<PrefsManager>();
             if (object.ReferenceEquals(prefs, null))
-                MelonLogger.Warning("BikeSwitcher: PrefsManager not found.");
+                ModLog.Warn("BikeSwitcher: PrefsManager not found.");
 
             return prefs;
         }
@@ -292,7 +292,7 @@ namespace DescendersModMenu.Mods
 
                 if (object.ReferenceEquals(getIntMethod, null))
                 {
-                    MelonLogger.Warning("BikeSwitcher: PrefsManager.GetInt not found.");
+                    ModLog.Warn("BikeSwitcher: PrefsManager.GetInt not found.");
                     return 0;
                 }
 
@@ -325,7 +325,7 @@ namespace DescendersModMenu.Mods
 
                 if (object.ReferenceEquals(setIntMethod, null))
                 {
-                    MelonLogger.Warning("BikeSwitcher: PrefsManager.SetInt not found.");
+                    ModLog.Warn("BikeSwitcher: PrefsManager.SetInt not found.");
                     return;
                 }
 

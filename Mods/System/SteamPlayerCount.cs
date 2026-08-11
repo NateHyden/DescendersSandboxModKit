@@ -28,7 +28,7 @@ namespace DescendersModMenu.Mods
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[SteamPlayerCount] Failed to start thread: " + ex.Message);
+                ModLog.Warn("[SteamPlayerCount] Failed to start thread: " + ex.Message);
                 DisplayValue  = "unavailable";
                 FetchFailed   = true;
                 FetchComplete = true;
@@ -56,7 +56,7 @@ namespace DescendersModMenu.Mods
 
                 if (string.IsNullOrEmpty(output))
                 {
-                    MelonLogger.Warning("[SteamPlayerCount] Empty response.");
+                    ModLog.Warn("[SteamPlayerCount] Empty response.");
                     DisplayValue  = "unavailable";
                     FetchFailed   = true;
                     FetchComplete = true;
@@ -74,14 +74,14 @@ namespace DescendersModMenu.Mods
                 }
                 else
                 {
-                    MelonLogger.Warning("[SteamPlayerCount] Could not parse player_count. Raw: " + output);
+                    ModLog.Warn("[SteamPlayerCount] Could not parse player_count. Raw: " + output);
                     DisplayValue = "unavailable";
                     FetchFailed  = true;
                 }
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[SteamPlayerCount] Fetch failed: " + ex.Message);
+                ModLog.Warn("[SteamPlayerCount] Fetch failed: " + ex.Message);
                 DisplayValue = "unavailable";
                 FetchFailed  = true;
             }

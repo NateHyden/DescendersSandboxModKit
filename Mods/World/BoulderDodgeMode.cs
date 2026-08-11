@@ -59,12 +59,12 @@ namespace DescendersModMenu.Mods
             if (Enabled)
             {
                 _spawnTimer = IntervalValues[IntervalIndex]; // spawn immediately on first tick
-                MelonLogger.Msg("[BoulderDodge] ON");
+                ModLog.Debug("[BoulderDodge] ON");
             }
             else
             {
                 ClearAll();
-                MelonLogger.Msg("[BoulderDodge] OFF");
+                ModLog.Debug("[BoulderDodge] OFF");
             }
         }
 
@@ -158,7 +158,7 @@ namespace DescendersModMenu.Mods
         {
             if (_boulders.Count >= HardCap)
             {
-                MelonLogger.Msg("[BoulderDodge] Hard cap reached (" + HardCap + "), skipping spawn.");
+                ModLog.Debug("[BoulderDodge] Hard cap reached (" + HardCap + "), skipping spawn.");
                 return;
             }
 
@@ -242,7 +242,7 @@ namespace DescendersModMenu.Mods
             };
 
             _boulders.Add(entry);
-            MelonLogger.Msg("[BoulderDodge] Spawned at " + spawnPos
+            ModLog.Debug("[BoulderDodge] Spawned at " + spawnPos
                 + " dir=" + predictedDir
                 + " size=" + size
                 + " active=" + _boulders.Count);
@@ -255,7 +255,7 @@ namespace DescendersModMenu.Mods
             b.Rb.velocity        = Vector3.zero;
             b.Rb.angularVelocity = Vector3.zero;
             b.Rb.isKinematic     = true;
-            MelonLogger.Msg("[BoulderDodge] Boulder locked at age=" + b.Age.ToString("F1"));
+            ModLog.Debug("[BoulderDodge] Boulder locked at age=" + b.Age.ToString("F1"));
         }
 
         // ── Ground height ─────────────────────────────────────────────

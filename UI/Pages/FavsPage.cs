@@ -198,7 +198,7 @@ namespace DescendersModMenu.UI
                 try { entry.BuildControls(_contentRoot); }
                 catch (Exception ex)
                 {
-                    MelonLogger.Warning("[Favs] BuildControls(" + id + "): " + ex.Message);
+                    ModLog.Warn("[Favs] BuildControls(" + id + "): " + ex.Message);
                 }
             }
 

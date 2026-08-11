@@ -67,7 +67,7 @@ namespace DescendersModMenu.Mods
                     _savedAmbientIntensity = RenderSettings.ambientIntensity;
                     _savedReflectionIntensity = RenderSettings.reflectionIntensity;
                     _ambientSaved = true;
-                    MelonLogger.Msg("[HeadlightsOnly] Ambient saved. intensity="
+                    ModLog.Debug("[HeadlightsOnly] Ambient saved. intensity="
                         + _savedAmbientIntensity + " reflection=" + _savedReflectionIntensity);
                 }
                 RenderSettings.ambientLight = Color.black;
@@ -92,7 +92,7 @@ namespace DescendersModMenu.Mods
                         if ((object)_dirLights[i] != null)
                             _dirLights[i].enabled = false;
                     }
-                    MelonLogger.Msg("[HeadlightsOnly] Disabled " + _dirLights.Length + " directional light(s).");
+                    ModLog.Debug("[HeadlightsOnly] Disabled " + _dirLights.Length + " directional light(s).");
                 }
 
                 // Auto-enable BikeTorch at max intensity
@@ -127,7 +127,7 @@ namespace DescendersModMenu.Mods
                     RenderSettings.ambientIntensity = _savedAmbientIntensity;
                     RenderSettings.reflectionIntensity = _savedReflectionIntensity;
                     _ambientSaved = false;
-                    MelonLogger.Msg("[HeadlightsOnly] Ambient restored.");
+                    ModLog.Debug("[HeadlightsOnly] Ambient restored.");
                 }
 
                 // Restore time of day
@@ -141,7 +141,7 @@ namespace DescendersModMenu.Mods
                         if ((object)_dirLights[i] != null)
                             _dirLights[i].enabled = _dirLightWasEnabled[i];
                     }
-                    MelonLogger.Msg("[HeadlightsOnly] Directional lights restored.");
+                    ModLog.Debug("[HeadlightsOnly] Directional lights restored.");
                 }
 
                 // Turn torch off if we auto-enabled it
@@ -173,7 +173,7 @@ namespace DescendersModMenu.Mods
                         idx++;
                     }
                 }
-                MelonLogger.Msg("[HeadlightsOnly] Cached " + count + " directional light(s).");
+                ModLog.Debug("[HeadlightsOnly] Cached " + count + " directional light(s).");
             }
             catch (System.Exception ex) { MelonLogger.Error("[HeadlightsOnly] CacheLights: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "HeadlightsOnly"); }
         }

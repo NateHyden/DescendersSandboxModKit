@@ -67,7 +67,7 @@ namespace DescendersModMenu.Mods
                     });
                 }
                 Enabled = true;
-                MelonLogger.Msg("[UIRemover] ON — hidden " + _hidden.Count + " canvas(es).");
+                ModLog.Debug("[UIRemover] ON — hidden " + _hidden.Count + " canvas(es).");
             }
             catch (System.Exception ex)
             {
@@ -90,7 +90,7 @@ namespace DescendersModMenu.Mods
             }
             _hidden.Clear();
             Enabled = false;
-            MelonLogger.Msg("[UIRemover] OFF — game HUD restored.");
+            ModLog.Debug("[UIRemover] OFF — game HUD restored.");
         }
 
         public static void ClearCache()

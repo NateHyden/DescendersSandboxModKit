@@ -103,7 +103,7 @@ namespace DescendersModMenu.Mods
                     writer.Write("\n\n[!!! DUMP TRUNCATED - exceeded " + (maxChars / 1024 / 1024) +
                                  " MB safety cap for " + label + " - remaining content skipped to avoid OOM !!!]\n");
                     Capped = true;
-                    MelonLogger.Warning("SceneDumper: " + label + " truncated at " + (maxChars / 1024 / 1024) + " MB safety cap.");
+                    ModLog.Warn("SceneDumper: " + label + " truncated at " + (maxChars / 1024 / 1024) + " MB safety cap.");
                     return;
                 }
 
@@ -135,7 +135,7 @@ namespace DescendersModMenu.Mods
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 Scene scene = SceneManager.GetActiveScene();
 
-                MelonLogger.Msg("SceneDumper: Starting full dump...");
+                ModLog.Debug("SceneDumper: Starting full dump...");
 
                 // ── FILE 1: Full scene hierarchy ──────────────────────────────────────
                 {
@@ -158,7 +158,7 @@ namespace DescendersModMenu.Mods
                     ddolRoots.CopyTo(roots, sceneRoots.Length);
 
                     string path = Path.Combine(desktop, "DescendersSceneDump_FULL_" + timestamp + ".txt");
-                    MelonLogger.Msg("SceneDumper: FILE 1 (full hierarchy) starting - " + roots.Length +
+                    ModLog.Debug("SceneDumper: FILE 1 (full hierarchy) starting - " + roots.Length +
                                      " root object(s) (" + sceneRoots.Length + " scene + " + ddolRoots.Length + " DDOL)");
 
                     int processed = 0;
@@ -186,7 +186,7 @@ namespace DescendersModMenu.Mods
                 {
                     string path = Path.Combine(desktop, "DescendersVehicleForensics_" + timestamp + ".txt");
                     List<Component> vehicles = FindComponentsByTypeName("Vehicle");
-                    MelonLogger.Msg("SceneDumper: FILE 2 (vehicle forensics) starting - " + vehicles.Count + " Vehicle instance(s)");
+                    ModLog.Debug("SceneDumper: FILE 2 (vehicle forensics) starting - " + vehicles.Count + " Vehicle instance(s)");
 
                     using (DumpWriter sb = new DumpWriter(path, MaxCharsPerFile, "vehicle forensics"))
                     {
@@ -209,7 +209,7 @@ namespace DescendersModMenu.Mods
                 // ── FILE 3: Player forensics (PlayerInfoImpact + VehicleController) ──
                 {
                     string path3 = Path.Combine(desktop, "DescendersPlayerForensics_" + timestamp + ".txt");
-                    MelonLogger.Msg("SceneDumper: FILE 3 (player forensics) starting...");
+                    ModLog.Debug("SceneDumper: FILE 3 (player forensics) starting...");
 
                     using (DumpWriter sb = new DumpWriter(path3, MaxCharsPerFile, "player forensics"))
                     {
@@ -261,7 +261,7 @@ namespace DescendersModMenu.Mods
                 // ── FILE 4: All unique component types found in scene ─────────────────
                 {
                     string path4 = Path.Combine(desktop, "DescendersComponentIndex_" + timestamp + ".txt");
-                    MelonLogger.Msg("SceneDumper: FILE 4 (component type index) starting...");
+                    ModLog.Debug("SceneDumper: FILE 4 (component type index) starting...");
 
                     using (DumpWriter sb = new DumpWriter(path4, MaxCharsPerFile, "component type index"))
                     {
@@ -297,7 +297,7 @@ namespace DescendersModMenu.Mods
                     ModLog.Feedback("SceneDumper: FILE 4 done -> " + path4);
                 }
 
-                MelonLogger.Msg("SceneDumper: All files written to game directory.");
+                ModLog.Debug("SceneDumper: All files written to game directory.");
             }
             catch (Exception ex)
             {
@@ -605,7 +605,7 @@ namespace DescendersModMenu.Mods
 
             processed++;
             if (processed % 500 == 0)
-                MelonLogger.Msg("SceneDumper: FILE 1 progress - " + processed + " GameObject(s) written so far...");
+                ModLog.Debug("SceneDumper: FILE 1 progress - " + processed + " GameObject(s) written so far...");
 
             for (int i = 0; i < t.childCount; i++)
             {

@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "1.6.0";
+        public const string Version = "1.7.0";
         public const string DownloadLink = null;
     }
 
@@ -52,15 +52,15 @@ namespace DescendersModMenu
         {
             MelonLogger.Msg("Starting Descenders Sandbox");
             try { CodeStage.AntiCheat.Detectors.InjectionDetector.Dispose(); }
-            catch (System.Exception ex) { MelonLogger.Warning("AntiCheat dispose failed (InjectionDetector): " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("AntiCheat dispose failed (InjectionDetector): " + ex.Message); }
             try { CodeStage.AntiCheat.Detectors.ObscuredCheatingDetector.Dispose(); }
-            catch (System.Exception ex) { MelonLogger.Warning("AntiCheat dispose failed (ObscuredCheatingDetector): " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("AntiCheat dispose failed (ObscuredCheatingDetector): " + ex.Message); }
             try { CodeStage.AntiCheat.Detectors.SpeedHackDetector.Dispose(); }
-            catch (System.Exception ex) { MelonLogger.Warning("AntiCheat dispose failed (SpeedHackDetector): " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("AntiCheat dispose failed (SpeedHackDetector): " + ex.Message); }
             try { CodeStage.AntiCheat.Detectors.TimeCheatingDetector.Dispose(); }
-            catch (System.Exception ex) { MelonLogger.Warning("AntiCheat dispose failed (TimeCheatingDetector): " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("AntiCheat dispose failed (TimeCheatingDetector): " + ex.Message); }
             try { CodeStage.AntiCheat.Detectors.WallHackDetector.Dispose(); }
-            catch (System.Exception ex) { MelonLogger.Warning("AntiCheat dispose failed (WallHackDetector): " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("AntiCheat dispose failed (WallHackDetector): " + ex.Message); }
 
             harmony = new HarmonyLib.Harmony("DescendersModMenu.Patches");
             try { harmony.PatchAll(); DiagnosticsManager.Report("Harmony", true); }
@@ -106,7 +106,7 @@ namespace DescendersModMenu
             try { TrickSetSwap.ApplyPatch(harmony); DiagnosticsManager.Report("TrickSetSwap", true); }
             catch (System.Exception ex) { MelonLogger.Error("TrickSetSwap patch: " + ex.Message); DiagnosticsManager.Report("TrickSetSwap", false, ex.Message);  Telemetry.ReportErrorAsync(ex, "TrickSetSwap"); }
             try { MapChanger.ApplyPatch(harmony); DiagnosticsManager.Report("MapChanger", true); }
-            catch (System.Exception ex) { MelonLogger.Warning("MapChanger.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("MapChanger", false, ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("MapChanger.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("MapChanger", false, ex.Message); }
             try { NoBail.ApplyPatch(harmony); }
             catch (System.Exception ex) { MelonLogger.Error("NoBail.ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "NoBail"); }
             try { SlowMoOnBail.ApplyPatch(harmony); }
@@ -131,7 +131,7 @@ namespace DescendersModMenu
                     if (!s.OK) failures.Add(s.Name + ": " + s.Error);
                 if (failures.Count > 0) Telemetry.ReportInitFailuresAsync(failures);
             }
-            catch (System.Exception ex) { MelonLogger.Warning("Telemetry.ReportInitFailuresAsync: " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("Telemetry.ReportInitFailuresAsync: " + ex.Message); }
         }
 
         public override void OnLateInitializeMelon()
@@ -159,15 +159,15 @@ namespace DescendersModMenu
 
             // Load favourites configuration
             try { UI.FavouritesManager.LoadFromFile(); }
-            catch (System.Exception ex) { MelonLogger.Warning("FavouritesManager.LoadFromFile: " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("FavouritesManager.LoadFromFile: " + ex.Message); }
 
             // Load key bindings
             try { KeyBindManager.LoadBindings(); }
-            catch (System.Exception ex) { MelonLogger.Warning("KeyBindManager.LoadBindings: " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("KeyBindManager.LoadBindings: " + ex.Message); }
 
             // Load colour scheme (applies to UITheme before the menu is ever built)
             try { UI.ColorSchemeManager.LoadAndApply(); }
-            catch (System.Exception ex) { MelonLogger.Warning("ColorSchemeManager.LoadAndApply: " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("ColorSchemeManager.LoadAndApply: " + ex.Message); }
 
             DiagnosticsManager.LogStartupSummary();
 
@@ -203,7 +203,7 @@ namespace DescendersModMenu
             if (buildindex > 0)
             {
                 try { ModChat.EnablePhotonAccess(); }
-                catch (System.Exception ex) { MelonLogger.Warning("[ModChat] EnablePhotonAccess: " + ex.Message); }
+                catch (System.Exception ex) { ModLog.Warn("[ModChat] EnablePhotonAccess: " + ex.Message); }
             }
         }
 
@@ -230,6 +230,7 @@ namespace DescendersModMenu
             try { FavsPage.ClearUiRefs(); } catch { }
             try { MapPage.ClearUiRefs(); } catch { }
             try { EspPage.ClearUiRefs(); } catch { }
+            try { ObjectPlacerPage.ClearUiRefs(); } catch { }
             try { CompassAlwaysOn.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("CompassAlwaysOn.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CompassAlwaysOn"); }
             try { PlayerCache.Clear(); } catch (System.Exception ex) { MelonLogger.Error("PlayerCache.Clear: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PlayerCache"); }
 
@@ -385,6 +386,7 @@ namespace DescendersModMenu
             SurvivalMode.Reset();
             SessionTrackers.Reset(); ExplodingProps.Reset();
             Trees.Reset(); BouncyBike.Reset(); BlizzardDial.Reset();
+            ObjectPlacer.Reset();
             SuspensionHUD.ClearCache();
             BrakeFade.ClearCache(); BrakeFade_Patch.ClearCache();
             TrickMultiplier.Reset();
@@ -483,7 +485,7 @@ namespace DescendersModMenu
                 if ((object)GameObject.Find("Player_Human") != null)
                 {
                     _pendingModifierDump = false;
-                    try { GameModifierMods.DumpAllModifiers(); } catch (System.Exception ex) { MelonLogger.Warning("GameModifierMods.DumpAllModifiers: " + ex.Message); }
+                    try { GameModifierMods.DumpAllModifiers(); } catch (System.Exception ex) { ModLog.Warn("GameModifierMods.DumpAllModifiers: " + ex.Message); }
                 }
             }
 
@@ -496,11 +498,11 @@ namespace DescendersModMenu
                     ModLog.Debug("[AutoLoad] Player_Human found — loading saved settings...");
                     ModLog.SuppressUserFeedback = true;
                     try { StatsManager.LoadStats(); }
-                    catch (System.Exception ex) { MelonLogger.Warning("[AutoLoad] " + ex.Message); }
+                    catch (System.Exception ex) { ModLog.Warn("[AutoLoad] " + ex.Message); }
                     finally { ModLog.SuppressUserFeedback = false; }
                     MelonLogger.Msg("Sandbox loaded");
                     try { ModChat.EnablePhotonAccess(); }
-                    catch (System.Exception ex) { MelonLogger.Warning("[ModChat] EnablePhotonAccess: " + ex.Message); }
+                    catch (System.Exception ex) { ModLog.Warn("[ModChat] EnablePhotonAccess: " + ex.Message); }
                 }
             }
 
@@ -514,7 +516,7 @@ namespace DescendersModMenu
                 if ((object)GameObject.Find("Player_Human") != null)
                 {
                     _pendingTelemetryPing = false;
-                    try { Telemetry.PingAsync(); } catch (System.Exception ex) { MelonLogger.Warning("Telemetry.PingAsync: " + ex.Message); }
+                    try { Telemetry.PingAsync(); } catch (System.Exception ex) { ModLog.Warn("Telemetry.PingAsync: " + ex.Message); }
                 }
             }
 
@@ -632,6 +634,15 @@ namespace DescendersModMenu
             try { PoliceChaseMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("PoliceChaseMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PoliceChaseMode"); }
             try { TrickAttackMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("TrickAttackMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TrickAttackMode"); }
             try { BoulderDodgeMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("BoulderDodgeMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BoulderDodgeMode"); }
+            try { ObjectPlacer.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ObjectPlacer.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ObjectPlacer"); }
+            if (ObjectPlacer.ConsumeCancelPending())
+            {
+                try { ObjectPlacerPage.RefreshAll(); } catch { }
+                if (ObjectPlacer.AutoCloseMenu && MenuUI.IsOpen)
+                {
+                    try { MenuUI.ToggleMenu(); } catch { }
+                }
+            }
             try { SurvivalMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SurvivalMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SurvivalMode"); }
             try { GhostReplay.Tick(); } catch (System.Exception ex) { MelonLogger.Error("GhostReplay.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostReplay"); }
             try { MapChanger.Tick(); } catch (System.Exception ex) { MelonLogger.Error("MapChanger.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MapChanger"); }

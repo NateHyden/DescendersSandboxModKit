@@ -139,11 +139,11 @@ namespace DescendersModMenu.Mods
                     if (!string.Equals(fields[j].FieldType.Name, "CameraAngle",
                         StringComparison.Ordinal)) continue;
                     _caField = fields[j];
-                    MelonLogger.Msg("[FOV] Found CameraAngle field: " + fields[j].Name);
+                    ModLog.Debug("[FOV] Found CameraAngle field: " + fields[j].Name);
                     break;
                 }
                 if ((object)_caField == null)
-                    MelonLogger.Warning("[FOV] CameraAngle field not found on BikeCamera.");
+                    ModLog.Warn("[FOV] CameraAngle field not found on BikeCamera.");
             }
         }
     }

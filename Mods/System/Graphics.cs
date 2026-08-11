@@ -54,7 +54,7 @@ namespace DescendersModMenu.Mods
                         System.StringComparison.Ordinal))
                     { _ppb = all[i]; break; }
                 }
-                if ((object)_ppb == null) { MelonLogger.Warning("[Graphics] PostProcessingBehaviour not found."); return false; }
+                if ((object)_ppb == null) { ModLog.Warn("[Graphics] PostProcessingBehaviour not found."); return false; }
                 ModLog.Debug("[Graphics] Found PostProcessingBehaviour.");
             }
 
@@ -67,7 +67,7 @@ namespace DescendersModMenu.Mods
                     _profile = f.GetValue(_ppb);
 
                 if ((object)_profile == null)
-                { MelonLogger.Warning("[Graphics] PostProcessingProfile (RzjbfkQ) not found."); return false; }
+                { ModLog.Warn("[Graphics] PostProcessingProfile (RzjbfkQ) not found."); return false; }
 
                 // All models are public fields on the profile
                 System.Type pt = _profile.GetType();
@@ -77,7 +77,7 @@ namespace DescendersModMenu.Mods
                 _dofField = pt.GetField("depthOfField", BindingFlags.Public | BindingFlags.Instance);
                 _cabField = pt.GetField("chromaticAberration", BindingFlags.Public | BindingFlags.Instance);
 
-                MelonLogger.Msg("[Graphics] Profile found. Bloom=" + ((object)_bloomField != null)
+                ModLog.Debug("[Graphics] Profile found. Bloom=" + ((object)_bloomField != null)
                     + " AO=" + ((object)_aoField != null)
                     + " Vig=" + ((object)_vigField != null)
                     + " DOF=" + ((object)_dofField != null)
@@ -109,7 +109,7 @@ namespace DescendersModMenu.Mods
                 if ((object)_enabledProp != null)
                     _enabledProp.SetValue(model, enabled, null);
                 else
-                    MelonLogger.Warning("[Graphics] 'enabled' property not found on model.");
+                    ModLog.Warn("[Graphics] 'enabled' property not found on model.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[Graphics] SetEnabled: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Graphics"); }
         }

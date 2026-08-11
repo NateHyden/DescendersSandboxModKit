@@ -52,7 +52,7 @@ namespace DescendersModMenu.Mods
         public static void ApplySkinColor()
         {
             PlayerCustomization pc = GetLocalCustomization();
-            if ((object)pc == null) { MelonLogger.Warning("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
+            if ((object)pc == null) { ModLog.Warn("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
             try { pc.SetSkinColor(SkinColorLevel); }
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetSkinColor: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
@@ -63,7 +63,7 @@ namespace DescendersModMenu.Mods
         public static void ApplyHairColor()
         {
             PlayerCustomization pc = GetLocalCustomization();
-            if ((object)pc == null) { MelonLogger.Warning("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
+            if ((object)pc == null) { ModLog.Warn("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
             try { pc.SetHairColor(HairColorLevel); }
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetHairColor: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
@@ -74,7 +74,7 @@ namespace DescendersModMenu.Mods
         public static void ApplyHairType()
         {
             PlayerCustomization pc = GetLocalCustomization();
-            if ((object)pc == null) { MelonLogger.Warning("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
+            if ((object)pc == null) { ModLog.Warn("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
             try { pc.SetHairType(HairTypeLevel, false); }
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetHairType: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
@@ -85,7 +85,7 @@ namespace DescendersModMenu.Mods
         public static void ApplyBeardColor()
         {
             PlayerCustomization pc = GetLocalCustomization();
-            if ((object)pc == null) { MelonLogger.Warning("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
+            if ((object)pc == null) { ModLog.Warn("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
             try { pc.SetBeardColor(BeardColorLevel); }
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetBeardColor: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
@@ -96,7 +96,7 @@ namespace DescendersModMenu.Mods
         public static void ApplyBeardType()
         {
             PlayerCustomization pc = GetLocalCustomization();
-            if ((object)pc == null) { MelonLogger.Warning("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
+            if ((object)pc == null) { ModLog.Warn("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
             try { pc.SetBeardType(BeardTypeLevel, false); }
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetBeardType: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
@@ -107,7 +107,7 @@ namespace DescendersModMenu.Mods
         public static void ApplyBodyType()
         {
             PlayerCustomization pc = GetLocalCustomization();
-            if ((object)pc == null) { MelonLogger.Warning("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
+            if ((object)pc == null) { ModLog.Warn("[RiderCustomiser] Player_Human/PlayerCustomization not found."); return; }
             try { pc.SetBodyType(BodyTypeLevel); }
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetBodyType: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }

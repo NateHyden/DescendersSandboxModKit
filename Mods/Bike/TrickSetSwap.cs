@@ -118,7 +118,7 @@ namespace DescendersModMenu.Mods
                         BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if ((object)_getPlayerImpactMethod == null)
                     {
-                        MelonLogger.Warning("[TrickSetSwap] PlayerManager.GetPlayerImpact not found");
+                        ModLog.Warn("[TrickSetSwap] PlayerManager.GetPlayerImpact not found");
                         return null;
                     }
                 }
@@ -140,7 +140,7 @@ namespace DescendersModMenu.Mods
                 PlayerInfoImpact pii = GetPlayerImpact();
                 if ((object)pii == null)
                 {
-                    MelonLogger.Warning("[TrickSetSwap] PlayerInfoImpact not available (PlayerManager.GetPlayerImpact returned null)");
+                    ModLog.Warn("[TrickSetSwap] PlayerInfoImpact not available (PlayerManager.GetPlayerImpact returned null)");
                     return null;
                 }
 
@@ -161,7 +161,7 @@ namespace DescendersModMenu.Mods
                     }
                     if ((object)_bikeTypeField == null)
                     {
-                        MelonLogger.Warning("[TrickSetSwap] BikeType field not found on PlayerInfoImpact");
+                        ModLog.Warn("[TrickSetSwap] BikeType field not found on PlayerInfoImpact");
                         return null;
                     }
                 }
@@ -185,14 +185,14 @@ namespace DescendersModMenu.Mods
             if (_availableBikes == null) RefreshAvailableBikes();
             if (_availableBikes == null || _availableBikes.Count == 0)
             {
-                MelonLogger.Warning("[TrickSetSwap] No bike types with trick sets found — cannot enable");
+                ModLog.Warn("[TrickSetSwap] No bike types with trick sets found — cannot enable");
                 return;
             }
 
             BikeType target = GetCurrentPlayerBikeType();
             if ((object)target == null)
             {
-                MelonLogger.Warning("[TrickSetSwap] Could not read current player bike type — cannot enable");
+                ModLog.Warn("[TrickSetSwap] Could not read current player bike type — cannot enable");
                 return;
             }
 

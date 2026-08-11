@@ -288,7 +288,7 @@ namespace DescendersModMenu.UI
             try
             {
                 StateMachine sm = GameObject.FindObjectOfType<StateMachine>();
-                if ((object)sm == null) { MelonLogger.Warning("[Page11] StateMachine not found."); return; }
+                if ((object)sm == null) { ModLog.Warn("[Page11] StateMachine not found."); return; }
 
                 // Capture current state before going to shed
                 var curStateProp = typeof(StateMachine).GetProperty("\u005EtrLeIp",
@@ -301,7 +301,7 @@ namespace DescendersModMenu.UI
                 if ((object)pushState == null) return;
                 var vtType = pushState.GetParameters()[0].ParameterType;
                 pushState.Invoke(sm, new object[] { System.Enum.Parse(vtType, "Customization") });
-                MelonLogger.Msg("[Page11] Going to shed. Was in: " + _stateBeforeShed);
+                ModLog.Debug("[Page11] Going to shed. Was in: " + _stateBeforeShed);
             }
             catch (System.Exception ex) { MelonLogger.Error("[Page11] GoToShed: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "OutfitPage"); }
         }
@@ -311,7 +311,7 @@ namespace DescendersModMenu.UI
             try
             {
                 StateMachine sm = GameObject.FindObjectOfType<StateMachine>();
-                if ((object)sm == null) { MelonLogger.Warning("[Page11] StateMachine not found."); return; }
+                if ((object)sm == null) { ModLog.Warn("[Page11] StateMachine not found."); return; }
 
                 if (_stateBeforeShed != null)
                 {
@@ -321,7 +321,7 @@ namespace DescendersModMenu.UI
                     if ((object)popBackTo != null)
                     {
                         popBackTo.Invoke(sm, new object[] { _stateBeforeShed });
-                        MelonLogger.Msg("[Page11] Returning to: " + _stateBeforeShed);
+                        ModLog.Debug("[Page11] Returning to: " + _stateBeforeShed);
                         _stateBeforeShed = null;
                         return;
                     }
@@ -332,7 +332,7 @@ namespace DescendersModMenu.UI
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
                     null, new System.Type[0], null);
                 if ((object)popState != null) popState.Invoke(sm, null);
-                MelonLogger.Msg("[Page11] PopState fallback.");
+                ModLog.Debug("[Page11] PopState fallback.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[Page11] LeaveShed: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "OutfitPage"); }
         }

@@ -112,7 +112,7 @@ namespace DescendersModMenu.UI
         {
             if (index < 0 || index >= Presets.Length)
             {
-                MelonLogger.Warning("[ColorSchemeManager] Apply: index " + index + " out of range, using 0.");
+                ModLog.Warn("[ColorSchemeManager] Apply: index " + index + " out of range, using 0.");
                 index = 0;
             }
             CurrentIndex = index;

@@ -137,7 +137,7 @@ namespace DescendersModMenu.Mods
                 MethodInfo fixedUpdate = typeof(Vehicle).GetMethod("FixedUpdate",
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 if ((object)fixedUpdate == null)
-                { MelonLogger.Warning("[GameMod] NoSpeedWobbles: Vehicle.FixedUpdate not found."); return; }
+                { ModLog.Warn("[GameMod] NoSpeedWobbles: Vehicle.FixedUpdate not found."); return; }
                 MethodInfo postfix = typeof(NoSpeedWobbles_Patch).GetMethod("Postfix",
                     BindingFlags.Public | BindingFlags.Static);
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(postfix));
@@ -155,7 +155,7 @@ namespace DescendersModMenu.Mods
                 MethodInfo camFixedUpdate = bikeCamType.GetMethod("FixedUpdate",
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 if ((object)camFixedUpdate == null)
-                { MelonLogger.Warning("[GameMod] NoSpeedWobbles: BikeCamera.FixedUpdate not found."); return; }
+                { ModLog.Warn("[GameMod] NoSpeedWobbles: BikeCamera.FixedUpdate not found."); return; }
                 MethodInfo camPostfix = typeof(NoSpeedWobbles_CamPatch).GetMethod("Postfix",
                     BindingFlags.Public | BindingFlags.Static);
                 harmony.Patch(camFixedUpdate, postfix: new HarmonyMethod(camPostfix));
@@ -169,23 +169,23 @@ namespace DescendersModMenu.Mods
             try
             {
                 GameData gameData = UnityEngine.Object.FindObjectOfType<GameData>();
-                if ((object)gameData == null) { MelonLogger.Warning("[GameMod] GameData not found."); return; }
+                if ((object)gameData == null) { ModLog.Warn("[GameMod] GameData not found."); return; }
                 FieldInfo modArrayField = gameData.GetType().GetField("\u0081jU\u0080h\u0084c",
                     BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                if ((object)modArrayField == null) { MelonLogger.Warning("[GameMod] Mod array field not found."); return; }
+                if ((object)modArrayField == null) { ModLog.Warn("[GameMod] Mod array field not found."); return; }
                 GameModifier[] mods = modArrayField.GetValue(gameData) as GameModifier[];
-                if ((object)mods == null) { MelonLogger.Warning("[GameMod] Mod array is null."); return; }
+                if ((object)mods == null) { ModLog.Warn("[GameMod] Mod array is null."); return; }
                 GameModifier target = null;
                 for (int i = 0; i < mods.Length; i++)
                     if ((object)mods[i] != null && mods[i].name == modName)
                     { target = mods[i]; break; }
-                if ((object)target == null) { MelonLogger.Warning("[GameMod] Modifier not found: " + modName); return; }
+                if ((object)target == null) { ModLog.Warn("[GameMod] Modifier not found: " + modName); return; }
                 float value = modName == "OFFROADFRICTION" ? IceMult(level) : Delta(level);
                 target.modifiers[0].percentageValue = value;
                 PlayerManager pm = UnityEngine.Object.FindObjectOfType<PlayerManager>();
-                if ((object)pm == null) { MelonLogger.Warning("[GameMod] PlayerManager not found."); return; }
+                if ((object)pm == null) { ModLog.Warn("[GameMod] PlayerManager not found."); return; }
                 PlayerInfoImpact pi = pm.GetPlayerImpact();
-                if ((object)pi == null) { MelonLogger.Warning("[GameMod] PlayerInfoImpact not found."); return; }
+                if ((object)pi == null) { ModLog.Warn("[GameMod] PlayerInfoImpact not found."); return; }
                 pi.AddGameModifier(target);
                 ModLog.Debug("[GameMod] " + modName + " level " + level + " (" + value + ")");
             }
@@ -203,12 +203,12 @@ namespace DescendersModMenu.Mods
             try
             {
                 GameData gameData = UnityEngine.Object.FindObjectOfType<GameData>();
-                if ((object)gameData == null) { MelonLogger.Warning("[GameMod] DumpAllModifiers: GameData not found."); return; }
+                if ((object)gameData == null) { ModLog.Warn("[GameMod] DumpAllModifiers: GameData not found."); return; }
                 FieldInfo modArrayField = gameData.GetType().GetField("\u0081jU\u0080h\u0084c",
                     BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                if ((object)modArrayField == null) { MelonLogger.Warning("[GameMod] DumpAllModifiers: mod array field not found."); return; }
+                if ((object)modArrayField == null) { ModLog.Warn("[GameMod] DumpAllModifiers: mod array field not found."); return; }
                 GameModifier[] mods = modArrayField.GetValue(gameData) as GameModifier[];
-                if ((object)mods == null) { MelonLogger.Warning("[GameMod] DumpAllModifiers: mod array is null."); return; }
+                if ((object)mods == null) { ModLog.Warn("[GameMod] DumpAllModifiers: mod array is null."); return; }
 
                 ModLog.Debug("[GameMod] === ALL GAME MODIFIERS (" + mods.Length + ") ===");
                 for (int i = 0; i < mods.Length; i++)

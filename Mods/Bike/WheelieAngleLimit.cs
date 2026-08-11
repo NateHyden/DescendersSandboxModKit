@@ -31,7 +31,7 @@ namespace DescendersModMenu.Mods
                 MethodInfo target = typeof(Vehicle).GetMethod("FixedUpdate",
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 if ((object)target == null)
-                { MelonLogger.Warning("[WheelieAngleLimit] Vehicle.FixedUpdate not found."); return; }
+                { ModLog.Warn("[WheelieAngleLimit] Vehicle.FixedUpdate not found."); return; }
                 MethodInfo postfix = typeof(WheelieAngleLimit_Patch).GetMethod("Postfix",
                     BindingFlags.Public | BindingFlags.Static);
                 harmony.Patch(target, postfix: new HarmonyMethod(postfix));
@@ -151,7 +151,7 @@ namespace DescendersModMenu.Mods
                 { _wheelGroundedProp = wProps[i]; break; }
             }
 
-            MelonLogger.Msg("[WheelieAngleLimit] RB=" + ((object)_rbProp != null ? _rbProp.Name : "NULL")
+            ModLog.Debug("[WheelieAngleLimit] RB=" + ((object)_rbProp != null ? _rbProp.Name : "NULL")
                 + " Grounded=" + ((object)_wheelGroundedProp != null ? _wheelGroundedProp.Name : "NULL"));
 
             // Front wheel = higher local z
@@ -162,12 +162,12 @@ namespace DescendersModMenu.Mods
                 { _frontWheel = wheels[0]; _rearWheel = wheels[1]; }
                 else
                 { _frontWheel = wheels[1]; _rearWheel = wheels[0]; }
-                MelonLogger.Msg("[WheelieAngleLimit] Front=" + _frontWheel.gameObject.name
+                ModLog.Debug("[WheelieAngleLimit] Front=" + _frontWheel.gameObject.name
                     + " Rear=" + _rearWheel.gameObject.name);
             }
             else
             {
-                MelonLogger.Warning("[WheelieAngleLimit] Wheel count=" + (wheels != null ? wheels.Length : 0));
+                ModLog.Warn("[WheelieAngleLimit] Wheel count=" + (wheels != null ? wheels.Length : 0));
             }
         }
     }

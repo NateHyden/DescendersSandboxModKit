@@ -22,15 +22,15 @@ namespace DescendersModMenu.Mods
             try
             {
                 AudioManager mgr = Object.FindObjectOfType<AudioManager>();
-                if ((object)mgr == null) { MelonLogger.Warning("[Music] AudioManager not found."); return; }
+                if ((object)mgr == null) { ModLog.Warn("[Music] AudioManager not found."); return; }
 
                 System.Reflection.MethodInfo setMethod = mgr.GetType().GetMethod(
                     "SetCategoryVolume",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                if ((object)setMethod == null) { MelonLogger.Warning("[Music] SetCategoryVolume not found."); return; }
+                if ((object)setMethod == null) { ModLog.Warn("[Music] SetCategoryVolume not found."); return; }
 
                 System.Reflection.ParameterInfo[] parms = setMethod.GetParameters();
-                if (parms.Length < 2) { MelonLogger.Warning("[Music] Unexpected param count: " + parms.Length); return; }
+                if (parms.Length < 2) { ModLog.Warn("[Music] Unexpected param count: " + parms.Length); return; }
 
                 System.Type enumType = parms[0].ParameterType;
                 object musicEnum = System.Enum.ToObject(enumType, 1);

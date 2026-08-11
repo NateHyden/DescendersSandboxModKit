@@ -44,7 +44,7 @@ namespace DescendersModMenu.Mods
 
                 if ((object)fixedUpdate == null)
                 {
-                    MelonLogger.Warning("[AutoBalance] Vehicle.FixedUpdate not found.");
+                    ModLog.Warn("[AutoBalance] Vehicle.FixedUpdate not found.");
                     DiagnosticsManager.Report("AutoBalance", false, "Vehicle.FixedUpdate not found");
                     return;
                 }

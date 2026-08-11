@@ -52,9 +52,8 @@ namespace DescendersModMenu
                 if (string.IsNullOrEmpty(_prefWebhookUrl.Value) && !string.IsNullOrEmpty(builtIn))
                 {
                     _prefWebhookUrl.Value = builtIn;
+                    MelonPreferences.Save();
                 }
-
-                MelonPreferences.Save();
             }
             catch { }
         }
@@ -155,6 +154,7 @@ namespace DescendersModMenu
         // sites from the telemetry sweep, not just this one, since they
         // all funnel through this shared method.
         private static readonly HashSet<string> _reportedErrors = new HashSet<string>();
+        private static readonly HashSet<string> _reportedWarnings = new HashSet<string>();
 
         public static void ReportErrorAsync(Exception ex, string activeMod)
         {
@@ -183,6 +183,35 @@ namespace DescendersModMenu
                 string playerName = Sanitise(rawName, 32);
 
                 Thread t = new Thread(() => DoPostError(exType, exMsg, stack, mod, platform, mlVer, mods, playerName));
+                t.IsBackground = true;
+                t.Start();
+            }
+            catch { }
+        }
+
+        public static void ReportWarningAsync(string message, string activeMod)
+        {
+            EnsurePrefs();
+            if (!Enabled) return;
+            if (string.IsNullOrEmpty(WebhookUrl)) return;
+            if (string.IsNullOrEmpty(message)) return;
+
+            string dedupKey = (activeMod ?? "unknown") + "|" + message;
+            if (_reportedWarnings.Contains(dedupKey)) return;
+            _reportedWarnings.Add(dedupKey);
+
+            try
+            {
+                string msg = Sanitise(message, 400);
+                string mod = Sanitise(activeMod ?? "unknown", 40);
+                string platform = GetPlatform();
+                string mlVer = GetMelonLoaderVersion();
+                string mods = Sanitise(GetLoadedMods(), 350);
+                string rawName = GetPhotonLocalPlayerName();
+                if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
+                string playerName = Sanitise(rawName, 32);
+
+                Thread t = new Thread(() => DoPostWarning(msg, mod, platform, mlVer, mods, playerName));
                 t.IsBackground = true;
                 t.Start();
             }
@@ -364,6 +393,38 @@ namespace DescendersModMenu
                             "{\"name\":\"MelonLoader\",\"value\":\"" + Sanitise(mlVer, 16) + "\",\"inline\":true}," +
                             "{\"name\":\"Loaded Mods\",\"value\":\"" + mods + "\",\"inline\":false}," +
                             "{\"name\":\"Stack\",\"value\":\"" + stack + "\",\"inline\":false}" +
+                        "]" +
+                    "}]}";
+
+                PostJson(json);
+            }
+            catch { }
+        }
+
+        private static void DoPostWarning(string message, string mod,
+            string platform, string mlVer, string mods, string playerName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(playerName) || string.Equals(playerName, "unknown", StringComparison.Ordinal))
+                {
+                    WaitForSteamReady();
+                    string rawName = GetPhotonLocalPlayerName();
+                    if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
+                    playerName = Sanitise(rawName, 32);
+                }
+
+                string json =
+                    "{\"embeds\":[{" +
+                        "\"color\":16744448," +
+                        "\"title\":\"Descenders Sandbox — warning\"," +
+                        "\"fields\":[" +
+                            "{\"name\":\"Message\",\"value\":\"" + message + "\",\"inline\":false}," +
+                            "{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}," +
+                            "{\"name\":\"Active Mod\",\"value\":\"" + mod + "\",\"inline\":true}," +
+                            "{\"name\":\"Platform\",\"value\":\"" + Sanitise(platform, 16) + "\",\"inline\":true}," +
+                            "{\"name\":\"MelonLoader\",\"value\":\"" + Sanitise(mlVer, 16) + "\",\"inline\":true}," +
+                            "{\"name\":\"Loaded Mods\",\"value\":\"" + mods + "\",\"inline\":false}" +
                         "]" +
                     "}]}";
 

@@ -196,7 +196,7 @@ namespace DescendersModMenu.Mods
                         if (def > 0f) _wheelRadiusField.SetValue(wheels[i], def * scale);
                     }
                 }
-                MelonLogger.Msg("[WheelSize] Level=" + Level + " scale=" + scale);
+                ModLog.Debug("[WheelSize] Level=" + Level + " scale=" + scale);
             }
             catch (System.Exception ex) { MelonLogger.Error("[WheelSize] ApplyScaleDirectly: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WheelSize"); }
         }

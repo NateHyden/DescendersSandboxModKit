@@ -47,7 +47,7 @@ namespace DescendersModMenu.Mods
                     if ((object)_travelField == null)
                         _travelField = wheels[i].GetType().GetField("xL\u007BgJGT",
                             BindingFlags.Public | BindingFlags.Instance);
-                    if ((object)_travelField == null) { MelonLogger.Warning("[Suspension] Travel field not found."); return; }
+                    if ((object)_travelField == null) { ModLog.Warn("[Suspension] Travel field not found."); return; }
                     if (_travelDefault < 0f)
                         _travelDefault = (float)_travelField.GetValue(wheels[i]);
                     _travelField.SetValue(wheels[i], _travelDefault * Mult(TravelLevel));
@@ -79,7 +79,7 @@ namespace DescendersModMenu.Mods
                     if ((object)_stiffField == null)
                         _stiffField = wheels[i].GetType().GetField("p\u007EmkyX\u007B",
                             BindingFlags.Public | BindingFlags.Instance);
-                    if ((object)_stiffField == null) { MelonLogger.Warning("[Suspension] Stiffness field not found."); return; }
+                    if ((object)_stiffField == null) { ModLog.Warn("[Suspension] Stiffness field not found."); return; }
                     if (_stiffDefault < 0f)
                         _stiffDefault = (float)_stiffField.GetValue(wheels[i]);
                     _stiffField.SetValue(wheels[i], _stiffDefault * Mult(StiffnessLevel));
@@ -111,7 +111,7 @@ namespace DescendersModMenu.Mods
                     if ((object)_dampField == null)
                         _dampField = wheels[i].GetType().GetField("YrKDSPL",
                             BindingFlags.Public | BindingFlags.Instance);
-                    if ((object)_dampField == null) { MelonLogger.Warning("[Suspension] Damping field not found."); return; }
+                    if ((object)_dampField == null) { ModLog.Warn("[Suspension] Damping field not found."); return; }
                     if (_dampDefault < 0f)
                         _dampDefault = (float)_dampField.GetValue(wheels[i]);
                     _dampField.SetValue(wheels[i], _dampDefault * Mult(DampingLevel));
@@ -124,9 +124,9 @@ namespace DescendersModMenu.Mods
         private static Wheel[] GetWheels()
         {
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) { MelonLogger.Warning("[Suspension] Player_Human not found."); return null; }
+            if ((object)player == null) { ModLog.Warn("[Suspension] Player_Human not found."); return null; }
             Wheel[] wheels = player.GetComponentsInChildren<Wheel>();
-            if (wheels == null || wheels.Length == 0) { MelonLogger.Warning("[Suspension] No Wheel components found."); return null; }
+            if (wheels == null || wheels.Length == 0) { ModLog.Warn("[Suspension] No Wheel components found."); return null; }
             return wheels;
         }
     }

@@ -191,6 +191,7 @@
     <Compile Include="Mods\System\CompassAlwaysOn.cs" />
     <Compile Include="Mods\System\PerkMenu.cs" />
     <Compile Include="Mods\System\PlayerCache.cs" />
+    <Compile Include="Mods\System\AllModsSwitch.cs" />
     <Compile Include="Mods\System\ModLog.cs" />
     <Compile Include="Mods\System\SlowMotion.cs" />
     <Compile Include="Mods\System\SteamPlayerCount.cs" />
@@ -217,6 +218,7 @@
     <Compile Include="Mods\World\Fog.cs" />
     <Compile Include="Mods\World\Music.cs" />
     <Compile Include="Mods\World\Trees.cs" />
+    <Compile Include="Mods\World\ObjectPlacer.cs" />
     <Compile Include="Mods\World\TurboWind.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\KeyBindManager.cs" />
@@ -228,6 +230,7 @@
     <Compile Include="UI\Core\Uitheme.cs" />
     <Compile Include="UI\Pages\OtherPage.cs" />
     <Compile Include="UI\Pages\XboxWorkshopPage.cs" />
+    <Compile Include="UI\Pages\ObjectPlacerPage.cs" />
     <Compile Include="UI\HUDs\ChatHUD.cs" />
     <Compile Include="UI\HUDs\GhostHUD.cs" />
     <Compile Include="UI\Pages\AvalanchePage.cs" />

@@ -51,12 +51,12 @@ namespace DescendersModMenu.Mods
                 _spawnTimer = SpawnInterval; // spawn on first tick
                 _modeTimer = 0f;
                 SurvivalTime = 0f;
-                MelonLogger.Msg("[Avalanche] ON");
+                ModLog.Debug("[Avalanche] ON");
             }
             else
             {
                 ClearAll();
-                MelonLogger.Msg("[Avalanche] OFF");
+                ModLog.Debug("[Avalanche] OFF");
             }
         }
 
@@ -103,7 +103,7 @@ namespace DescendersModMenu.Mods
                     // Hit detection — slightly generous radius
                     if (InstantFail && dist < (HazardSize * 0.5f) + 1.5f)
                     {
-                        MelonLogger.Msg("[Avalanche] Hit! Bailing.");
+                        ModLog.Debug("[Avalanche] Hit! Bailing.");
                         TriggerBail(player);
                     }
                 }
@@ -114,7 +114,7 @@ namespace DescendersModMenu.Mods
 
                 if (tooOld || tooFar || stuck)
                 {
-                    MelonLogger.Msg("[Avalanche] Despawn: tooOld=" + tooOld
+                    ModLog.Debug("[Avalanche] Despawn: tooOld=" + tooOld
                         + " tooFar=" + tooFar + " stuck=" + stuck
                         + " age=" + h.Age.ToString("F1")
                         + " vel=" + ((object)h.Rb != null ? h.Rb.velocity.magnitude.ToString("F1") : "?")
@@ -172,7 +172,7 @@ namespace DescendersModMenu.Mods
                 if ((object)_hazards[i].Go == null) continue;
                 if (Vector3.Distance(_hazards[i].Go.transform.position, playerPos) < MinSpawnDist)
                 {
-                    MelonLogger.Msg("[Avalanche] Skipping spawn — hazard still close.");
+                    ModLog.Debug("[Avalanche] Skipping spawn — hazard still close.");
                     return;
                 }
             }
@@ -230,7 +230,7 @@ namespace DescendersModMenu.Mods
             rb.AddForce(toward * ForwardImpulse, ForceMode.Impulse);
 
             _hazards.Add(new HazardEntry { Go = hazard, Rb = rb, Age = 0f });
-            MelonLogger.Msg("[Avalanche] Spawned. Active=" + _hazards.Count
+            ModLog.Debug("[Avalanche] Spawned. Active=" + _hazards.Count
                 + " pos=" + spawnPos + " terrainY=" + terrainY);
         }
 
@@ -255,14 +255,14 @@ namespace DescendersModMenu.Mods
             Vector3 castFrom = new Vector3(worldPos.x, worldPos.y + 500f, worldPos.z);
             if (Physics.Raycast(castFrom, Vector3.down, out hit, 1000f))
             {
-                MelonLogger.Msg("[Avalanche] Raycast terrainY=" + hit.point.y);
+                ModLog.Debug("[Avalanche] Raycast terrainY=" + hit.point.y);
                 return hit.point.y;
             }
 
             // Last resort — use player's current Y so ball spawns above them
             GameObject player = GameObject.Find("Player_Human");
             float playerY = (object)player != null ? player.transform.position.y : 0f;
-            MelonLogger.Msg("[Avalanche] Using player Y as terrain: " + playerY);
+            ModLog.Debug("[Avalanche] Using player Y as terrain: " + playerY);
             return playerY;
         }
 
@@ -279,7 +279,7 @@ namespace DescendersModMenu.Mods
                     setVel.Invoke(v, new object[] { Vector3.up * 15f });
             }
             catch (System.Exception ex)
-            { MelonLogger.Warning("[Avalanche] TriggerBail: " + ex.Message); }
+            { ModLog.Warn("[Avalanche] TriggerBail: " + ex.Message); }
         }
 
         // ── Clear ─────────────────────────────────────────────────────

@@ -76,7 +76,7 @@ namespace DescendersModMenu.Mods
                 _impulseTimer = 0f;
                 ApplyCameraShake(DefaultShake);
             }
-            MelonLogger.Msg("[EarthquakeMode] " + (Enabled ? "ON" : "OFF"));
+            ModLog.Debug("[EarthquakeMode] " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void SetFrequencyMode(int mode) { FrequencyMode = mode; }
@@ -131,7 +131,7 @@ namespace DescendersModMenu.Mods
                     else
                         _intervalTimer = TimedInterval;
                     ApplyCameraShake(DefaultShake);
-                    MelonLogger.Msg("[EarthquakeMode] Event ended. Next in "
+                    ModLog.Debug("[EarthquakeMode] Event ended. Next in "
                         + _intervalTimer.ToString("F1") + "s");
                 }
             }
@@ -143,7 +143,7 @@ namespace DescendersModMenu.Mods
                 {
                     _quakeRemaining = EventDuration;
                     _impulseTimer = 0f;
-                    MelonLogger.Msg("[EarthquakeMode] Event started! dur="
+                    ModLog.Debug("[EarthquakeMode] Event started! dur="
                         + EventDuration.ToString("F1") + "s force="
                         + ImpulseForce.ToString("F1"));
                 }

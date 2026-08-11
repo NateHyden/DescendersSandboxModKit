@@ -133,7 +133,7 @@ namespace DescendersModMenu.Mods
         public static void OnCheckpointDetected()
         {
             CheckpointCount++;
-            MelonLogger.Msg("[SessionTrackers] Checkpoint #" + CheckpointCount);
+            ModLog.Debug("[SessionTrackers] Checkpoint #" + CheckpointCount);
         }
 
         // Called by Harmony postfix on Cyclist.Bail()
@@ -145,7 +145,7 @@ namespace DescendersModMenu.Mods
             if (now - _lastBailTime < BailCooldown) return;
             _lastBailTime = now;
             BailCount++;
-            MelonLogger.Msg("[SessionTrackers] Bail #" + BailCount);
+            ModLog.Debug("[SessionTrackers] Bail #" + BailCount);
 
             // Capture impact speed for BikeDamage before respawn resets velocity
             float impactSpeed = 0f;
@@ -340,7 +340,7 @@ namespace DescendersModMenu.Mods
 
                 if ((object)bailMethod == null)
                 {
-                    MelonLogger.Warning("[SessionTrackers] Cyclist.Bail() not found.");
+                    ModLog.Warn("[SessionTrackers] Cyclist.Bail() not found.");
                     return;
                 }
 

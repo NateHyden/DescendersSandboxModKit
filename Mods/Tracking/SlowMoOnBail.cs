@@ -33,7 +33,7 @@ namespace DescendersModMenu.Mods
             _ramping = false;
             _endTime = Time.realtimeSinceStartup + Duration;
             SetScale(SlowScale);
-            MelonLogger.Msg("[SlowMoOnBail] Bail detected — slow-mo for " + Duration + "s");
+            ModLog.Debug("[SlowMoOnBail] Bail detected — slow-mo for " + Duration + "s");
         }
 
         // Called when the player resets/respawns — begin smooth ramp to normal
@@ -41,7 +41,7 @@ namespace DescendersModMenu.Mods
         {
             if (!_active && !_ramping) return;
             StartRamp();
-            MelonLogger.Msg("[SlowMoOnBail] Respawn — ramping to normal over " + RampDuration + "s");
+            ModLog.Debug("[SlowMoOnBail] Respawn — ramping to normal over " + RampDuration + "s");
         }
 
         // Called every frame from OnUpdate
@@ -60,7 +60,7 @@ namespace DescendersModMenu.Mods
                 {
                     _ramping = false;
                     SetScale(1f);
-                    MelonLogger.Msg("[SlowMoOnBail] Restored normal speed.");
+                    ModLog.Debug("[SlowMoOnBail] Restored normal speed.");
                 }
                 return;
             }
@@ -70,7 +70,7 @@ namespace DescendersModMenu.Mods
             if (Time.realtimeSinceStartup >= _endTime)
             {
                 StartRamp();
-                MelonLogger.Msg("[SlowMoOnBail] Timer expired — ramping to normal over " + RampDuration + "s");
+                ModLog.Debug("[SlowMoOnBail] Timer expired — ramping to normal over " + RampDuration + "s");
             }
         }
 

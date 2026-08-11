@@ -28,12 +28,12 @@ namespace DescendersModMenu.Mods
                 _snapshotIndex = BikeSwitcher.CurrentBikeIndex;
                 _hasSnapshot = true;
                 ScheduleNext();
-                MelonLogger.Msg("[RandomBikeSwitch] ON — snapshotted bike index " + _snapshotIndex + ".");
+                ModLog.Debug("[RandomBikeSwitch] ON — snapshotted bike index " + _snapshotIndex + ".");
             }
             else
             {
                 RestoreSnapshot();
-                MelonLogger.Msg("[RandomBikeSwitch] OFF — restored original bike.");
+                ModLog.Debug("[RandomBikeSwitch] OFF — restored original bike.");
             }
         }
 

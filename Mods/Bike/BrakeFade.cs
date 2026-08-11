@@ -182,7 +182,7 @@ namespace DescendersModMenu.Mods
                     "FixedUpdate",
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 if ((object)fixedUpdate == null)
-                { MelonLogger.Warning("[BrakeFade] VehicleController.FixedUpdate not found."); return; }
+                { ModLog.Warn("[BrakeFade] VehicleController.FixedUpdate not found."); return; }
 
                 MethodInfo postfix = typeof(BrakeFade_Patch).GetMethod(
                     "Postfix", BindingFlags.Public | BindingFlags.Static);
@@ -276,7 +276,7 @@ namespace DescendersModMenu.Mods
                 if (_groundCheckLogCount < 4)
                 {
                     _groundCheckLogCount++;
-                    MelonLogger.Msg("[BrakeFade] IsGrounded: front=" + frontComp.ToString("F3")
+                    ModLog.Debug("[BrakeFade] IsGrounded: front=" + frontComp.ToString("F3")
                         + " rear=" + rearComp.ToString("F3") + " grounded=" + grounded);
                 }
                 return grounded;
@@ -296,9 +296,9 @@ namespace DescendersModMenu.Mods
 
                 _rigidbody = player.GetComponent<Rigidbody>();
                 if ((object)_rigidbody == null)
-                    MelonLogger.Warning("[BrakeFade] Rigidbody not found on Player_Human.");
+                    ModLog.Warn("[BrakeFade] Rigidbody not found on Player_Human.");
                 else
-                    MelonLogger.Msg("[BrakeFade] Rigidbody cached OK.");
+                    ModLog.Debug("[BrakeFade] Rigidbody cached OK.");
 
                 // Cache wheels for suspension-based ground detection
                 Transform ft = player.transform.Find("wheel_front");
@@ -314,7 +314,7 @@ namespace DescendersModMenu.Mods
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 }
 
-                MelonLogger.Msg("[BrakeFade] Wheels: front=" + ((object)_frontWheel != null)
+                ModLog.Debug("[BrakeFade] Wheels: front=" + ((object)_frontWheel != null)
                     + " rear=" + ((object)_rearWheel != null)
                     + " suspField=" + ((object)_suspField != null));
             }
@@ -508,7 +508,7 @@ namespace DescendersModMenu.Mods
                     }
                     if ((object)_vehicleField == null)
                     {
-                        MelonLogger.Warning("[BrakeFade] Vehicle field not found on VehicleController.");
+                        ModLog.Warn("[BrakeFade] Vehicle field not found on VehicleController.");
                         return;
                     }
                 }

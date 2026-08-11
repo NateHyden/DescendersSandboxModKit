@@ -25,7 +25,7 @@ namespace DescendersModMenu.Mods
                     BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if ((object)fixedUpdate == null)
-                { MelonLogger.Warning("[CutBrakes] VehicleController.FixedUpdate not found."); return; }
+                { ModLog.Warn("[CutBrakes] VehicleController.FixedUpdate not found."); return; }
 
                 MethodInfo postfix = typeof(CutBrakes_Patch).GetMethod(
                     "Postfix", BindingFlags.Public | BindingFlags.Static);
@@ -66,7 +66,7 @@ namespace DescendersModMenu.Mods
                         { _vehicleField = fields[i]; break; }
                     }
                     if ((object)_vehicleField == null)
-                    { MelonLogger.Warning("[CutBrakes] Vehicle field not found."); return; }
+                    { ModLog.Warn("[CutBrakes] Vehicle field not found."); return; }
                 }
 
                 Vehicle vehicle = _vehicleField.GetValue(__instance) as Vehicle;

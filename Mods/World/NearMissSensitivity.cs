@@ -21,7 +21,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply(Enabled ? Distance : DefaultDistance);
-            MelonLogger.Msg("[NearMiss] " + (Enabled ? "ON level=" + Level + " dist=" + Distance : "OFF restored default"));
+            ModLog.Debug("[NearMiss] " + (Enabled ? "ON level=" + Level + " dist=" + Distance : "OFF restored default"));
         }
 
         public static void SetLevel(int v)
@@ -62,7 +62,7 @@ namespace DescendersModMenu.Mods
                 int count = 0;
                 VehicleTricks[] allVT = UnityEngine.Object.FindObjectsOfType<VehicleTricks>();
                 if (allVT == null || allVT.Length == 0)
-                { MelonLogger.Warning("[NearMiss] No VehicleTricks found."); return; }
+                { ModLog.Warn("[NearMiss] No VehicleTricks found."); return; }
                 for (int v = 0; v < allVT.Length; v++)
                 {
                     TrickInfo[] infos = allVT[v].ZduHweT;
@@ -75,7 +75,7 @@ namespace DescendersModMenu.Mods
                         count++;
                     }
                 }
-                MelonLogger.Msg("[NearMiss] nearMissDistance=" + distance + " applied to " + count + " instance(s).");
+                ModLog.Debug("[NearMiss] nearMissDistance=" + distance + " applied to " + count + " instance(s).");
             }
             catch (System.Exception ex) { MelonLogger.Error("[NearMiss] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "NearMissSensitivity"); }
         }

@@ -128,7 +128,7 @@ namespace DescendersModMenu.Mods
                 _playerRb = null;
                 _cyclist = null;
             }
-            MelonLogger.Msg("[PoliceChase] " + (Enabled ? "ON - counting down" : "OFF")
+            ModLog.Debug("[PoliceChase] " + (Enabled ? "ON - counting down" : "OFF")
                 + " difficulty=" + DifficultyName);
         }
 
@@ -185,7 +185,7 @@ namespace DescendersModMenu.Mods
             if (_hasLastPos && Vector3.Distance(pos, _lastPlayerPos) > 20f)
             {
                 ResetBallBehindPlayer();
-                MelonLogger.Msg("[PoliceChase] Respawn detected — pursuer repositioned.");
+                ModLog.Debug("[PoliceChase] Respawn detected — pursuer repositioned.");
             }
             _lastPlayerPos = pos;
             _hasLastPos = true;
@@ -199,7 +199,7 @@ namespace DescendersModMenu.Mods
                 if (CountdownRemaining <= 0f)
                 {
                     IsCountingDown = false;
-                    MelonLogger.Msg("[PoliceChase] GO!");
+                    ModLog.Debug("[PoliceChase] GO!");
                 }
                 return; // ball doesn't move during countdown
             }
@@ -265,7 +265,7 @@ namespace DescendersModMenu.Mods
                     {
                         IsBursting = true;
                         _burstTimer = Random.Range(2f, 4f);
-                        MelonLogger.Msg("[PoliceChase] Burst!");
+                        ModLog.Debug("[PoliceChase] Burst!");
                     }
                 }
             }
@@ -319,7 +319,7 @@ namespace DescendersModMenu.Mods
                     _ballRb.velocity = Vector3.zero;
                     Vector3 escapeDir = (toPlayer.normalized + Vector3.up * 1.8f).normalized;
                     _ballRb.AddForce(escapeDir * 35f, ForceMode.Impulse);
-                    MelonLogger.Msg("[PoliceChase] Escape jump fired.");
+                    ModLog.Debug("[PoliceChase] Escape jump fired.");
                 }
 
                 // At 3s: still stuck — respawn from above
@@ -332,7 +332,7 @@ namespace DescendersModMenu.Mods
                     _ball.transform.position = respawnPos;
                     _ballRb.velocity = Vector3.zero;
                     _ballRb.angularVelocity = Vector3.zero;
-                    MelonLogger.Msg("[PoliceChase] Genuinely stuck — respawned above player.");
+                    ModLog.Debug("[PoliceChase] Genuinely stuck — respawned above player.");
                 }
                 _lastDistToPlayer = dist;
             }
@@ -407,7 +407,7 @@ namespace DescendersModMenu.Mods
             if ((object)_playerRb != null)
                 _playerRb.velocity = Vector3.zero;
 
-            MelonLogger.Msg("[PoliceChase] CAUGHT! Total=" + CaughtCount);
+            ModLog.Debug("[PoliceChase] CAUGHT! Total=" + CaughtCount);
         }
 
         // ── Ball spawning ─────────────────────────────────────────────

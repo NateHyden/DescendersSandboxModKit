@@ -44,9 +44,9 @@ namespace DescendersModMenu.Mods
             try
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null) { MelonLogger.Warning("[BikeSize] Player_Human not found."); return; }
+                if ((object)player == null) { ModLog.Warn("[BikeSize] Player_Human not found."); return; }
                 Transform bm = player.transform.Find("BikeModel");
-                if ((object)bm == null) { MelonLogger.Warning("[BikeSize] BikeModel not found."); return; }
+                if ((object)bm == null) { ModLog.Warn("[BikeSize] BikeModel not found."); return; }
                 if (!_captured) { _defaultScale = bm.localScale; _captured = true; }
                 bm.localScale = new Vector3(scale, scale, scale);
                 CurrentScale = scale;

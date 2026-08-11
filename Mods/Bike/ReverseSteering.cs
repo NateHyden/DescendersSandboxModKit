@@ -26,7 +26,7 @@ namespace DescendersModMenu.Mods
 
                 if ((object)fixedUpdate == null)
                 {
-                    MelonLogger.Warning("[ReverseSteering] VehicleController.FixedUpdate not found.");
+                    ModLog.Warn("[ReverseSteering] VehicleController.FixedUpdate not found.");
                     return;
                 }
 
@@ -84,14 +84,14 @@ namespace DescendersModMenu.Mods
                             System.StringComparison.Ordinal))
                         {
                             _vehicleField = fields[i];
-                            MelonLogger.Msg("[ReverseSteering] Found Vehicle field: " + fields[i].Name);
+                            ModLog.Debug("[ReverseSteering] Found Vehicle field: " + fields[i].Name);
                             break;
                         }
                     }
 
                     if ((object)_vehicleField == null)
                     {
-                        MelonLogger.Warning("[ReverseSteering] Could not find Vehicle field on VehicleController.");
+                        ModLog.Warn("[ReverseSteering] Could not find Vehicle field on VehicleController.");
                         return;
                     }
                 }
@@ -111,9 +111,9 @@ namespace DescendersModMenu.Mods
                         BindingFlags.Public | BindingFlags.Instance);
 
                     if ((object)_steerProp != null)
-                        MelonLogger.Msg("[ReverseSteering] Found steer property: " + SteerPropName);
+                        ModLog.Debug("[ReverseSteering] Found steer property: " + SteerPropName);
                     else
-                        MelonLogger.Warning("[ReverseSteering] Could not find steer property: " + SteerPropName);
+                        ModLog.Warn("[ReverseSteering] Could not find steer property: " + SteerPropName);
                 }
 
                 // Cache lean property (c{v}lhG) - also a public property
@@ -124,9 +124,9 @@ namespace DescendersModMenu.Mods
                         BindingFlags.Public | BindingFlags.Instance);
 
                     if ((object)_leanProp != null)
-                        MelonLogger.Msg("[ReverseSteering] Found lean property: " + LeanPropName);
+                        ModLog.Debug("[ReverseSteering] Found lean property: " + LeanPropName);
                     else
-                        MelonLogger.Warning("[ReverseSteering] Could not find lean property: " + LeanPropName);
+                        ModLog.Warn("[ReverseSteering] Could not find lean property: " + LeanPropName);
                 }
 
                 // Negate steer input

@@ -56,7 +56,7 @@ namespace DescendersModMenu.Mods
                     return _field;
                 }
             }
-            MelonLogger.Warning("[MaxSpeed] Drag field not found.");
+            ModLog.Warn("[MaxSpeed] Drag field not found.");
             return null;
         }
 

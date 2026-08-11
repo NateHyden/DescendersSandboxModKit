@@ -154,7 +154,7 @@ namespace DescendersModMenu.Mods
         {
             var original = typeof(Vehicle).GetMethod("FixedUpdate",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if ((object)original == null) { MelonLogger.Warning("[DrunkMode] Vehicle.FixedUpdate not found"); return; }
+            if ((object)original == null) { ModLog.Warn("[DrunkMode] Vehicle.FixedUpdate not found"); return; }
             var postfix = typeof(DrunkMode_Patch).GetMethod("Postfix");
             harmony.Patch(original, postfix: new HarmonyMethod(postfix));
             ModLog.Debug("[DrunkMode] Patched Vehicle.FixedUpdate");

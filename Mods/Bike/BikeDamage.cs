@@ -92,11 +92,11 @@ namespace DescendersModMenu.Mods
                 if (_hardBailCount >= HardBailsToRemove)
                 {
                     _rearWheelGone = true;
-                    MelonLogger.Msg("[BikeDamage] Rear wheel removed after " + _hardBailCount + " hard bails!");
+                    ModLog.Debug("[BikeDamage] Rear wheel removed after " + _hardBailCount + " hard bails!");
                 }
             }
 
-            MelonLogger.Msg("[BikeDamage] Bail #" + bailCount
+            ModLog.Debug("[BikeDamage] Bail #" + bailCount
                 + " impact=" + impactSpeed.ToString("F1")
                 + " hardBails=" + _hardBailCount + "/" + HardBailsToRemove
                 + " steerOffset=" + _steerOffset.ToString("F3")
@@ -136,7 +136,7 @@ namespace DescendersModMenu.Mods
                                     _steerBone = sb;
                                     _steerBoneNeutral = sb.localRotation;
                                     _steerNeutralCaptured = true;
-                                    MelonLogger.Msg("[BikeDamage] steer_Jnt neutral captured: "
+                                    ModLog.Debug("[BikeDamage] steer_Jnt neutral captured: "
                                         + _steerBoneNeutral.eulerAngles.ToString("F2"));
                                 }
                             }
@@ -162,11 +162,11 @@ namespace DescendersModMenu.Mods
                         if (_hardLandingCount >= HardLandsToRemove)
                         {
                             _rearWheelGone = true;
-                            MelonLogger.Msg("[BikeDamage] Rear wheel removed after "
+                            ModLog.Debug("[BikeDamage] Rear wheel removed after "
                                 + _hardLandingCount + " hard landings!");
                         }
                     }
-                    MelonLogger.Msg("[BikeDamage] Hard landing drop=" + drop.ToString("F1")
+                    ModLog.Debug("[BikeDamage] Hard landing drop=" + drop.ToString("F1")
                         + " hardLandings=" + _hardLandingCount + "/" + HardLandsToRemove
                         + " steerOffset=" + _steerOffset.ToString("F3"));
                 }
@@ -239,7 +239,7 @@ namespace DescendersModMenu.Mods
                             _rearWheelBone = bikeModel.Find(
                                 "root_Jnt/Frame_Jnt/backWheelRotator_Jnt/BackWheelShockAbsorber_Jnt/backWheel_Jnt");
                         }
-                        MelonLogger.Msg("[BikeDamage] Rear bone: "
+                        ModLog.Debug("[BikeDamage] Rear bone: "
                             + ((object)_rearWheelBone != null ? "OK" : "MISSING"));
                     }
 
@@ -274,7 +274,7 @@ namespace DescendersModMenu.Mods
                             BindingFlags.Public | BindingFlags.Instance);
                     if ((object)_radiusField != null && _defaultRearRadius < 0f)
                         _defaultRearRadius = (float)_radiusField.GetValue(wheels[i]);
-                    MelonLogger.Msg("[BikeDamage] Rear Wheel found. defaultRadius="
+                    ModLog.Debug("[BikeDamage] Rear Wheel found. defaultRadius="
                         + _defaultRearRadius.ToString("F4"));
                     break;
                 }
@@ -296,7 +296,7 @@ namespace DescendersModMenu.Mods
             }
             catch { }
             ResetDamage();
-            MelonLogger.Msg("[BikeDamage] Manual reset — damage cleared.");
+            ModLog.Debug("[BikeDamage] Manual reset — damage cleared.");
         }
 
         private static void ResetDamage()
@@ -340,7 +340,7 @@ namespace DescendersModMenu.Mods
                 MethodInfo fixedUpdate = typeof(VehicleController).GetMethod(
                     "FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
                 if ((object)fixedUpdate == null)
-                { MelonLogger.Warning("[BikeDamage] VehicleController.FixedUpdate not found."); return; }
+                { ModLog.Warn("[BikeDamage] VehicleController.FixedUpdate not found."); return; }
 
                 harmony.Patch(fixedUpdate, postfix: new HarmonyMethod(
                     typeof(BikeDamage_SteerPatch).GetMethod(

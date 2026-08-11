@@ -53,7 +53,7 @@ namespace DescendersModMenu.Mods
 
                 if ((object)original == null)
                 {
-                    MelonLogger.Warning("[RubberBandSteering] VehicleController.FixedUpdate not found.");
+                    ModLog.Warn("[RubberBandSteering] VehicleController.FixedUpdate not found.");
                     return;
                 }
 
@@ -162,13 +162,13 @@ namespace DescendersModMenu.Mods
                             System.StringComparison.Ordinal))
                         {
                             _vehicleField = fields[i];
-                            MelonLogger.Msg("[RubberBandSteering] Found Vehicle field: " + fields[i].Name);
+                            ModLog.Debug("[RubberBandSteering] Found Vehicle field: " + fields[i].Name);
                             break;
                         }
                     }
                     if ((object)_vehicleField == null)
                     {
-                        MelonLogger.Warning("[RubberBandSteering] Could not find Vehicle field on VehicleController.");
+                        ModLog.Warn("[RubberBandSteering] Could not find Vehicle field on VehicleController.");
                         return;
                     }
                 }
@@ -185,17 +185,17 @@ namespace DescendersModMenu.Mods
                 {
                     _steerProp = typeof(Vehicle).GetProperty(SteerPropName, BindingFlags.Public | BindingFlags.Instance);
                     if ((object)_steerProp != null)
-                        MelonLogger.Msg("[RubberBandSteering] Found steer property: " + SteerPropName);
+                        ModLog.Debug("[RubberBandSteering] Found steer property: " + SteerPropName);
                     else
-                        MelonLogger.Warning("[RubberBandSteering] Could not find steer property: " + SteerPropName);
+                        ModLog.Warn("[RubberBandSteering] Could not find steer property: " + SteerPropName);
                 }
                 if ((object)_leanProp == null)
                 {
                     _leanProp = typeof(Vehicle).GetProperty(LeanPropName, BindingFlags.Public | BindingFlags.Instance);
                     if ((object)_leanProp != null)
-                        MelonLogger.Msg("[RubberBandSteering] Found lean property: " + LeanPropName);
+                        ModLog.Debug("[RubberBandSteering] Found lean property: " + LeanPropName);
                     else
-                        MelonLogger.Warning("[RubberBandSteering] Could not find lean property: " + LeanPropName);
+                        ModLog.Warn("[RubberBandSteering] Could not find lean property: " + LeanPropName);
                 }
                 if ((object)_steerProp == null && (object)_leanProp == null) return;
 

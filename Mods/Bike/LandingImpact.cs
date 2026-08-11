@@ -158,7 +158,7 @@ namespace DescendersModMenu.Mods
                 }
             }
 
-            MelonLogger.Warning("[LandingImpact] Could not find bail threshold field.");
+            ModLog.Warn("[LandingImpact] Could not find bail threshold field.");
             return null;
         }
     }

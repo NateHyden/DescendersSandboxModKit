@@ -46,7 +46,7 @@ namespace DescendersModMenu.Mods
                 if ((object)_field == null)
                     _field = vehicle.GetType().GetField(AccelFieldName,
                         BindingFlags.Public | BindingFlags.Instance);
-                if ((object)_field == null) { MelonLogger.Warning("[Acceleration] Field not found."); return; }
+                if ((object)_field == null) { ModLog.Warn("[Acceleration] Field not found."); return; }
 
                 if (_originalValue < 0f)
                 {

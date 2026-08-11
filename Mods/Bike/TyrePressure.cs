@@ -93,7 +93,7 @@ namespace DescendersModMenu.Mods
                     ModLog.Debug("[TyrePressure] Patched Wheel.FixedUpdate.");
                 }
                 else
-                    MelonLogger.Warning("[TyrePressure] Wheel.FixedUpdate not found.");
+                    ModLog.Warn("[TyrePressure] Wheel.FixedUpdate not found.");
 
                 DiagnosticsManager.Report("TyrePressure", true);
             }
@@ -142,15 +142,15 @@ namespace DescendersModMenu.Mods
 
                     if ((object)_rollFrictionProp != null)
                     {
-                        MelonLogger.Msg("[TyrePressure] Prop WbmnXfG found.");
+                        ModLog.Debug("[TyrePressure] Prop WbmnXfG found.");
                     }
                     else
                     {
-                        MelonLogger.Warning("[TyrePressure] Prop WbmnXfG not found -- dumping Wheel float props:");
+                        ModLog.Warn("[TyrePressure] Prop WbmnXfG not found -- dumping Wheel float props:");
                         var props = typeof(Wheel).GetProperties(BindingFlags.Public | BindingFlags.Instance);
                         foreach (var p in props)
                             if (p.PropertyType.Equals(typeof(float)))
-                                MelonLogger.Msg("[TyrePressure]   float prop: " + p.Name);
+                                ModLog.Debug("[TyrePressure]   float prop: " + p.Name);
                         return;
                     }
                 }
@@ -161,7 +161,7 @@ namespace DescendersModMenu.Mods
                 if (_defaultFriction < 0f)
                 {
                     _defaultFriction = (float)_rollFrictionProp.GetValue(__instance, null);
-                    MelonLogger.Msg("[TyrePressure] Default rollFriction=" + _defaultFriction.ToString("F4"));
+                    ModLog.Debug("[TyrePressure] Default rollFriction=" + _defaultFriction.ToString("F4"));
                 }
 
                 _rollFrictionProp.SetValue(__instance, _defaultFriction * mult, null);

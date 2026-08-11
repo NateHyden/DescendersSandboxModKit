@@ -94,7 +94,7 @@ namespace DescendersModMenu.Mods
                     ModLog.Debug("[TopSpeed] Loaded: " + val.ToString("F1") + " km/h");
                 }
             }
-            catch (Exception ex) { MelonLogger.Warning("[TopSpeed] Load: " + ex.Message); }
+            catch (Exception ex) { ModLog.Warn("[TopSpeed] Load: " + ex.Message); }
         }
 
         private static void Save()

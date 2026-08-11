@@ -144,7 +144,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.ActionBtnOrange(cpir.transform, "Teleport", () =>
                 {
                     int count = TeleportToCheckpoint.CheckpointCount;
-                    if (count == 0) { MelonLogger.Warning("[TeleportCP] No checkpoints."); return; }
+                    if (count == 0) { ModLog.Warn("[TeleportCP] No checkpoints."); return; }
                     _cpIndex = UnityEngine.Mathf.Clamp(_cpIndex, 0, count - 1);
                     TeleportToCheckpoint.TeleportByIndex(_cpIndex);
                 }, 76);
@@ -286,14 +286,14 @@ namespace DescendersModMenu.UI
             = new System.Collections.Generic.List<TeleportToPlayer.PlayerEntry>();
 
         public static void Scan()
-        { _pl = TeleportToPlayer.ScanForPlayers(); _i = 0; UL(); MelonLogger.Msg("[TP] Scanned: " + _pl.Count); }
+        { _pl = TeleportToPlayer.ScanForPlayers(); _i = 0; UL(); ModLog.Debug("[TP] Scanned: " + _pl.Count); }
         public static void NextPlayer()
         { if (_pl.Count == 0) return; _i = (_i + 1) % _pl.Count; UL(); }
         public static void PreviousPlayer()
         { if (_pl.Count == 0) return; _i = (_i - 1 + _pl.Count) % _pl.Count; UL(); }
         public static void TeleportToSelected()
         {
-            if (_pl.Count == 0) { MelonLogger.Warning("[TP] No players."); UL("Scan first!"); return; }
+            if (_pl.Count == 0) { ModLog.Warn("[TP] No players."); UL("Scan first!"); return; }
             var e = _pl[_i]; bool ok = TeleportToPlayer.TeleportTo(e);
             UL(ok ? "Teleported to " + e.Name + "!" : "Failed");
         }

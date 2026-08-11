@@ -44,6 +44,10 @@ Generated\ Files/
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+# Keep this project's MSBuild script + logs (not MSTest BuildLog.*)
+!build.bat
+!build_log.txt
+!build_log*.txt
 
 # NUnit
 *.VisualState.xml
@@ -361,6 +365,12 @@ MigrationBackup/
 
 # Descenders ModMenu build output
 Output/
+
+# Force-include the local build script, its logs, and the project file
+!build.bat
+!/build_log.txt
+!/build_log?.txt
+!DescendersSandbox.csproj
 
 # Local machine-specific secrets — never commit these.
 # Each has a committed .example template showing the expected shape.

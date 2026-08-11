@@ -46,13 +46,13 @@ namespace DescendersModMenu.Mods
                         _savedWindMain = (float)_windMainProp.GetValue(wz, null);
                     if ((object)_windMainProp != null) _windMainProp.SetValue(wz, 50f, null);
                     if ((object)_windTurbProp != null) _windTurbProp.SetValue(wz, 1f, null);
-                    MelonLogger.Msg("[TurboWind] ON");
+                    ModLog.Debug("[TurboWind] ON");
                 }
                 else
                 {
                     if ((object)_windMainProp != null) _windMainProp.SetValue(wz, _savedWindMain >= 0f ? _savedWindMain : 1f, null);
                     if ((object)_windTurbProp != null) _windTurbProp.SetValue(wz, 0.5f, null);
-                    MelonLogger.Msg("[TurboWind] OFF");
+                    ModLog.Debug("[TurboWind] OFF");
                 }
             }
             catch (System.Exception ex) { MelonLogger.Error("[TurboWind] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TurboWind"); }

@@ -530,7 +530,7 @@ namespace DescendersModMenu.Mods
             if (_messages.Count > MaxMessages)
                 _messages.RemoveAt(0);
             HasNewMessages = true;
-            MelonLogger.Msg("[ModChat] <" + msg.PlayerName + "> " + msg.Text);
+            ModLog.Debug("[ModChat] <" + msg.PlayerName + "> " + msg.Text);
             try { ChatHUD.Notify(msg); }
             catch (Exception ex)
             {

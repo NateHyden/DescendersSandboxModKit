@@ -137,7 +137,7 @@ namespace DescendersModMenu.UI
                         _seedBuffer = "";
                         _seedFocused = false;
                         if ((object)_seedInputText != null) { _seedInputText.text = "Enter seed number..."; _seedInputText.color = UIHelpers.TextDim; }
-                        MelonLogger.Msg("[MapChanger] Loading seed: " + s);
+                        ModLog.Debug("[MapChanger] Loading seed: " + s);
                         MapChanger.LoadFromSeed(s);
                     }
                 }, 52);
@@ -330,7 +330,7 @@ namespace DescendersModMenu.UI
                         _seedBuffer = "";
                         _seedFocused = false;
                         if (_seedInputText) { _seedInputText.text = "Enter seed number..."; _seedInputText.color = UIHelpers.TextDim; }
-                        MelonLogger.Msg("[MapChanger] Loading seed via Enter: " + s);
+                        ModLog.Debug("[MapChanger] Loading seed via Enter: " + s);
                         MapChanger.LoadFromSeed(s);
                     }
                     return;

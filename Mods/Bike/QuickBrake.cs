@@ -39,7 +39,7 @@ namespace DescendersModMenu.Mods
                     BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if ((object)fixedUpdate == null)
-                { MelonLogger.Warning("[QuickBrake] VehicleController.FixedUpdate not found."); return; }
+                { ModLog.Warn("[QuickBrake] VehicleController.FixedUpdate not found."); return; }
 
                 MethodInfo postfix = typeof(QuickBrake_Patch).GetMethod(
                     "Postfix", BindingFlags.Public | BindingFlags.Static);

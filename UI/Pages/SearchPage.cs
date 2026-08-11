@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using MelonLoader;
 using DescendersModMenu;
+using DescendersModMenu.Mods;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -201,7 +202,7 @@ namespace DescendersModMenu.UI
                     try { entry.BuildControls(_listRoot); }
                     catch (Exception ex)
                     {
-                        MelonLogger.Warning("[Search] BuildControls(" + entry.Id + "): " + ex.Message);
+                        ModLog.Warn("[Search] BuildControls(" + entry.Id + "): " + ex.Message);
                     }
                 }
 

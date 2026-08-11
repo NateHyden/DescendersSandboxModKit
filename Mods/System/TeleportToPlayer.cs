@@ -56,7 +56,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 if (log)
-                    MelonLogger.Msg("[TeleportToPlayer] Found " + results.Count + " player(s).");
+                    ModLog.Debug("[TeleportToPlayer] Found " + results.Count + " player(s).");
             }
             catch (Exception ex)
             {
@@ -71,7 +71,7 @@ namespace DescendersModMenu.Mods
         {
             if ((object)entry == null)
             {
-                MelonLogger.Warning("[TeleportToPlayer] Entry is null.");
+                ModLog.Warn("[TeleportToPlayer] Entry is null.");
                 return false;
             }
 
@@ -94,13 +94,13 @@ namespace DescendersModMenu.Mods
                 // Fall back to the cached root if name match fails
                 if ((object)target == null)
                 {
-                    MelonLogger.Warning("[TeleportToPlayer] Could not re-find " + entry.Name + " - using cached position.");
+                    ModLog.Warn("[TeleportToPlayer] Could not re-find " + entry.Name + " - using cached position.");
                     target = entry;
                 }
 
                 if ((object)target.Root == null)
                 {
-                    MelonLogger.Warning("[TeleportToPlayer] Target root is null.");
+                    ModLog.Warn("[TeleportToPlayer] Target root is null.");
                     return false;
                 }
 
@@ -109,7 +109,7 @@ namespace DescendersModMenu.Mods
                 GameObject local = GameObject.Find("Player_Human");
                 if ((object)local == null)
                 {
-                    MelonLogger.Warning("[TeleportToPlayer] Player_Human not found.");
+                    ModLog.Warn("[TeleportToPlayer] Player_Human not found.");
                     return false;
                 }
 
@@ -147,12 +147,12 @@ namespace DescendersModMenu.Mods
                     }
                     catch { }
 
-                    MelonLogger.Msg("[TeleportToPlayer] Teleported to " + target.Name + " at " + dest);
+                    ModLog.Debug("[TeleportToPlayer] Teleported to " + target.Name + " at " + dest);
                     return true;
                 }
 
                 local.transform.position = dest;
-                MelonLogger.Msg("[TeleportToPlayer] Teleported to " + target.Name + " (transform) at " + dest);
+                ModLog.Debug("[TeleportToPlayer] Teleported to " + target.Name + " (transform) at " + dest);
                 return true;
             }
             catch (Exception ex)
@@ -222,7 +222,7 @@ namespace DescendersModMenu.Mods
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[TeleportToPlayer] GetPlayerName failed: " + ex.Message);
+                ModLog.Warn("[TeleportToPlayer] GetPlayerName failed: " + ex.Message);
             }
 
             return "Player " + (fallbackIndex + 1);

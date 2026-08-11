@@ -153,7 +153,7 @@ namespace DescendersModMenu.Mods
             {
                 if (!File.Exists(SaveFile))
                 {
-                    MelonLogger.Msg("[MenuCustomiser] No layout file found, using defaults.");
+                    ModLog.Debug("[MenuCustomiser] No layout file found, using defaults.");
                     Apply();
                     return;
                 }
@@ -163,7 +163,7 @@ namespace DescendersModMenu.Mods
 
                 if ((object)data == null)
                 {
-                    MelonLogger.Warning("[MenuCustomiser] Layout file corrupt, using defaults.");
+                    ModLog.Warn("[MenuCustomiser] Layout file corrupt, using defaults.");
                     Apply();
                     return;
                 }
@@ -175,7 +175,7 @@ namespace DescendersModMenu.Mods
                 CustomY = data.CustomY;
 
                 Apply();
-                MelonLogger.Msg("[MenuCustomiser] Layout loaded.");
+                ModLog.Debug("[MenuCustomiser] Layout loaded.");
             }
             catch (Exception ex)
             {
@@ -203,7 +203,7 @@ namespace DescendersModMenu.Mods
 
                 File.WriteAllText(SaveFile, JsonUtility.ToJson(data, true));
                 _savedTime = Time.realtimeSinceStartup;
-                MelonLogger.Msg("[MenuCustomiser] Layout saved.");
+                ModLog.Debug("[MenuCustomiser] Layout saved.");
             }
             catch (Exception ex)
             {

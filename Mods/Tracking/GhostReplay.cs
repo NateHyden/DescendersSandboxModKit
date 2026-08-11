@@ -64,7 +64,7 @@ namespace DescendersModMenu.Mods
                 IsPlaying = false;
                 RunTime = 0f;
                 BuildGhost();
-                MelonLogger.Msg("[GhostReplay] ON — step 1: ride to start and press B.");
+                ModLog.Debug("[GhostReplay] ON — step 1: ride to start and press B.");
             }
             else
             {
@@ -73,7 +73,7 @@ namespace DescendersModMenu.Mods
                 IsPlaying = false;
                 _currentRun.Clear();
                 DestroyGhost();
-                MelonLogger.Msg("[GhostReplay] OFF.");
+                ModLog.Debug("[GhostReplay] OFF.");
             }
         }
 
@@ -82,7 +82,7 @@ namespace DescendersModMenu.Mods
         {
             if (!Enabled || !IsRecording || _currentRun.Count < 30)
             {
-                MelonLogger.Msg("[GhostReplay] Nothing to save (frames=" + _currentRun.Count + ").");
+                ModLog.Debug("[GhostReplay] Nothing to save (frames=" + _currentRun.Count + ").");
                 return;
             }
             DoSave();
@@ -95,7 +95,7 @@ namespace DescendersModMenu.Mods
             SavedRunTime = RunTime;
             // Rebuild ghost so it reflects current outfit
             BuildGhost();
-            MelonLogger.Msg("[GhostReplay] SAVED " + _savedRun.Count + " frames, " + SavedRunTime.ToString("F1") + "s.");
+            ModLog.Debug("[GhostReplay] SAVED " + _savedRun.Count + " frames, " + SavedRunTime.ToString("F1") + "s.");
         }
 
         private static float _lastRespawnTime = -999f;
@@ -109,7 +109,7 @@ namespace DescendersModMenu.Mods
             float now = Time.realtimeSinceStartup;
             if (now - _lastRespawnTime < RespawnCooldown)
             {
-                MelonLogger.Msg("[GhostReplay] Respawn ignored (double-fire).");
+                ModLog.Debug("[GhostReplay] Respawn ignored (double-fire).");
                 return;
             }
             _lastRespawnTime = now;
@@ -119,7 +119,7 @@ namespace DescendersModMenu.Mods
                 // Auto-save first run if nothing saved yet and run is meaningful
                 if (_savedRun.Count == 0 && _currentRun.Count >= 30)
                 {
-                    MelonLogger.Msg("[GhostReplay] Auto-saving first run (" + _currentRun.Count + " frames).");
+                    ModLog.Debug("[GhostReplay] Auto-saving first run (" + _currentRun.Count + " frames).");
                     DoSave();
                 }
 
@@ -131,7 +131,7 @@ namespace DescendersModMenu.Mods
                 IsPlaying = false;
                 _graceEnd = now + GracePeriod;
                 _state = GhostState.WaitingForMove;
-                MelonLogger.Msg("[GhostReplay] Reset — keeping spawn at " + _spawnPos);
+                ModLog.Debug("[GhostReplay] Reset — keeping spawn at " + _spawnPos);
 
                 if ((object)_ghostObj != null && _savedRun.Count > 0)
                 {
@@ -158,7 +158,7 @@ namespace DescendersModMenu.Mods
                 _currentRun.Clear();
                 RunTime = 0f;
                 _frameCount = 0;
-                MelonLogger.Msg("[GhostReplay] LS — spawn set at " + _spawnPos + " waiting for move.");
+                ModLog.Debug("[GhostReplay] LS — spawn set at " + _spawnPos + " waiting for move.");
 
                 if ((object)_ghostObj != null && _savedRun.Count > 0)
                 {
@@ -182,7 +182,7 @@ namespace DescendersModMenu.Mods
             if (Time.realtimeSinceStartup - _lastLogTime > 2f)
             {
                 _lastLogTime = Time.realtimeSinceStartup;
-                MelonLogger.Msg("[GhostReplay] State=" + _state
+                ModLog.Debug("[GhostReplay] State=" + _state
                     + " frames=" + _currentRun.Count
                     + " saved=" + _savedRun.Count
                     + " dist=" + Vector3.Distance(playerPos, _spawnPos).ToString("F2")
@@ -226,11 +226,11 @@ namespace DescendersModMenu.Mods
                             _playbackTime = 0f;
                             IsPlaying = true;
                             if ((object)_ghostObj != null) _ghostObj.SetActive(true);
-                            MelonLogger.Msg("[GhostReplay] MOVING — recording + ghost started simultaneously.");
+                            ModLog.Debug("[GhostReplay] MOVING — recording + ghost started simultaneously.");
                         }
                         else
                         {
-                            MelonLogger.Msg("[GhostReplay] MOVING — recording only (no saved run yet, press F4 to save).");
+                            ModLog.Debug("[GhostReplay] MOVING — recording only (no saved run yet, press F4 to save).");
                         }
                     }
                     break;
@@ -303,7 +303,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null) { MelonLogger.Warning("[GhostReplay] No player."); return; }
+                if ((object)player == null) { ModLog.Warn("[GhostReplay] No player."); return; }
 
                 _ghostObj = new GameObject("GhostRider");
 
@@ -324,7 +324,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 _ghostObj.SetActive(false);
-                MelonLogger.Msg("[GhostReplay] Ghost built.");
+                ModLog.Debug("[GhostReplay] Ghost built.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[GhostReplay] BuildGhost: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostReplay"); }
         }
@@ -381,7 +381,7 @@ namespace DescendersModMenu.Mods
                     mr.materials = mats;
                 }
                 catch (System.Exception ex)
-                { MelonLogger.Warning("[GhostReplay] BakeMesh failed: " + ex.Message); smr.enabled = false; }
+                { ModLog.Warn("[GhostReplay] BakeMesh failed: " + ex.Message); smr.enabled = false; }
             }
 
             // Regular MeshRenderers (bike frame, wheels)
@@ -422,7 +422,7 @@ namespace DescendersModMenu.Mods
             SavedRunTime = 0f;
             IsPlaying = false;
             if ((object)_ghostObj != null) _ghostObj.SetActive(false);
-            MelonLogger.Msg("[GhostReplay] Saved run cleared.");
+            ModLog.Debug("[GhostReplay] Saved run cleared.");
         }
 
         public static void Reset()

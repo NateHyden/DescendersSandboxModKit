@@ -40,7 +40,7 @@ namespace DescendersModMenu.Mods
             OKCount = 0;
             FailCount = 0;
 
-            MelonLogger.Msg("[AssemblyScanner] Starting scan...");
+            ModLog.Debug("[AssemblyScanner] Starting scan...");
 
             RunBikePhysicsChecks();
             RunMovementChecks();
@@ -53,7 +53,7 @@ namespace DescendersModMenu.Mods
 
             HasRun = true;
             WriteReport();
-            MelonLogger.Msg("[AssemblyScanner] Done. "
+            ModLog.Debug("[AssemblyScanner] Done. "
                 + OKCount + " OK / " + FailCount + " FAILED.");
         }
 
@@ -477,7 +477,7 @@ namespace DescendersModMenu.Mods
                     sb.AppendLine(FailCount + " check(s) failed. These mods may not work correctly.");
 
                 File.WriteAllText(ReportFile, sb.ToString());
-                MelonLogger.Msg("[AssemblyScanner] Report saved: " + ReportFile);
+                ModLog.Debug("[AssemblyScanner] Report saved: " + ReportFile);
             }
             catch (Exception ex)
             {

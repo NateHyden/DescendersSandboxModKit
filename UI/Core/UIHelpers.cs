@@ -1,3 +1,4 @@
+using DescendersModMenu.Mods;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -645,7 +646,7 @@ namespace DescendersModMenu.UI
             }
             catch (System.Exception ex)
             {
-                MelonLoader.MelonLogger.Warning("[UIHelpers] AddScrollbar: " + ex.Message);
+                ModLog.Warn("[UIHelpers] AddScrollbar: " + ex.Message);
             }
         }
 

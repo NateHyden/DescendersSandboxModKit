@@ -35,7 +35,7 @@ namespace DescendersModMenu.Mods
                     _prevValues.Clear();
                     _changeLog.Clear();
                     _sessionStart = Time.unscaledTime;
-                    MelonLogger.Msg("[SpeedWatcher] Recording started - release F10 to save.");
+                    ModLog.Debug("[SpeedWatcher] Recording started - release F10 to save.");
                 }
 
                 // Record this frame
@@ -145,7 +145,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
-                MelonLogger.Msg("[SpeedWatcher] Saved to " + path);
+                ModLog.Debug("[SpeedWatcher] Saved to " + path);
             }
             catch (Exception ex)
             {

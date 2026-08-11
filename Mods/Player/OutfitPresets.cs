@@ -73,7 +73,7 @@ namespace DescendersModMenu.Mods
             if (_entries[slot] != null) _entries[slot].Value = "";
             if (_nameEntries[slot] != null) _nameEntries[slot].Value = "Preset " + (slot + 1);
             MelonPreferences.Save();
-            MelonLogger.Msg("[OutfitPresets] Deleted slot " + slot);
+            ModLog.Debug("[OutfitPresets] Deleted slot " + slot);
         }
 
         // ── Internal ──────────────────────────────────────────────────────
@@ -82,9 +82,9 @@ namespace DescendersModMenu.Mods
             if ((object)_pc == null)
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null) { MelonLogger.Warning("[OutfitPresets] Player_Human not found."); return false; }
+                if ((object)player == null) { ModLog.Warn("[OutfitPresets] Player_Human not found."); return false; }
                 _pc = player.GetComponent<PlayerCustomization>();
-                if ((object)_pc == null) { MelonLogger.Warning("[OutfitPresets] PlayerCustomization not found."); return false; }
+                if ((object)_pc == null) { ModLog.Warn("[OutfitPresets] PlayerCustomization not found."); return false; }
             }
             if ((object)_equipOutfit == null)
                 _equipOutfit = typeof(PlayerCustomization).GetMethod("EquipOutfit",
@@ -122,7 +122,7 @@ namespace DescendersModMenu.Mods
             {
                 CustomizationItem[] equipped = _getOutfit.Invoke(_pc, null) as CustomizationItem[];
                 if (equipped == null || equipped.Length == 0)
-                { MelonLogger.Warning("[OutfitPresets] No equipped items."); return false; }
+                { ModLog.Warn("[OutfitPresets] No equipped items."); return false; }
 
                 _presetIds[slot] = new int[equipped.Length];
                 for (int i = 0; i < equipped.Length; i++)
@@ -137,7 +137,7 @@ namespace DescendersModMenu.Mods
                     MelonPreferences.Save();
                 }
 
-                MelonLogger.Msg("[OutfitPresets] Saved slot " + slot + " (" + equipped.Length + " items) to disk.");
+                ModLog.Debug("[OutfitPresets] Saved slot " + slot + " (" + equipped.Length + " items) to disk.");
                 return true;
             }
             catch (System.Exception ex) { MelonLogger.Error("[OutfitPresets] Save: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OutfitPresets"); return false; }
@@ -146,7 +146,7 @@ namespace DescendersModMenu.Mods
         // ── Load ──────────────────────────────────────────────────────────
         public static bool Load(int slot)
         {
-            if (!HasPreset(slot)) { MelonLogger.Warning("[OutfitPresets] Slot " + slot + " empty."); return false; }
+            if (!HasPreset(slot)) { ModLog.Warn("[OutfitPresets] Slot " + slot + " empty."); return false; }
             if (!EnsureRefs()) return false;
             try
             {
@@ -163,7 +163,7 @@ namespace DescendersModMenu.Mods
                     if ((object)(UnityEngine.Object)item != null)
                     { items[found] = item; found++; }
                 }
-                if (found == 0) { MelonLogger.Warning("[OutfitPresets] No items resolved."); return false; }
+                if (found == 0) { ModLog.Warn("[OutfitPresets] No items resolved."); return false; }
 
                 CustomizationItem[] toEquip = new CustomizationItem[found];
                 System.Array.Copy(items, toEquip, found);

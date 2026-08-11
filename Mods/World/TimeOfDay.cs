@@ -102,15 +102,15 @@ namespace DescendersModMenu.Mods
                         break;
                     }
                 }
-                if ((object)sky == null) { MelonLogger.Warning("[TimeOfDay] TOD_Sky not found on this map."); return; }
+                if ((object)sky == null) { ModLog.Warn("[TimeOfDay] TOD_Sky not found on this map."); return; }
 
                 // Get Cycle object
                 FieldInfo cycleField = sky.GetType().GetField("Cycle",
                     BindingFlags.Public | BindingFlags.Instance);
-                if ((object)cycleField == null) { MelonLogger.Warning("[TimeOfDay] Cycle field not found."); return; }
+                if ((object)cycleField == null) { ModLog.Warn("[TimeOfDay] Cycle field not found."); return; }
 
                 object cycle = cycleField.GetValue(sky);
-                if ((object)cycle == null) { MelonLogger.Warning("[TimeOfDay] Cycle is null."); return; }
+                if ((object)cycle == null) { ModLog.Warn("[TimeOfDay] Cycle is null."); return; }
 
                 // Set Hour
                 FieldInfo hourField = cycle.GetType().GetField("Hour",
@@ -132,7 +132,7 @@ namespace DescendersModMenu.Mods
                     return;
                 }
 
-                MelonLogger.Warning("[TimeOfDay] Hour field/property not found on Cycle.");
+                ModLog.Warn("[TimeOfDay] Hour field/property not found on Cycle.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[TimeOfDay] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
         }

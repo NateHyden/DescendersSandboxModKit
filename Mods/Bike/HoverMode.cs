@@ -64,7 +64,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null) { MelonLogger.Warning("[HoverMode] Player_Human not found."); Enabled = false; return; }
+                if ((object)player == null) { ModLog.Warn("[HoverMode] Player_Human not found."); Enabled = false; return; }
 
                 _playerTrans = player.transform;
                 _vehicle = player.GetComponent<Vehicle>();
@@ -72,7 +72,7 @@ namespace DescendersModMenu.Mods
 
                 if ((object)_vehicle == null || (object)_rb == null)
                 {
-                    MelonLogger.Warning("[HoverMode] Vehicle/Rigidbody not found.");
+                    ModLog.Warn("[HoverMode] Vehicle/Rigidbody not found.");
                     Enabled = false; return;
                 }
 
@@ -80,7 +80,7 @@ namespace DescendersModMenu.Mods
                 _rb.useGravity = false;
                 _yaw = _playerTrans.eulerAngles.y;
 
-                MelonLogger.Msg("[HoverMode] Enabled. rb=" + _rb.name);
+                ModLog.Debug("[HoverMode] Enabled. rb=" + _rb.name);
             }
             catch (System.Exception ex)
             {

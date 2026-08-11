@@ -263,7 +263,7 @@ namespace DescendersModMenu.UI
                         var fl = FinishLine.GetAFinishLine();
                         if ((object)fl == null)
                         {
-                            MelonLogger.Msg("[JumpToFinish] No FinishLine found on this level - nothing to jump to.");
+                            ModLog.Debug("[JumpToFinish] No FinishLine found on this level - nothing to jump to.");
                             jumpStatusTxt.text = "No finish line here";
                             jumpStatusTxt.color = UIHelpers.Orange;
                             return;
@@ -419,7 +419,6 @@ namespace DescendersModMenu.UI
                     },
                     IsActive = () => BlizzardDial.Enabled
                 });
-
                 RefreshAll();
                 UIHelpers.AddScrollForwarders(pg7);
             }

@@ -63,7 +63,7 @@ namespace DescendersModMenu.Mods
                     "UpdateCompass", BindingFlags.Public | BindingFlags.Instance);
 
                 if ((object)updateCompass == null)
-                { MelonLogger.Warning("[CompassAlwaysOn] UI_InGame.UpdateCompass not found."); return; }
+                { ModLog.Warn("[CompassAlwaysOn] UI_InGame.UpdateCompass not found."); return; }
 
                 MethodInfo postfix = typeof(CompassAlwaysOn_Patch).GetMethod(
                     "Postfix", BindingFlags.Public | BindingFlags.Static);

@@ -84,7 +84,7 @@ namespace DescendersModMenu.Mods
                     _capField = tricks.GetType().GetField("uDh\u005DdJt",
                         BindingFlags.Public | BindingFlags.Instance);
                     if ((object)_capField == null)
-                        MelonLogger.Warning("[TrickMultiplier] Cap field (uDh]dJt) not found on VehicleTricks runtime subclass.");
+                        ModLog.Warn("[TrickMultiplier] Cap field (uDh]dJt) not found on VehicleTricks runtime subclass.");
                 }
                 if ((object)_capField != null)
                 {
@@ -102,7 +102,7 @@ namespace DescendersModMenu.Mods
                     _multiplierProp = typeof(VehicleTricks).GetProperty("FnHLcjK",
                         BindingFlags.Public | BindingFlags.Instance);
                     if ((object)_multiplierProp == null)
-                        MelonLogger.Warning("[TrickMultiplier] Multiplier property (FnHLcjK) not found on VehicleTricks.");
+                        ModLog.Warn("[TrickMultiplier] Multiplier property (FnHLcjK) not found on VehicleTricks.");
                 }
                 if ((object)_multiplierProp != null && _multiplierProp.CanWrite)
                 {

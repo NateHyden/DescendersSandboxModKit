@@ -82,10 +82,10 @@ namespace DescendersModMenu.Mods
                 "\u007FJm\u007DD\u0060\u007B", BindingFlags.Public | BindingFlags.Instance);
             _eiBaseEffField = typeof(EffectInstance).GetField(
                 "\u0083W\u0083n\u0060Xw", BindingFlags.Public | BindingFlags.Instance);
-            if ((object)_elEnvFlagsField == null) MelonLogger.Warning("[SkyColours] EL env flags field not found.");
-            if ((object)_elLtpField == null) MelonLogger.Warning("[SkyColours] EL ltp field not found.");
-            if ((object)_eiPsField == null) MelonLogger.Warning("[SkyColours] EI PS field not found.");
-            if ((object)_eiBaseEffField == null) MelonLogger.Warning("[SkyColours] EI BaseEffect field not found.");
+            if ((object)_elEnvFlagsField == null) ModLog.Warn("[SkyColours] EL env flags field not found.");
+            if ((object)_elLtpField == null) ModLog.Warn("[SkyColours] EL ltp field not found.");
+            if ((object)_eiPsField == null) ModLog.Warn("[SkyColours] EI PS field not found.");
+            if ((object)_eiBaseEffField == null) ModLog.Warn("[SkyColours] EI BaseEffect field not found.");
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace DescendersModMenu.Mods
             renderer.material.SetColor("_TintColor", new Color(0.6f, 0.65f, 0.8f, 0.3f));
 
             _rainPS.Play();
-            MelonLogger.Msg("[SkyColours] Custom rain created. Rate=" + GetRainEmissionRate());
+            ModLog.Debug("[SkyColours] Custom rain created. Rate=" + GetRainEmissionRate());
         }
 
         public static void DestroyRain()
@@ -233,13 +233,13 @@ namespace DescendersModMenu.Mods
                 // Collect particle systems from EffectInstances only
                 EffectInstance[] instances = Object.FindObjectsOfType<EffectInstance>();
                 if ((object)instances == null || instances.Length == 0)
-                { MelonLogger.Warning("[SkyColours] No EffectInstances found."); return; }
+                { ModLog.Warn("[SkyColours] No EffectInstances found."); return; }
 
                 var psList = new System.Collections.Generic.List<ParticleSystem>();
                 System.Reflection.FieldInfo psField = typeof(EffectInstance).GetField(
                     "\u007FJm\u007DD\u0060\u007B",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                if ((object)psField == null) { MelonLogger.Warning("[SkyColours] PS field not found."); return; }
+                if ((object)psField == null) { ModLog.Warn("[SkyColours] PS field not found."); return; }
 
                 for (int i = 0; i < instances.Length; i++)
                 {
@@ -250,7 +250,7 @@ namespace DescendersModMenu.Mods
                         if ((object)pss[j] != null) psList.Add(pss[j]);
                 }
 
-                if (psList.Count == 0) { MelonLogger.Warning("[SkyColours] No PS in EffectInstances."); return; }
+                if (psList.Count == 0) { ModLog.Warn("[SkyColours] No PS in EffectInstances."); return; }
 
                 // Cache default rates on first call (only reset by storm toggle, not slider)
                 if ((object)_cachedRainPS == null)
@@ -297,13 +297,13 @@ namespace DescendersModMenu.Mods
                     _cachedRainPS = validPS.ToArray();
                     _defaultEmissionRates = validRates.ToArray();
 
-                    MelonLogger.Msg("[SkyColours] Storm PS cached: " + _cachedRainPS.Length
+                    ModLog.Debug("[SkyColours] Storm PS cached: " + _cachedRainPS.Length
                         + " emitters (world only). Base rate="
                         + (_defaultEmissionRates.Length > 0 ? _defaultEmissionRates[0].ToString("F1") : "none"));
                 }
 
                 if (_cachedRainPS.Length == 0)
-                { MelonLogger.Warning("[SkyColours] No emitters found on world EffectInstances."); return; }
+                { ModLog.Warn("[SkyColours] No emitters found on world EffectInstances."); return; }
 
                 // Apply multiplier via rateOverTime
                 int applied = 0;
@@ -318,7 +318,7 @@ namespace DescendersModMenu.Mods
                     }
                     catch { }
                 }
-                MelonLogger.Msg("[SkyColours] Rain intensity x" + mult.ToString("F2") + " applied to " + applied + " systems.");
+                ModLog.Debug("[SkyColours] Rain intensity x" + mult.ToString("F2") + " applied to " + applied + " systems.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[SkyColours] ApplyRainIntensity: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SkyColours.Rain"); }
         }
@@ -409,7 +409,7 @@ namespace DescendersModMenu.Mods
                 }
                 if ((object)todSkyType == null)
                 {
-                    MelonLogger.Warning("[SkyColours] TOD_Sky type not found for patching.");
+                    ModLog.Warn("[SkyColours] TOD_Sky type not found for patching.");
                     DiagnosticsManager.Report("SkyColours", false, "TOD_Sky type not found");
                     return;
                 }
@@ -418,7 +418,7 @@ namespace DescendersModMenu.Mods
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 if ((object)lateUpdate == null)
                 {
-                    MelonLogger.Warning("[SkyColours] TOD_Sky.LateUpdate not found.");
+                    ModLog.Warn("[SkyColours] TOD_Sky.LateUpdate not found.");
                     DiagnosticsManager.Report("SkyColours", false, "LateUpdate not found");
                     return;
                 }
@@ -454,7 +454,7 @@ namespace DescendersModMenu.Mods
                     patchCount++;
                 }
                 else
-                    MelonLogger.Warning("[SkyColours] [2/4] TLJ method not found.");
+                    ModLog.Warn("[SkyColours] [2/4] TLJ method not found.");
             }
             catch (System.Exception ex)
             {
@@ -476,7 +476,7 @@ namespace DescendersModMenu.Mods
                     patchCount++;
                 }
                 else
-                    MelonLogger.Warning("[SkyColours] [3/4] EffectList.LateUpdate not found.");
+                    ModLog.Warn("[SkyColours] [3/4] EffectList.LateUpdate not found.");
             }
             catch (System.Exception ex)
             {
@@ -498,7 +498,7 @@ namespace DescendersModMenu.Mods
                     patchCount++;
                 }
                 else
-                    MelonLogger.Warning("[SkyColours] [4/4] UpdateEnvironmentStates not found.");
+                    ModLog.Warn("[SkyColours] [4/4] UpdateEnvironmentStates not found.");
             }
             catch (System.Exception ex)
             {
@@ -565,7 +565,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 CameraEffects ce = Object.FindObjectOfType<CameraEffects>();
-                if ((object)ce == null) { MelonLogger.Warning("[SkyColours] CameraEffects not found."); return; }
+                if ((object)ce == null) { ModLog.Warn("[SkyColours] CameraEffects not found."); return; }
 
                 SessionManager sm = Object.FindObjectOfType<SessionManager>();
                 MethodInfo getWorld = typeof(SessionManager).GetMethod("GetWorld",
@@ -641,7 +641,7 @@ namespace DescendersModMenu.Mods
                     ceWorld = World.Highlands;
                 if ((object)setCE != null)
                     try { setCE.Invoke(ce, new object[] { ceWorld, targetModifier, null }); }
-                    catch (System.Exception ex4) { MelonLogger.Warning("[SkyColours] SetCameraEffects fail: " + (ex4.InnerException != null ? ex4.InnerException.Message : ex4.Message)); }
+                    catch (System.Exception ex4) { ModLog.Warn("[SkyColours] SetCameraEffects fail: " + (ex4.InnerException != null ? ex4.InnerException.Message : ex4.Message)); }
 
                 EffectList[] allEffectLists = Object.FindObjectsOfType<EffectList>();
                 MethodInfo refreshEffects = typeof(EffectList).GetMethod("RefreshEffects",

@@ -59,7 +59,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null) { MelonLogger.Warning("[TrailPainter] Player_Human not found."); return; }
+                if ((object)player == null) { ModLog.Warn("[TrailPainter] Player_Human not found."); return; }
                 Transform bikeModel = player.transform.Find("BikeModel");
                 Transform anchor = (object)bikeModel != null ? bikeModel : player.transform;
 
@@ -80,7 +80,7 @@ namespace DescendersModMenu.Mods
                     _trail.material = new Material(Shader.Find("Sprites/Default"));
                     _trail.minVertexDistance = 0.05f;
                     ApplyColour();
-                    MelonLogger.Msg("[TrailPainter] TrailRenderer attached to " + anchor.name + ".");
+                    ModLog.Debug("[TrailPainter] TrailRenderer attached to " + anchor.name + ".");
                 }
                 else
                 {

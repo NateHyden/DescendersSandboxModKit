@@ -160,14 +160,14 @@ namespace DescendersModMenu.Mods
             GameObject player = PlayerCache.PlayerHuman;
             if ((object)player == null)
             {
-                MelonLogger.Warning("[WideTyres] Player_Human not found.");
+                ModLog.Warn("[WideTyres] Player_Human not found.");
                 return false;
             }
 
             Transform bikeModel = player.transform.Find("BikeModel");
             if ((object)bikeModel == null)
             {
-                MelonLogger.Warning("[WideTyres] BikeModel not found.");
+                ModLog.Warn("[WideTyres] BikeModel not found.");
                 return false;
             }
 

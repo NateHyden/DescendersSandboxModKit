@@ -27,7 +27,7 @@ namespace DescendersModMenu.Mods
                 PlayerManager pm = Object.FindObjectOfType<PlayerManager>();
                 if ((object)pm == null)
                 {
-                    MelonLogger.Warning("[InstantRespawn] PlayerManager not found.");
+                    ModLog.Warn("[InstantRespawn] PlayerManager not found.");
                     return;
                 }
 
@@ -35,14 +35,14 @@ namespace DescendersModMenu.Mods
                     "GetPlayerImpact", BindingFlags.Public | BindingFlags.Instance);
                 if ((object)getPii == null)
                 {
-                    MelonLogger.Warning("[InstantRespawn] GetPlayerImpact not found.");
+                    ModLog.Warn("[InstantRespawn] GetPlayerImpact not found.");
                     return;
                 }
 
                 object pii = getPii.Invoke(pm, null);
                 if ((object)pii == null)
                 {
-                    MelonLogger.Warning("[InstantRespawn] PlayerImpact null.");
+                    ModLog.Warn("[InstantRespawn] PlayerImpact null.");
                     return;
                 }
 
@@ -52,12 +52,12 @@ namespace DescendersModMenu.Mods
                     null, new System.Type[] { typeof(bool) }, null);
                 if ((object)respawn == null)
                 {
-                    MelonLogger.Warning("[InstantRespawn] RespawnOnTrack not found.");
+                    ModLog.Warn("[InstantRespawn] RespawnOnTrack not found.");
                     return;
                 }
 
                 respawn.Invoke(pii, new object[] { true });
-                MelonLogger.Msg("[InstantRespawn] Respawned.");
+                ModLog.Debug("[InstantRespawn] Respawned.");
             }
             catch (System.Exception ex)
             {

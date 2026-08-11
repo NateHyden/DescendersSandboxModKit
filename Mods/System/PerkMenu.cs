@@ -43,7 +43,7 @@ namespace DescendersModMenu.Mods
                 GameData gd = Object.FindObjectOfType<GameData>();
                 if ((object)gd == null)
                 {
-                    MelonLogger.Warning("[PerkMenu] GameData not found in scene.");
+                    ModLog.Warn("[PerkMenu] GameData not found in scene.");
                     return;
                 }
 
@@ -53,12 +53,12 @@ namespace DescendersModMenu.Mods
 
                 if ((object)_rosterField == null)
                 {
-                    MelonLogger.Warning("[PerkMenu] No GameModifier[] field found on GameData.");
+                    ModLog.Warn("[PerkMenu] No GameModifier[] field found on GameData.");
                     return;
                 }
 
                 _allPerks = _rosterField.GetValue(gd) as GameModifier[];
-                MelonLogger.Msg("[PerkMenu] Loaded " + (_allPerks != null ? _allPerks.Length : 0)
+                ModLog.Debug("[PerkMenu] Loaded " + (_allPerks != null ? _allPerks.Length : 0)
                     + " perk(s) from GameData." + _rosterField.Name);
             }
             catch (System.Exception ex) { MelonLogger.Error("[PerkMenu] LoadRoster: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "PerkMenu"); }
@@ -87,7 +87,7 @@ namespace DescendersModMenu.Mods
             }
             catch (System.Exception ex)
             {
-                MelonLogger.Warning("[PerkMenu] GetBadgeSprite: " + ex.Message);
+                ModLog.Warn("[PerkMenu] GetBadgeSprite: " + ex.Message);
                 return null;
             }
         }
@@ -115,9 +115,9 @@ namespace DescendersModMenu.Mods
                     LocalizationSettings settings = Resources.Load<LocalizationSettings>("Languages/LocalizationSettings");
                     if ((object)settings != null && settings.sheetTitles != null)
                         _sheetTitles = settings.sheetTitles;
-                    else MelonLogger.Warning("[PerkMenu] GetSheetTitles: LocalizationSettings asset or sheetTitles was null.");
+                    else ModLog.Warn("[PerkMenu] GetSheetTitles: LocalizationSettings asset or sheetTitles was null.");
                 }
-                catch (System.Exception ex) { MelonLogger.Warning("[PerkMenu] GetSheetTitles: " + ex.Message); }
+                catch (System.Exception ex) { ModLog.Warn("[PerkMenu] GetSheetTitles: " + ex.Message); }
             }
             return _sheetTitles ?? new string[0];
         }
@@ -132,7 +132,7 @@ namespace DescendersModMenu.Mods
                 LocalizationManager lm = GetSingletonInstance<LocalizationManager>();
                 if ((object)lm == null)
                 {
-                    MelonLogger.Warning("[PerkMenu] DisplayName: LocalizationManager singleton not resolved.");
+                    ModLog.Warn("[PerkMenu] DisplayName: LocalizationManager singleton not resolved.");
                     return key;
                 }
 
@@ -148,7 +148,7 @@ namespace DescendersModMenu.Mods
             }
             catch (System.Exception ex)
             {
-                MelonLogger.Warning("[PerkMenu] DisplayName: " + ex.Message);
+                ModLog.Warn("[PerkMenu] DisplayName: " + ex.Message);
                 return key;
             }
         }
@@ -168,7 +168,7 @@ namespace DescendersModMenu.Mods
                         return props[i].GetValue(null, null) as T;
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Warning("[PerkMenu] GetSingletonInstance<" + typeof(T).Name + ">: " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("[PerkMenu] GetSingletonInstance<" + typeof(T).Name + ">: " + ex.Message); }
             return null;
         }
 
@@ -193,7 +193,7 @@ namespace DescendersModMenu.Mods
             if ((object)pii == null)
             {
                 LastResult = "Not in a session";
-                MelonLogger.Warning("[PerkMenu] Grant: local PlayerInfoImpact not found - not loaded into a Career/Bike Park session?");
+                ModLog.Warn("[PerkMenu] Grant: local PlayerInfoImpact not found - not loaded into a Career/Bike Park session?");
                 return;
             }
 
@@ -201,7 +201,7 @@ namespace DescendersModMenu.Mods
             {
                 pii.AddGameModifier(perk);
                 LastResult = "Granted: " + perk.name;
-                MelonLogger.Msg("[PerkMenu] Granted \"" + perk.name + "\".");
+                ModLog.Debug("[PerkMenu] Granted \"" + perk.name + "\".");
             }
             catch (System.Exception ex)
             {
@@ -224,7 +224,7 @@ namespace DescendersModMenu.Mods
 
                 bool removed = list.Remove(perk);
                 LastResult = removed ? "Removed: " + perk.name : "Wasn't active: " + perk.name;
-                MelonLogger.Msg("[PerkMenu] " + LastResult);
+                ModLog.Debug("[PerkMenu] " + LastResult);
             }
             catch (System.Exception ex)
             {
@@ -261,7 +261,7 @@ namespace DescendersModMenu.Mods
                 int count = list.Count;
                 list.Clear();
                 LastResult = "Cleared " + count + " perk(s)";
-                MelonLogger.Msg("[PerkMenu] Cleared " + count + " perk(s).");
+                ModLog.Debug("[PerkMenu] Cleared " + count + " perk(s).");
             }
             catch (System.Exception ex)
             {

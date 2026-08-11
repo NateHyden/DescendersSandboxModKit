@@ -41,12 +41,12 @@ namespace DescendersModMenu.Mods
             _lastTapTime = now;
             _tapCount++;
 
-            MelonLogger.Msg("[DevLock] Tap " + _tapCount + "/" + TapsRequired);
+            ModLog.Debug("[DevLock] Tap " + _tapCount + "/" + TapsRequired);
 
             if (_tapCount >= TapsRequired)
             {
                 IsUnlocked = true;
-                MelonLogger.Msg("[DevLock] Developer Diagnostics unlocked.");
+                ModLog.Debug("[DevLock] Developer Diagnostics unlocked.");
             }
         }
 

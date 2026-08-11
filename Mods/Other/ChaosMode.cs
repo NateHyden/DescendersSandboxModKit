@@ -32,12 +32,12 @@ namespace DescendersModMenu.Mods
                 for (int i = 0; i < PoolCount; i++) _snapshot[i] = GetPoolEnabled(i);
                 _hasSnapshot = true;
                 ScheduleNext();
-                MelonLogger.Msg("[ChaosMode] ON — snapshotted " + PoolCount + " mods.");
+                ModLog.Debug("[ChaosMode] ON — snapshotted " + PoolCount + " mods.");
             }
             else
             {
                 RestoreAll();
-                MelonLogger.Msg("[ChaosMode] OFF — restored original states.");
+                ModLog.Debug("[ChaosMode] OFF — restored original states.");
             }
         }
 
@@ -56,7 +56,7 @@ namespace DescendersModMenu.Mods
             {
                 TogglePool(idx);
                 LastFlipDisplay = PoolNames[idx] + " " + (GetPoolEnabled(idx) ? "ON" : "OFF");
-                MelonLogger.Msg("[ChaosMode] Flipped " + LastFlipDisplay);
+                ModLog.Debug("[ChaosMode] Flipped " + LastFlipDisplay);
             }
             catch (System.Exception ex) { MelonLogger.Error("[ChaosMode] Flip " + PoolNames[idx] + ": " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ChaosMode"); }
             ScheduleNext();

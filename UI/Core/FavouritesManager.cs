@@ -110,7 +110,7 @@ namespace DescendersModMenu.UI
                 try { UIHelpers.SetStarActive(kv.Value, IsFavourited(kv.Key)); }
                 catch (Exception ex)
                 {
-                    MelonLogger.Warning("[Favs] RefreshAllStars: stale star button for '" + kv.Key + "' — " + ex.Message);
+                    ModLog.Warn("[Favs] RefreshAllStars: stale star button for '" + kv.Key + "' — " + ex.Message);
                     if (stale == null) stale = new List<string>();
                     stale.Add(kv.Key);
                 }
@@ -219,7 +219,7 @@ namespace DescendersModMenu.UI
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[Favs] LoadFromFile failed: " + ex.Message);
+                ModLog.Warn("[Favs] LoadFromFile failed: " + ex.Message);
             }
         }
 
@@ -242,7 +242,7 @@ namespace DescendersModMenu.UI
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[Favs] SaveToFile failed: " + ex.Message);
+                ModLog.Warn("[Favs] SaveToFile failed: " + ex.Message);
             }
         }
 

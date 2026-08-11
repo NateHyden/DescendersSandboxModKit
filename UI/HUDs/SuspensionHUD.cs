@@ -80,7 +80,7 @@ namespace DescendersModMenu.Mods
             EnsureRepPopup();
             if ((object)_repPopup == null)
             {
-                MelonLogger.Warning("[SuspensionHUD] UI_RepPopup not found — trick feed unchanged.");
+                ModLog.Warn("[SuspensionHUD] UI_RepPopup not found — trick feed unchanged.");
                 return;
             }
             _repPopup.gameObject.SetActive(visible);
@@ -107,13 +107,13 @@ namespace DescendersModMenu.Mods
                         _repPopupType = assemblies[a].GetType("UI_RepPopup");
                         if ((object)_repPopupType != null) break;
                     }
-                    MelonLogger.Msg("[SuspensionHUD] UI_RepPopup type: "
+                    ModLog.Debug("[SuspensionHUD] UI_RepPopup type: "
                         + ((object)_repPopupType != null ? "FOUND" : "NOT FOUND"));
                 }
 
                 if ((object)_repPopupType == null)
                 {
-                    MelonLogger.Warning("[SuspensionHUD] UI_RepPopup type not resolved — trick feed hide unavailable.");
+                    ModLog.Warn("[SuspensionHUD] UI_RepPopup type not resolved — trick feed hide unavailable.");
                     return;
                 }
 
@@ -122,11 +122,11 @@ namespace DescendersModMenu.Mods
                 if ((object)obj != null)
                 {
                     _repPopup = obj as MonoBehaviour;
-                    MelonLogger.Msg("[SuspensionHUD] UI_RepPopup found: " + _repPopup.gameObject.name);
+                    ModLog.Debug("[SuspensionHUD] UI_RepPopup found: " + _repPopup.gameObject.name);
                 }
                 else
                 {
-                    MelonLogger.Warning("[SuspensionHUD] UI_RepPopup not found in scene.");
+                    ModLog.Warn("[SuspensionHUD] UI_RepPopup not found in scene.");
                 }
             }
             catch (System.Exception ex)
@@ -205,7 +205,7 @@ namespace DescendersModMenu.Mods
             if (_calibLogCount < 5 && (frontRaw > 0f || rearRaw > 0f))
             {
                 _calibLogCount++;
-                MelonLogger.Msg("[SuspensionHUD] raw F=" + frontRaw.ToString("F4")
+                ModLog.Debug("[SuspensionHUD] raw F=" + frontRaw.ToString("F4")
                     + " R=" + rearRaw.ToString("F4")
                     + " | norm F=" + frontComp.ToString("F3")
                     + " R=" + rearComp.ToString("F3")
@@ -221,7 +221,7 @@ namespace DescendersModMenu.Mods
                 if (_rearSamples >= HardtailFrames)
                 {
                     _isHardtail = _rearMaxComp < HardtailThresh;
-                    MelonLogger.Msg("[SuspensionHUD] Hardtail detection: maxRearComp="
+                    ModLog.Debug("[SuspensionHUD] Hardtail detection: maxRearComp="
                         + _rearMaxComp.ToString("F4")
                         + " isHardtail=" + _isHardtail);
                 }
@@ -336,29 +336,29 @@ namespace DescendersModMenu.Mods
                 Transform frontT = player.transform.Find("wheel_front");
                 Transform rearT = player.transform.Find("wheel_back");
 
-                MelonLogger.Msg("[SuspensionHUD] wheel_front transform: "
+                ModLog.Debug("[SuspensionHUD] wheel_front transform: "
                     + ((object)frontT != null ? "FOUND (" + frontT.gameObject.name + ")" : "NOT FOUND"));
-                MelonLogger.Msg("[SuspensionHUD] wheel_back transform: "
+                ModLog.Debug("[SuspensionHUD] wheel_back transform: "
                     + ((object)rearT != null ? "FOUND (" + rearT.gameObject.name + ")" : "NOT FOUND"));
 
                 if ((object)frontT != null) _frontWheel = frontT.GetComponent<Wheel>();
                 if ((object)rearT != null) _rearWheel = rearT.GetComponent<Wheel>();
 
-                MelonLogger.Msg("[SuspensionHUD] Front Wheel component: "
+                ModLog.Debug("[SuspensionHUD] Front Wheel component: "
                     + ((object)_frontWheel != null ? "OK" : "NOT FOUND on wheel_front"));
-                MelonLogger.Msg("[SuspensionHUD] Rear Wheel component: "
+                ModLog.Debug("[SuspensionHUD] Rear Wheel component: "
                     + ((object)_rearWheel != null ? "OK" : "NOT FOUND on wheel_back"));
 
                 // ── Approach B: fallback if named approach failed ─────
                 if ((object)_frontWheel == null && (object)_rearWheel == null)
                 {
-                    MelonLogger.Warning("[SuspensionHUD] Named transforms failed — fallback: GetComponentsInChildren<Wheel>()");
+                    ModLog.Warn("[SuspensionHUD] Named transforms failed — fallback: GetComponentsInChildren<Wheel>()");
                     Wheel[] wheels = player.GetComponentsInChildren<Wheel>();
                     int wCount = (wheels != null) ? wheels.Length : 0;
-                    MelonLogger.Msg("[SuspensionHUD] GetComponentsInChildren<Wheel>() found " + wCount + " wheel(s).");
+                    ModLog.Debug("[SuspensionHUD] GetComponentsInChildren<Wheel>() found " + wCount + " wheel(s).");
 
-                    if (wCount >= 1) { _frontWheel = wheels[0]; MelonLogger.Msg("[SuspensionHUD] Fallback front: " + wheels[0].gameObject.name); }
-                    if (wCount >= 2) { _rearWheel = wheels[1]; MelonLogger.Msg("[SuspensionHUD] Fallback rear: " + wheels[1].gameObject.name); }
+                    if (wCount >= 1) { _frontWheel = wheels[0]; ModLog.Debug("[SuspensionHUD] Fallback front: " + wheels[0].gameObject.name); }
+                    if (wCount >= 2) { _rearWheel = wheels[1]; ModLog.Debug("[SuspensionHUD] Fallback rear: " + wheels[1].gameObject.name); }
 
                     if (wCount == 0)
                         MelonLogger.Error("[SuspensionHUD] No Wheel components found on Player_Human subtree. HUD will not function.");
@@ -383,7 +383,7 @@ namespace DescendersModMenu.Mods
             Wheel w = (object)_frontWheel != null ? _frontWheel : _rearWheel;
             if ((object)w == null)
             {
-                MelonLogger.Warning("[SuspensionHUD] EnsureField: no wheel to introspect.");
+                ModLog.Warn("[SuspensionHUD] EnsureField: no wheel to introspect.");
                 return;
             }
 
@@ -399,18 +399,18 @@ namespace DescendersModMenu.Mods
                     // Verify it returns float and reads a sane value
                     float testVal = -1f;
                     try { testVal = (float)_suspField.GetValue(w); } catch { }
-                    MelonLogger.Msg("[SuspensionHUD] <suspensionPress>k__BackingField FOUND."
+                    ModLog.Debug("[SuspensionHUD] <suspensionPress>k__BackingField FOUND."
                         + " FieldType=" + _suspField.FieldType.Name
                         + " CurrentValue=" + testVal.ToString("F4"));
                     return;
                 }
 
-                MelonLogger.Warning("[SuspensionHUD] <suspensionPress>k__BackingField NOT found by exact name.");
+                ModLog.Warn("[SuspensionHUD] <suspensionPress>k__BackingField NOT found by exact name.");
 
                 // ── Attempt 2: scan NonPublic Instance fields for suspension-related names ──
                 FieldInfo[] nonPubFields = w.GetType().GetFields(
                     BindingFlags.NonPublic | BindingFlags.Instance);
-                MelonLogger.Msg("[SuspensionHUD] Scanning " + nonPubFields.Length + " NonPublic Instance fields on Wheel...");
+                ModLog.Debug("[SuspensionHUD] Scanning " + nonPubFields.Length + " NonPublic Instance fields on Wheel...");
 
                 for (int i = 0; i < nonPubFields.Length; i++)
                 {
@@ -423,20 +423,20 @@ namespace DescendersModMenu.Mods
 
                     if (nameMatch)
                     {
-                        MelonLogger.Msg("[SuspensionHUD] Candidate: " + fn + " (" + nonPubFields[i].FieldType.Name + ")");
+                        ModLog.Debug("[SuspensionHUD] Candidate: " + fn + " (" + nonPubFields[i].FieldType.Name + ")");
                         if (string.Equals(nonPubFields[i].FieldType.Name, "Single", System.StringComparison.Ordinal))
                         {
                             _suspField = nonPubFields[i];
                             float v = -1f;
                             try { v = (float)_suspField.GetValue(w); } catch { }
-                            MelonLogger.Msg("[SuspensionHUD] Using field: " + fn + " = " + v.ToString("F4"));
+                            ModLog.Debug("[SuspensionHUD] Using field: " + fn + " = " + v.ToString("F4"));
                             return;
                         }
                     }
                 }
 
                 // ── Attempt 3: log ALL float-returning 0-param public methods ──
-                MelonLogger.Warning("[SuspensionHUD] No suspension field found by name scan. Listing all float 0-param public methods on Wheel:");
+                ModLog.Warn("[SuspensionHUD] No suspension field found by name scan. Listing all float 0-param public methods on Wheel:");
                 MethodInfo[] methods = w.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance);
                 int listed = 0;
                 for (int i = 0; i < methods.Length; i++)
@@ -447,16 +447,16 @@ namespace DescendersModMenu.Mods
                     {
                         float val = -999f;
                         try { val = (float)methods[i].Invoke(w, null); } catch { }
-                        MelonLogger.Msg("[SuspensionHUD]   method: " + methods[i].Name + "() = " + val.ToString("F4"));
+                        ModLog.Debug("[SuspensionHUD]   method: " + methods[i].Name + "() = " + val.ToString("F4"));
                         listed++;
                     }
                 }
-                MelonLogger.Msg("[SuspensionHUD] Listed " + listed + " float 0-param public methods.");
+                ModLog.Debug("[SuspensionHUD] Listed " + listed + " float 0-param public methods.");
 
                 // ── Attempt 4: log ALL NonPublic fields (raw dump) ────
-                MelonLogger.Warning("[SuspensionHUD] Dumping ALL NonPublic Instance fields on Wheel for manual inspection:");
+                ModLog.Warn("[SuspensionHUD] Dumping ALL NonPublic Instance fields on Wheel for manual inspection:");
                 for (int i = 0; i < nonPubFields.Length; i++)
-                    MelonLogger.Msg("[SuspensionHUD]   field[" + i + "]: " + nonPubFields[i].Name + " (" + nonPubFields[i].FieldType.Name + ")");
+                    ModLog.Debug("[SuspensionHUD]   field[" + i + "]: " + nonPubFields[i].Name + " (" + nonPubFields[i].FieldType.Name + ")");
 
                 MelonLogger.Error("[SuspensionHUD] Could not resolve suspension compression field. Bars will show 0.");
                 Telemetry.ReportErrorAsync(new System.Exception("[SuspensionHUD] Could not resolve suspension compression field. Bars will show 0."), "SuspensionHUD");

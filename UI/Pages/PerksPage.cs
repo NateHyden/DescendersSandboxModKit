@@ -318,7 +318,7 @@ namespace DescendersModMenu.UI
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[PerksPage] DescribePerk: " + ex.Message);
+                ModLog.Warn("[PerksPage] DescribePerk: " + ex.Message);
                 return null;
             }
         }

@@ -57,8 +57,8 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            if (Enabled) { ResetRun(); MelonLogger.Msg("[Survival] ON"); }
-            else { IsGameOver = false; MelonLogger.Msg("[Survival] OFF"); }
+            if (Enabled) { ResetRun(); ModLog.Debug("[Survival] ON"); }
+            else { IsGameOver = false; ModLog.Debug("[Survival] OFF"); }
         }
 
         public static void ResetRun()
@@ -72,7 +72,7 @@ namespace DescendersModMenu.Mods
             _wasAirborne = false;
             _airtimeAccum = 0f;
             _prevVelY = 0f;
-            MelonLogger.Msg("[Survival] Run reset.");
+            ModLog.Debug("[Survival] Run reset.");
         }
 
         public static void Reset()
@@ -126,13 +126,13 @@ namespace DescendersModMenu.Mods
                     int heal = HealValues[HealIndex];
                     HP = Mathf.Min(MaxHP, HP + heal);
                     TricksLanded++;
-                    MelonLogger.Msg("[Survival] Big landing +" + heal + " HP (air=" + _airtimeAccum.ToString("F2") + "s)");
+                    ModLog.Debug("[Survival] Big landing +" + heal + " HP (air=" + _airtimeAccum.ToString("F2") + "s)");
                 }
                 else if (_airtimeAccum >= SmallJumpTime)
                 {
                     HP = Mathf.Min(MaxHP, HP + 5);
                     TricksLanded++;
-                    MelonLogger.Msg("[Survival] Small landing +5 HP (air=" + _airtimeAccum.ToString("F2") + "s)");
+                    ModLog.Debug("[Survival] Small landing +5 HP (air=" + _airtimeAccum.ToString("F2") + "s)");
                 }
                 _wasAirborne = false;
                 _airtimeAccum = 0f;
@@ -152,7 +152,7 @@ namespace DescendersModMenu.Mods
             {
                 HP = 0f;
                 IsGameOver = true;
-                MelonLogger.Msg("[Survival] GAME OVER. " + TimeAlive.ToString("F1")
+                ModLog.Debug("[Survival] GAME OVER. " + TimeAlive.ToString("F1")
                     + "s  Bails:" + BailsTaken + "  Tricks:" + TricksLanded);
             }
         }

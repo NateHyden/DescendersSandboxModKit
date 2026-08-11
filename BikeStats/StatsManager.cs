@@ -178,7 +178,7 @@ namespace DescendersModMenu.BikeStats
 
                 string json = JsonUtility.ToJson(data, true);
                 File.WriteAllText(SaveFile, json);
-                MelonLogger.Msg("[StatsManager] Saved to: " + SaveFile);
+                ModLog.Debug("[StatsManager] Saved to: " + SaveFile);
             }
             catch (Exception ex) { MelonLogger.Error("[StatsManager] SaveStats: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "StatsManager"); }
         }
@@ -191,17 +191,17 @@ namespace DescendersModMenu.BikeStats
             // Reset to clean defaults first — ensures mods that are currently ON
             // but saved as OFF get properly turned off
             try { ResetStats(); }
-            catch (System.Exception ex) { MelonLogger.Warning("[StatsManager] Pre-load reset: " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("[StatsManager] Pre-load reset: " + ex.Message); }
 
             try
             {
                 if (!File.Exists(SaveFile))
-                { MelonLogger.Warning("[StatsManager] No save file found: " + SaveFile); return; }
+                { ModLog.Warn("[StatsManager] No save file found: " + SaveFile); return; }
 
                 string json = File.ReadAllText(SaveFile);
                 BikeStatsData data = JsonUtility.FromJson<BikeStatsData>(json);
                 if (data == null)
-                { MelonLogger.Warning("[StatsManager] JSON returned null."); return; }
+                { ModLog.Warn("[StatsManager] JSON returned null."); return; }
 
                 // Bike / Stats
                 Acceleration.SetLevel(data.AccelerationLevel);

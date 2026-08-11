@@ -63,21 +63,21 @@ namespace DescendersModMenu.UI
         // No Speed Cap
         private static Image capBg, capBdr; private static Text capTxt;
         // ── Pages ─────────────────────────────────────────────────────
-        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22, pg23;
+        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22, pg23, pg24;
         private static int cur = 1;
 
         // Set before RebuildMenu() to reopen on a specific page id (e.g. 3 = Info/Customize)
         // instead of the default first tab. Consumed (reset to -1) on use.
         public static int PendingPage = -1;
 
-        private static readonly int[] PageOrder = { 17, 20, 19, 3, 1, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22 };
-        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info/Customize", "General", "Xbox Workshop", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Other", "Perks" };
-        private static readonly string[] GroupLabels = { null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
+        private static readonly int[] PageOrder = { 17, 20, 19, 3, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22 };
+        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info/Customize", "General", "Object Placer", "Xbox Workshop", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Other", "Perks" };
+        private static readonly string[] GroupLabels = { null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
 
-        private static Image[] _navBars = new Image[21];
-        private static Text[] _navTxts = new Text[21];
-        private static Image[] _navBgs = new Image[21];
-        private static Image[] _activeDots = new Image[21];
+        private static Image[] _navBars = new Image[22];
+        private static Text[] _navTxts = new Text[22];
+        private static Image[] _navBgs = new Image[22];
+        private static Image[] _activeDots = new Image[22];
         private static UnityEngine.UI.Image _infoTabDot;
 
         public static CanvasGroup RootCanvasGroup { get; private set; }
@@ -91,6 +91,11 @@ namespace DescendersModMenu.UI
         private static Text _telemetryTxt;
         private static Image _telSwitchTrack;
         private static RectTransform _telSwitchKnob;
+        private static Text _allModsTxt;
+        private static Image _allModsTrack;
+        private static RectTransform _allModsKnob;
+        private static ScrollRect _sibScroll;
+        private static CanvasGroup _sibMoreHint;
 
         // ─────────────────────────────────────────────────────────────
         public static GameObject CreateMenu()
@@ -171,6 +176,27 @@ namespace DescendersModMenu.UI
                 var verTxt = UIHelpers.Txt("VT", verBadge.transform, "v" + BuildInfo.Version, 10, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 UIHelpers.Fill(UIHelpers.RT(verTxt.gameObject));
 
+                var allLbl = UIHelpers.Txt("AllLbl", hdr.transform, "All Mods", 9, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextMid);
+                var allLblRt = UIHelpers.RT(allLbl.gameObject);
+                allLblRt.anchorMin = new Vector2(0, 0.5f); allLblRt.anchorMax = new Vector2(0, 0.5f);
+                allLblRt.pivot = new Vector2(0, 0.5f);
+                allLblRt.sizeDelta = new Vector2(54, 16);
+                allLblRt.anchoredPosition = new Vector2(16, -26);
+                allLbl.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+                _allModsTxt = UIHelpers.Txt("AllState", hdr.transform, "ON", 9, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.OnColor);
+                var allStateRt = UIHelpers.RT(_allModsTxt.gameObject);
+                allStateRt.anchorMin = new Vector2(0, 0.5f); allStateRt.anchorMax = new Vector2(0, 0.5f);
+                allStateRt.pivot = new Vector2(0, 0.5f);
+                allStateRt.sizeDelta = new Vector2(26, 16);
+                allStateRt.anchoredPosition = new Vector2(70, -26);
+                _allModsTxt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+                BuildHeaderToggle(hdr.transform, "AllSwitch", new Vector2(98, -27),
+                    new Vector2(0, 0.5f), () => { AllModsSwitch.Toggle(); },
+                    out _allModsTrack, out _allModsKnob);
+                RefreshAllModsSwitch();
+
                 // "Created by NateHyden" — pinned to top-right corner
                 var byTxt = UIHelpers.Txt("By", hdr.transform, "Created by NateHyden", 9, FontStyle.Normal, TextAnchor.UpperRight, UIHelpers.TextMid);
                 var byrt = UIHelpers.RT(byTxt.gameObject);
@@ -197,7 +223,7 @@ namespace DescendersModMenu.UI
                 telLblRt.anchorMin = new Vector2(1, 1); telLblRt.anchorMax = new Vector2(1, 1);
                 telLblRt.pivot = new Vector2(1, 1);
                 telLblRt.sizeDelta = new Vector2(60, 16);
-                telLblRt.anchoredPosition = new Vector2(-76, -35);
+                telLblRt.anchoredPosition = new Vector2(-92, -35);
                 telLbl.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
                 _telemetryTxt = UIHelpers.Txt("TelState", hdr.transform, "ON", 9, FontStyle.Bold, TextAnchor.UpperRight, UIHelpers.OnColor);
@@ -205,36 +231,12 @@ namespace DescendersModMenu.UI
                 telStateRt.anchorMin = new Vector2(1, 1); telStateRt.anchorMax = new Vector2(1, 1);
                 telStateRt.pivot = new Vector2(1, 1);
                 telStateRt.sizeDelta = new Vector2(26, 16);
-                telStateRt.anchoredPosition = new Vector2(-40, -35);
+                telStateRt.anchoredPosition = new Vector2(-56, -35);
                 _telemetryTxt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
-                var telSwitch = UIHelpers.Obj("TelSwitch", hdr.transform);
-                var telSwRt = UIHelpers.RT(telSwitch);
-                telSwRt.anchorMin = new Vector2(1, 1); telSwRt.anchorMax = new Vector2(1, 1);
-                telSwRt.pivot = new Vector2(1, 1);
-                telSwRt.sizeDelta = new Vector2(28, 15);
-                telSwRt.anchoredPosition = new Vector2(-8, -34);
-                telSwitch.AddComponent<LayoutElement>().ignoreLayout = true;
-                _telSwitchTrack = telSwitch.AddComponent<Image>();
-                _telSwitchTrack.sprite = UIHelpers.TogSp; _telSwitchTrack.type = Image.Type.Sliced;
-
-                var telKnobObj = UIHelpers.Obj("K", telSwitch.transform);
-                var telKnobImg = telKnobObj.AddComponent<Image>();
-                telKnobImg.sprite = UIHelpers.KnobSp; telKnobImg.type = Image.Type.Sliced;
-                telKnobImg.raycastTarget = false;
-                _telSwitchKnob = UIHelpers.RT(telKnobObj);
-                _telSwitchKnob.anchorMin = new Vector2(0, 0.5f); _telSwitchKnob.anchorMax = new Vector2(0, 0.5f);
-                _telSwitchKnob.pivot = new Vector2(0, 0.5f);
-                _telSwitchKnob.sizeDelta = new Vector2(11, 11);
-                _telSwitchKnob.anchoredPosition = new Vector2(2, 0);
-
-                var telBtn = telSwitch.AddComponent<Button>();
-                telBtn.targetGraphic = _telSwitchTrack;
-                telBtn.onClick.AddListener(() => { Telemetry.Toggle(); RefreshTelemetryLabel(); });
-                var telBc = telBtn.colors;
-                telBc.normalColor = Color.white; telBc.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
-                telBc.pressedColor = new Color(0.7f, 0.7f, 0.7f, 1f); telBc.colorMultiplier = 1;
-                telBtn.colors = telBc;
+                BuildHeaderToggle(hdr.transform, "TelSwitch", new Vector2(-8, -32),
+                    new Vector2(1, 1), () => { Telemetry.Toggle(); RefreshTelemetryLabel(); },
+                    out _telSwitchTrack, out _telSwitchKnob);
                 RefreshTelemetryLabel();
 
                 // ── Telemetry explanation — dismissible. Skipped entirely
@@ -349,13 +351,33 @@ namespace DescendersModMenu.UI
                 sibCRT.pivot = new Vector2(0.5f, 1); sibCRT.sizeDelta = new Vector2(0, 0);
                 sibSR.content = sibCRT;
                 UIHelpers.AddScrollbar(sibSR);
+                _sibScroll = sibSR;
+
+                var moreHint = UIHelpers.Obj("MoreHint", sidebar.transform);
+                var moreRt = UIHelpers.RT(moreHint);
+                moreRt.anchorMin = new Vector2(0, 0); moreRt.anchorMax = new Vector2(1, 0);
+                moreRt.pivot = new Vector2(0.5f, 0);
+                moreRt.sizeDelta = new Vector2(0, 26);
+                moreRt.anchoredPosition = Vector2.zero;
+                moreHint.AddComponent<LayoutElement>().ignoreLayout = true;
+                var moreFade = UIHelpers.Panel("Fade", moreHint.transform, new Color(0.04f, 0.05f, 0.08f, 0.82f));
+                UIHelpers.Fill(UIHelpers.RT(moreFade));
+                moreFade.GetComponent<Image>().raycastTarget = false;
+                var moreTxt = UIHelpers.Txt("Arr", moreHint.transform, "\u25BC", 13, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                UIHelpers.Fill(UIHelpers.RT(moreTxt.gameObject));
+                moreTxt.raycastTarget = false;
+                _sibMoreHint = moreHint.AddComponent<CanvasGroup>();
+                _sibMoreHint.alpha = 0f;
+                _sibMoreHint.blocksRaycasts = false;
+                _sibMoreHint.interactable = false;
+
                 sibContent.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 var sVlg = sibContent.AddComponent<VerticalLayoutGroup>();
                 sVlg.spacing = 1; sVlg.padding = new RectOffset(4, 4, 2, 6);
                 sVlg.childAlignment = TextAnchor.UpperCenter;
                 sVlg.childForceExpandWidth = true; sVlg.childForceExpandHeight = false;
 
-                for (int i = 0; i < 21; i++)
+                for (int i = 0; i < PageOrder.Length; i++)
                 {
                     // ── Group separator ────────────────────────────────
                     if (GroupLabels[i] != null)
@@ -463,6 +485,7 @@ namespace DescendersModMenu.UI
                 pg21 = UIHelpers.Obj("P21", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg21)); OtherPage.CreatePage(pg21.transform);
                 pg22 = UIHelpers.Obj("P22", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg22)); PerksPage.CreatePage(pg22.transform);
                 pg23 = UIHelpers.Obj("P23", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg23)); XboxWorkshopPage.CreatePage(pg23.transform);
+                pg24 = UIHelpers.Obj("P24", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg24)); ObjectPlacerPage.CreatePage(pg24.transform);
 
                 RefreshAll(); RefreshTabs();
                 Mods.MenuCustomiser.LoadFromFile();
@@ -970,25 +993,79 @@ namespace DescendersModMenu.UI
             return im;
         }
 
-        // Updates the header telemetry label's text + colour to match the
-        // current MelonPreferences state. Called on build and on click.
-        // Now drives an actual switch (track colour + knob position), not
-        // just a text label — track is 28x15 with an 11px knob, so the
-        // on/off knob positions are sized for this specific switch rather
-        // than reusing UIHelpers.SetToggle (which assumes a 44x24 track).
+        private static void BuildHeaderToggle(Transform hdr, string name, Vector2 pos, Vector2 corner,
+            UnityEngine.Events.UnityAction clk, out Image track, out RectTransform knob)
+        {
+            var g = UIHelpers.Obj(name, hdr);
+            var rt = UIHelpers.RT(g);
+            rt.anchorMin = corner; rt.anchorMax = corner;
+            rt.pivot = corner;
+            rt.sizeDelta = new Vector2(34, 16);
+            rt.anchoredPosition = pos;
+            g.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            track = g.AddComponent<Image>();
+            track.sprite = UIHelpers.TogSp; track.type = Image.Type.Sliced;
+            track.color = UIHelpers.TogOffTrack;
+
+            var tbdr = UIHelpers.Panel("TBdr", g.transform, UIHelpers.RowBorder, UIHelpers.TogSp);
+            tbdr.GetComponent<Image>().raycastTarget = false;
+            UIHelpers.Fill(UIHelpers.RT(tbdr));
+            tbdr.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            var b = g.AddComponent<Button>();
+            b.onClick.AddListener(clk);
+            b.targetGraphic = track;
+            var cb = b.colors;
+            cb.normalColor = Color.white; cb.highlightedColor = Color.white;
+            cb.pressedColor = Color.white; cb.colorMultiplier = 1;
+            b.colors = cb;
+
+            var k = UIHelpers.Obj("K", g.transform);
+            var ki = k.AddComponent<Image>();
+            ki.sprite = UIHelpers.KnobSp; ki.type = Image.Type.Sliced;
+            ki.color = UIHelpers.TogKnobOff;
+            ki.raycastTarget = false;
+            knob = UIHelpers.RT(k);
+            knob.anchorMin = new Vector2(0, 0.5f); knob.anchorMax = new Vector2(0, 0.5f);
+            knob.pivot = new Vector2(0, 0.5f);
+            knob.sizeDelta = new Vector2(10, 10);
+            knob.anchoredPosition = new Vector2(3, 0);
+        }
+
+        private static void SetHeaderToggle(Image track, RectTransform knob, bool on)
+        {
+            if (track) track.color = on ? UIHelpers.TogOnTrack : UIHelpers.TogOffTrack;
+            Transform tbdr = (object)track != null ? track.transform.Find("TBdr") : null;
+            if ((object)tbdr != null)
+            {
+                var tbdrImg = tbdr.GetComponent<Image>();
+                if (tbdrImg) tbdrImg.color = on ? UIHelpers.AccentBdr : UIHelpers.RowBorder;
+            }
+            if (knob)
+            {
+                knob.anchoredPosition = new Vector2(on ? 21f : 3f, 0f);
+                var ki = knob.GetComponent<Image>();
+                if (ki) ki.color = on ? UIHelpers.TogKnobOn : UIHelpers.TogKnobOff;
+            }
+        }
+
+        public static void RefreshAllModsSwitch()
+        {
+            if (!_allModsTxt) return;
+            bool on = AllModsSwitch.Enabled;
+            _allModsTxt.text = on ? "ON" : "OFF";
+            _allModsTxt.color = on ? UIHelpers.OnColor : UIHelpers.OffColor;
+            SetHeaderToggle(_allModsTrack, _allModsKnob, on);
+        }
+
         private static void RefreshTelemetryLabel()
         {
             if (!_telemetryTxt) return;
             bool on = Telemetry.Enabled;
             _telemetryTxt.text = on ? "ON" : "OFF";
             _telemetryTxt.color = on ? UIHelpers.OnColor : UIHelpers.OffColor;
-            if (_telSwitchTrack) _telSwitchTrack.color = on ? UIHelpers.TogOnTrack : UIHelpers.TogOffTrack;
-            if (_telSwitchKnob)
-            {
-                _telSwitchKnob.anchoredPosition = new Vector2(on ? 15f : 2f, 0f);
-                var knobImg = _telSwitchKnob.GetComponent<Image>();
-                if (knobImg) knobImg.color = on ? UIHelpers.TogKnobOn : UIHelpers.TogKnobOff;
-            }
+            SetHeaderToggle(_telSwitchTrack, _telSwitchKnob, on);
         }
 
         private static void BotBtn(string lbl, Transform p, Color bg, UnityEngine.Events.UnityAction clk)
@@ -1033,6 +1110,7 @@ namespace DescendersModMenu.UI
                     case 21: return OtherPage.IsAnyActive;
                     case 22: return false;
                     case 23: return false;
+                    case 24: return ObjectPlacerPage.IsAnyActive;
                     default: return false;
                 }
             }
@@ -1066,8 +1144,10 @@ namespace DescendersModMenu.UI
             if (pg21) pg21.SetActive(cur == 21);
             if (pg22) pg22.SetActive(cur == 22);
             if (pg23) pg23.SetActive(cur == 23);
+            if (pg24) pg24.SetActive(cur == 24);
+            if (cur == 24) ObjectPlacerPage.RefreshAll();
 
-            for (int i = 0; i < 21; i++)
+            for (int i = 0; i < PageOrder.Length; i++)
             {
                 bool on = PageOrder[i] == cur;
                 bool active = IsPageActive(PageOrder[i]);
@@ -1242,6 +1322,41 @@ namespace DescendersModMenu.UI
                     _hdrFlashImg.color = UIHelpers.NeonBlue;
                     _hdrFlashImg = null;
                 }
+            }
+
+            if (MenuUI.IsOpen) UpdateSidebarMoreHint();
+        }
+
+        private static void UpdateSidebarMoreHint()
+        {
+            // Unity fake-null: destroyed UI still fails (object)x == null.
+            // Xbox set_alpha throws NullReferenceException, not MissingReferenceException.
+            if (!_sibMoreHint || !_sibScroll)
+            {
+                _sibMoreHint = null;
+                _sibScroll = null;
+                return;
+            }
+
+            try
+            {
+                bool show = false;
+                RectTransform content = _sibScroll.content;
+                RectTransform vp = _sibScroll.viewport;
+                if (content && vp)
+                {
+                    float extra = content.rect.height - vp.rect.height;
+                    bool overflow = extra > 10f;
+                    bool atTop = _sibScroll.verticalNormalizedPosition >= 0.96f;
+                    show = overflow && atTop;
+                }
+
+                _sibMoreHint.alpha = Mathf.MoveTowards(_sibMoreHint.alpha, show ? 1f : 0f, Time.unscaledDeltaTime * 8f);
+            }
+            catch (System.Exception)
+            {
+                _sibMoreHint = null;
+                _sibScroll = null;
             }
         }
     }

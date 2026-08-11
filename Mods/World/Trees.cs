@@ -57,7 +57,7 @@ namespace DescendersModMenu.Mods
                 int caughtCols = DisableCollisionObjects(logNew: true);
 
                 if (caughtRoots > 0 || caughtCols > 0)
-                    MelonLogger.Msg("[Trees] Reassert: re-hid " + caughtRoots
+                    ModLog.Debug("[Trees] Reassert: re-hid " + caughtRoots
                         + " root(s), disabled " + caughtCols + " CollisionObject collider(s).");
             }
             catch (System.Exception ex) { MelonLogger.Error("[Trees] ReassertHidden: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Trees"); }
@@ -121,7 +121,7 @@ namespace DescendersModMenu.Mods
             EnsureTerrainReflection();
             if ((object)_terrainType == null)
             {
-                if (log) MelonLogger.Warning("[Trees] Terrain type not found (GO trees still handled).");
+                if (log) ModLog.Warn("[Trees] Terrain type not found (GO trees still handled).");
                 return;
             }
 

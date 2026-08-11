@@ -34,7 +34,7 @@ namespace DescendersModMenu.Mods
 
                 if ((object)fixedUpdate == null)
                 {
-                    MelonLogger.Warning("[NoSpeedCap] Could not find VehicleController.FixedUpdate.");
+                    ModLog.Warn("[NoSpeedCap] Could not find VehicleController.FixedUpdate.");
                     return;
                 }
 
@@ -88,7 +88,7 @@ namespace DescendersModMenu.Mods
 
                 if ((object)target == null)
                 {
-                    MelonLogger.Warning("[NoSpeedCap] Could not find E{Kza method.");
+                    ModLog.Warn("[NoSpeedCap] Could not find E{Kza method.");
                     return;
                 }
 

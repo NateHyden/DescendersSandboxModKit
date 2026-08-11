@@ -51,7 +51,7 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                MelonLogger.Msg("[StateNavigator] Attempting to push state \"" + label + "\" (" + stateValue + ")");
+                ModLog.Debug("[StateNavigator] Attempting to push state \"" + label + "\" (" + stateValue + ")");
 
                 Type stateMachineType = FindType("StateMachine");
                 if ((object)stateMachineType == null)
@@ -59,7 +59,7 @@ namespace DescendersModMenu.Mods
                     MelonLogger.Error("[StateNavigator] StateMachine type not found in any loaded assembly.");
                     return false;
                 }
-                MelonLogger.Msg("[StateNavigator] Found StateMachine type: " + stateMachineType.AssemblyQualifiedName);
+                ModLog.Debug("[StateNavigator] Found StateMachine type: " + stateMachineType.AssemblyQualifiedName);
 
                 Type baseType = stateMachineType.BaseType; // expected: Singleton<StateMachine>
                 if ((object)baseType == null)
@@ -67,7 +67,7 @@ namespace DescendersModMenu.Mods
                     MelonLogger.Error("[StateNavigator] StateMachine.BaseType is null - can't reach Singleton<T>.");
                     return false;
                 }
-                MelonLogger.Msg("[StateNavigator] StateMachine base type: " + baseType.FullName);
+                ModLog.Debug("[StateNavigator] StateMachine base type: " + baseType.FullName);
 
                 MethodInfo getSP = baseType.GetMethod("get_SP", BindingFlags.Public | BindingFlags.Static);
                 if ((object)getSP == null)
@@ -76,7 +76,7 @@ namespace DescendersModMenu.Mods
                     // right one can be identified by hand if "get_SP" ever changes.
                     MelonLogger.Error("[StateNavigator] get_SP not found on " + baseType.Name + ". Dumping static methods:");
                     foreach (var m in baseType.GetMethods(BindingFlags.Public | BindingFlags.Static))
-                        MelonLogger.Msg("[StateNavigator]   candidate: " + m.ReturnType.Name + " " + m.Name + "()");
+                        ModLog.Debug("[StateNavigator]   candidate: " + m.ReturnType.Name + " " + m.Name + "()");
                     return false;
                 }
 
@@ -86,14 +86,14 @@ namespace DescendersModMenu.Mods
                     MelonLogger.Error("[StateNavigator] StateMachine.SP returned null (menu system may not be initialized yet - try again once you're in the main menu).");
                     return false;
                 }
-                MelonLogger.Msg("[StateNavigator] StateMachine instance acquired.");
+                ModLog.Debug("[StateNavigator] StateMachine instance acquired.");
 
                 MethodInfo pushState = stateMachineType.GetMethod("PushState", BindingFlags.Public | BindingFlags.Instance);
                 if ((object)pushState == null)
                 {
                     MelonLogger.Error("[StateNavigator] PushState method not found on StateMachine. Dumping instance methods:");
                     foreach (var m in stateMachineType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
-                        MelonLogger.Msg("[StateNavigator]   candidate: " + m.ReturnType.Name + " " + m.Name + "(" + m.GetParameters().Length + " args)");
+                        ModLog.Debug("[StateNavigator]   candidate: " + m.ReturnType.Name + " " + m.Name + "(" + m.GetParameters().Length + " args)");
                     return false;
                 }
 
@@ -105,7 +105,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 Type enumType = pars[0].ParameterType;
-                MelonLogger.Msg("[StateNavigator] PushState enum parameter type: " + enumType.FullName);
+                ModLog.Debug("[StateNavigator] PushState enum parameter type: " + enumType.FullName);
 
                 if (!enumType.IsEnum)
                 {
@@ -117,15 +117,15 @@ namespace DescendersModMenu.Mods
                 {
                     MelonLogger.Error("[StateNavigator] Value " + stateValue + " is not defined on enum " + enumType.Name + ". Dumping valid values:");
                     foreach (var name in Enum.GetNames(enumType))
-                        MelonLogger.Msg("[StateNavigator]   " + name + " = " + (int)Enum.Parse(enumType, name));
+                        ModLog.Debug("[StateNavigator]   " + name + " = " + (int)Enum.Parse(enumType, name));
                     return false;
                 }
 
                 object stateArg = Enum.ToObject(enumType, stateValue);
-                MelonLogger.Msg("[StateNavigator] Invoking PushState(" + stateArg + ")");
+                ModLog.Debug("[StateNavigator] Invoking PushState(" + stateArg + ")");
                 pushState.Invoke(smInstance, new object[] { stateArg });
 
-                MelonLogger.Msg("[StateNavigator] PushState call completed without exception for \"" + label + "\".");
+                ModLog.Debug("[StateNavigator] PushState call completed without exception for \"" + label + "\".");
                 return true;
             }
             catch (TargetInvocationException tie)

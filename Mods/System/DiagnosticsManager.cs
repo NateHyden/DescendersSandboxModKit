@@ -36,7 +36,7 @@ namespace DescendersModMenu.Mods
             // hit the MelonLoader console so startup isn't a wall of OK lines.
             if (!ok)
             {
-                MelonLogger.Warning("[Diagnostics] " + name + ": FAILED - " + error);
+                ModLog.Warn("[Diagnostics] " + name + ": FAILED - " + error);
                 WriteToFile(name, error, "");
             }
         }
@@ -46,13 +46,13 @@ namespace DescendersModMenu.Mods
             // Quiet success path — only surface startup failures in MelonLoader.
             if (FailCount > 0)
             {
-                MelonLogger.Warning("[Diagnostics] Startup: " + FailCount + " failed, "
+                ModLog.Warn("[Diagnostics] Startup: " + FailCount + " failed, "
                     + OKCount + " OK  |  Unity " + UnityVersion
                     + (UnityVersionMatch ? "" : " (built for " + BuiltForUnity + ")"));
                 for (int i = 0; i < _statuses.Count; i++)
                 {
                     if (!_statuses[i].OK)
-                        MelonLogger.Warning("[Diagnostics]   " + _statuses[i].Name
+                        ModLog.Warn("[Diagnostics]   " + _statuses[i].Name
                             + ": " + _statuses[i].Error);
                 }
             }

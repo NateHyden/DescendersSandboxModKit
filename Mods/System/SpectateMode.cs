@@ -109,7 +109,8 @@ namespace DescendersModMenu.Mods
                         keyNames[i], BindingFlags.NonPublic | BindingFlags.Instance);
                     if ((object)m == null)
                     {
-                        MelonLogger.Warning("[SpectateMode] Keyframe method missing: " + i);
+                        // Steam names — Xbox/Game Pass CSharp often differs. Not a lobby issue.
+                        ModLog.Debug("[SpectateMode] Keyframe method missing: " + i);
                         continue;
                     }
                     harmony.Patch(m, prefix: new HarmonyMethod(keyPrefix));
@@ -117,7 +118,7 @@ namespace DescendersModMenu.Mods
                 }
                 catch (System.Exception ex)
                 {
-                    MelonLogger.Warning("[SpectateMode] Keyframe patch " + i + " failed: " + ex.Message);
+                    ModLog.Warn("[SpectateMode] Keyframe patch " + i + " failed: " + ex.Message);
                 }
             }
 
@@ -132,7 +133,7 @@ namespace DescendersModMenu.Mods
                     "hgIcHdS", BindingFlags.Public | BindingFlags.Instance,
                     null, new System.Type[] { typeof(bool) }, null);
                 if ((object)resetLike == null)
-                    MelonLogger.Warning("[SpectateMode] hgIcHdS(bool) not found.");
+                    ModLog.Debug("[SpectateMode] hgIcHdS(bool) not found.");
                 else
                 {
                     MethodInfo hgPrefix = typeof(SpectateMode_HgPatch).GetMethod(
@@ -143,11 +144,11 @@ namespace DescendersModMenu.Mods
             }
             catch (System.Exception ex)
             {
-                MelonLogger.Warning("[SpectateMode] hgIcHdS patch failed: " + ex.Message);
+                ModLog.Warn("[SpectateMode] hgIcHdS patch failed: " + ex.Message);
             }
 
             if (patched == 0)
-                MelonLogger.Warning("[SpectateMode] No spectate patches applied.");
+                ModLog.Warn("[SpectateMode] No spectate patches applied.");
             else
                 ModLog.Debug("[SpectateMode] Applied " + patched + " spectate patch(es).");
         }
@@ -248,12 +249,12 @@ namespace DescendersModMenu.Mods
 
                 GameObject local = GameObject.Find("Player_Human");
                 if ((object)local == null)
-                { MelonLogger.Warning("[SpectateMode] Player_Human not found."); Enabled = false; return; }
+                { ModLog.Warn("[SpectateMode] Player_Human not found."); Enabled = false; return; }
 
                 _localVc = local.GetComponent<VehicleController>();
                 _pm = Object.FindObjectOfType<PlayerManager>();
                 if ((object)_pm == null)
-                { MelonLogger.Warning("[SpectateMode] PlayerManager missing."); Enabled = false; return; }
+                { ModLog.Warn("[SpectateMode] PlayerManager missing."); Enabled = false; return; }
 
                 _localImpact = _pm.GetPlayerImpact();
                 if ((object)_localImpact == null)
@@ -286,9 +287,9 @@ namespace DescendersModMenu.Mods
                 if (_targets.Count > 0)
                     WatchIndex(0);
                 else
-                    MelonLogger.Warning("[SpectateMode] No remote players to spectate.");
+                    ModLog.Warn("[SpectateMode] No remote players to spectate.");
 
-                MelonLogger.Msg("[SpectateMode] Enabled. " + _targets.Count + " target(s).");
+                ModLog.Debug("[SpectateMode] Enabled. " + _targets.Count + " target(s).");
             }
             catch (System.Exception ex)
             {
@@ -368,7 +369,7 @@ namespace DescendersModMenu.Mods
                 FieldInfo f = GetBufferLimitField();
                 if ((object)f == null)
                 {
-                    MelonLogger.Warning("[SpectateMode] Buffer limit field not found");
+                    ModLog.Warn("[SpectateMode] Buffer limit field not found");
                     _bufferRaised = false;
                     return;
                 }
@@ -379,7 +380,7 @@ namespace DescendersModMenu.Mods
             }
             catch (System.Exception ex)
             {
-                MelonLogger.Warning("[SpectateMode] Could not raise buffer limit: " + ex.Message);
+                ModLog.Warn("[SpectateMode] Could not raise buffer limit: " + ex.Message);
                 _bufferRaised = false;
             }
         }
@@ -726,7 +727,7 @@ namespace DescendersModMenu.Mods
                     _disabledBikeCams.Add(cams[i]);
                 }
             }
-            catch (System.Exception ex) { MelonLogger.Warning("[SpectateMode] DisableBikeCameras: " + ex.Message); }
+            catch (System.Exception ex) { ModLog.Warn("[SpectateMode] DisableBikeCameras: " + ex.Message); }
         }
 
         private static void RestoreBikeCameras()

@@ -61,7 +61,7 @@ namespace DescendersModMenu.Mods
                 GameObject player = GameObject.Find("Player_Human");
                 if ((object)player == null)
                 {
-                    MelonLogger.Warning("[FlyMode] Player_Human not found.");
+                    ModLog.Warn("[FlyMode] Player_Human not found.");
                     Enabled = false; return;
                 }
 
@@ -74,13 +74,13 @@ namespace DescendersModMenu.Mods
 
                 if ((object)_vehicle == null)
                 {
-                    MelonLogger.Warning("[FlyMode] Vehicle not found.");
+                    ModLog.Warn("[FlyMode] Vehicle not found.");
                     Enabled = false; return;
                 }
 
                 if ((object)_rb == null)
                 {
-                    MelonLogger.Warning("[FlyMode] Rigidbody not found.");
+                    ModLog.Warn("[FlyMode] Rigidbody not found.");
                     Enabled = false; return;
                 }
 
@@ -122,7 +122,7 @@ namespace DescendersModMenu.Mods
                 _yaw = _playerTrans.eulerAngles.y;
                 _pitch = 0f;
 
-                MelonLogger.Msg("[FlyMode] Ready. rb=" + ((object)_rb != null)
+                ModLog.Debug("[FlyMode] Ready. rb=" + ((object)_rb != null)
                     + " physField=" + ((object)_physField != null)
                     + " toggle=" + ((object)_toggleCtrl != null));
             }

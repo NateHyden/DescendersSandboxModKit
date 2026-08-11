@@ -54,13 +54,13 @@ namespace DescendersModMenu.Mods
                 if (MoonMode.IsActive) MoonMode.Toggle();
                 CurrentState = WeatherState.Normal;
                 ScheduleNext();
-                MelonLogger.Msg("[RandomWeatherRoulette] ON — snapshotted Storm=" + _snapStorm + " Moon=" + _snapMoon);
+                ModLog.Debug("[RandomWeatherRoulette] ON — snapshotted Storm=" + _snapStorm + " Moon=" + _snapMoon);
             }
             else
             {
                 ApplyState(WeatherState.Normal); // turn off whatever's currently running
                 RestoreSnapshot();
-                MelonLogger.Msg("[RandomWeatherRoulette] OFF — restored original weather.");
+                ModLog.Debug("[RandomWeatherRoulette] OFF — restored original weather.");
             }
         }
 

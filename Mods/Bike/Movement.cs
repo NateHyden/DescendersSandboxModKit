@@ -54,7 +54,7 @@ namespace DescendersModMenu.Mods
                 if ((object)c == null) return;
                 if ((object)_spinField == null)
                     _spinField = FindField(c, "\u005EE\u005DVx\u0081\u0082");
-                if ((object)_spinField == null) { MelonLogger.Warning("[Movement] Spin field not found."); return; }
+                if ((object)_spinField == null) { ModLog.Warn("[Movement] Spin field not found."); return; }
                 if (_spinDefault < 0f) _spinDefault = (float)_spinField.GetValue(c);
                 _spinField.SetValue(c, _spinDefault * Mult(SpinLevel));
                 ModLog.Feedback("[Movement] Spin -> " + SpinLevel + " (" + (_spinDefault * Mult(SpinLevel)) + ")");
@@ -94,7 +94,7 @@ namespace DescendersModMenu.Mods
                 if ((object)c == null) return;
                 if ((object)_hopField == null)
                     _hopField = FindField(c, "kV\u005B\u0083SnO");
-                if ((object)_hopField == null) { MelonLogger.Warning("[Movement] Hop field not found."); return; }
+                if ((object)_hopField == null) { ModLog.Warn("[Movement] Hop field not found."); return; }
                 if (_hopDefault < 0f) _hopDefault = (float)_hopField.GetValue(c);
                 _hopField.SetValue(c, _hopDefault * Mult(HopLevel));
                 ModLog.Feedback("[Movement] Hop -> " + HopLevel + " (" + (_hopDefault * Mult(HopLevel)) + ")");
@@ -134,7 +134,7 @@ namespace DescendersModMenu.Mods
                 if ((object)c == null) return;
                 if ((object)_wheelieField == null)
                     _wheelieField = FindField(c, "\u007D\u0060\u0082zWt\u007C");
-                if ((object)_wheelieField == null) { MelonLogger.Warning("[Movement] Wheelie field not found."); return; }
+                if ((object)_wheelieField == null) { ModLog.Warn("[Movement] Wheelie field not found."); return; }
                 if (_wheelieDefault < 0f) _wheelieDefault = (float)_wheelieField.GetValue(c);
                 _wheelieField.SetValue(c, _wheelieDefault * Mult(WheelieLevel));
                 ModLog.Feedback("[Movement] Wheelie -> " + WheelieLevel + " (" + (_wheelieDefault * Mult(WheelieLevel)) + ")");
@@ -174,7 +174,7 @@ namespace DescendersModMenu.Mods
                 if ((object)c == null) return;
                 if ((object)_leanField == null)
                     _leanField = FindField(c, "Pl\u007Fvrb\u0082");
-                if ((object)_leanField == null) { MelonLogger.Warning("[Movement] Lean field not found."); return; }
+                if ((object)_leanField == null) { ModLog.Warn("[Movement] Lean field not found."); return; }
                 if (_leanDefault < 0f) _leanDefault = (float)_leanField.GetValue(c);
                 _leanField.SetValue(c, _leanDefault * Mult(LeanLevel));
                 ModLog.Feedback("[Movement] Lean -> " + LeanLevel + " (" + (_leanDefault * Mult(LeanLevel)) + ")");
@@ -219,7 +219,7 @@ namespace DescendersModMenu.Mods
             if ((object)f != null)
                 ModLog.Debug("[Movement] Found field: " + name);
             else
-                MelonLogger.Warning("[Movement] Field not found: " + name);
+                ModLog.Warn("[Movement] Field not found: " + name);
             return f;
         }
     }

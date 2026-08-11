@@ -22,7 +22,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply(Enabled ? ShakeValue : DefaultShake);
-            MelonLogger.Msg("[CameraShake] " + (Enabled
+            ModLog.Debug("[CameraShake] " + (Enabled
                 ? "ON level=" + Level + " shake=" + ShakeValue
                 : "OFF restored default=" + DefaultShake));
         }
@@ -64,7 +64,7 @@ namespace DescendersModMenu.Mods
             {
                 BikeCamera[] cameras = Object.FindObjectsOfType<BikeCamera>();
                 if (cameras == null || cameras.Length == 0)
-                { MelonLogger.Warning("[CameraShake] No BikeCamera found."); return; }
+                { ModLog.Warn("[CameraShake] No BikeCamera found."); return; }
 
                 // Resolve CameraAngle field once via reflection — field name contains
                 // control chars that C# source cannot express as an identifier.
@@ -81,7 +81,7 @@ namespace DescendersModMenu.Mods
                     }
                 }
                 if ((object)_caFld == null)
-                { MelonLogger.Warning("[CameraShake] CameraAngle field not found."); return; }
+                { ModLog.Warn("[CameraShake] CameraAngle field not found."); return; }
 
                 int count = 0;
                 for (int i = 0; i < cameras.Length; i++)
@@ -92,7 +92,7 @@ namespace DescendersModMenu.Mods
                     ca.impactCameraShake = shake;
                     count++;
                 }
-                MelonLogger.Msg("[CameraShake] Applied shake=" + shake + " to " + count + " CameraAngle(s).");
+                ModLog.Debug("[CameraShake] Applied shake=" + shake + " to " + count + " CameraAngle(s).");
             }
             catch (System.Exception ex) { MelonLogger.Error("[CameraShake] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "CameraShake"); }
         }

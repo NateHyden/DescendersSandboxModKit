@@ -52,16 +52,16 @@ namespace DescendersModMenu.Mods
             {
                 for (int i = 0; i < all.Length; i++)
                     if (all[i].name.IndexOf("Head", System.StringComparison.OrdinalIgnoreCase) >= 0)
-                    { _headBone = all[i]; MelonLogger.Msg("[BigHeadMode] Exact bone name missed, using fallback: " + all[i].name); break; }
+                    { _headBone = all[i]; ModLog.Debug("[BigHeadMode] Exact bone name missed, using fallback: " + all[i].name); break; }
             }
 
             if ((object)_headBone == null)
             {
-                MelonLogger.Warning("[BigHeadMode] No head bone found. Candidate bones containing 'Neck' or 'Spine':");
+                ModLog.Warn("[BigHeadMode] No head bone found. Candidate bones containing 'Neck' or 'Spine':");
                 for (int i = 0; i < all.Length; i++)
                     if (all[i].name.IndexOf("Neck", System.StringComparison.OrdinalIgnoreCase) >= 0
                         || all[i].name.IndexOf("Spine", System.StringComparison.OrdinalIgnoreCase) >= 0)
-                        MelonLogger.Msg("  - " + all[i].name);
+                        ModLog.Debug("  - " + all[i].name);
                 return false;
             }
             return true;

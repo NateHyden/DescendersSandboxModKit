@@ -58,7 +58,7 @@ namespace DescendersModMenu.Mods
         public static void SetTarget(int score)
         {
             TargetScore = Mathf.Max(1, score);
-            MelonLogger.Msg("[TrickAttack] Target=" + TargetScore);
+            ModLog.Debug("[TrickAttack] Target=" + TargetScore);
         }
 
         public static void Toggle()
@@ -89,7 +89,7 @@ namespace DescendersModMenu.Mods
             _prevRawCombo = 0;
             ScoreGained = 0;
             TimeRemaining = 0f;
-            MelonLogger.Msg("[TrickAttack] Run cancelled — waiting for left stick.");
+            ModLog.Debug("[TrickAttack] Run cancelled — waiting for left stick.");
         }
 
         public static void Tick()
@@ -109,7 +109,7 @@ namespace DescendersModMenu.Mods
                     TimeRemaining = TimeLimitSecs;
                     ScoreGained = 0;
                     CurrentState = State.Running;
-                    MelonLogger.Msg("[TrickAttack] GO! target=" + TargetScore
+                    ModLog.Debug("[TrickAttack] GO! target=" + TargetScore
                         + " time=" + TimeLimitSecs + "s snapshot=" + _snapshotScore);
                 }
                 return;
@@ -132,7 +132,7 @@ namespace DescendersModMenu.Mods
                 if (currentBails > _bailCountFrame)
                 {
                     // BAIL — lose current combo, clear everything
-                    MelonLogger.Msg("[TrickAttack] Bail — clearing. lostCombo="
+                    ModLog.Debug("[TrickAttack] Bail — clearing. lostCombo="
                         + liveScore);
                     _accumulated = 0;
                     _snapshotScore = 0;
@@ -147,7 +147,7 @@ namespace DescendersModMenu.Mods
                     int banked = Mathf.Max(0, _prevRawCombo - _snapshotScore);
                     _accumulated += banked;
                     _snapshotScore = 0; // new baseline after landing
-                    MelonLogger.Msg("[TrickAttack] Landed! banked=" + banked
+                    ModLog.Debug("[TrickAttack] Landed! banked=" + banked
                         + " total=" + _accumulated);
                 }
 
@@ -161,7 +161,7 @@ namespace DescendersModMenu.Mods
                     ScoreGained = _accumulated + liveScore;
                     CurrentState = ScoreGained >= TargetScore ? State.Success : State.Fail;
                     _resultTimer = ResultDuration;
-                    MelonLogger.Msg("[TrickAttack] " + CurrentState
+                    ModLog.Debug("[TrickAttack] " + CurrentState
                         + " accumulated=" + _accumulated
                         + " live=" + liveScore
                         + " total=" + ScoreGained
@@ -188,7 +188,7 @@ namespace DescendersModMenu.Mods
                     if ((object)player == null) return 0;
                     _tricks = player.GetComponentInChildren<VehicleTricks>();
                     if ((object)_tricks != null)
-                        MelonLogger.Msg("[TrickAttack] VehicleTricks found.");
+                        ModLog.Debug("[TrickAttack] VehicleTricks found.");
                 }
                 if ((object)_tricks == null) return 0;
 

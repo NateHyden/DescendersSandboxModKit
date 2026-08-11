@@ -25,7 +25,7 @@ namespace DescendersModMenu.Mods
                 src.volume = 0.8f;
                 src.Play();
                 UnityEngine.Object.Destroy(go, _clip.length + 0.2f);
-                MelonLogger.Msg("[Airhorn] Honk.");
+                ModLog.Debug("[Airhorn] Honk.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[Airhorn] Honk: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Airhorn"); }
         }

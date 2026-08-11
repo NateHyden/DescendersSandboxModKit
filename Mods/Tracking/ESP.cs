@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -75,7 +75,7 @@ namespace DescendersModMenu.Mods
             RefreshTargets();
             RefreshWorldTargets();
             _lastRefreshTime = Time.unscaledTime;
-            MelonLogger.Msg("ESP targets refreshed: " + _targets.Count + " player(s), "
+            ModLog.Debug("ESP targets refreshed: " + _targets.Count + " player(s), "
                 + _worldTargets.Count + " world object(s).");
         }
 
@@ -246,7 +246,7 @@ namespace DescendersModMenu.Mods
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("ESP.RefreshTargets failed: " + ex.Message);
+                ModLog.Warn("ESP.RefreshTargets failed: " + ex.Message);
             }
         }
 
@@ -292,7 +292,7 @@ namespace DescendersModMenu.Mods
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("ESP.RefreshWorldTargets failed: " + ex.Message);
+                ModLog.Warn("ESP.RefreshWorldTargets failed: " + ex.Message);
             }
         }
 
@@ -317,7 +317,7 @@ namespace DescendersModMenu.Mods
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[ESP] AddWorldObjects<" + typeof(T).Name + "> failed: " + ex.Message);
+                ModLog.Warn("[ESP] AddWorldObjects<" + typeof(T).Name + "> failed: " + ex.Message);
             }
         }
 
@@ -341,7 +341,7 @@ namespace DescendersModMenu.Mods
                         if (string.Equals(fields[i].Name, IoTpiSFieldName, StringComparison.Ordinal))
                         {
                             _ioTpiSField = fields[i];
-                            MelonLogger.Msg("[ESP] Found ioTpiS field: " + fields[i].Name.Length + " chars");
+                            ModLog.Debug("[ESP] Found ioTpiS field: " + fields[i].Name.Length + " chars");
                             break;
                         }
                     }
@@ -369,7 +369,7 @@ namespace DescendersModMenu.Mods
                             if (string.Equals(fields[i].Name, PlayerNameFieldName, StringComparison.Ordinal))
                             {
                                 _playerNameField = fields[i];
-                                MelonLogger.Msg("[ESP] Found laxjiuc on " + t.Name);
+                                ModLog.Debug("[ESP] Found laxjiuc on " + t.Name);
                                 found = true;
                                 break;
                             }
@@ -391,7 +391,7 @@ namespace DescendersModMenu.Mods
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[ESP] GetPlayerName failed: " + ex.Message);
+                ModLog.Warn("[ESP] GetPlayerName failed: " + ex.Message);
             }
 
             return "Player " + (fallbackIndex + 1);

@@ -35,7 +35,7 @@ namespace DescendersModMenu.Mods
                         if (found != null && found.Length > 0)
                         {
                             _timer = found[0];
-                            MelonLogger.Msg("[SpeedrunTimer] Found existing instance.");
+                            ModLog.Debug("[SpeedrunTimer] Found existing instance.");
                         }
                     }
 
@@ -46,12 +46,12 @@ namespace DescendersModMenu.Mods
                         {
                             _timer = uiManager.SpawnByType<UI_SpeedrunTimer>();
                             if ((object)_timer != null)
-                                MelonLogger.Msg("[SpeedrunTimer] Spawned via UIManager.");
+                                ModLog.Debug("[SpeedrunTimer] Spawned via UIManager.");
                             else
-                                MelonLogger.Warning("[SpeedrunTimer] SpawnByType returned null.");
+                                ModLog.Warn("[SpeedrunTimer] SpawnByType returned null.");
                         }
                         else
-                            MelonLogger.Warning("[SpeedrunTimer] UIManager not found.");
+                            ModLog.Warn("[SpeedrunTimer] UIManager not found.");
                     }
 
                     if ((object)_timer != null)
@@ -76,7 +76,7 @@ namespace DescendersModMenu.Mods
             {
                 // Get SessionManager instance via FindObjectOfType
                 SessionManager sm = Object.FindObjectOfType<SessionManager>();
-                if ((object)sm == null) { MelonLogger.Warning("[SpeedrunTimer] SessionManager not found."); return; }
+                if ((object)sm == null) { ModLog.Warn("[SpeedrunTimer] SessionManager not found."); return; }
 
                 // Cache \u0083ESVMoz field (session data object on SessionManager)
                 if ((object)_sessionDataField == null)
@@ -97,7 +97,7 @@ namespace DescendersModMenu.Mods
                             {
                                 _sessionDataField = fields[i];
                                 _timeField = innerFields[j];
-                                MelonLogger.Msg("[SpeedrunTimer] Found session data + time field.");
+                                ModLog.Debug("[SpeedrunTimer] Found session data + time field.");
                                 break;
                             }
                         }
@@ -107,7 +107,7 @@ namespace DescendersModMenu.Mods
 
                 if ((object)_sessionDataField == null || (object)_timeField == null)
                 {
-                    MelonLogger.Warning("[SpeedrunTimer] Could not find time field to reset.");
+                    ModLog.Warn("[SpeedrunTimer] Could not find time field to reset.");
                     return;
                 }
 
@@ -115,7 +115,7 @@ namespace DescendersModMenu.Mods
                 if ((object)sessionData == null) return;
 
                 _timeField.SetValue(sessionData, 0.0);
-                MelonLogger.Msg("[SpeedrunTimer] Timer reset to 0.");
+                ModLog.Debug("[SpeedrunTimer] Timer reset to 0.");
             }
             catch (System.Exception ex)
             {

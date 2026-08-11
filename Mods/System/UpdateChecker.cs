@@ -28,7 +28,7 @@ namespace DescendersModMenu.Mods
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[UpdateChecker] Failed to start: " + ex.Message);
+                ModLog.Warn("[UpdateChecker] Failed to start: " + ex.Message);
                 CheckComplete = true;
             }
         }
@@ -82,17 +82,17 @@ namespace DescendersModMenu.Mods
                 if (IsNewer(remoteClean, localClean))
                 {
                     UpdateAvailable = true;
-                    MelonLogger.Msg("[UpdateChecker] Update available: v" + remoteClean
+                    ModLog.Debug("[UpdateChecker] Update available: v" + remoteClean
                         + " (current: v" + localClean + ")");
                 }
                 else
                 {
-                    MelonLogger.Msg("[UpdateChecker] Up to date (v" + localClean + ").");
+                    ModLog.Debug("[UpdateChecker] Up to date (v" + localClean + ").");
                 }
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning("[UpdateChecker] Check failed: " + ex.Message);
+                ModLog.Warn("[UpdateChecker] Check failed: " + ex.Message);
             }
             CheckComplete = true;
         }

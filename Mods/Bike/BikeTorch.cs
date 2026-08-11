@@ -22,7 +22,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = !Enabled;
             Apply();
-            MelonLogger.Msg("[BikeTorch] " + (Enabled ? "ON" : "OFF"));
+            ModLog.Debug("[BikeTorch] " + (Enabled ? "ON" : "OFF"));
         }
 
         public static void PrevIntensity()
@@ -63,7 +63,7 @@ namespace DescendersModMenu.Mods
                 GameObject player = GameObject.Find("Player_Human");
                 if ((object)player == null)
                 {
-                    MelonLogger.Warning("[BikeTorch] Player_Human not found.");
+                    ModLog.Warn("[BikeTorch] Player_Human not found.");
                     return;
                 }
 
@@ -74,7 +74,7 @@ namespace DescendersModMenu.Mods
                     if (lights[i].type == LightType.Spot)
                     {
                         _torchLight = lights[i];
-                        MelonLogger.Msg("[BikeTorch] Found existing spotlight: "
+                        ModLog.Debug("[BikeTorch] Found existing spotlight: "
                             + lights[i].gameObject.name);
                         return;
                     }
@@ -98,7 +98,7 @@ namespace DescendersModMenu.Mods
                 _torchLight.color         = Color.white;
                 _torchLight.shadows       = LightShadows.None;
 
-                MelonLogger.Msg("[BikeTorch] Created new spotlight on: " + host.name);
+                ModLog.Debug("[BikeTorch] Created new spotlight on: " + host.name);
             }
             catch (System.Exception ex)
             {

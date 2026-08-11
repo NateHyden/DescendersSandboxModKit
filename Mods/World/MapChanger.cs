@@ -60,7 +60,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 object gd = GetSingleton(typeof(GameData));
-                if ((object)gd == null) { MelonLogger.Warning("[MapChanger] No GameData."); return; }
+                if ((object)gd == null) { ModLog.Warn("[MapChanger] No GameData."); return; }
 
                 int found = 0;
 
@@ -161,7 +161,7 @@ namespace DescendersModMenu.Mods
         public static void GoToMap(int index)
         {
             if (index < 0 || index >= _maps.Count) return;
-            MelonLogger.Msg("[MapChanger] Queuing: " + _maps[index].Name);
+            ModLog.Debug("[MapChanger] Queuing: " + _maps[index].Name);
             _pendingLoad = index;
             _loadTimer = 0.1f;
         }
@@ -186,7 +186,7 @@ namespace DescendersModMenu.Mods
                     try
                     {
                         DevCommandsGameplay.AddScore(_scoreToRestore);
-                        MelonLogger.Msg("[MapChanger] Restored " + _scoreToRestore + " REP.");
+                        ModLog.Debug("[MapChanger] Restored " + _scoreToRestore + " REP.");
                     }
                     catch (System.Exception ex) { MelonLogger.Error("[MapChanger] RestoreScore: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MapChanger"); }
                     _scoreToRestore = 0;
@@ -214,10 +214,10 @@ namespace DescendersModMenu.Mods
                     // Also try LoadLevelFromSeed with the world index string.
                     SuppressInactivityWarning();
                     string worldStr = map.WorldInt.ToString();
-                    MelonLogger.Msg("[MapChanger] Base world load attempt: worldStr=" + worldStr);
+                    ModLog.Debug("[MapChanger] Base world load attempt: worldStr=" + worldStr);
                     // Attempt 1: LoadLevel with just world index (no career suffix)
                     DevCommandsGameplay.LoadLevel(worldStr);
-                    MelonLogger.Msg("[MapChanger] Base world: LoadLevel(" + worldStr + ") called");
+                    ModLog.Debug("[MapChanger] Base world: LoadLevel(" + worldStr + ") called");
                     return;
                 }
 
@@ -227,7 +227,7 @@ namespace DescendersModMenu.Mods
                 // 2. session.currentLevel = wiWlGz.FmDOWdg((long)customSeed)
                 // 3. StateMachine.PushState(Vt.Generating)
 
-                MelonLogger.Msg("[MapChanger] Bike park: " + map.Name
+                ModLog.Debug("[MapChanger] Bike park: " + map.Name
                     + " seed=" + map.CustomSeed + " world=" + map.WorldInt);
 
                 // Resolve reflection cache
@@ -301,7 +301,7 @@ namespace DescendersModMenu.Mods
                 // 5. StateMachine.PushState(Vt.Generating)
                 _pushState.Invoke(stInstance, new object[] { _vtGenerating });
 
-                MelonLogger.Msg("[MapChanger] Bike park load dispatched.");
+                ModLog.Debug("[MapChanger] Bike park load dispatched.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[MapChanger] ExecuteLoad: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MapChanger"); }
         }
@@ -471,7 +471,7 @@ namespace DescendersModMenu.Mods
                     System.Reflection.BindingFlags.Instance);
                 if ((object)target == null)
                 {
-                    MelonLogger.Warning("[MapChanger] UI_FreerideBikeParks.OnEnable not found.");
+                    ModLog.Warn("[MapChanger] UI_FreerideBikeParks.OnEnable not found.");
                     return;
                 }
                 var postfix = typeof(MapChanger).GetMethod(
@@ -482,7 +482,7 @@ namespace DescendersModMenu.Mods
             }
             catch (System.Exception ex)
             {
-                MelonLogger.Warning("[MapChanger] Patch failed: " + ex.Message);
+                ModLog.Warn("[MapChanger] Patch failed: " + ex.Message);
             }
         }
 
@@ -623,7 +623,7 @@ namespace DescendersModMenu.Mods
                 if ((object)seed != null)
                 {
                     _cachedSeedString = seed.ToString();
-                    MelonLogger.Msg("[MapChanger] Cached map seed: " + _cachedSeedString);
+                    ModLog.Debug("[MapChanger] Cached map seed: " + _cachedSeedString);
                 }
             }
             catch (System.Exception ex)
@@ -717,7 +717,7 @@ namespace DescendersModMenu.Mods
                 _pushState.Invoke(stInstance, new object[] { _vtGenerating });
 
                 LastLoadedSeed = seed;
-                MelonLogger.Msg("[MapChanger] LoadFromSeed: \"" + seed + "\" world=" + world + " (Sandbox/freeride)");
+                ModLog.Debug("[MapChanger] LoadFromSeed: \"" + seed + "\" world=" + world + " (Sandbox/freeride)");
             }
             catch (System.Exception ex)
             { MelonLogger.Error("[MapChanger] LoadFromSeed: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MapChanger"); }

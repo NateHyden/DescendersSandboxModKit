@@ -32,12 +32,12 @@ namespace DescendersModMenu.Mods
                 _snapPump = GameModifierMods.PumpStrengthLevel;
                 _snapIce = GameModifierMods.IcePhysicsLevel;
                 _hasSnapshot = true;
-                MelonLogger.Msg("[RandomMutator] ON — snapshotted current modifier levels.");
+                ModLog.Debug("[RandomMutator] ON — snapshotted current modifier levels.");
             }
             else
             {
                 RestoreSnapshot();
-                MelonLogger.Msg("[RandomMutator] OFF — restored original modifier levels.");
+                ModLog.Debug("[RandomMutator] OFF — restored original modifier levels.");
             }
         }
 
@@ -58,7 +58,7 @@ namespace DescendersModMenu.Mods
                     case 4: GameModifierMods.SetIcePhysicsLevel(level); break;
                 }
                 LastMutationDisplay = ModNames[idx] + " -> " + level;
-                MelonLogger.Msg("[RandomMutator] Checkpoint mutation: " + LastMutationDisplay);
+                ModLog.Debug("[RandomMutator] Checkpoint mutation: " + LastMutationDisplay);
             }
             catch (System.Exception ex) { MelonLogger.Error("[RandomMutator] OnCheckpoint: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomMutatorOnCheckpoint"); }
         }

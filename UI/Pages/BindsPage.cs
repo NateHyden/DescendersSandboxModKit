@@ -1,6 +1,7 @@
 using System;
 using MelonLoader;
 using DescendersModMenu;
+using DescendersModMenu.Mods;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -248,7 +249,7 @@ namespace DescendersModMenu.UI
             if (k == KeyCode.F6)
             {
                 ev.Use();
-                MelonLogger.Msg("[BindsPage] F6 is reserved for menu open — choose a different key.");
+                ModLog.Debug("[BindsPage] F6 is reserved for menu open — choose a different key.");
                 return;
             }
             ev.Use();
