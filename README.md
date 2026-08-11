@@ -22,7 +22,20 @@ any controller button — see Key Binds below). XBOX/GamesPass users can now acc
 ## Features
 
 ### 🗺️ mod.io custom maps for Xbox/Games pass users!
+
 Download and play Mod.io Customs maps on Xbox/GamesPass on PC
+
+### 🏗️ Custom Object Placing
+
+Place down objects in the map, like ramps and walls.
+
+- **Full Control** — Position and rotate objects to any angle
+- **Favourites** — Save your placements for easy reuse on any map
+- **Quick Exit** — Esc/B auto-closes the menu and returns you to your bike
+
+### ⏻ Global Mods Off Switch
+
+Does what it says on the tin — instantly pause every active mod, flip back to restore your set.
 
 ### 🚲 Bike Physics
 Tune every aspect of how your bike handles.
