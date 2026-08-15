@@ -409,8 +409,9 @@ namespace DescendersModMenu
             FOV.Reset(); Acceleration.Reset(); MaxSpeedMultiplier.Reset();
             Movement.Reset(); LandingImpact.Reset();
             NoBail.ClearCache(); WheelSize.Reset();
-            if (NoSpeedCap.Enabled) NoSpeedCap.Toggle(); // Reset to OFF before immediate restore
-            if (NoBail.Enabled) NoBail.Toggle(); // Reset to OFF before immediate restore
+            // Silent — Toggle() Feedback would spam Melon every map change.
+            if (NoSpeedCap.Enabled) NoSpeedCap.SetEnabled(false);
+            if (NoBail.Enabled) NoBail.SetEnabled(false);
             BikeTorch.Reset(); CameraShake.Reset(); NearMissSensitivity.Reset();
             // Always-reset (NOT restored):
             SkyColours.Reset(); GraphicsSettings.Reset();

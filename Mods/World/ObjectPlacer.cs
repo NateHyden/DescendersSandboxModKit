@@ -11,7 +11,8 @@ namespace DescendersModMenu.Mods
     // Live placement: freeze the bike, fly a ghost around, confirm to drop a copy.
     // Prefers cloned in-scene Bike Park meshes (textures intact). Primitive blocks
     // remain as fallback when the current map has nothing harvestable.
-    // Session-only: nothing is saved.
+    // Favourited map objects are detached + written under UserData so they survive
+    // map changes and restarts (scene meshes otherwise unload with the park).
     public static class ObjectPlacer
     {
         public static bool Enabled { get; private set; } = false;
@@ -90,11 +91,14 @@ namespace DescendersModMenu.Mods
             if (_favIds.Contains(id))
             {
                 _favIds.Remove(id);
+                DeletePersistedFav(id);
                 ModLog.Feedback("[ObjectPlacer] Unfavoured " + GetNameAt(index));
             }
             else
             {
                 _favIds.Add(id);
+                if (IsHarvestedAt(index))
+                    PersistFavAt(index);
                 ModLog.Feedback("[ObjectPlacer] Favoured " + GetNameAt(index));
             }
             SavePrefs();
@@ -115,6 +119,7 @@ namespace DescendersModMenu.Mods
         public static void BumpMove(int dir) { EnsurePrefs(); MoveSpeedLevel = ClampLevel(MoveSpeedLevel + dir); SavePrefs(); }
         public static void BumpRotate(int dir) { EnsurePrefs(); RotateSpeedLevel = ClampLevel(RotateSpeedLevel + dir); SavePrefs(); }
         public static void BumpLift(int dir) { EnsurePrefs(); LiftSpeedLevel = ClampLevel(LiftSpeedLevel + dir); SavePrefs(); }
+        public static void BumpCamDistance(int dir) { EnsurePrefs(); CamDistanceLevel = ClampLevel(CamDistanceLevel + dir); SavePrefs(); }
 
         private static int ClampLevel(int level)
         {
@@ -144,19 +149,24 @@ namespace DescendersModMenu.Mods
         private static readonly float[] MoveSpeeds = { 3f, 5f, 7f, 8.5f, 10f, 13f, 16f, 20f, 26f, 34f };
         private static readonly float[] RotateSpeeds = { 30f, 45f, 60f, 75f, 90f, 115f, 140f, 175f, 220f, 280f };
         private static readonly float[] LiftSpeeds = { 1f, 1.5f, 2f, 2.5f, 3f, 4f, 5.5f, 7f, 9f, 12f };
+        // Back-distance (metres) — level 5 matches the old fixed CamOffset z=-9.
+        private static readonly float[] CamDistances = { 5f, 7f, 9f, 12f, 16f, 22f, 30f, 42f, 58f, 80f };
 
         public static int MoveSpeedLevel { get; private set; } = 5;
         public static int RotateSpeedLevel { get; private set; } = 5;
         public static int LiftSpeedLevel { get; private set; } = 5;
+        public static int CamDistanceLevel { get; private set; } = 5;
 
         public static float MoveSpeed { get { return MoveSpeeds[MoveSpeedLevel - 1]; } }
         public static float YawSpeed { get { return RotateSpeeds[RotateSpeedLevel - 1]; } }
         public static float LiftSpeed { get { return LiftSpeeds[LiftSpeedLevel - 1]; } }
         public static float PitchSpeed { get { return YawSpeed * 0.67f; } }
+        public static float CamDistance { get { return CamDistances[CamDistanceLevel - 1]; } }
 
         public static string MoveSpeedDisplay { get { return MoveSpeed.ToString("0.#"); } }
         public static string RotateSpeedDisplay { get { return YawSpeed.ToString("0"); } }
         public static string LiftSpeedDisplay { get { return LiftSpeed.ToString("0.#"); } }
+        public static string CamDistanceDisplay { get { return CamDistance.ToString("0") + "m"; } }
 
         private static readonly HashSet<string> _favIds = new HashSet<string>();
         private static bool _prefsLoaded = false;
@@ -182,8 +192,23 @@ namespace DescendersModMenu.Mods
         private const int MaxHarvest = 80;
         private static readonly HashSet<string> _harvestKeys = new HashSet<string>();
 
-        private static readonly Vector3 CamOffset = new Vector3(0f, 4.5f, -9f);
-        private static readonly Vector3 CamLookOffset = new Vector3(0f, 1f, 0f);
+        private static Vector3 CurrentCamOffset
+        {
+            get
+            {
+                float d = CamDistance;
+                return new Vector3(0f, d * 0.5f, -d);
+            }
+        }
+
+        private static Vector3 CurrentCamLookOffset
+        {
+            get
+            {
+                float d = CamDistance;
+                return new Vector3(0f, Mathf.Max(1f, d * 0.08f), 0f);
+            }
+        }
 
         private static Vehicle _vehicle = null;
         private static Rigidbody _rb = null;
@@ -417,12 +442,21 @@ namespace DescendersModMenu.Mods
 
                 if (confirm) ConfirmPlacement();
 
+                // Zoom out/in for big pieces without opening the menu (autoclose).
+                float scroll = Input.GetAxis("Mouse ScrollWheel");
+                if (scroll > 0.01f
+                    || Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.KeypadPlus))
+                    BumpCamDistance(1);
+                else if (scroll < -0.01f
+                    || Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus))
+                    BumpCamDistance(-1);
+
                 Camera cam = Camera.main;
                 if ((object)cam != null && (object)_ghost != null)
                 {
                     Quaternion heading = Quaternion.Euler(0f, _yaw, 0f);
-                    cam.transform.position = _ghost.transform.position + heading * CamOffset;
-                    cam.transform.LookAt(_ghost.transform.position + CamLookOffset);
+                    cam.transform.position = _ghost.transform.position + heading * CurrentCamOffset;
+                    cam.transform.LookAt(_ghost.transform.position + CurrentCamLookOffset);
                 }
             }
             catch (Exception ex)
@@ -544,7 +578,12 @@ namespace DescendersModMenu.Mods
 
             if (!e.IsPrimitive)
             {
-                if ((object)e.Template == null) return BuildPrimitiveFallback(name);
+                if (!IsUnityAlive(e.Template))
+                {
+                    if (_favIds.Contains(e.Id ?? "") && TryReloadFavTemplate(SelectedIndex))
+                        e = _catalog[SelectedIndex];
+                }
+                if (!IsUnityAlive(e.Template)) return BuildPrimitiveFallback(name);
                 GameObject clone = UnityEngine.Object.Instantiate(e.Template);
                 clone.name = name;
                 clone.SetActive(true);
@@ -660,7 +699,21 @@ namespace DescendersModMenu.Mods
                     if ((object)mesh == null) continue;
 
                     string key = HarvestKey(mesh);
-                    if (_harvestKeys.Contains(key)) continue;
+                    if (_harvestKeys.Contains(key))
+                    {
+                        // Restored favs may be mesh-only (white). If this live
+                        // object matches, replace the placeholder with a textured copy.
+                        if (!IsBlockedName(go.name) && !IsBlockedName(mesh.name)
+                            && (LooksLikeRamp(go.name) || LooksLikeRamp(mesh.name)
+                                || AncestorLooksLikeRamp(go.transform)))
+                        {
+                            Vector3 sizeChk = Vector3.Scale(mesh.bounds.size, go.transform.lossyScale);
+                            float maxChk = Mathf.Max(sizeChk.x, Mathf.Max(sizeChk.y, sizeChk.z));
+                            if (maxChk >= 1.2f && maxChk <= 55f)
+                                TryUpgradeFavFromLive("m:" + key, FindHarvestRoot(go));
+                        }
+                        continue;
+                    }
 
                     string goName = go.name;
                     string meshName = mesh.name;
@@ -693,8 +746,13 @@ namespace DescendersModMenu.Mods
                     p.Group = ClassifyGroup(label, false);
                     p.IsPrimitive = false;
                     p.Template = template;
-                    _catalog.Insert(HarvestedCount + added, p);
+                    int insertAt = HarvestedCount + added;
+                    _catalog.Insert(insertAt, p);
                     added++;
+                    // Re-favourite match from a previous session: detach + disk-save now
+                    // that the live mesh is in hand again.
+                    if (_favIds.Contains(p.Id))
+                        PersistFavAt(insertAt);
                 }
             }
             catch (Exception ex)
@@ -845,7 +903,7 @@ namespace DescendersModMenu.Mods
 
         private static void EnsureHolder()
         {
-            if ((object)_holder != null) return;
+            if (IsUnityAlive(_holder)) return;
             _holder = new GameObject("ObjectPlacer_Templates");
             UnityEngine.Object.DontDestroyOnLoad(_holder);
             _holder.SetActive(false);
@@ -854,8 +912,9 @@ namespace DescendersModMenu.Mods
         private static void EnsureCatalog()
         {
             EnsurePrefs();
-            if (_catalog.Count > 0) return;
-            SeedPrimitives();
+            if (_catalog.Count == 0) SeedPrimitives();
+            RestorePersistedFavs();
+            RepairMissingFavTemplates();
         }
 
         private static void SeedPrimitives()
@@ -927,21 +986,18 @@ namespace DescendersModMenu.Mods
             for (int i = _catalog.Count - 1; i >= 0; i--)
             {
                 if (_catalog[i].IsPrimitive) continue;
-                if ((object)_catalog[i].Template != null)
+                // Keep favourited map objects — they are meant to travel with you.
+                if (_favIds.Contains(_catalog[i].Id ?? "")) continue;
+                if (IsUnityAlive(_catalog[i].Template))
                     UnityEngine.Object.Destroy(_catalog[i].Template);
                 _catalog.RemoveAt(i);
             }
-            HarvestedCount = 0;
-            _harvestKeys.Clear();
-            if ((object)_holder != null)
-            {
-                UnityEngine.Object.Destroy(_holder);
-                _holder = null;
-            }
+            RecountHarvested();
             if (_catalog.Count == 0) SeedPrimitives();
+            RestorePersistedFavs();
             if (SelectedIndex >= _catalog.Count) SelectedIndex = 0;
             RefreshGhostShape();
-            ModLog.Feedback("[ObjectPlacer] Library cleared.");
+            ModLog.Feedback("[ObjectPlacer] Library cleared (favourites kept).");
         }
 
         private static float GetGroundHeight(Vector3 worldPos)
@@ -986,12 +1042,20 @@ namespace DescendersModMenu.Mods
 
         public static void Reset()
         {
-            // Keep the harvested library across scene changes — templates live
-            // on a DontDestroyOnLoad holder. Only stop placing and drop instances.
+            // Snapshot favourites before the old map's shared meshes can unload,
+            // then keep the library (DDOL + disk). Only stop placing / drop instances.
+            try { PersistAllLiveFavs(); } catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] PersistAllLiveFavs: " + ex.Message);
+            }
             if (Enabled) Exit();
             ClearPlaced(false);
             _physField = null;
             _toggleCtrl = null;
+            try { RepairMissingFavTemplates(); } catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] RepairMissingFavTemplates: " + ex.Message);
+            }
         }
 
         private static string PrefsPath
@@ -1003,6 +1067,677 @@ namespace DescendersModMenu.Mods
                     "DescendersModMenu");
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                 return Path.Combine(dir, "ObjectPlacer.txt");
+            }
+        }
+
+        private static string FavsRootDir
+        {
+            get
+            {
+                string dir = Path.Combine(
+                    Path.Combine(
+                        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UserData"),
+                        "DescendersModMenu"),
+                    "ObjectPlacerFavs");
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                return dir;
+            }
+        }
+
+        private static bool IsUnityAlive(UnityEngine.Object obj)
+        {
+            // Unity fake-null: destroyed assets still fail (object)==null.
+            return (object)obj != null && obj;
+        }
+
+        private static void RecountHarvested()
+        {
+            int n = 0;
+            _harvestKeys.Clear();
+            for (int i = 0; i < _catalog.Count; i++)
+            {
+                if (_catalog[i].IsPrimitive) continue;
+                n++;
+                string id = _catalog[i].Id ?? "";
+                if (id.StartsWith("m:") && id.Length > 2)
+                    _harvestKeys.Add(id.Substring(2));
+            }
+            HarvestedCount = n;
+        }
+
+        private static bool CatalogHasId(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return false;
+            for (int i = 0; i < _catalog.Count; i++)
+            {
+                if (string.Equals(_catalog[i].Id, id, StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
+        }
+
+        private static string FavFolderName(string id)
+        {
+            // Filesystem-safe key derived from harvest id.
+            var sb = new System.Text.StringBuilder(id.Length);
+            for (int i = 0; i < id.Length; i++)
+            {
+                char c = id[i];
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9') || c == '-' || c == '_')
+                    sb.Append(c);
+                else
+                    sb.Append('_');
+            }
+            string name = sb.ToString();
+            if (name.Length > 80) name = name.Substring(0, 80);
+            if (name.Length == 0) name = "fav";
+            return name;
+        }
+
+        private static string FavDirFor(string id)
+        {
+            return Path.Combine(FavsRootDir, FavFolderName(id));
+        }
+
+        private static void PersistFavAt(int index)
+        {
+            if (index < 0 || index >= _catalog.Count) return;
+            Placeable p = _catalog[index];
+            if (p.IsPrimitive || string.IsNullOrEmpty(p.Id)) return;
+            if (!IsUnityAlive(p.Template)) return;
+
+            DetachSharedMeshes(p.Template);
+            SaveFavToDisk(p);
+        }
+
+        public static void PersistAllLiveFavs()
+        {
+            EnsurePrefs();
+            for (int i = 0; i < _catalog.Count; i++)
+            {
+                if (_catalog[i].IsPrimitive) continue;
+                string id = _catalog[i].Id ?? "";
+                if (!_favIds.Contains(id)) continue;
+                if (!IsUnityAlive(_catalog[i].Template)) continue;
+                PersistFavAt(i);
+            }
+        }
+
+        private static void DetachSharedMeshes(GameObject root)
+        {
+            if (!IsUnityAlive(root)) return;
+            MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
+            for (int i = 0; i < filters.Length; i++)
+            {
+                MeshFilter mf = filters[i];
+                if (!IsUnityAlive(mf) || !IsUnityAlive(mf.sharedMesh)) continue;
+                Mesh copy = UnityEngine.Object.Instantiate(mf.sharedMesh);
+                copy.hideFlags = HideFlags.DontUnloadUnusedAsset;
+                mf.sharedMesh = copy;
+            }
+
+            Renderer[] rends = root.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < rends.Length; i++)
+            {
+                Renderer r = rends[i];
+                if (!IsUnityAlive(r)) continue;
+                // materials getter creates instances — then steal albedo into owned copies
+                // so map unload can't wipe the texture reference.
+                Material[] mats = r.materials;
+                if (mats == null) continue;
+                for (int m = 0; m < mats.Length; m++)
+                {
+                    if (!IsUnityAlive(mats[m])) continue;
+                    OwnMaterialTextures(mats[m]);
+                }
+                r.materials = mats;
+            }
+        }
+
+        private static void OwnMaterialTextures(Material mat)
+        {
+            if (!IsUnityAlive(mat)) return;
+            mat.hideFlags = HideFlags.DontUnloadUnusedAsset;
+
+            string[] props = { "_MainTex", "_BaseMap", "_Diffuse", "_Albedo", "_BaseColorMap", "_ColorMap" };
+            for (int i = 0; i < props.Length; i++)
+            {
+                string prop = props[i];
+                if (!mat.HasProperty(prop)) continue;
+                Texture src = mat.GetTexture(prop);
+                if (!IsUnityAlive(src)) continue;
+                Texture2D owned = CopyTextureReadable(src);
+                if (!IsUnityAlive(owned)) continue;
+                owned.hideFlags = HideFlags.DontUnloadUnusedAsset;
+                mat.SetTexture(prop, owned);
+                if (prop == "_MainTex" || i == 0)
+                    mat.mainTexture = owned;
+            }
+        }
+
+        private static Texture2D CopyTextureReadable(Texture src)
+        {
+            if (!IsUnityAlive(src)) return null;
+            try
+            {
+                int w = src.width;
+                int h = src.height;
+                if (w < 1 || h < 1) return null;
+                if (w > 2048) w = 2048;
+                if (h > 2048) h = 2048;
+
+                // Prefer direct read when the asset is already readable.
+                Texture2D as2d = src as Texture2D;
+                if (IsUnityAlive(as2d))
+                {
+                    try
+                    {
+                        Color32[] px = as2d.GetPixels32();
+                        Texture2D direct = new Texture2D(as2d.width, as2d.height, TextureFormat.RGBA32, false);
+                        direct.name = src.name + "_OPCopy";
+                        direct.wrapMode = src.wrapMode;
+                        direct.filterMode = src.filterMode;
+                        direct.SetPixels32(px);
+                        direct.Apply(false, false);
+                        return direct;
+                    }
+                    catch
+                    {
+                        // Not readable — fall through to Blit.
+                    }
+                }
+
+                RenderTexture rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
+                RenderTexture prev = RenderTexture.active;
+                Graphics.Blit(src, rt);
+                RenderTexture.active = rt;
+                Texture2D copy = new Texture2D(w, h, TextureFormat.RGBA32, false);
+                copy.name = src.name + "_OPCopy";
+                copy.wrapMode = src.wrapMode;
+                copy.filterMode = src.filterMode;
+                copy.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+                copy.Apply(false, false);
+                RenderTexture.active = prev;
+                RenderTexture.ReleaseTemporary(rt);
+                return copy;
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] CopyTextureReadable: " + ex.Message);
+                return null;
+            }
+        }
+
+        private static Texture GetAlbedoTexture(Material mat)
+        {
+            if (!IsUnityAlive(mat)) return null;
+            string[] props = { "_MainTex", "_BaseMap", "_Diffuse", "_Albedo", "_BaseColorMap", "_ColorMap" };
+            for (int i = 0; i < props.Length; i++)
+            {
+                if (!mat.HasProperty(props[i])) continue;
+                Texture t = mat.GetTexture(props[i]);
+                if (IsUnityAlive(t)) return t;
+            }
+            return IsUnityAlive(mat.mainTexture) ? mat.mainTexture : null;
+        }
+
+        private static Color GetMaterialColor(Material mat)
+        {
+            if (!IsUnityAlive(mat)) return new Color(0.72f, 0.55f, 0.32f, 1f);
+            if (mat.HasProperty("_Color")) return mat.color;
+            if (mat.HasProperty("_BaseColor")) return mat.GetColor("_BaseColor");
+            return Color.white;
+        }
+
+        private static void SaveFavToDisk(Placeable p)
+        {
+            try
+            {
+                if (!IsUnityAlive(p.Template)) return;
+                string dir = FavDirFor(p.Id);
+                if (Directory.Exists(dir)) Directory.Delete(dir, true);
+                Directory.CreateDirectory(dir);
+
+                MeshFilter[] filters = p.Template.GetComponentsInChildren<MeshFilter>(true);
+                int partCount = 0;
+                Transform rootT = p.Template.transform;
+
+                for (int i = 0; i < filters.Length; i++)
+                {
+                    MeshFilter mf = filters[i];
+                    if (!IsUnityAlive(mf) || !IsUnityAlive(mf.sharedMesh)) continue;
+                    Mesh mesh = mf.sharedMesh;
+                    if (mesh.vertexCount < 3) continue;
+
+                    Transform t = mf.transform;
+                    Vector3 lp = rootT.InverseTransformPoint(t.position);
+                    Quaternion lr = Quaternion.Inverse(rootT.rotation) * t.rotation;
+                    Vector3 ls = DivideScale(t.lossyScale, rootT.lossyScale);
+
+                    Color col = new Color(0.72f, 0.55f, 0.32f, 1f);
+                    Texture albedo = null;
+                    Renderer rend = mf.GetComponent<Renderer>();
+                    if (IsUnityAlive(rend) && IsUnityAlive(rend.sharedMaterial))
+                    {
+                        col = GetMaterialColor(rend.sharedMaterial);
+                        albedo = GetAlbedoTexture(rend.sharedMaterial);
+                    }
+
+                    string partPath = Path.Combine(dir, "part_" + partCount + ".mesh");
+                    WriteMeshFile(partPath, mesh, lp, lr, ls, col, CleanName(t.name));
+                    TrySaveTexturePng(Path.Combine(dir, "part_" + partCount + ".png"), albedo);
+                    partCount++;
+                }
+
+                if (partCount == 0)
+                {
+                    ModLog.Warn("[ObjectPlacer] Fav save skipped (no meshes): " + p.Name);
+                    try { Directory.Delete(dir, true); } catch { }
+                    return;
+                }
+
+                var meta = new System.Text.StringBuilder();
+                meta.Append("id=").Append(p.Id).Append('\n');
+                meta.Append("name=").Append(p.Name).Append('\n');
+                meta.Append("group=").Append(string.IsNullOrEmpty(p.Group) ? "Props" : p.Group).Append('\n');
+                meta.Append("parts=").Append(partCount).Append('\n');
+                File.WriteAllText(Path.Combine(dir, "meta.txt"), meta.ToString());
+                ModLog.Debug("[ObjectPlacer] Saved fav " + p.Name + " (" + partCount + " parts)");
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] SaveFavToDisk: " + ex.Message);
+            }
+        }
+
+        private static void TrySaveTexturePng(string path, Texture albedo)
+        {
+            if (!IsUnityAlive(albedo)) return;
+            try
+            {
+                Texture2D owned = CopyTextureReadable(albedo);
+                if (!IsUnityAlive(owned)) return;
+                byte[] png = owned.EncodeToPNG();
+                if (png == null || png.Length == 0) return;
+                File.WriteAllBytes(path, png);
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] TrySaveTexturePng: " + ex.Message);
+            }
+        }
+
+        private static Vector3 DivideScale(Vector3 child, Vector3 parent)
+        {
+            return new Vector3(
+                parent.x == 0f ? child.x : child.x / parent.x,
+                parent.y == 0f ? child.y : child.y / parent.y,
+                parent.z == 0f ? child.z : child.z / parent.z);
+        }
+
+        private static void WriteMeshFile(string path, Mesh mesh, Vector3 lp, Quaternion lr,
+            Vector3 ls, Color col, string partName)
+        {
+            Vector3[] verts = mesh.vertices;
+            Vector3[] normals = mesh.normals;
+            Vector2[] uv = mesh.uv;
+            int[] tris = mesh.triangles;
+
+            using (var fs = File.Create(path))
+            using (var bw = new BinaryWriter(fs))
+            {
+                bw.Write(0x4F504D31); // OPM1
+                bw.Write(partName ?? "");
+                bw.Write(lp.x); bw.Write(lp.y); bw.Write(lp.z);
+                bw.Write(lr.x); bw.Write(lr.y); bw.Write(lr.z); bw.Write(lr.w);
+                bw.Write(ls.x); bw.Write(ls.y); bw.Write(ls.z);
+                bw.Write(col.r); bw.Write(col.g); bw.Write(col.b); bw.Write(col.a);
+
+                bw.Write(verts.Length);
+                for (int i = 0; i < verts.Length; i++)
+                {
+                    bw.Write(verts[i].x); bw.Write(verts[i].y); bw.Write(verts[i].z);
+                }
+
+                int nCount = (normals != null && normals.Length == verts.Length) ? normals.Length : 0;
+                bw.Write(nCount);
+                for (int i = 0; i < nCount; i++)
+                {
+                    bw.Write(normals[i].x); bw.Write(normals[i].y); bw.Write(normals[i].z);
+                }
+
+                int uvCount = (uv != null && uv.Length == verts.Length) ? uv.Length : 0;
+                bw.Write(uvCount);
+                for (int i = 0; i < uvCount; i++)
+                {
+                    bw.Write(uv[i].x); bw.Write(uv[i].y);
+                }
+
+                bw.Write(tris.Length);
+                for (int i = 0; i < tris.Length; i++)
+                    bw.Write(tris[i]);
+            }
+        }
+
+        private static void DeletePersistedFav(string id)
+        {
+            try
+            {
+                string dir = FavDirFor(id);
+                if (Directory.Exists(dir)) Directory.Delete(dir, true);
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] DeletePersistedFav: " + ex.Message);
+            }
+        }
+
+        private static void RestorePersistedFavs()
+        {
+            EnsurePrefs();
+            if (_favIds.Count == 0) return;
+
+            string[] ids = new string[_favIds.Count];
+            _favIds.CopyTo(ids);
+
+            int restored = 0;
+            for (int i = 0; i < ids.Length; i++)
+            {
+                string id = ids[i];
+                if (string.IsNullOrEmpty(id) || !id.StartsWith("m:", StringComparison.Ordinal))
+                    continue;
+                if (CatalogHasId(id)) continue;
+                Placeable p;
+                if (!TryLoadFavFromDisk(id, out p)) continue;
+                _catalog.Insert(0, p);
+                if (id.Length > 2) _harvestKeys.Add(id.Substring(2));
+                restored++;
+            }
+
+            if (restored > 0)
+            {
+                RecountHarvested();
+                ModLog.Debug("[ObjectPlacer] Restored " + restored + " favourite map object(s)");
+            }
+        }
+
+        private static void RepairMissingFavTemplates()
+        {
+            EnsurePrefs();
+            for (int i = 0; i < _catalog.Count; i++)
+            {
+                if (_catalog[i].IsPrimitive) continue;
+                string id = _catalog[i].Id ?? "";
+                if (!_favIds.Contains(id)) continue;
+                if (IsUnityAlive(_catalog[i].Template)) continue;
+                TryReloadFavTemplate(i);
+            }
+        }
+
+        private static bool TryReloadFavTemplate(int index)
+        {
+            if (index < 0 || index >= _catalog.Count) return false;
+            Placeable cur = _catalog[index];
+            Placeable loaded;
+            if (!TryLoadFavFromDisk(cur.Id, out loaded)) return false;
+            if (IsUnityAlive(cur.Template))
+                UnityEngine.Object.Destroy(cur.Template);
+            cur.Template = loaded.Template;
+            cur.Name = loaded.Name;
+            cur.Group = loaded.Group;
+            _catalog[index] = cur;
+            return IsUnityAlive(cur.Template);
+        }
+
+        private static bool TryLoadFavFromDisk(string id, out Placeable placeable)
+        {
+            placeable = default(Placeable);
+            try
+            {
+                string dir = FavDirFor(id);
+                string metaPath = Path.Combine(dir, "meta.txt");
+                if (!File.Exists(metaPath)) return false;
+
+                string name = "Map Object";
+                string group = "Props";
+                int parts = 0;
+                string[] lines = File.ReadAllLines(metaPath);
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    int eq = line.IndexOf('=');
+                    if (eq <= 0) continue;
+                    string key = line.Substring(0, eq).Trim();
+                    string val = line.Substring(eq + 1).Trim();
+                    if (key == "name" && val.Length > 0) name = val;
+                    else if (key == "group" && val.Length > 0) group = val;
+                    else if (key == "parts") int.TryParse(val, out parts);
+                    else if (key == "id" && val.Length > 0) id = val;
+                }
+
+                if (parts <= 0) return false;
+                EnsureHolder();
+
+                GameObject root = new GameObject(name);
+                root.SetActive(false);
+                root.transform.SetParent(_holder.transform, false);
+
+                int loadedParts = 0;
+                for (int p = 0; p < parts; p++)
+                {
+                    string partPath = Path.Combine(dir, "part_" + p + ".mesh");
+                    if (!File.Exists(partPath)) continue;
+                    if (!ReadMeshPart(partPath, Path.Combine(dir, "part_" + p + ".png"), root.transform))
+                        continue;
+                    loadedParts++;
+                }
+
+                if (loadedParts == 0)
+                {
+                    UnityEngine.Object.Destroy(root);
+                    return false;
+                }
+
+                placeable.Id = id;
+                placeable.Name = name;
+                placeable.Group = group;
+                placeable.IsPrimitive = false;
+                placeable.Template = root;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] TryLoadFavFromDisk: " + ex.Message);
+                return false;
+            }
+        }
+
+        private static bool ReadMeshPart(string path, string texPath, Transform root)
+        {
+            using (var fs = File.OpenRead(path))
+            using (var br = new BinaryReader(fs))
+            {
+                int magic = br.ReadInt32();
+                if (magic != 0x4F504D31) return false;
+
+                string partName = br.ReadString();
+                Vector3 lp = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                Quaternion lr = new Quaternion(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                Vector3 ls = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                Color col = new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+
+                int vertCount = br.ReadInt32();
+                if (vertCount < 3 || vertCount > 200000) return false;
+                var verts = new Vector3[vertCount];
+                for (int i = 0; i < vertCount; i++)
+                    verts[i] = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+
+                int nCount = br.ReadInt32();
+                Vector3[] normals = null;
+                if (nCount == vertCount)
+                {
+                    normals = new Vector3[nCount];
+                    for (int i = 0; i < nCount; i++)
+                        normals[i] = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                }
+                else
+                {
+                    for (int i = 0; i < nCount; i++)
+                    { br.ReadSingle(); br.ReadSingle(); br.ReadSingle(); }
+                }
+
+                int uvCount = br.ReadInt32();
+                Vector2[] uv = null;
+                if (uvCount == vertCount)
+                {
+                    uv = new Vector2[uvCount];
+                    for (int i = 0; i < uvCount; i++)
+                        uv[i] = new Vector2(br.ReadSingle(), br.ReadSingle());
+                }
+                else
+                {
+                    for (int i = 0; i < uvCount; i++)
+                    { br.ReadSingle(); br.ReadSingle(); }
+                }
+
+                int triCount = br.ReadInt32();
+                if (triCount < 3 || triCount > 600000) return false;
+                var tris = new int[triCount];
+                for (int i = 0; i < triCount; i++)
+                    tris[i] = br.ReadInt32();
+
+                Mesh mesh = new Mesh();
+                mesh.name = string.IsNullOrEmpty(partName) ? "FavPart" : partName;
+                mesh.hideFlags = HideFlags.DontUnloadUnusedAsset;
+                mesh.vertices = verts;
+                if (normals != null) mesh.normals = normals;
+                if (uv != null) mesh.uv = uv;
+                mesh.triangles = tris;
+                if (normals == null) mesh.RecalculateNormals();
+                mesh.RecalculateBounds();
+
+                Texture2D albedo = LoadTexturePng(texPath);
+
+                GameObject go = new GameObject(mesh.name);
+                go.transform.SetParent(root, false);
+                go.transform.localPosition = lp;
+                go.transform.localRotation = lr;
+                go.transform.localScale = ls;
+
+                MeshFilter mf = go.AddComponent<MeshFilter>();
+                mf.sharedMesh = mesh;
+                MeshRenderer mr = go.AddComponent<MeshRenderer>();
+                Material mat = CreateFavMaterial(col, albedo);
+                if (IsUnityAlive(mat)) mr.sharedMaterial = mat;
+                MeshCollider colider = go.AddComponent<MeshCollider>();
+                colider.sharedMesh = mesh;
+                return true;
+            }
+        }
+
+        private static Texture2D LoadTexturePng(string path)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path) || !File.Exists(path)) return null;
+                byte[] bytes = File.ReadAllBytes(path);
+                if (bytes == null || bytes.Length < 8) return null;
+                Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!tex.LoadImage(bytes))
+                {
+                    UnityEngine.Object.Destroy(tex);
+                    return null;
+                }
+                tex.hideFlags = HideFlags.DontUnloadUnusedAsset;
+                tex.name = Path.GetFileNameWithoutExtension(path);
+                return tex;
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] LoadTexturePng: " + ex.Message);
+                return null;
+            }
+        }
+
+        private static Material CreateFavMaterial(Color col, Texture2D albedo)
+        {
+            Shader shader = Shader.Find("Standard");
+            if ((object)shader == null) shader = Shader.Find("Legacy Shaders/Diffuse");
+            if ((object)shader == null) shader = Shader.Find("Diffuse");
+            if ((object)shader == null) shader = Shader.Find("Mobile/Diffuse");
+            if ((object)shader == null) return null;
+
+            Material mat = new Material(shader);
+            mat.hideFlags = HideFlags.DontUnloadUnusedAsset;
+            if (mat.HasProperty("_Color")) mat.color = col;
+            if (IsUnityAlive(albedo))
+            {
+                if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", albedo);
+                mat.mainTexture = albedo;
+            }
+            return mat;
+        }
+
+        private static bool TemplateHasAlbedo(GameObject root)
+        {
+            if (!IsUnityAlive(root)) return false;
+            Renderer[] rends = root.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < rends.Length; i++)
+            {
+                if (!IsUnityAlive(rends[i])) continue;
+                Material[] mats = rends[i].sharedMaterials;
+                if (mats == null) continue;
+                for (int m = 0; m < mats.Length; m++)
+                {
+                    if (IsUnityAlive(GetAlbedoTexture(mats[m]))) return true;
+                }
+            }
+            return false;
+        }
+
+        private static void TryUpgradeFavFromLive(string id, GameObject liveRoot)
+        {
+            if (string.IsNullOrEmpty(id) || !IsUnityAlive(liveRoot)) return;
+            if (!_favIds.Contains(id)) return;
+
+            int index = -1;
+            for (int i = 0; i < _catalog.Count; i++)
+            {
+                if (string.Equals(_catalog[i].Id, id, StringComparison.Ordinal))
+                { index = i; break; }
+            }
+            if (index < 0) return;
+            if (TemplateHasAlbedo(_catalog[index].Template)) return;
+
+            try
+            {
+                GameObject template = UnityEngine.Object.Instantiate(liveRoot);
+                template.name = _catalog[index].Name;
+                StripRuntimeJunk(template);
+                template.SetActive(false);
+                EnsureHolder();
+                template.transform.SetParent(_holder.transform, false);
+                template.transform.localPosition = Vector3.zero;
+                template.transform.localRotation = Quaternion.identity;
+
+                DetachSharedMeshes(template);
+                if (!TemplateHasAlbedo(template))
+                {
+                    UnityEngine.Object.Destroy(template);
+                    return;
+                }
+
+                Placeable p = _catalog[index];
+                if (IsUnityAlive(p.Template)) UnityEngine.Object.Destroy(p.Template);
+                p.Template = template;
+                _catalog[index] = p;
+                SaveFavToDisk(p);
+                ModLog.Feedback("[ObjectPlacer] Updated textures for " + p.Name);
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] TryUpgradeFavFromLive: " + ex.Message);
             }
         }
 
@@ -1032,6 +1767,7 @@ namespace DescendersModMenu.Mods
                         if (key == "move") { int n; if (int.TryParse(val, out n)) MoveSpeedLevel = ClampLevel(n); }
                         else if (key == "rotate") { int n; if (int.TryParse(val, out n)) RotateSpeedLevel = ClampLevel(n); }
                         else if (key == "lift") { int n; if (int.TryParse(val, out n)) LiftSpeedLevel = ClampLevel(n); }
+                        else if (key == "cam") { int n; if (int.TryParse(val, out n)) CamDistanceLevel = ClampLevel(n); }
                         else if (key == "autoclose") AutoCloseMenu = val != "0" && !string.Equals(val, "false", StringComparison.OrdinalIgnoreCase);
                         else if (key == "favs")
                         {
@@ -1078,6 +1814,7 @@ namespace DescendersModMenu.Mods
                 sb.Append("move=").Append(MoveSpeedLevel).Append('\n');
                 sb.Append("rotate=").Append(RotateSpeedLevel).Append('\n');
                 sb.Append("lift=").Append(LiftSpeedLevel).Append('\n');
+                sb.Append("cam=").Append(CamDistanceLevel).Append('\n');
                 sb.Append("autoclose=").Append(AutoCloseMenu ? "1" : "0").Append('\n');
                 sb.Append("favs=");
                 bool first = true;

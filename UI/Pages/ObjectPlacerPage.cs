@@ -15,8 +15,8 @@ namespace DescendersModMenu.UI
         private static Image _autoTrack;
         private static RectTransform _autoKnob;
         private static Text _statusVal;
-        private static Image _moveBar, _rotBar, _liftBar;
-        private static Text _moveVal, _rotVal, _liftVal;
+        private static Image _moveBar, _rotBar, _liftBar, _camBar;
+        private static Text _moveVal, _rotVal, _liftVal, _camVal;
 
         public static bool IsAnyActive => ObjectPlacer.IsAnyActive;
 
@@ -122,6 +122,14 @@ namespace DescendersModMenu.UI
                     RefreshHeader();
                 }, out _autoTrack, out _autoKnob);
 
+                var camr = UIHelpers.StatRow("Camera Distance", c);
+                _camBar = UIHelpers.MakeBar("CmB", camr.transform, (ObjectPlacer.CamDistanceLevel - 1) / 9f);
+                _camVal = UIHelpers.Txt("CmV", camr.transform, ObjectPlacer.CamDistanceDisplay, 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+                _camVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 40;
+                UIHelpers.SmallBtn(camr.transform, "-", () => { ObjectPlacer.BumpCamDistance(-1); RefreshHeader(); });
+                UIHelpers.SmallBtn(camr.transform, "+", () => { ObjectPlacer.BumpCamDistance(1); RefreshHeader(); });
+
                 var lib = UIHelpers.StatRow("Library", c);
                 UIHelpers.ActionBtn(lib.transform, "Scan Map", () => { ObjectPlacer.ScanMap(); RebuildList(); }, 70);
                 UIHelpers.ActionBtnOrange(lib.transform, "Forget", () => { ObjectPlacer.ClearHarvested(); RebuildList(); }, 56);
@@ -130,7 +138,7 @@ namespace DescendersModMenu.UI
                     FontStyle.Italic, TextAnchor.MiddleLeft, UIHelpers.TextDim);
                 _statusVal.gameObject.AddComponent<LayoutElement>().preferredHeight = 18;
 
-                UIHelpers.InfoBox(c, "Scan a Bike Park to fill Map Objects, then star what you want. LB/RB (Z/C) roll, right stick yaw/pitch, left stick / WASD move, E/Q lift. A/Enter place, B/Esc exit.");
+                UIHelpers.InfoBox(c, "Scan a Bike Park to fill Map Objects, then star what you want — favourites are saved and stay available on other maps. LB/RB (Z/C) roll, right stick yaw/pitch, left stick / WASD move, E/Q lift. Scroll or +/- camera distance. A/Enter place, B/Esc exit.", Color.white);
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("FAVOURITES", c);
@@ -265,9 +273,11 @@ namespace DescendersModMenu.UI
             UIHelpers.SetBar(_moveBar, (ObjectPlacer.MoveSpeedLevel - 1) / 9f);
             UIHelpers.SetBar(_rotBar, (ObjectPlacer.RotateSpeedLevel - 1) / 9f);
             UIHelpers.SetBar(_liftBar, (ObjectPlacer.LiftSpeedLevel - 1) / 9f);
+            UIHelpers.SetBar(_camBar, (ObjectPlacer.CamDistanceLevel - 1) / 9f);
             if (_moveVal) _moveVal.text = ObjectPlacer.MoveSpeedDisplay;
             if (_rotVal) _rotVal.text = ObjectPlacer.RotateSpeedDisplay;
             if (_liftVal) _liftVal.text = ObjectPlacer.LiftSpeedDisplay;
+            if (_camVal) _camVal.text = ObjectPlacer.CamDistanceDisplay;
         }
 
         public static void RefreshAll()
@@ -289,9 +299,11 @@ namespace DescendersModMenu.UI
             _moveBar = null;
             _rotBar = null;
             _liftBar = null;
+            _camBar = null;
             _moveVal = null;
             _rotVal = null;
             _liftVal = null;
+            _camVal = null;
         }
     }
 }
