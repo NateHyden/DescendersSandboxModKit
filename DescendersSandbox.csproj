@@ -140,6 +140,7 @@
     <Compile Include="Mods\Bike\NoSpeedCap.cs" />
     <Compile Include="Mods\Bike\QuickBrake.cs" />
     <Compile Include="Mods\Bike\ReverseSteering.cs" />
+    <Compile Include="Mods\Bike\SpiderBike.cs" />
     <Compile Include="Mods\Bike\StickyTyres.cs" />
     <Compile Include="Mods\Bike\Suspension.cs" />
     <Compile Include="Mods\Bike\BouncyBike.cs" />
@@ -159,6 +160,7 @@
     <Compile Include="Mods\World\MapChanger.cs" />
     <Compile Include="Mods\World\NearMissSensitivity.cs" />
     <Compile Include="Mods\World\SkyColours.cs" />
+    <Compile Include="Mods\World\DiscoMode.cs" />
     <Compile Include="Mods\World\TimeOfDay.cs" />
     <Compile Include="Mods\Player\DrunkMode.cs" />
     <Compile Include="Mods\Player\RiderCustomiser.cs" />
@@ -174,6 +176,7 @@
     <Compile Include="Mods\Tracking\GhostReplay.cs" />
     <Compile Include="Mods\Tracking\SessionTrackers.cs" />
     <Compile Include="Mods\Tracking\SlowMoOnBail.cs" />
+    <Compile Include="Mods\Tracking\BlackDeath.cs" />
     <Compile Include="Mods\Tracking\SpeedWatcher.cs" />
     <Compile Include="Mods\Tracking\TopSpeed.cs" />
     <Compile Include="Mods\System\AssemblyScanner.cs" />
@@ -185,6 +188,7 @@
     <Compile Include="Mods\System\Graphics.cs" />
     <Compile Include="Mods\System\MenuCustomiser.cs" />
     <Compile Include="Mods\System\ModChat.cs" />
+    <Compile Include="Mods\System\MultiplayerMenuGuard.cs" />
     <Compile Include="Mods\System\ModDetection.cs" />
     <Compile Include="Mods\System\SceneDumper.cs" />
     <Compile Include="Mods\System\ScreenshotMode.cs" />

@@ -103,8 +103,8 @@ namespace DescendersModMenu.UI
 
                 content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 var vlg = content.AddComponent<VerticalLayoutGroup>();
-                vlg.spacing = UIHelpers.RowGap;
-                vlg.padding = new RectOffset((int)UIHelpers.ContentPad, (int)UIHelpers.ContentPad, 8, 8);
+                vlg.spacing = 2f;
+                vlg.padding = new RectOffset((int)UIHelpers.ContentPad, (int)UIHelpers.ContentPad, 4, 4);
                 vlg.childAlignment = TextAnchor.UpperCenter;
                 vlg.childForceExpandWidth = true; vlg.childForceExpandHeight = false;
 
@@ -146,14 +146,12 @@ namespace DescendersModMenu.UI
             }
 
             // ── Remove All button ─────────────────────────────────────
-            var clearRow = UIHelpers.StatRow("", _contentRoot);
+            var clearRow = UIHelpers.BareBtnRow(_contentRoot, CompactRowH);
             UIHelpers.ActionBtnOrange(clearRow.transform, "\u2716  Remove All Favourites", () =>
             {
                 FavouritesManager.ClearAll();
             }, 186);
-            UIHelpers.Divider(_contentRoot);
 
-            bool first = true;
             foreach (var id in favIds)
             {
                 ModFavEntry entry;
@@ -163,39 +161,45 @@ namespace DescendersModMenu.UI
                     continue;
                 }
 
-                if (!first) UIHelpers.Divider(_contentRoot);
-                first = false;
+                // Tight card: header + controls with almost no gap between them
+                var card = UIHelpers.Obj("Fav_" + id, _contentRoot);
+                var cardLe = card.AddComponent<LayoutElement>();
+                cardLe.flexibleWidth = 1;
+                var cardV = card.AddComponent<VerticalLayoutGroup>();
+                cardV.spacing = 1f;
+                cardV.padding = new RectOffset(0, 0, 0, 0);
+                cardV.childAlignment = TextAnchor.UpperCenter;
+                cardV.childForceExpandWidth = true;
+                cardV.childForceExpandHeight = false;
+                cardV.childControlWidth = true;
+                cardV.childControlHeight = true;
 
                 // ── Entry header: tab badge + mod name + remove star ──
-                var hdr = UIHelpers.Obj("FH_" + id, _contentRoot);
+                var hdr = UIHelpers.Obj("FH_" + id, card.transform);
                 var hle = hdr.AddComponent<LayoutElement>();
-                hle.preferredHeight = 24; hle.minHeight = 24;
+                hle.preferredHeight = 14; hle.minHeight = 14;
                 var hhlg = hdr.AddComponent<HorizontalLayoutGroup>();
-                hhlg.spacing = 6;
-                hhlg.padding = new RectOffset(4, 4, 0, 0);
+                hhlg.spacing = 4;
+                hhlg.padding = new RectOffset(2, 2, 0, 0);
                 hhlg.childAlignment = TextAnchor.MiddleLeft;
                 hhlg.childForceExpandWidth = false; hhlg.childForceExpandHeight = false;
 
-                // Tab badge
                 var badge = UIHelpers.Panel("Badge", hdr.transform, new Color(0, 0, 0, 0));
-                var bt = UIHelpers.Txt("BT", badge.transform, entry.TabBadge, 9,
+                var bt = UIHelpers.Txt("BT", badge.transform, entry.TabBadge, 7,
                     FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextDim);
                 UIHelpers.Fill(UIHelpers.RT(bt.gameObject));
-                badge.AddComponent<LayoutElement>().preferredWidth = 50;
+                badge.AddComponent<LayoutElement>().preferredWidth = 40;
 
-                // Mod name
-                var nameT = UIHelpers.Txt("FN", hdr.transform, entry.DisplayName, 10,
+                var nameT = UIHelpers.Txt("FN", hdr.transform, entry.DisplayName, 8,
                     FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextMid);
                 var nle = nameT.gameObject.AddComponent<LayoutElement>();
-                nle.flexibleWidth = 1; nle.preferredHeight = 24;
+                nle.flexibleWidth = 1; nle.preferredHeight = 14;
 
-                // Remove star — uses the real ID for colour, not registered globally
                 string capturedId = id;
-                var removeStar = UIHelpers.StarBtn(hdr.transform, capturedId,
+                UIHelpers.StarBtn(hdr.transform, capturedId,
                     () => { FavouritesManager.Toggle(capturedId); });
 
-                // ── Build the mod's actual controls ───────────────────
-                try { entry.BuildControls(_contentRoot); }
+                try { entry.BuildControls(card.transform); }
                 catch (Exception ex)
                 {
                     ModLog.Warn("[Favs] BuildControls(" + id + "): " + ex.Message);
@@ -251,6 +255,38 @@ namespace DescendersModMenu.UI
             hint.gameObject.AddComponent<LayoutElement>().preferredHeight = 16;
         }
 
+        // Shorter than a normal StatRow so more favourites fit on screen.
+        // Public so custom BuildControls (Bike switcher, etc.) can match.
+        public const float CompactRowH = 24f;
+
+        public static GameObject CompactStatRow(string label, Transform p)
+        {
+            var row = UIHelpers.Panel(label + "R", p, UIHelpers.RowBg, UIHelpers.RowSp);
+            var le = row.AddComponent<LayoutElement>();
+            le.preferredHeight = CompactRowH; le.minHeight = CompactRowH; le.flexibleHeight = 0;
+
+            var hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 5; hlg.padding = new RectOffset(5, 5, 0, 0);
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            // Keep false so MakeBar stays 4px tall (same as other tabs). Expanding
+            // height turned the bar track into a tall inset that looked wrong.
+            hlg.childForceExpandWidth = false; hlg.childForceExpandHeight = false;
+            hlg.childControlWidth = true; hlg.childControlHeight = true;
+
+            var bd = UIHelpers.Panel("Bd", row.transform, UIHelpers.RowBorder, UIHelpers.RowSp);
+            bd.GetComponent<Image>().raycastTarget = false;
+            UIHelpers.Fill(UIHelpers.RT(bd));
+            bd.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            if (!string.IsNullOrEmpty(label))
+            {
+                var t = UIHelpers.Txt(label + "L", row.transform, label, 10, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextLight);
+                var tle = t.gameObject.AddComponent<LayoutElement>();
+                tle.flexibleWidth = 1; tle.preferredHeight = CompactRowH; tle.minHeight = CompactRowH;
+            }
+            return row;
+        }
+
         // ══════════════════════════════════════════════════════════════
         //  BUILDER HELPERS — used by page factories
         // ══════════════════════════════════════════════════════════════
@@ -260,7 +296,7 @@ namespace DescendersModMenu.UI
             FavBoolGetter getState, FavAction doToggle, FavAction refreshPage)
         {
             bool initOn = getState();
-            var row = UIHelpers.StatRow(label, parent);
+            var row = CompactStatRow(label, parent);
             var val = UIHelpers.Txt("FT_" + id, row.transform, initOn ? "ON" : "OFF", 11,
                 FontStyle.Bold, TextAnchor.MiddleCenter, initOn ? UIHelpers.OnColor : UIHelpers.OffColor);
             val.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
@@ -289,7 +325,7 @@ namespace DescendersModMenu.UI
         public static void BuildActionButton(Transform parent, string id, string label, string btnLabel,
             FavAction doAction, FavAction refreshPage, FavStringGetter getResult = null)
         {
-            var row = UIHelpers.StatRow(label, parent);
+            var row = CompactStatRow(label, parent);
             Text resultTxt = null;
             if (getResult != null)
             {
@@ -314,7 +350,7 @@ namespace DescendersModMenu.UI
             FavStringGetter getDisplayVal = null)
         {
             bool initOn = getState();
-            var row = UIHelpers.StatRow(label, parent);
+            var row = CompactStatRow(label, parent);
             var togVal = UIHelpers.Txt("FTV_" + id, row.transform, initOn ? "ON" : "OFF", 11,
                 FontStyle.Bold, TextAnchor.MiddleCenter, initOn ? UIHelpers.OnColor : UIHelpers.OffColor);
             togVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
@@ -365,7 +401,7 @@ namespace DescendersModMenu.UI
             FavFloatGetter getBarPct, FavAction refreshPage,
             FavStringGetter getDisplayVal = null, FavBoolGetter isNonDefault = null)
         {
-            var row = UIHelpers.StatRow(label, parent);
+            var row = CompactStatRow(label, parent);
             var bar = UIHelpers.MakeBar("FB_" + id, row.transform, getBarPct());
             var lvlVal = UIHelpers.Txt("FLV_" + id, row.transform,
                 getDisplayVal != null ? getDisplayVal() : getLevel().ToString(), 12,
@@ -397,7 +433,7 @@ namespace DescendersModMenu.UI
             FavIntGetter getLevel, FavAction onMinus, FavAction onPlus,
             int min, int max, FavAction refreshPage, int defaultLevel = 10)
         {
-            var row = UIHelpers.StatRow(label, parent);
+            var row = CompactStatRow(label, parent);
             var minus = UIHelpers.SmallBtn(row.transform, "\u25C0", () =>
             {
                 onMinus();
@@ -434,7 +470,7 @@ namespace DescendersModMenu.UI
             FavAction refreshPage, int defaultLevel = 5)
         {
             // Row 1
-            var r1 = UIHelpers.StatRow(label1, parent);
+            var r1 = CompactStatRow(label1, parent);
             var b1 = UIHelpers.MakeBar("FB1_" + id, r1.transform, pct1());
             var v1 = UIHelpers.Txt("FV1_" + id, r1.transform, get1().ToString(), 12,
                 FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
@@ -443,7 +479,7 @@ namespace DescendersModMenu.UI
             UIHelpers.SmallBtn(r1.transform, "+", () => { inc1(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
 
             // Row 2
-            var r2 = UIHelpers.StatRow(label2, parent);
+            var r2 = CompactStatRow(label2, parent);
             var b2 = UIHelpers.MakeBar("FB2_" + id, r2.transform, pct2());
             var v2 = UIHelpers.Txt("FV2_" + id, r2.transform, get2().ToString(), 12,
                 FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
@@ -452,7 +488,7 @@ namespace DescendersModMenu.UI
             UIHelpers.SmallBtn(r2.transform, "+", () => { inc2(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
 
             // Row 3
-            var r3 = UIHelpers.StatRow(label3, parent);
+            var r3 = CompactStatRow(label3, parent);
             var b3 = UIHelpers.MakeBar("FB3_" + id, r3.transform, pct3());
             var v3 = UIHelpers.Txt("FV3_" + id, r3.transform, get3().ToString(), 12,
                 FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
@@ -479,7 +515,7 @@ namespace DescendersModMenu.UI
             int min, int max, FavAction refreshPage, int defaultLevel = 10)
         {
             bool initOn = getState();
-            var row = UIHelpers.StatRow(label, parent);
+            var row = CompactStatRow(label, parent);
             var togVal = UIHelpers.Txt("FTV_" + id, row.transform, initOn ? "ON" : "OFF", 11,
                 FontStyle.Bold, TextAnchor.MiddleCenter, initOn ? UIHelpers.OnColor : UIHelpers.OffColor);
             togVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
@@ -529,7 +565,7 @@ namespace DescendersModMenu.UI
             FavAction refreshPage)
         {
             bool initOn = getState();
-            var row = UIHelpers.StatRow(label, parent);
+            var row = CompactStatRow(label, parent);
             var togVal = UIHelpers.Txt("FTV_" + id, row.transform, initOn ? "ON" : "OFF", 11,
                 FontStyle.Bold, TextAnchor.MiddleCenter, initOn ? UIHelpers.OnColor : UIHelpers.OffColor);
             togVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;

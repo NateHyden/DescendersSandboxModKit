@@ -40,7 +40,7 @@ namespace DescendersModMenu
             "SuperLaunch",     "TeleportCheckpoint",
             // ── Modes ─────────────────────────────────────────────────────
             "AvalancheMode",   "EarthquakeMode",   "PoliceChase",     "BoulderDodge",
-            "SurvivalMode",    "TrickAttack"
+            "SurvivalMode",    "TrickAttack",     "SpiderBike"
         };
 
         public static readonly string[] ModLabels = new string[]
@@ -64,7 +64,7 @@ namespace DescendersModMenu
             "Super Launch",      "Teleport to Checkpoint",
             // ── Modes ─────────────────────────────────────────────────────
             "Avalanche Mode",    "Earthquake Mode",        "Police Chase",       "Boulder Dodge",
-            "Survival Mode",     "Trick Attack"
+            "Survival Mode",     "Trick Attack",         "Spider Bike"
         };
 
         public static int Count { get { return ModIds.Length; } }
@@ -299,6 +299,7 @@ namespace DescendersModMenu
                     case "ExplodingProps":     ExplodingProps.Toggle();                           break;
                     case "NearMiss":           NearMissSensitivity.Toggle();                      break;
                     case "StickyTyres":        StickyTyres.Toggle();                              break;
+                    case "SpiderBike":         SpiderBike.Toggle();                               break;
                     case "WideTyres":          WideTyres.Toggle();                                break;
                     case "ESP":                ESP.Toggle();                                      break;
                     case "BikeDamage":         BikeDamage.Toggle();                               break;

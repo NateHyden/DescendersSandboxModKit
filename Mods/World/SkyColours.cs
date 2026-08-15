@@ -988,7 +988,10 @@ namespace DescendersModMenu.Mods
 
         public static void Postfix()
         {
-            SkyColours.ApplyColours();
+            if (DiscoMode.Enabled)
+                DiscoMode.ApplyColours();
+            else
+                SkyColours.ApplyColours();
             SkyColours.TickStorm(ref _efhType, ref _setEnvFlag);
         }
     }

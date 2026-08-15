@@ -141,6 +141,10 @@ namespace DescendersModMenu.Mods
 
     public static class SlowMoOnBailRespawn_Patch
     {
-        public static void Postfix() { SlowMoOnBail.OnRespawn(); }
+        public static void Postfix()
+        {
+            SlowMoOnBail.OnRespawn();
+            BlackDeath.OnRespawn();
+        }
     }
 }

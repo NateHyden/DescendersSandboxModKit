@@ -6,74 +6,35 @@ using DescendersModMenu; // Telemetry
 
 namespace DescendersModMenu.Mods
 {
+    // Ice Grip: zero wheel roll friction + ground grip so the bike slides on
+    // contact. Do NOT zero Rigidbody.angularDrag — that made mid-air spins /
+    // flips integrate forever and runaway to ridiculous speeds.
     public static class IceMode
     {
         public static bool Enabled { get; private set; } = false;
 
-        // Saved angularDrag for restore
-        private static float _savedAngularDrag = -1f;
-        private static bool _defaultsSaved = false;
+        // Soft air safety: if angular speed somehow spikes while ice is on,
+        // clamp it. Does not fight normal trick spins under this cap.
+        private const float MaxAirAngularSpeed = 14f; // rad/s ≈ 800 deg/s
+
+        private static PropertyInfo _vehicleGroundedProp = null;
 
         public static void Toggle()
         {
             Enabled = !Enabled;
-            if (Enabled)
-                ApplyToRigidbody();
-            else
-                RestoreRigidbody();
             ModLog.Feedback("[IceMode] -> " + (Enabled ? "ON" : "OFF"));
-        }
-
-        private static void ApplyToRigidbody()
-        {
-            try
-            {
-                Rigidbody rb = GetRigidbody();
-                if ((object)rb == null) return;
-                if (!_defaultsSaved)
-                {
-                    _savedAngularDrag = rb.angularDrag;
-                    _defaultsSaved = true;
-                    ModLog.Debug("[IceMode] Saved angularDrag=" + _savedAngularDrag);
-                }
-                rb.angularDrag = 0f;
-            }
-            catch (System.Exception ex) { MelonLogger.Error("[IceMode] ApplyToRigidbody: " + ex.Message); Telemetry.ReportErrorAsync(ex, "IceMode"); }
-        }
-
-        private static void RestoreRigidbody()
-        {
-            try
-            {
-                if (!_defaultsSaved) return;
-                Rigidbody rb = GetRigidbody();
-                if ((object)rb == null) return;
-                rb.angularDrag = _savedAngularDrag;
-                ModLog.Debug("[IceMode] Restored angularDrag=" + _savedAngularDrag);
-            }
-            catch (System.Exception ex) { MelonLogger.Error("[IceMode] RestoreRigidbody: " + ex.Message); Telemetry.ReportErrorAsync(ex, "IceMode"); }
-        }
-
-        private static Rigidbody GetRigidbody()
-        {
-            GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) { ModLog.Warn("[IceMode] Player_Human not found."); return null; }
-            return player.GetComponent<Rigidbody>();
         }
 
         public static void Reset()
         {
-            if (Enabled) RestoreRigidbody();
             Enabled = false;
-            _defaultsSaved = false;
-            _savedAngularDrag = -1f;
+            _vehicleGroundedProp = null;
         }
 
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
         {
             try
             {
-                // Patch Wheel.FixedUpdate — zero rollFriction every frame
                 MethodInfo wheelFU = typeof(Wheel).GetMethod(
                     "FixedUpdate", BindingFlags.Public | BindingFlags.Instance);
 
@@ -86,7 +47,6 @@ namespace DescendersModMenu.Mods
                 else
                     ModLog.Warn("[IceMode] Wheel.FixedUpdate not found.");
 
-                // Patch Vehicle.FixedUpdate — zero averaged grip (eSXpeQc) every frame
                 MethodInfo vehicleFU = typeof(Vehicle).GetMethod(
                     "FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -108,6 +68,43 @@ namespace DescendersModMenu.Mods
                 DiagnosticsManager.Report("IceMode", false, ex.Message);
             }
         }
+
+        internal static bool IsVehicleAirborne(Vehicle vehicle)
+        {
+            try
+            {
+                if ((object)_vehicleGroundedProp == null)
+                {
+                    PropertyInfo[] props = typeof(Vehicle).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                    for (int i = 0; i < props.Length; i++)
+                    {
+                        if (!props[i].CanRead) continue;
+                        if (props[i].PropertyType.Equals(typeof(bool)) && props[i].Name.StartsWith("T"))
+                        {
+                            _vehicleGroundedProp = props[i];
+                            break;
+                        }
+                    }
+                }
+                if ((object)_vehicleGroundedProp == null) return false;
+                return !(bool)_vehicleGroundedProp.GetValue(vehicle, null);
+            }
+            catch { return false; }
+        }
+
+        internal static void ClampAirSpin(Vehicle vehicle)
+        {
+            if (!IsVehicleAirborne(vehicle)) return;
+            try
+            {
+                Rigidbody rb = vehicle.GetComponent<Rigidbody>();
+                if ((object)rb == null) return;
+                float mag = rb.angularVelocity.magnitude;
+                if (mag > MaxAirAngularSpeed)
+                    rb.angularVelocity = rb.angularVelocity * (MaxAirAngularSpeed / mag);
+            }
+            catch { }
+        }
     }
 
     public static class IceMode_WheelPatch
@@ -122,7 +119,6 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                // Only local player wheels
                 Transform t = __instance.transform;
                 if ((object)t == null || (object)t.parent == null) return;
                 if (!string.Equals(t.parent.name, "Player_Human", System.StringComparison.Ordinal)) return;
@@ -140,10 +136,8 @@ namespace DescendersModMenu.Mods
 
     public static class IceMode_VehiclePatch
     {
-        // njDpmV = actual ground grip (public property on Vehicle)
-        // This is what directly drives forward + lateral velocity corrections each frame.
-        // eSXpeQc gets overwritten inside FixedUpdate before our postfix, so it does nothing.
-        // njDpmV is SET by sub-methods then READ to apply forces -- zero it in postfix.
+        // n\u0080jDpmV = actual ground grip (public property on Vehicle)
+        // eSXpeQc gets overwritten inside FixedUpdate before our postfix.
         private static PropertyInfo _groundGripProp = null;
 
         public static void Postfix(Vehicle __instance)
@@ -158,16 +152,31 @@ namespace DescendersModMenu.Mods
 
                 if ((object)_groundGripProp == null)
                 {
+                    // Prefer exact unicode name; fall back to scan (mojibake-safe).
                     _groundGripProp = typeof(Vehicle).GetProperty(
-                        "njDpmV", BindingFlags.Public | BindingFlags.Instance);
+                        "n\u0080jDpmV", BindingFlags.Public | BindingFlags.Instance);
+                    if ((object)_groundGripProp == null)
+                    {
+                        PropertyInfo[] props = typeof(Vehicle).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                        for (int i = 0; i < props.Length; i++)
+                        {
+                            if (!props[i].CanWrite) continue;
+                            if (!props[i].PropertyType.Equals(typeof(float))) continue;
+                            string n = props[i].Name;
+                            if (n != null && n.Length >= 6 && n[0] == 'n' && n.IndexOf("jDpm") >= 0)
+                            { _groundGripProp = props[i]; break; }
+                        }
+                    }
                     if ((object)_groundGripProp != null)
-                        ModLog.Debug("[IceMode] Found ground grip prop: njDpmV");
+                        ModLog.Debug("[IceMode] Found ground grip prop: " + _groundGripProp.Name);
                     else
-                        ModLog.Warn("[IceMode] Could not find ground grip prop: njDpmV");
+                        ModLog.Warn("[IceMode] Could not find ground grip prop.");
                 }
 
                 if ((object)_groundGripProp != null)
                     _groundGripProp.SetValue(__instance, 0.0f, null);
+
+                IceMode.ClampAirSpin(__instance);
             }
             catch { }
         }

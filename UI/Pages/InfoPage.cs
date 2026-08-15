@@ -9,19 +9,25 @@ namespace DescendersModMenu.UI
     public static class InfoPage
     {
         // ── Sub-tab state ─────────────────────────────────────────────
-        private static int _activeTab = 0; // 0=System 1=Hotkeys 2=Customise 3=Career
+        // Info page only: System / Hotkeys / Version. Customise + Career
+        // are top-level sidebar tabs now (pages 25 / 26).
+        private static int _activeTab = 0; // 0=System 1=Hotkeys 2=Version Update Check
 
-        private static readonly string[] TabLabels = { "System", "Hotkeys", "Customize", "Career" };
+        private static readonly string[] TabLabels = { "System", "Hotkeys", "Version Update Check" };
 
         // Sub-tab bar buttons
-        private static Image[] _tabBgs = new Image[4];
-        private static Text[] _tabTxts = new Text[4];
+        private static Image[] _tabBgs = new Image[3];
+        private static Text[] _tabTxts = new Text[3];
 
         // Page root GameObjects
         private static GameObject _pgSystem;
         private static GameObject _pgHotkeys;
         private static GameObject _pgCustomise;
         private static GameObject _pgCareer;
+        private static GameObject _pgVersion;
+        private static Text _verInstalledTxt;
+        private static Text _verLatestTxt;
+        private static Text _verStatusTxt;
 
         // Customise tab refs
         private static Text _custPosLbl;
@@ -29,8 +35,8 @@ namespace DescendersModMenu.UI
         private static Text _custOpacityLbl;
         private static GameObject _custSavedRow;
 
-        // Set before RebuildMenu() to reopen the Info/Customise page on a specific
-        // sub-tab (2 = Customise) instead of the default first sub-tab. Consumed on use.
+        // Legacy: kept for any callers that still set it; Info no longer
+        // uses Customise/Career sub-tab indices.
         public static int PendingSubTab = -1;
         // System tab
         private static Text _unityVersionTxt;
@@ -54,8 +60,7 @@ namespace DescendersModMenu.UI
         private static UnityEngine.UI.Button _inGameRepMinus, _inGameRepPlus;
         private static Text _inGameRepMultVal;
         private static GameObject _devDiagContent;
-        private static GameObject _devDiagLockedRow;
-        private static Text _devDiagLockedTxt;
+        // Locked hint intentionally omitted — unlock still works via header taps.
 
         // ── CreatePage ────────────────────────────────────────────────
         public static GameObject CreatePage(Transform parent)
@@ -132,18 +137,12 @@ namespace DescendersModMenu.UI
                 UIHelpers.Fill(UIHelpers.RT(_pgHotkeys));
                 BuildHotkeysPage(_pgHotkeys.transform);
 
-                // ── Credits page ──────────────────────────────────────
-                // ── Customise page ────────────────────────────────────
-                _pgCustomise = UIHelpers.Obj("PgCustomise", contentArea.transform);
-                UIHelpers.Fill(UIHelpers.RT(_pgCustomise));
-                BuildCustomisePage(_pgCustomise.transform);
+                // ── Version Update Check page ─────────────────────────
+                _pgVersion = UIHelpers.Obj("PgVersion", contentArea.transform);
+                UIHelpers.Fill(UIHelpers.RT(_pgVersion));
+                BuildVersionPage(_pgVersion.transform);
 
-                // ── Career page ───────────────────────────────────────
-                _pgCareer = UIHelpers.Obj("PgCareer", contentArea.transform);
-                UIHelpers.Fill(UIHelpers.RT(_pgCareer));
-                BuildCareerPage(_pgCareer.transform);
-
-                SwitchTab(PendingSubTab >= 0 ? PendingSubTab : 0);
+                SwitchTab(0);
                 PendingSubTab = -1;
                 Refresh();
             }
@@ -156,14 +155,167 @@ namespace DescendersModMenu.UI
             return pg;
         }
 
+        // Top-level Customise sidebar page (was an Info sub-tab).
+        public static GameObject CreateCustomisePage(Transform parent)
+        {
+            GameObject pg = null;
+            try
+            {
+                pg = UIHelpers.Obj("P25R", parent);
+                UIHelpers.Fill(UIHelpers.RT(pg));
+                _pgCustomise = pg;
+                BuildCustomisePage(pg.transform);
+            }
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("InfoPage.CreateCustomisePage: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "InfoPage");
+                return null;
+            }
+            return pg;
+        }
+
+        // Top-level Career sidebar page (was an Info sub-tab).
+        // Opens behind a Yes/No gate so people think twice about the grind.
+        private static GameObject _careerGate;
+        private static GameObject _careerContentHost;
+        private static bool _careerUnlockedThisVisit;
+
+        public static GameObject CreateCareerPage(Transform parent)
+        {
+            GameObject pg = null;
+            try
+            {
+                pg = UIHelpers.Obj("P26R", parent);
+                UIHelpers.Fill(UIHelpers.RT(pg));
+                _pgCareer = pg;
+                _careerUnlockedThisVisit = false;
+
+                _careerContentHost = UIHelpers.Obj("CareerContent", pg.transform);
+                UIHelpers.Fill(UIHelpers.RT(_careerContentHost));
+                BuildCareerPage(_careerContentHost.transform);
+                _careerContentHost.SetActive(false);
+
+                _careerGate = BuildCareerConfirmGate(pg.transform);
+                _careerGate.SetActive(true);
+            }
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("InfoPage.CreateCareerPage: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "InfoPage");
+                return null;
+            }
+            return pg;
+        }
+
+        public static void RefreshCustomisePage() { RefreshCustomise(); }
+        public static void RefreshCareerPage() { RefreshCareerResult(); }
+
+        // Called from MenuWindow when Career becomes the active page.
+        public static void OnCareerTabOpened()
+        {
+            if (_careerUnlockedThisVisit)
+            {
+                if (_careerGate) _careerGate.SetActive(false);
+                if (_careerContentHost) _careerContentHost.SetActive(true);
+                RefreshCareerResult();
+                return;
+            }
+            if (_careerGate) _careerGate.SetActive(true);
+            if (_careerContentHost) _careerContentHost.SetActive(false);
+        }
+
+        // Leaving Career re-arms the gate for the next visit.
+        public static void OnCareerTabClosed()
+        {
+            _careerUnlockedThisVisit = false;
+            if (_careerGate) _careerGate.SetActive(true);
+            if (_careerContentHost) _careerContentHost.SetActive(false);
+        }
+
+        private static GameObject BuildCareerConfirmGate(Transform parent)
+        {
+            var gate = UIHelpers.Obj("CareerGate", parent);
+            UIHelpers.Fill(UIHelpers.RT(gate));
+            var bg = gate.AddComponent<Image>();
+            bg.color = new Color(0.04f, 0.05f, 0.08f, 0.97f);
+            bg.raycastTarget = true;
+
+            var card = UIHelpers.Panel("GateCard", gate.transform, UIHelpers.RowBg, UIHelpers.RowSp);
+            var cardRt = UIHelpers.RT(card);
+            cardRt.anchorMin = new Vector2(0.5f, 0.5f);
+            cardRt.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRt.pivot = new Vector2(0.5f, 0.5f);
+            cardRt.sizeDelta = new Vector2(420, 160);
+
+            var cardBdr = UIHelpers.Panel("GateBdr", card.transform, UIHelpers.AccentBdr, UIHelpers.RowSp);
+            cardBdr.GetComponent<Image>().raycastTarget = false;
+            UIHelpers.Fill(UIHelpers.RT(cardBdr));
+            cardBdr.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            var title = UIHelpers.Txt("GateTitle", card.transform,
+                "Are you sure you want to stop the grind?",
+                14, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextLight);
+            var titleRt = UIHelpers.RT(title.gameObject);
+            titleRt.anchorMin = new Vector2(0, 1);
+            titleRt.anchorMax = new Vector2(1, 1);
+            titleRt.pivot = new Vector2(0.5f, 1);
+            titleRt.sizeDelta = new Vector2(-24, 48);
+            titleRt.anchoredPosition = new Vector2(0, -18);
+            title.horizontalOverflow = HorizontalWrapMode.Wrap;
+            title.verticalOverflow = VerticalWrapMode.Overflow;
+
+            var hint = UIHelpers.Txt("GateHint", card.transform,
+                "Career tools can wipe or max progression. Yes opens the menu. No takes you back to General.",
+                11, FontStyle.Italic, TextAnchor.MiddleCenter, Color.white);
+            var hintRt = UIHelpers.RT(hint.gameObject);
+            hintRt.anchorMin = new Vector2(0, 1);
+            hintRt.anchorMax = new Vector2(1, 1);
+            hintRt.pivot = new Vector2(0.5f, 1);
+            hintRt.sizeDelta = new Vector2(-28, 40);
+            hintRt.anchoredPosition = new Vector2(0, -68);
+            hint.horizontalOverflow = HorizontalWrapMode.Wrap;
+
+            var btnRow = UIHelpers.Obj("GateBtns", card.transform);
+            var btnRt = UIHelpers.RT(btnRow);
+            btnRt.anchorMin = new Vector2(0.5f, 0);
+            btnRt.anchorMax = new Vector2(0.5f, 0);
+            btnRt.pivot = new Vector2(0.5f, 0);
+            btnRt.sizeDelta = new Vector2(280, 32);
+            btnRt.anchoredPosition = new Vector2(0, 18);
+            var hlg = btnRow.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 16;
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
+
+            UIHelpers.ActionBtn(btnRow.transform, "Yes", () =>
+            {
+                _careerUnlockedThisVisit = true;
+                if (_careerGate) _careerGate.SetActive(false);
+                if (_careerContentHost) _careerContentHost.SetActive(true);
+                RefreshCareerResult();
+            }, 100);
+
+            UIHelpers.ActionBtnOrange(btnRow.transform, "No", () =>
+            {
+                _careerUnlockedThisVisit = false;
+                if (_careerGate) _careerGate.SetActive(true);
+                if (_careerContentHost) _careerContentHost.SetActive(false);
+                MenuWindow.GoToPage(1); // General
+            }, 100);
+
+            return gate;
+        }
+
         // ── Tab switching ─────────────────────────────────────────────
         private static void SwitchTab(int idx)
         {
             _activeTab = idx;
             if ((object)_pgSystem != null) _pgSystem.SetActive(idx == 0);
             if ((object)_pgHotkeys != null) _pgHotkeys.SetActive(idx == 1);
-            if ((object)_pgCustomise != null) _pgCustomise.SetActive(idx == 2);
-            if ((object)_pgCareer != null) _pgCareer.SetActive(idx == 3);
+            if ((object)_pgVersion != null) _pgVersion.SetActive(idx == 2);
+            if (idx == 2) Refresh();
 
             for (int i = 0; i < TabLabels.Length; i++)
             {
@@ -173,8 +325,6 @@ namespace DescendersModMenu.UI
                 if ((object)_tabTxts[i] != null)
                     _tabTxts[i].color = active ? UIHelpers.Accent : UIHelpers.TextDim;
             }
-
-            // Refresh status data when switching to its tab
         }
 
         // ── System page ───────────────────────────────────────────────
@@ -219,7 +369,7 @@ namespace DescendersModMenu.UI
             UIHelpers.SectionHeader("SANDBOX", vlg.transform);
             MakeInfoRow2("Version", BuildInfo.Version, vlg.transform, UIHelpers.Accent);
             MakeInfoRow2("Output DLL", "DescendersSandbox.dll", vlg.transform);
-            MakeInfoRow2("Author", "NateHyden", vlg.transform);
+            MakeInfoRow2("Created By", "NateHyden", vlg.transform);
 
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeader("COMMUNITY", vlg.transform);
@@ -386,14 +536,7 @@ namespace DescendersModMenu.UI
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeaderButton("DEVELOPER DIAGNOSTICS", vlg.transform, HandleDevDiagTap);
 
-            _devDiagLockedRow = UIHelpers.Obj("DevDiagLocked", vlg.transform);
-            var dlLe = _devDiagLockedRow.AddComponent<LayoutElement>();
-            dlLe.preferredHeight = 36; dlLe.minHeight = 36; dlLe.flexibleHeight = 0;
-            _devDiagLockedTxt = UIHelpers.Txt("DevDiagLockedTxt", _devDiagLockedRow.transform,
-                "Locked - tap the header above " + DevLock.TapsRemaining + " more time(s) to unlock.",
-                11, FontStyle.Italic, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-            UIHelpers.Fill(UIHelpers.RT(_devDiagLockedTxt.gameObject));
-
+            // No locked hint text — silent gate. Content appears after enough header taps.
             _devDiagContent = UIHelpers.Obj("DevDiagContent", vlg.transform);
             var dcLe = _devDiagContent.AddComponent<LayoutElement>();
             dcLe.flexibleHeight = 0;
@@ -420,7 +563,6 @@ namespace DescendersModMenu.UI
             }, 90);
             UIHelpers.InfoBox(ddc, "Logs every Bike/BikeType customization item with its live IsItemUnlocked() result - check MelonLoader/Latest.log for the [CareerReset] lines after clicking.");
 
-            _devDiagLockedRow.SetActive(!DevLock.IsUnlocked);
             _devDiagContent.SetActive(DevLock.IsUnlocked);
 
             UIHelpers.AddScrollbar(sr);
@@ -599,7 +741,7 @@ namespace DescendersModMenu.UI
                 TabBadge = "INFO",
                 BuildControls = (fp) =>
                 {
-                    var row = UIHelpers.StatRow("Current Sponsor", fp);
+                    var row = FavsPage.CompactStatRow("Current Sponsor", fp);
                     UIHelpers.SmallBtn(row.transform, "\u25C0", () =>
                     {
                         CareerReset.PreviousSponsor();
@@ -729,12 +871,6 @@ namespace DescendersModMenu.UI
         private static void HandleDevDiagTap()
         {
             DevLock.RegisterTap();
-            if (_devDiagLockedTxt)
-                _devDiagLockedTxt.text = DevLock.IsUnlocked
-                    ? "Unlocked."
-                    : "Locked - tap the header above " + DevLock.TapsRemaining + " more time(s) to unlock.";
-
-            if (_devDiagLockedRow) _devDiagLockedRow.SetActive(!DevLock.IsUnlocked);
             if (_devDiagContent) _devDiagContent.SetActive(DevLock.IsUnlocked);
         }
 
@@ -770,6 +906,86 @@ namespace DescendersModMenu.UI
             UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay — save run", "F4 / RS Click");
             UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay — set spawn", "LS Click");
 
+        }
+
+        // ── Version Update Check page ─────────────────────────────────
+        private static void BuildVersionPage(Transform p)
+        {
+            var vlg = UIHelpers.Obj("VerVlg", p);
+            UIHelpers.Fill(UIHelpers.RT(vlg));
+            var v = vlg.AddComponent<VerticalLayoutGroup>();
+            v.spacing = UIHelpers.RowGap;
+            v.padding = new RectOffset((int)UIHelpers.ContentPad, (int)UIHelpers.ContentPad, 8, 8);
+            v.childAlignment = TextAnchor.UpperCenter;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = false;
+
+            UIHelpers.SectionHeader("VERSION UPDATE CHECK", vlg.transform);
+            _verInstalledTxt = MakeInfoRow("Installed", vlg.transform);
+            _verLatestTxt = MakeInfoRow("Latest available", vlg.transform);
+            _verStatusTxt = MakeInfoRow("Status", vlg.transform);
+
+            UIHelpers.Divider(vlg.transform);
+            UIHelpers.SectionHeader("DOWNLOAD", vlg.transform);
+            UIHelpers.InfoBox(vlg.transform, "GitHub releases — grab the latest build here or on Nexus.");
+
+            var linkRow = UIHelpers.StatRow("Releases", vlg.transform);
+            UIHelpers.ActionBtn(linkRow.transform, "Open GitHub", () =>
+            {
+                try { Application.OpenURL(UpdateChecker.ReleasesPageUrl); }
+                catch (System.Exception ex)
+                {
+                    MelonLogger.Error("[InfoPage] OpenURL: " + ex.Message);
+                    Telemetry.ReportErrorAsync(ex, "InfoPage");
+                }
+            }, 110);
+
+            var urlTxt = UIHelpers.Txt("RelUrl", linkRow.transform, UpdateChecker.ReleasesPageUrl,
+                10, FontStyle.Normal, TextAnchor.MiddleRight, UIHelpers.NeonBlue);
+            urlTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+            RefreshVersion();
+        }
+
+        private static void RefreshVersion()
+        {
+            if (_verInstalledTxt)
+                _verInstalledTxt.text = "v" + BuildInfo.Version;
+
+            if (_verLatestTxt)
+            {
+                if (!UpdateChecker.CheckComplete)
+                    _verLatestTxt.text = "Checking...";
+                else if (string.IsNullOrEmpty(UpdateChecker.LatestVersion))
+                    _verLatestTxt.text = "Could not check";
+                else
+                    _verLatestTxt.text = "v" + UpdateChecker.LatestVersion;
+                _verLatestTxt.color = UIHelpers.Accent;
+            }
+
+            if (_verStatusTxt)
+            {
+                if (!UpdateChecker.CheckComplete)
+                {
+                    _verStatusTxt.text = "Checking...";
+                    _verStatusTxt.color = UIHelpers.TextDim;
+                }
+                else if (string.IsNullOrEmpty(UpdateChecker.LatestVersion))
+                {
+                    _verStatusTxt.text = "Could not check";
+                    _verStatusTxt.color = UIHelpers.OffColor;
+                }
+                else if (UpdateChecker.UpdateAvailable)
+                {
+                    _verStatusTxt.text = "OUTDATED";
+                    _verStatusTxt.color = UIHelpers.OffColor;
+                }
+                else
+                {
+                    _verStatusTxt.text = "UP TO DATE";
+                    _verStatusTxt.color = UIHelpers.OnColor;
+                }
+            }
         }
 
         // ── Credits page ──────────────────────────────────────────────
@@ -1003,6 +1219,10 @@ namespace DescendersModMenu.UI
             if (_steamPlayerTxt && Mods.SteamPlayerCount.FetchComplete
                 && _steamPlayerTxt.text == "...")
                 Refresh();
+
+            if (_verLatestTxt && UpdateChecker.CheckComplete
+                && (_verLatestTxt.text == "Checking..." || _verLatestTxt.text == "..."))
+                RefreshVersion();
         }
 
         public static void ClearUiRefs()
@@ -1013,6 +1233,10 @@ namespace DescendersModMenu.UI
             _mlVersionTxt = null;
             _unityMatchTxt = null;
             _telemetryStatusTxt = null;
+            _verInstalledTxt = null;
+            _verLatestTxt = null;
+            _verStatusTxt = null;
+            _pgVersion = null;
         }
 
         // ── Refresh / Rebuild ─────────────────────────────────────────
@@ -1047,6 +1271,8 @@ namespace DescendersModMenu.UI
                     _telemetryStatusTxt.text = telOn ? "ON" : "OFF";
                     _telemetryStatusTxt.color = telOn ? UIHelpers.OnColor : UIHelpers.OffColor;
                 }
+
+                RefreshVersion();
 
                 // Feedback send status — real result polled back from the
                 // background thread that actually did the POST, not an

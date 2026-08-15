@@ -106,11 +106,17 @@ namespace DescendersModMenu.UI
             List<string> stale = null;
             foreach (var kv in _starButtons)
             {
-                if ((object)kv.Value == null) continue;
-                try { UIHelpers.SetStarActive(kv.Value, IsFavourited(kv.Key)); }
-                catch (Exception ex)
+                // Unity fake-null: destroyed buttons still fail (object)==null after
+                // scene unload / Search rebuild. Drop them quietly — not a real fault.
+                if (!kv.Value)
                 {
-                    ModLog.Warn("[Favs] RefreshAllStars: stale star button for '" + kv.Key + "' — " + ex.Message);
+                    if (stale == null) stale = new List<string>();
+                    stale.Add(kv.Key);
+                    continue;
+                }
+                try { UIHelpers.SetStarActive(kv.Value, IsFavourited(kv.Key)); }
+                catch (Exception)
+                {
                     if (stale == null) stale = new List<string>();
                     stale.Add(kv.Key);
                 }

@@ -39,18 +39,33 @@ namespace DescendersModMenu.Mods
             get { return Level == 0 ? "OFF" : "x" + CapValues[Level]; }
         }
 
+        private static int _lastNonZeroLevel = 1;
         private static FieldInfo _capField;
         private static PropertyInfo _multiplierProp;
         private static bool _multiplierPropSearched;
 
+        // All Mods Off / restore — remembers last non-zero level
+        public static void Toggle()
+        {
+            if (Level > 0)
+            {
+                _lastNonZeroLevel = Level;
+                Level = 0;
+            }
+            else
+            {
+                SetLevel(_lastNonZeroLevel > 0 ? _lastNonZeroLevel : 1);
+            }
+        }
+
         public static void Increase()
         {
-            if (Level < CapValues.Length - 1) { Level++; }
+            if (Level < CapValues.Length - 1) { Level++; if (Level > 0) _lastNonZeroLevel = Level; }
         }
 
         public static void Decrease()
         {
-            if (Level > 0) { Level--; }
+            if (Level > 0) { Level--; if (Level > 0) _lastNonZeroLevel = Level; }
         }
 
         public static void SetLevel(int level)
@@ -58,6 +73,7 @@ namespace DescendersModMenu.Mods
             if (level < 0) level = 0;
             if (level > CapValues.Length - 1) level = CapValues.Length - 1;
             Level = level;
+            if (Level > 0) _lastNonZeroLevel = Level;
         }
 
         /// <summary>Called every frame from ModEntry.OnUpdate. VehicleTricks is a
@@ -70,7 +86,7 @@ namespace DescendersModMenu.Mods
             {
                 if (Level == 0) return; // OFF - leave the game's own values alone entirely
 
-                GameObject player = GameObject.Find("Player_Human");
+                GameObject player = PlayerCache.PlayerHuman;
                 if ((object)player == null) return;
 
                 VehicleTricks tricks = player.GetComponentInChildren<VehicleTricks>();

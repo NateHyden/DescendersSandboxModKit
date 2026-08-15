@@ -24,17 +24,11 @@ namespace DescendersModMenu.UI
         // Random Mutator
         private static Text _mutatorVal; private static Image _mutatorTrack; private static RectTransform _mutatorKnob;
         private static Text _mutatorLastVal;
-        // Rubber Band Steering
-        private static Text _rubberVal; private static Image _rubberTrack; private static RectTransform _rubberKnob;
-        private static Text _rubberLvlVal;
-        // Random Weather Roulette
-        private static Text _weatherVal; private static Image _weatherTrack; private static RectTransform _weatherKnob;
-        private static Text _weatherLastVal;
+        private static Text _jumpStatusTxt;
 
         public static bool IsAnyActive =>
             TrailPainter.Enabled || ConfettiOnTrick.Enabled || BigHeadMode.Enabled ||
-            ChaosMode.Enabled || RandomBikeSwitch.Enabled || RandomMutatorOnCheckpoint.Enabled ||
-            RubberBandSteering.Enabled || RandomWeatherRoulette.Enabled;
+            ChaosMode.Enabled || RandomBikeSwitch.Enabled || RandomMutatorOnCheckpoint.Enabled;
 
         public static GameObject CreatePage(Transform parent)
         {
@@ -79,7 +73,7 @@ namespace DescendersModMenu.UI
                 var c = content.transform;
 
                 // ── RESET TAB ─────────────────────────────────────────
-                var rstRow = UIHelpers.StatRow("", c);
+                var rstRow = UIHelpers.BareBtnRow(c);
                 UIHelpers.ActionBtnOrange(rstRow.transform, "\u21BA  Reset Tab to Defaults", () => { GlobalReset(); RefreshAll(); }, 186);
 
                 UIHelpers.SectionHeader("VISUAL CHAOS", c);
@@ -148,33 +142,43 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
-                UIHelpers.SectionHeader("STEERING", c);
+                UIHelpers.SectionHeader("LEVEL", c);
 
-                var rubR = UIHelpers.StatRow("Rubber Band Steering", c);
-                _rubberVal = UIHelpers.Txt("RbV", rubR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-                _rubberVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-                UIHelpers.Toggle(rubR.transform, "RbT", () => { RubberBandSteering.Toggle(); RefreshAll(); }, out _rubberTrack, out _rubberKnob);
-                _rubberLvlVal = UIHelpers.Txt("RbLV", rubR.transform, RubberBandSteering.LevelDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
-                _rubberLvlVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
-                UIHelpers.SmallBtn(rubR.transform, "-", () => { RubberBandSteering.Decrease(); RefreshAll(); });
-                UIHelpers.SmallBtn(rubR.transform, "+", () => { RubberBandSteering.Increase(); RefreshAll(); });
-                FavouritesManager.RegisterStarButton("RubberBandSteering", UIHelpers.StarBtn(rubR.transform, "RubberBandSteering", () => FavouritesManager.Toggle("RubberBandSteering")));
-                UIHelpers.InfoBox(c, "Delays your steering and lean input so every move lands late — like riding on a rubber band. Level 1 = 50ms, Level 10 = 500ms.");
+                var jr = UIHelpers.StatRow("Jump to Finish", c);
+                _jumpStatusTxt = UIHelpers.Txt("JumpStatus", jr.transform, "",
+                    9, FontStyle.Italic, TextAnchor.MiddleRight, UIHelpers.TextDim);
+                _jumpStatusTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 130;
+                UIHelpers.ActionBtnOrange(jr.transform, "Jump", () =>
+                {
+                    try
+                    {
+                        var fl = FinishLine.GetAFinishLine();
+                        if ((object)fl == null)
+                        {
+                            ModLog.Debug("[JumpToFinish] No FinishLine found on this level - nothing to jump to.");
+                            if (_jumpStatusTxt) { _jumpStatusTxt.text = "No finish line here"; _jumpStatusTxt.color = UIHelpers.Orange; }
+                            return;
+                        }
 
-                UIHelpers.Divider(c);
+                        DevCommandsGameplay.JumpToFinish();
+                        if (_jumpStatusTxt) _jumpStatusTxt.text = "";
+                    }
+                    catch (System.Exception ex)
+                    {
+                        MelonLogger.Error("[JumpToFinish]: " + ex.Message);
+                        Telemetry.ReportErrorAsync(ex, "OtherPage");
+                        if (_jumpStatusTxt) { _jumpStatusTxt.text = "Failed - see log"; _jumpStatusTxt.color = UIHelpers.Orange; }
+                    }
+                }, 60);
+                FavouritesManager.RegisterStarButton("JumpToFinish", UIHelpers.StarBtn(jr.transform, "JumpToFinish", () => FavouritesManager.Toggle("JumpToFinish")));
 
-                UIHelpers.SectionHeader("WEATHER", c);
-
-                var wthR = UIHelpers.StatRow("Random Weather Roulette", c);
-                _weatherVal = UIHelpers.Txt("WthV", wthR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-                _weatherVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-                UIHelpers.Toggle(wthR.transform, "WthT", () => { RandomWeatherRoulette.Toggle(); RefreshAll(); }, out _weatherTrack, out _weatherKnob);
-                FavouritesManager.RegisterStarButton("RandomWeatherRoulette", UIHelpers.StarBtn(wthR.transform, "RandomWeatherRoulette", () => FavouritesManager.Toggle("RandomWeatherRoulette")));
-                UIHelpers.InfoBox(c, "Cycles between Storm, Fog, Moon Mode and Normal every 12-25 seconds instead of one fixed pick. Reverts to how it was when you turn this off.");
-                var wthLastR = UIHelpers.StatRow("Current weather", c);
-                _weatherLastVal = UIHelpers.Txt("WthLV", wthLastR.transform, RandomWeatherRoulette.LastFlipDisplay, 11,
-                    FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.TextDim);
-                _weatherLastVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 160;
+                var sr = UIHelpers.StatRow("Skip Song", c);
+                UIHelpers.ActionBtn(sr.transform, "Skip", () =>
+                {
+                    try { DevCommandsGameplay.SkipSong(); }
+                    catch (System.Exception ex) { MelonLogger.Error("[SkipSong]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OtherPage"); }
+                }, 60);
+                FavouritesManager.RegisterStarButton("SkipSong", UIHelpers.StarBtn(sr.transform, "SkipSong", () => FavouritesManager.Toggle("SkipSong")));
 
                 UIHelpers.Divider(c);
 
@@ -209,7 +213,7 @@ namespace DescendersModMenu.UI
                     TabBadge = "OTHER",
                     BuildControls = (p) =>
                     {
-                        var row = UIHelpers.StatRow("Airhorn", p);
+                        var row = FavsPage.CompactStatRow("Airhorn", p);
                         UIHelpers.ActionBtn(row.transform, "HONK", () => { Airhorn.Honk(); }, 72);
                     },
                     IsActive = () => false // one-shot action, no persistent state
@@ -254,23 +258,40 @@ namespace DescendersModMenu.UI
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
-                    Id = "RubberBandSteering",
-                    DisplayName = "Rubber Band Steering",
+                    Id = "JumpToFinish",
+                    DisplayName = "Jump to Finish",
                     TabBadge = "OTHER",
-                    BuildControls = (p) => FavsPage.BuildToggleStepper(p, "RubberBandSteering", "Rubber Band Steering",
-                        () => RubberBandSteering.Enabled, () => { RubberBandSteering.Toggle(); },
-                        () => RubberBandSteering.Level, () => RubberBandSteering.Decrease(), () => RubberBandSteering.Increase(),
-                        1, 10, () => RefreshAll(), 5),
-                    IsActive = () => RubberBandSteering.Enabled
+                    BuildControls = (p) =>
+                    {
+                        var row = FavsPage.CompactStatRow("Jump to Finish", p);
+                        UIHelpers.ActionBtnOrange(row.transform, "Jump", () =>
+                        {
+                            try
+                            {
+                                var fl = FinishLine.GetAFinishLine();
+                                if ((object)fl == null) return;
+                                DevCommandsGameplay.JumpToFinish();
+                            }
+                            catch (System.Exception ex) { MelonLogger.Error("[JumpToFinish]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OtherPage"); }
+                        }, 60);
+                    },
+                    IsActive = () => false
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
-                    Id = "RandomWeatherRoulette",
-                    DisplayName = "Random Weather Roulette",
+                    Id = "SkipSong",
+                    DisplayName = "Skip Song",
                     TabBadge = "OTHER",
-                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "RandomWeatherRoulette", "Random Weather Roulette",
-                        () => RandomWeatherRoulette.Enabled, () => { RandomWeatherRoulette.Toggle(); }, () => RefreshAll()),
-                    IsActive = () => RandomWeatherRoulette.Enabled
+                    BuildControls = (p) =>
+                    {
+                        var row = FavsPage.CompactStatRow("Skip Song", p);
+                        UIHelpers.ActionBtn(row.transform, "Skip", () =>
+                        {
+                            try { DevCommandsGameplay.SkipSong(); }
+                            catch (System.Exception ex) { MelonLogger.Error("[SkipSong]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OtherPage"); }
+                        }, 60);
+                    },
+                    IsActive = () => false
                 });
 
                 RefreshAll();
@@ -290,8 +311,6 @@ namespace DescendersModMenu.UI
             ChaosMode.Reset();
             RandomBikeSwitch.Reset();
             RandomMutatorOnCheckpoint.Reset();
-            RubberBandSteering.Reset();
-            RandomWeatherRoulette.Reset();
         }
 
         public static void RefreshAll()
@@ -323,16 +342,6 @@ namespace DescendersModMenu.UI
             if (_mutatorVal) { _mutatorVal.text = muOn ? "ON" : "OFF"; _mutatorVal.color = muOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_mutatorTrack, _mutatorKnob, muOn);
             if (_mutatorLastVal) _mutatorLastVal.text = RandomMutatorOnCheckpoint.LastMutationDisplay;
-
-            bool rubOn = RubberBandSteering.Enabled;
-            if (_rubberVal) { _rubberVal.text = rubOn ? "ON" : "OFF"; _rubberVal.color = rubOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(_rubberTrack, _rubberKnob, rubOn);
-            if (_rubberLvlVal) _rubberLvlVal.text = RubberBandSteering.LevelDisplay;
-
-            bool wthOn = RandomWeatherRoulette.Enabled;
-            if (_weatherVal) { _weatherVal.text = wthOn ? "ON" : "OFF"; _weatherVal.color = wthOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(_weatherTrack, _weatherKnob, wthOn);
-            if (_weatherLastVal) _weatherLastVal.text = RandomWeatherRoulette.LastFlipDisplay;
         }
     }
 }

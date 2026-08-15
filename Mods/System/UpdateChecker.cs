@@ -7,8 +7,10 @@ namespace DescendersModMenu.Mods
 {
     public static class UpdateChecker
     {
-        private const string ReleasesUrl =
+        private const string ReleasesApiUrl =
             "https://api.github.com/repos/NateHyden/Descenders-Sandbox/releases/latest";
+        public const string ReleasesPageUrl =
+            "https://github.com/NateHyden/Descenders-Sandbox/releases";
 
         public static bool CheckComplete { get; private set; } = false;
         public static bool UpdateAvailable { get; private set; } = false;
@@ -40,7 +42,7 @@ namespace DescendersModMenu.Mods
                 // Unity 2017 Mono has no TLS 1.2 support — GitHub requires it.
                 // Shell out to PowerShell which handles modern TLS natively.
                 string psCmd = "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; "
-                    + "(Invoke-WebRequest -Uri '" + ReleasesUrl + "' -UseBasicParsing "
+                    + "(Invoke-WebRequest -Uri '" + ReleasesApiUrl + "' -UseBasicParsing "
                     + "-Headers @{'User-Agent'='DescendersToolKit'}).Content";
 
                 ProcessStartInfo psi = new ProcessStartInfo();
@@ -82,12 +84,11 @@ namespace DescendersModMenu.Mods
                 if (IsNewer(remoteClean, localClean))
                 {
                     UpdateAvailable = true;
-                    ModLog.Debug("[UpdateChecker] Update available: v" + remoteClean
-                        + " (current: v" + localClean + ")");
+                    MelonLogger.Msg("[UpdateChecker] OUTDATED - V" + localClean + " -----> V" + remoteClean + ", VISIT NEXUS OR GITHUB FOR THE LATEST VERSION");
                 }
                 else
                 {
-                    ModLog.Debug("[UpdateChecker] Up to date (v" + localClean + ").");
+                    MelonLogger.Msg("[UpdateChecker] UP TO DATE v" + localClean);
                 }
             }
             catch (Exception ex)

@@ -24,9 +24,28 @@ namespace DescendersModMenu.UI
         private static Text _specTogVal, _specTargetVal, _specDistVal;
         private static Image _specTrack;
         private static RectTransform _specKnob;
+        private static Text _fovVal, _fovTogVal;
+        private static Image _fovBar, _fovTrack;
+        private static RectTransform _fovKnob;
+        private static Text _slowVal, _slowSpeedVal;
+        private static Image _slowSpeedBar, _slowTrack;
+        private static RectTransform _slowKnob;
+        private static Text _smobVal;
+        private static Image _smobTrack;
+        private static RectTransform _smobKnob;
+        private static Text _blackDeathVal;
+        private static Image _blackDeathTrack;
+        private static RectTransform _blackDeathKnob;
+        private static Text _compassVal;
+        private static Image _compassTrack;
+        private static RectTransform _compassKnob;
+        private static Text _tmLabelVal;
+        private static UnityEngine.UI.Button _tmMinus, _tmPlus;
 
         public static bool IsAnyActive =>
-            SpeedrunTimer.Enabled || SessionHUD.Enabled || SpectateMode.Enabled;
+            SpeedrunTimer.Enabled || SessionHUD.Enabled || SpectateMode.Enabled ||
+            FOV.Enabled || SlowMotion.Enabled || SlowMoOnBail.Enabled ||
+            BlackDeath.Enabled || CompassAlwaysOn.Enabled || TrickMultiplier.Enabled;
 
         public static GameObject CreatePage(Transform parent)
         {
@@ -74,6 +93,48 @@ namespace DescendersModMenu.UI
                     RefreshAll();
                 }, out _hudTrack, out _hudKnob);
                 UIHelpers.InfoBox(c, "Displays session stats in the top-right corner while riding.");
+
+                var compassRow = UIHelpers.StatRow("Show Compass", c);
+                _compassVal = UIHelpers.Txt("CmpV", compassRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _compassVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(compassRow.transform, "CmpT", () => { CompassAlwaysOn.Toggle(); MenuWindow.RefreshAll(); }, out _compassTrack, out _compassKnob);
+                UIHelpers.InfoBox(c, "Only points to something in Bike Park or Career.");
+
+                UIHelpers.Divider(c);
+
+                UIHelpers.SectionHeader("CAMERA & BAIL", c);
+                var fr = UIHelpers.StatRow("FOV", c);
+                _fovTogVal = UIHelpers.Txt("FTV", fr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _fovTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(fr.transform, "FT", () => { FOV.Toggle(); MenuWindow.RefreshAll(); }, out _fovTrack, out _fovKnob);
+                _fovBar = UIHelpers.MakeBar("FB", fr.transform, (FOV.Level - 1) / 9f);
+                _fovVal = UIHelpers.Txt("FV", fr.transform, FOV.DisplayValue, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+                _fovVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 26;
+                UIHelpers.SmallBtn(fr.transform, "-", () => { FOV.Decrease(); MenuWindow.RefreshAll(); });
+                UIHelpers.SmallBtn(fr.transform, "+", () => { FOV.Increase(); MenuWindow.RefreshAll(); });
+
+                var smr = UIHelpers.StatRow("Slow Motion", c);
+                _slowVal = UIHelpers.Txt("SMV", smr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _slowVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(smr.transform, "SMT", () => { SlowMotion.Toggle(); MenuWindow.RefreshAll(); }, out _slowTrack, out _slowKnob);
+                _slowSpeedBar = UIHelpers.MakeBar("SmSB", smr.transform, (SlowMotion.Level - 1) / 8f);
+                _slowSpeedVal = UIHelpers.Txt("SmSV", smr.transform, SlowMotion.DisplayValue, 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+                _slowSpeedVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.SmallBtn(smr.transform, "-", () => { SlowMotion.Decrease(); MenuWindow.RefreshAll(); });
+                UIHelpers.SmallBtn(smr.transform, "+", () => { SlowMotion.Increase(); MenuWindow.RefreshAll(); });
+                var smHint = UIHelpers.Txt("SMH", smr.transform, "F2", 10, FontStyle.Normal, TextAnchor.MiddleRight, UIHelpers.TextDim);
+                smHint.gameObject.AddComponent<LayoutElement>().preferredWidth = 22;
+
+                var smobr = UIHelpers.StatRow("Slow Mo on Bail", c);
+                _smobVal = UIHelpers.Txt("SbV", smobr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _smobVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(smobr.transform, "SbT", () => { SlowMoOnBail.Toggle(); MenuWindow.RefreshAll(); }, out _smobTrack, out _smobKnob);
+
+                var bdr = UIHelpers.StatRow("Black Death", c);
+                _blackDeathVal = UIHelpers.Txt("BdV", bdr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _blackDeathVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(bdr.transform, "BdT", () => { BlackDeath.Toggle(); MenuWindow.RefreshAll(); }, out _blackDeathTrack, out _blackDeathKnob);
+                UIHelpers.InfoBox(c, "Screen goes black when you bail. Press B / respawn to come back.");
 
                 UIHelpers.Divider(c);
 
@@ -147,6 +208,14 @@ namespace DescendersModMenu.UI
                 UIHelpers.ActionBtn(srtr.transform, "Reset", () => { SpeedrunTimer.ResetTime(); }, 52);
                 UIHelpers.InfoBox(c, "Requires Speedrun Timer ON in Settings > Gameplay.");
 
+                var tmr = UIHelpers.StatRow("Trick Multiplier", c);
+                _tmMinus = UIHelpers.SmallBtn(tmr.transform, "\u25C0", () => { TrickMultiplier.Decrease(); MenuWindow.RefreshAll(); });
+                _tmLabelVal = UIHelpers.Txt("TmLV", tmr.transform, TrickMultiplier.LevelDisplay, 11,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _tmLabelVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 64;
+                _tmPlus = UIHelpers.SmallBtn(tmr.transform, "\u25B6", () => { TrickMultiplier.Increase(); MenuWindow.RefreshAll(); });
+                UIHelpers.InfoBox(c, "Raises the max combo multiplier cap above the game's default x3.");
+
                 var bcr = UIHelpers.StatRow("Bails", c);
                 _bailCountVal = UIHelpers.Txt("BcV", bcr.transform, SessionTrackers.BailCountDisplay,
                     12, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
@@ -181,6 +250,12 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("ShowHUD", UIHelpers.StarBtn(hudr.transform, "ShowHUD", () => FavouritesManager.Toggle("ShowHUD")));
                 FavouritesManager.RegisterStarButton("SpeedrunTimer", UIHelpers.StarBtn(srtr.transform, "SpeedrunTimer", () => FavouritesManager.Toggle("SpeedrunTimer")));
                 FavouritesManager.RegisterStarButton("SpectateMode", UIHelpers.StarBtn(specR.transform, "SpectateMode", () => FavouritesManager.Toggle("SpectateMode")));
+                FavouritesManager.RegisterStarButton("FOV", UIHelpers.StarBtn(fr.transform, "FOV", () => FavouritesManager.Toggle("FOV")));
+                FavouritesManager.RegisterStarButton("SlowMotion", UIHelpers.StarBtn(smr.transform, "SlowMotion", () => FavouritesManager.Toggle("SlowMotion")));
+                FavouritesManager.RegisterStarButton("SlowMoOnBail", UIHelpers.StarBtn(smobr.transform, "SlowMoOnBail", () => FavouritesManager.Toggle("SlowMoOnBail")));
+                FavouritesManager.RegisterStarButton("BlackDeath", UIHelpers.StarBtn(bdr.transform, "BlackDeath", () => FavouritesManager.Toggle("BlackDeath")));
+                FavouritesManager.RegisterStarButton("CompassAlwaysOn", UIHelpers.StarBtn(compassRow.transform, "CompassAlwaysOn", () => FavouritesManager.Toggle("CompassAlwaysOn")));
+                FavouritesManager.RegisterStarButton("TrickMultiplier", UIHelpers.StarBtn(tmr.transform, "TrickMultiplier", () => FavouritesManager.Toggle("TrickMultiplier")));
 
                 FavouritesManager.Register(new ModFavEntry {
                     Id = "ShowHUD", DisplayName = "Show HUD", TabBadge = "SESSION",
@@ -199,6 +274,51 @@ namespace DescendersModMenu.UI
                     BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "SpectateMode", "Spectate Mode",
                         () => SpectateMode.Enabled, () => SpectateMode.Toggle(), () => RefreshAll()),
                     IsActive = () => SpectateMode.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "FOV", DisplayName = "FOV", TabBadge = "SESSION",
+                    BuildControls = (p) => FavsPage.BuildToggleSlider(p, "FOV", "FOV",
+                        () => FOV.Enabled, () => FOV.Toggle(),
+                        () => FOV.Level, () => FOV.Increase(), () => FOV.Decrease(),
+                        10, () => (FOV.Level - 1) / 9f, () => MenuWindow.RefreshAll(),
+                        () => FOV.DisplayValue),
+                    IsActive = () => FOV.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "SlowMotion", DisplayName = "Slow Motion", TabBadge = "SESSION",
+                    BuildControls = (p) => FavsPage.BuildToggleSlider(p, "SlowMotion", "Slow Motion",
+                        () => SlowMotion.Enabled, () => SlowMotion.Toggle(),
+                        () => SlowMotion.Level, () => SlowMotion.Increase(), () => SlowMotion.Decrease(),
+                        9, () => (SlowMotion.Level - 1) / 8f, () => MenuWindow.RefreshAll(),
+                        () => SlowMotion.DisplayValue),
+                    IsActive = () => SlowMotion.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "SlowMoOnBail", DisplayName = "Slow Mo On Bail", TabBadge = "SESSION",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "SlowMoOnBail", "Slow Mo On Bail",
+                        () => SlowMoOnBail.Enabled, () => SlowMoOnBail.Toggle(), () => MenuWindow.RefreshAll()),
+                    IsActive = () => SlowMoOnBail.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "BlackDeath", DisplayName = "Black Death", TabBadge = "SESSION",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "BlackDeath", "Black Death",
+                        () => BlackDeath.Enabled, () => BlackDeath.Toggle(), () => MenuWindow.RefreshAll()),
+                    IsActive = () => BlackDeath.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "CompassAlwaysOn", DisplayName = "Show Compass", TabBadge = "SESSION",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "CompassAlwaysOn", "Show Compass",
+                        () => CompassAlwaysOn.Enabled, () => CompassAlwaysOn.Toggle(), () => MenuWindow.RefreshAll()),
+                    IsActive = () => CompassAlwaysOn.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "TrickMultiplier", DisplayName = "Trick Multiplier", TabBadge = "SESSION",
+                    BuildControls = (p) => FavsPage.BuildStepper(p, "TrickMultiplier", "Trick Multiplier",
+                        () => TrickMultiplier.Level,
+                        () => TrickMultiplier.Decrease(),
+                        () => TrickMultiplier.Increase(),
+                        0, 3, () => MenuWindow.RefreshAll(), 0),
+                    IsActive = () => TrickMultiplier.Enabled
                 });
 
                 UIHelpers.AddScrollForwarders(c);
@@ -229,6 +349,34 @@ namespace DescendersModMenu.UI
             UIHelpers.SetToggle(_specTrack, _specKnob, spec);
             if (_specTargetVal) _specTargetVal.text = SpectateMode.StatusDisplay;
             if (_specDistVal) _specDistVal.text = SpectateMode.Distance.ToString("0") + "m";
+
+            bool fovOn = FOV.Enabled;
+            if (_fovTogVal) { _fovTogVal.text = fovOn ? "ON" : "OFF"; _fovTogVal.color = fovOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_fovTrack, _fovKnob, fovOn);
+            if (_fovVal) _fovVal.text = FOV.DisplayValue;
+            UIHelpers.SetBar(_fovBar, (FOV.Level - 1) / 9f);
+
+            bool slow = SlowMotion.Enabled;
+            if (_slowVal) { _slowVal.text = slow ? "ON" : "OFF"; _slowVal.color = slow ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_slowTrack, _slowKnob, slow);
+            if (_slowSpeedVal) _slowSpeedVal.text = SlowMotion.DisplayValue;
+            UIHelpers.SetBar(_slowSpeedBar, (SlowMotion.Level - 1) / 8f);
+
+            bool smob = SlowMoOnBail.Enabled;
+            if (_smobVal) { _smobVal.text = smob ? "ON" : "OFF"; _smobVal.color = smob ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_smobTrack, _smobKnob, smob);
+
+            bool bdth = BlackDeath.Enabled;
+            if (_blackDeathVal) { _blackDeathVal.text = bdth ? "ON" : "OFF"; _blackDeathVal.color = bdth ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_blackDeathTrack, _blackDeathKnob, bdth);
+
+            bool compass = CompassAlwaysOn.Enabled;
+            if (_compassVal) { _compassVal.text = compass ? "ON" : "OFF"; _compassVal.color = compass ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_compassTrack, _compassKnob, compass);
+
+            if (_tmLabelVal) _tmLabelVal.text = TrickMultiplier.LevelDisplay;
+            if ((object)_tmMinus != null && _tmMinus) _tmMinus.interactable = TrickMultiplier.Level > 0;
+            if ((object)_tmPlus != null && _tmPlus) _tmPlus.interactable = TrickMultiplier.Level < 3;
         }
 
         public static void TickLive()

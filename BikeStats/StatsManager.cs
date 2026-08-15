@@ -66,6 +66,7 @@ namespace DescendersModMenu.BikeStats
                     WideTyresLevel = WideTyres.Level,
                     StickyTyresEnabled = StickyTyres.Enabled,
                     StickyForce = StickyTyres.SuctionForce,
+                    SpiderBikeEnabled = SpiderBike.Enabled,
 
                     // Toggles
                     SlowMotionEnabled = SlowMotion.Enabled,
@@ -77,8 +78,13 @@ namespace DescendersModMenu.BikeStats
                     MirrorModeEnabled = MirrorMode.Enabled,
                     DrunkModeEnabled = DrunkMode.Enabled,
                     FlyModeEnabled = FlyMode.Enabled,
+                    HoverModeEnabled = HoverMode.Enabled,
+                    HoverModeHeight = HoverMode.HoverHeight,
                     SpeedrunTimerEnabled = SpeedrunTimer.Enabled,
+                    SessionHUDEnabled = SessionHUD.Enabled,
+                    TrickMultiplierLevel = TrickMultiplier.Level,
                     SlowMoOnBailEnabled = SlowMoOnBail.Enabled,
+                    BlackDeathEnabled = BlackDeath.Enabled,
 
                     WheelieAngleLimitEnabled = WheelieAngleLimit.Enabled,
                     WheelieAngleLimitLevel = WheelieAngleLimit.Level,
@@ -237,6 +243,7 @@ namespace DescendersModMenu.BikeStats
                 // Toggles — only enable if saved true, don't double-toggle
                 if (data.WideTyresEnabled && !WideTyres.Enabled) WideTyres.Toggle();
                 if (data.StickyTyresEnabled && !StickyTyres.Enabled) StickyTyres.Toggle();
+                if (data.SpiderBikeEnabled && !SpiderBike.Enabled) SpiderBike.Toggle();
                 if (data.SlowMotionEnabled && !SlowMotion.Enabled) SlowMotion.Toggle();
                 if (data.CutBrakesEnabled && !CutBrakes.Enabled) CutBrakes.Toggle();
                 if (data.NoSpeedCapEnabled && !NoSpeedCap.Enabled) NoSpeedCap.Toggle();
@@ -245,8 +252,13 @@ namespace DescendersModMenu.BikeStats
                 if (data.MirrorModeEnabled && !MirrorMode.Enabled) MirrorMode.Toggle();
                 if (data.DrunkModeEnabled && !DrunkMode.Enabled) DrunkMode.Toggle();
                 if (data.FlyModeEnabled && !FlyMode.Enabled) FlyMode.Toggle();
+                HoverMode.SetHeight(data.HoverModeHeight);
+                if (data.HoverModeEnabled && !HoverMode.Enabled) HoverMode.Toggle();
                 if (data.SpeedrunTimerEnabled && !SpeedrunTimer.Enabled) SpeedrunTimer.Toggle();
+                if (data.SessionHUDEnabled && !SessionHUD.Enabled) SessionHUD.Toggle();
+                TrickMultiplier.SetLevel(data.TrickMultiplierLevel);
                 if (data.SlowMoOnBailEnabled && !SlowMoOnBail.Enabled) SlowMoOnBail.Toggle();
+                if (data.BlackDeathEnabled && !BlackDeath.Enabled) BlackDeath.Toggle();
 
                 WheelieAngleLimit.SetLevel(data.WheelieAngleLimitLevel);
                 AirControl.SetLevel(data.AirControlLevel);
@@ -302,19 +314,19 @@ namespace DescendersModMenu.BikeStats
                 PlayerSize.CurrentScale = data.PlayerScale;
                 // These will be applied by the scene reapply system when Player_Human exists
                 // Direct apply attempted here in case player already exists:
-                if (data.BikeSizeLevel != 10) try { BikeSize.ApplyLevel(data.BikeSizeLevel); } catch { }
-                else if (data.BikeScale != 1f) try { BikeSize.Apply(data.BikeScale); } catch { } // legacy
-                if (data.PlayerSizeLevel != 10) try { PlayerSize.ApplyLevel(data.PlayerSizeLevel); } catch { }
-                else if (data.PlayerScale != 1f) try { PlayerSize.Apply(data.PlayerScale); } catch { } // legacy
-                if (data.InvisibleBikeEnabled) try { InvisibleBike.SetEnabled(true); } catch { }
-                if (data.InvisiblePlayerEnabled) try { InvisiblePlayer.SetEnabled(true); } catch { }
+                if (data.BikeSizeLevel != 10) try { BikeSize.ApplyLevel(data.BikeSizeLevel); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats BikeSize: " + ex.Message); }
+                else if (data.BikeScale != 1f) try { BikeSize.Apply(data.BikeScale); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats BikeScale(legacy): " + ex.Message); }
+                if (data.PlayerSizeLevel != 10) try { PlayerSize.ApplyLevel(data.PlayerSizeLevel); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats PlayerSize: " + ex.Message); }
+                else if (data.PlayerScale != 1f) try { PlayerSize.Apply(data.PlayerScale); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats PlayerScale(legacy): " + ex.Message); }
+                if (data.InvisibleBikeEnabled) try { InvisibleBike.SetEnabled(true); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats InvisibleBike: " + ex.Message); }
+                if (data.InvisiblePlayerEnabled) try { InvisiblePlayer.SetEnabled(true); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats InvisiblePlayer: " + ex.Message); }
                 if (data.IndividualWheelMode)
                 {
-                    try { WheelSize.ApplyIndividualFromSave(data.FrontWheelSizeLevel, data.RearWheelSizeLevel); } catch { }
+                    try { WheelSize.ApplyIndividualFromSave(data.FrontWheelSizeLevel, data.RearWheelSizeLevel); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats IndividualWheel: " + ex.Message); }
                 }
                 else if (data.WheelSizeEnabled)
                 {
-                    try { WheelSize.ApplyFromSave(true, data.WheelSizeLevel, data.WheelSizeMode); } catch { }
+                    try { WheelSize.ApplyFromSave(true, data.WheelSizeLevel, data.WheelSizeMode); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats WheelSize: " + ex.Message); }
                 }
 
                 // Suspension HUD
@@ -371,6 +383,9 @@ namespace DescendersModMenu.BikeStats
                 WorldPage.GlobalReset();
                 BikePage.GlobalReset();
                 FunPage.GlobalReset();
+                OtherPage.GlobalReset();
+                TrickMultiplier.Reset();
+                if (CompassAlwaysOn.Enabled) CompassAlwaysOn.Toggle();
 
                 Acceleration.SetLevel(1);
                 MaxSpeedMultiplier.SetLevel(1);
@@ -408,6 +423,7 @@ namespace DescendersModMenu.BikeStats
 
                 if (WideTyres.Enabled) WideTyres.Toggle();
                 if (StickyTyres.Enabled) StickyTyres.Toggle();
+                if (SpiderBike.Enabled) SpiderBike.Toggle();
                 if (SlowMotion.Enabled) SlowMotion.Toggle();
                 if (CutBrakes.Enabled) CutBrakes.Toggle();
                 if (NoSpeedCap.Enabled) NoSpeedCap.Toggle();
@@ -419,6 +435,7 @@ namespace DescendersModMenu.BikeStats
                 if (ESP.Enabled) ESP.Toggle();
                 if (SpeedrunTimer.Enabled) SpeedrunTimer.Toggle();
                 if (SlowMoOnBail.Enabled) SlowMoOnBail.Toggle();
+                if (BlackDeath.Enabled) BlackDeath.Toggle();
                 if (GhostReplay.Enabled) GhostReplay.Toggle();
 
                 if (Acceleration.Enabled) Acceleration.Toggle();
@@ -478,6 +495,7 @@ namespace DescendersModMenu.BikeStats
                 // Sky — always reset (not saved)
                 if (SkyColours.StormEnabled) SkyColours.ToggleStorm();
                 SkyColours.SetRainIntensityLevel(5);
+                DiscoMode.Reset();
 
                 SessionHUD.Enabled = false;
                 if (SuspensionHUD.Enabled) SuspensionHUD.Toggle();

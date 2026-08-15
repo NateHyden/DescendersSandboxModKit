@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "1.7.0";
+        public const string Version = "1.8.0";
         public const string DownloadLink = null;
     }
 
@@ -38,6 +38,14 @@ namespace DescendersModMenu
         private bool _reapplyCameraShake; private int _reapplyCameraShakeLevel;
         private bool _reapplyNearMiss; private int _reapplyNearMissLevel;
         private bool _reapplyExplodingProps;
+        private bool _reapplyHoverMode; private float _reapplyHoverHeight;
+        private bool _reapplyBouncyBike; private int _reapplyBouncyLevel;
+        private bool _reapplyBlizzardDial; private int _reapplyBlizzardSnow; private int _reapplyBlizzardSeason;
+        private bool _reapplyDiscoMode; private int _reapplyDiscoSpeed;
+        private bool _reapplyDiscoTorch;
+        private bool _reapplyTrickMultiplier; private int _reapplyTrickMultiplierLevel;
+        private bool _reapplySuspensionHUD;
+        private bool _reapplyScreenshotMode;
         private float _reapplyCOMx, _reapplyCOMy, _reapplyCOMz; private bool _reapplyCOMNeeded;
         private int _reapplySuspTravel, _reapplySuspStiff, _reapplySuspDamp; private bool _reapplySuspNeeded;
         private float _reapplyBikeScale; private bool _reapplyBikeScaleNeeded;
@@ -151,9 +159,9 @@ namespace DescendersModMenu
             DiagnosticsManager.Report("Giant Everyone", true); DiagnosticsManager.Report("Invisible Bike", true);
             DiagnosticsManager.Report("Moon Mode", true); DiagnosticsManager.Report("Wheel Size", true);
             DiagnosticsManager.Report("Fog Remover", true); DiagnosticsManager.Report("SessionTrackers", true);
-            DiagnosticsManager.Report("WideTyres", true); DiagnosticsManager.Report("StickyTyres", true);
+            DiagnosticsManager.Report("WideTyres", true); DiagnosticsManager.Report("StickyTyres", true); DiagnosticsManager.Report("SpiderBike", true);
             DiagnosticsManager.Report("FlyMode", true); DiagnosticsManager.Report("MirrorMode", true);
-            DiagnosticsManager.Report("SpeedrunTimer", true); DiagnosticsManager.Report("SlowMoOnBail", true);
+            DiagnosticsManager.Report("SpeedrunTimer", true); DiagnosticsManager.Report("SlowMoOnBail", true); DiagnosticsManager.Report("BlackDeath", true);
             DiagnosticsManager.Report("AirControl", true); DiagnosticsManager.Report("ModDetection", true);
             TopSpeed.Load(); TopSpeed.StartTracking();
 
@@ -231,7 +239,9 @@ namespace DescendersModMenu
             try { MapPage.ClearUiRefs(); } catch { }
             try { EspPage.ClearUiRefs(); } catch { }
             try { ObjectPlacerPage.ClearUiRefs(); } catch { }
+            try { BikePage.ClearUiRefs(); } catch { }
             try { CompassAlwaysOn.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("CompassAlwaysOn.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CompassAlwaysOn"); }
+            try { TimeOfDay.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("TimeOfDay.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
             try { PlayerCache.Clear(); } catch (System.Exception ex) { MelonLogger.Error("PlayerCache.Clear: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PlayerCache"); }
 
             // -- GUARD: intermediate scene (e.g. EmptyScene) --
@@ -258,6 +268,7 @@ namespace DescendersModMenu
             bool wasWheelieAngle = WheelieAngleLimit.Enabled;
             bool wasNoSpeedWobbles = GameModifierMods.NoSpeedWobblesEnabled;
             bool wasSlowMoOnBail = SlowMoOnBail.Enabled;
+            bool wasBlackDeath = BlackDeath.Enabled;
             bool wasIceMode = IceMode.Enabled;
             bool wasTyrePressure = TyrePressure.Enabled;
             int tyrePressureLv = TyrePressure.Level;
@@ -266,6 +277,7 @@ namespace DescendersModMenu
             bool wasUIRemover = UIRemover.Enabled;
             bool wasInstantRespawn = InstantRespawn.Enabled;
             bool wasStickyTyres = StickyTyres.Enabled;
+            bool wasSpiderBike = SpiderBike.Enabled;
             bool wasAirControl = AirControl.Enabled;
             bool wasNoBail = NoBail.Enabled;
             int gravLevel = Gravity.Level;
@@ -293,6 +305,20 @@ namespace DescendersModMenu
             bool wasNearMiss = NearMissSensitivity.Enabled;
             int nearMissLv = NearMissSensitivity.Level;
             bool wasExploding = ExplodingProps.Enabled;
+            bool wasHoverMode = HoverMode.Enabled;
+            float hoverHeight = HoverMode.HoverHeight;
+            bool wasBouncyBike = BouncyBike.Enabled;
+            int bouncyLv = BouncyBike.BouncinessLevel;
+            bool wasBlizzard = BlizzardDial.Enabled;
+            int blizzardSnow = BlizzardDial.SnowLevel;
+            int blizzardSeason = BlizzardDial.SeasonIndex;
+            bool wasDisco = DiscoMode.Enabled;
+            int discoSpeed = DiscoMode.SpeedLevel;
+            bool wasDiscoTorch = BikeTorch.DiscoEnabled;
+            bool wasTrickMult = TrickMultiplier.Enabled;
+            int trickMultLv = TrickMultiplier.Level;
+            bool wasSuspHUD = SuspensionHUD.Enabled;
+            bool wasScreenshot = ScreenshotMode.Enabled;
             float cx = CenterOfMass.OffsetLR, cy = CenterOfMass.OffsetUD, cz = CenterOfMass.OffsetFB;
             bool comNeed = cx != 0f || cy != 0f || cz != 0f;
             int sT = Suspension.TravelLevel, sS = Suspension.StiffnessLevel, sD = Suspension.DampingLevel;
@@ -310,7 +336,6 @@ namespace DescendersModMenu
             bool wasIndividualWheel = WheelSize.IsIndividualMode;
             int frontWheelLv = WheelSize.FrontLevel;
             int rearWheelLv = WheelSize.RearLevel;
-            bool wasSuspHUD = SuspensionHUD.Enabled;
             bool wasBrakeFade = BrakeFade.Enabled;
             int brakeBalanceLv = BrakeFade.BalanceLevel;
 
@@ -325,10 +350,12 @@ namespace DescendersModMenu
             if (wasWheelieAngle) ModLog.Debug("[Reapply]   WheelieAngle");
             if (wasNoSpeedWobbles) ModLog.Debug("[Reapply]   NoSpeedWobbles");
             if (wasSlowMoOnBail) ModLog.Debug("[Reapply]   SlowMoOnBail");
+            if (wasBlackDeath) ModLog.Debug("[Reapply]   BlackDeath");
             if (wasIceMode) ModLog.Debug("[Reapply]   IceMode");
             if (wasTyrePressure) ModLog.Debug("[Reapply]   TyrePressure lv=" + tyrePressureLv);
             if (wasInstantRespawn) ModLog.Debug("[Reapply]   InstantRespawn");
             if (wasStickyTyres) ModLog.Debug("[Reapply]   StickyTyres");
+            if (wasSpiderBike) ModLog.Debug("[Reapply]   SpiderBike");
             if (wasAirControl) ModLog.Debug("[Reapply]   AirControl");
             if (wasNoBail) ModLog.Debug("[Reapply]   NoBail");
             if (gravNeed) ModLog.Debug("[Reapply]   Gravity lv=" + gravLevel);
@@ -349,6 +376,13 @@ namespace DescendersModMenu
             if (wasCamShake) ModLog.Debug("[Reapply]   CameraShake lv=" + camShakeLv);
             if (wasNearMiss) ModLog.Debug("[Reapply]   NearMiss lv=" + nearMissLv);
             if (wasExploding) ModLog.Debug("[Reapply]   ExplodingProps");
+            if (wasHoverMode) ModLog.Debug("[Reapply]   HoverMode h=" + hoverHeight);
+            if (wasBouncyBike) ModLog.Debug("[Reapply]   BouncyBike lv=" + bouncyLv);
+            if (wasBlizzard) ModLog.Debug("[Reapply]   BlizzardDial snow=" + blizzardSnow + " season=" + blizzardSeason);
+            if (wasDisco) ModLog.Debug("[Reapply]   DiscoMode spd=" + discoSpeed);
+            if (wasDiscoTorch) ModLog.Debug("[Reapply]   DiscoTorch");
+            if (wasTrickMult) ModLog.Debug("[Reapply]   TrickMultiplier lv=" + trickMultLv);
+            if (wasScreenshot) ModLog.Debug("[Reapply]   ScreenshotMode");
             if (comNeed) ModLog.Debug("[Reapply]   COM " + cx + "/" + cy + "/" + cz);
             if (suspNeed) ModLog.Debug("[Reapply]   Susp " + sT + "/" + sS + "/" + sD);
             if (wasNoSpeedCap) ModLog.Debug("[Reapply]   NoSpeedCap");
@@ -369,8 +403,8 @@ namespace DescendersModMenu
             GameModifierMods.NoSpeedWobblesReset();
             MirrorMode.Reset(); FlyMode.Reset(); DrunkMode.Reset(); HoverMode.Reset();
             SpectateMode.Reset(); SpectateMode.ClearCache();
-            OutfitPresets.Reset(); ModChat.Reset(); ModDetection.ResetTag(); ChatHUD.Reset(); SlowMoOnBail.Reset();
-            StickyTyres.Reset(); WheelieAngleLimit.Reset(); AirControl.Reset();
+            OutfitPresets.Reset(); ModChat.Reset(); ModDetection.ResetTag(); ChatHUD.Reset(); SlowMoOnBail.Reset(); BlackDeath.Reset(); MultiplayerMenuGuard.Reset();
+            StickyTyres.Reset(); SpiderBike.Reset(); WheelieAngleLimit.Reset(); AirControl.Reset();
             CenterOfMass.Reset();
             FOV.Reset(); Acceleration.Reset(); MaxSpeedMultiplier.Reset();
             Movement.Reset(); LandingImpact.Reset();
@@ -385,7 +419,7 @@ namespace DescendersModMenu
             TrickAttackMode.Reset(); BoulderDodgeMode.Reset();
             SurvivalMode.Reset();
             SessionTrackers.Reset(); ExplodingProps.Reset();
-            Trees.Reset(); BouncyBike.Reset(); BlizzardDial.Reset();
+            Trees.Reset(); BouncyBike.Reset(); BlizzardDial.Reset(); DiscoMode.Reset();
             ObjectPlacer.Reset();
             SuspensionHUD.ClearCache();
             BrakeFade.ClearCache(); BrakeFade_Patch.ClearCache();
@@ -421,6 +455,7 @@ namespace DescendersModMenu
             if (wasWheelieAngle) { WheelieAngleLimit.Toggle(); ModLog.Debug("[Reapply] IMM WheelieAngle -> " + WheelieAngleLimit.Enabled); }
             if (wasNoSpeedWobbles) { GameModifierMods.NoSpeedWobblesToggle(); ModLog.Debug("[Reapply] IMM NoSpeedWobbles -> " + GameModifierMods.NoSpeedWobblesEnabled); }
             if (wasSlowMoOnBail) { SlowMoOnBail.Toggle(); ModLog.Debug("[Reapply] IMM SlowMoOnBail -> " + SlowMoOnBail.Enabled); }
+            if (wasBlackDeath) { BlackDeath.Toggle(); ModLog.Debug("[Reapply] IMM BlackDeath -> " + BlackDeath.Enabled); }
             if (wasIceMode) { IceMode.Toggle(); ModLog.Debug("[Reapply] IMM IceMode -> " + IceMode.Enabled); }
             if (wasTyrePressure) { TyrePressure.SetLevel(tyrePressureLv); TyrePressure.Toggle(); ModLog.Debug("[Reapply] IMM TyrePressure -> " + TyrePressure.Enabled + " lv=" + tyrePressureLv); }
             if (wasBikeDamage) { BikeDamage.Toggle(); ModLog.Debug("[Reapply] IMM BikeDamage -> " + BikeDamage.Enabled); }
@@ -428,6 +463,7 @@ namespace DescendersModMenu
             if (wasUIRemover) { UIRemover.Toggle(); ModLog.Debug("[Reapply] IMM UIRemover -> " + UIRemover.Enabled); }
             if (wasInstantRespawn) { InstantRespawn.Toggle(); ModLog.Debug("[Reapply] IMM InstantRespawn -> " + InstantRespawn.Enabled); }
             if (wasStickyTyres) { StickyTyres.Toggle(); ModLog.Debug("[Reapply] IMM StickyTyres -> " + StickyTyres.Enabled); }
+            if (wasSpiderBike) { SpiderBike.Toggle(); ModLog.Debug("[Reapply] IMM SpiderBike -> " + SpiderBike.Enabled); }
             if (wasAirControl) { AirControl.Toggle(); ModLog.Debug("[Reapply] IMM AirControl -> " + AirControl.Enabled); }
             if (wasNoSpeedCap) { NoSpeedCap.Toggle(); ModLog.Debug("[Reapply] IMM NoSpeedCap -> " + NoSpeedCap.Enabled); }
             if (wasNoBail) { NoBail.Toggle(); ModLog.Debug("[Reapply] IMM NoBail -> " + NoBail.Enabled); }
@@ -447,6 +483,14 @@ namespace DescendersModMenu
             _reapplyCameraShake = wasCamShake; _reapplyCameraShakeLevel = camShakeLv;
             _reapplyNearMiss = wasNearMiss; _reapplyNearMissLevel = nearMissLv;
             _reapplyExplodingProps = wasExploding;
+            _reapplyHoverMode = wasHoverMode; _reapplyHoverHeight = hoverHeight;
+            _reapplyBouncyBike = wasBouncyBike; _reapplyBouncyLevel = bouncyLv;
+            _reapplyBlizzardDial = wasBlizzard; _reapplyBlizzardSnow = blizzardSnow; _reapplyBlizzardSeason = blizzardSeason;
+            _reapplyDiscoMode = wasDisco; _reapplyDiscoSpeed = discoSpeed;
+            _reapplyDiscoTorch = wasDiscoTorch;
+            _reapplyTrickMultiplier = wasTrickMult; _reapplyTrickMultiplierLevel = trickMultLv;
+            _reapplySuspensionHUD = wasSuspHUD;
+            _reapplyScreenshotMode = wasScreenshot;
             _reapplyCOMx = cx; _reapplyCOMy = cy; _reapplyCOMz = cz; _reapplyCOMNeeded = comNeed;
             _reapplySuspTravel = sT; _reapplySuspStiff = sS; _reapplySuspDamp = sD; _reapplySuspNeeded = suspNeed;
             _reapplyBikeScale = bikeScale; _reapplyBikeScaleNeeded = bikeScaleNeed;
@@ -458,11 +502,15 @@ namespace DescendersModMenu
             _reapplyBrakeFade = wasBrakeFade;
 
             if (_reapplyBrakeFade) { _reapplyBrakeFade = false; BrakeFade.SetBalanceLevel(brakeBalanceLv); BrakeFade.Toggle(); ModLog.Debug("[Reapply] IMM BrakeFade -> " + BrakeFade.Enabled); }
+            if (_reapplySuspensionHUD) { _reapplySuspensionHUD = false; if (!SuspensionHUD.Enabled) SuspensionHUD.Toggle(); ModLog.Debug("[Reapply] IMM SuspensionHUD -> " + SuspensionHUD.Enabled); }
+            if (_reapplyScreenshotMode) { _reapplyScreenshotMode = false; ScreenshotMode.Toggle(); ModLog.Debug("[Reapply] IMM ScreenshotMode -> " + ScreenshotMode.Enabled); }
+            if (_reapplyTrickMultiplier) { _reapplyTrickMultiplier = false; TrickMultiplier.SetLevel(_reapplyTrickMultiplierLevel); ModLog.Debug("[Reapply] IMM TrickMultiplier lv=" + _reapplyTrickMultiplierLevel); }
 
             _pendingReapply = wasFlyMode || wasDrunkMode || wasMirrorMode || wasWideTyres ||
                 wasFov || wasSpeedrunTimer || wasAcceleration || wasMaxSpeed ||
                 wasLandingImpact || wasMoveSpin || wasMoveHop || wasMoveWheelie || wasMoveLean ||
                 wasBikeTorch || wasCamShake || wasNearMiss || wasExploding ||
+                wasHoverMode || wasBouncyBike || wasBlizzard || wasDisco || wasDiscoTorch ||
                 comNeed || suspNeed ||
                 bikeScaleNeed || playerScaleNeed || wasInvisBike || wasInvisPlayer || wasWheelSize || wasIndividualWheel;
 
@@ -474,25 +522,19 @@ namespace DescendersModMenu
 
         public override void OnUpdate()
         {
-            // == One-shot GameModifier[] dump — see GameModifierMods.DumpAllModifiers ==
-            // Deliberately fires BEFORE AutoLoad below: StatsManager.LoadStats()
-            // resets-then-loads, which overwrites WHEELIEBALANCE/AIRCORRECTION/
-            // FAKIEBALANCE/PUMPSTRENGTH/OFFROADFRICTION/SPEEDWOBBLES with our
-            // own values. Dumping first captures the game's true untouched
-            // defaults for those 6, not ours.
-            if (_pendingModifierDump)
+            // Boot / reapply waits — one Player_Human lookup shared across pending flags
+            if (_pendingModifierDump || _pendingAutoLoad || _pendingTelemetryPing || _pendingReapply)
             {
-                if ((object)GameObject.Find("Player_Human") != null)
+                GameObject playerHuman = GameObject.Find("Player_Human");
+                bool hasPlayer = (object)playerHuman != null;
+
+                if (_pendingModifierDump && hasPlayer)
                 {
                     _pendingModifierDump = false;
                     try { GameModifierMods.DumpAllModifiers(); } catch (System.Exception ex) { ModLog.Warn("GameModifierMods.DumpAllModifiers: " + ex.Message); }
                 }
-            }
 
-            // == Auto-load saved settings once player first exists ==
-            if (_pendingAutoLoad)
-            {
-                if ((object)GameObject.Find("Player_Human") != null)
+                if (_pendingAutoLoad && hasPlayer)
                 {
                     _pendingAutoLoad = false;
                     ModLog.Debug("[AutoLoad] Player_Human found — loading saved settings...");
@@ -504,27 +546,14 @@ namespace DescendersModMenu
                     try { ModChat.EnablePhotonAccess(); }
                     catch (System.Exception ex) { ModLog.Warn("[ModChat] EnablePhotonAccess: " + ex.Message); }
                 }
-            }
 
-            // == Telemetry load-ping — deferred until player actually exists ==
-            // Fired at splash-screen time (OnLateInitializeMelon) this was
-            // too early for both Steam client state and Photon's local
-            // player name to be populated. Player_Human existing means the
-            // game is genuinely loaded into a session, not just booting.
-            if (_pendingTelemetryPing)
-            {
-                if ((object)GameObject.Find("Player_Human") != null)
+                if (_pendingTelemetryPing && hasPlayer)
                 {
                     _pendingTelemetryPing = false;
                     try { Telemetry.PingAsync(); } catch (System.Exception ex) { ModLog.Warn("Telemetry.PingAsync: " + ex.Message); }
                 }
-            }
 
-
-            // == Deferred reapply ==
-            if (_pendingReapply)
-            {
-                if ((object)GameObject.Find("Player_Human") != null)
+                if (_pendingReapply && hasPlayer)
                 {
                     ModLog.Debug("[Reapply] === Player_Human found — APPLYING ===");
                     _pendingReapply = false;
@@ -549,6 +578,11 @@ namespace DescendersModMenu
                     if (_reapplyCameraShake) { _reapplyCameraShake = false; try { CameraShake.SetLevel(_reapplyCameraShakeLevel); CameraShake.Toggle(); ok++; ModLog.Debug("[Reapply]   + CameraShake"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! CameraShake: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! CameraShake"); } }
                     if (_reapplyNearMiss) { _reapplyNearMiss = false; try { NearMissSensitivity.SetLevel(_reapplyNearMissLevel); NearMissSensitivity.Toggle(); ok++; ModLog.Debug("[Reapply]   + NearMiss"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! NearMiss: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! NearMiss"); } }
                     if (_reapplyExplodingProps) { _reapplyExplodingProps = false; try { ExplodingProps.Toggle(); ok++; ModLog.Debug("[Reapply]   + ExplodingProps"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! ExplodingProps: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! ExplodingProps"); } }
+                    if (_reapplyHoverMode) { _reapplyHoverMode = false; try { HoverMode.SetHeight(_reapplyHoverHeight); HoverMode.Toggle(); ok++; ModLog.Debug("[Reapply]   + HoverMode"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! HoverMode: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! HoverMode"); } }
+                    if (_reapplyBouncyBike) { _reapplyBouncyBike = false; try { BouncyBike.SetLevel(_reapplyBouncyLevel); BouncyBike.Toggle(); ok++; ModLog.Debug("[Reapply]   + BouncyBike"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! BouncyBike: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! BouncyBike"); } }
+                    if (_reapplyBlizzardDial) { _reapplyBlizzardDial = false; try { BlizzardDial.SetSnowLevel(_reapplyBlizzardSnow); BlizzardDial.SetSeasonIndex(_reapplyBlizzardSeason); BlizzardDial.Toggle(); ok++; ModLog.Debug("[Reapply]   + BlizzardDial"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! BlizzardDial: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! BlizzardDial"); } }
+                    if (_reapplyDiscoMode) { _reapplyDiscoMode = false; try { DiscoMode.SetSpeed(_reapplyDiscoSpeed); DiscoMode.Toggle(); ok++; ModLog.Debug("[Reapply]   + DiscoMode"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! DiscoMode: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! DiscoMode"); } }
+                    if (_reapplyDiscoTorch) { _reapplyDiscoTorch = false; try { if (!BikeTorch.DiscoEnabled) BikeTorch.ToggleDisco(); ok++; ModLog.Debug("[Reapply]   + DiscoTorch"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! DiscoTorch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! DiscoTorch"); } }
                     if (_reapplyCOMNeeded) { _reapplyCOMNeeded = false; try { CenterOfMass.SetLR(_reapplyCOMx); CenterOfMass.SetFB(_reapplyCOMz); CenterOfMass.SetUD(_reapplyCOMy); ok++; ModLog.Debug("[Reapply]   + COM"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! COM: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! COM"); } }
                     if (_reapplySuspNeeded) { _reapplySuspNeeded = false; try { Suspension.SetTravelLevel(_reapplySuspTravel); Suspension.SetStiffnessLevel(_reapplySuspStiff); Suspension.SetDampingLevel(_reapplySuspDamp); ok++; ModLog.Debug("[Reapply]   + Suspension"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! Suspension: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! Suspension"); } }
                     if (_reapplyBikeScaleNeeded) { _reapplyBikeScaleNeeded = false; try { BikeSize.Apply(_reapplyBikeScale); ok++; ModLog.Debug("[Reapply]   + BikeScale=" + _reapplyBikeScale); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! BikeScale: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! BikeScale"); } }
@@ -566,6 +600,7 @@ namespace DescendersModMenu
                         + " CutBrakes=" + CutBrakes.Enabled
                         + " IceMode=" + IceMode.Enabled
                         + " StickyTyres=" + StickyTyres.Enabled
+                        + " SpiderBike=" + SpiderBike.Enabled
                         + " AirControl=" + AirControl.Enabled
                         + " AutoBalance=" + AutoBalance.Enabled
                         + " WheelieAngle=" + WheelieAngleLimit.Enabled
@@ -578,7 +613,12 @@ namespace DescendersModMenu
                         + " BrakeFade=" + BrakeFade.Enabled);
 
                     // Refresh UI so menu toggles reflect restored state
-                    try { MenuWindow.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("MenuWindow.RefreshAll: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MenuWindow"); }
+                    try { MenuWindow.RefreshAll(); }
+                    catch (System.Exception ex)
+                    {
+                        MelonLogger.Error("MenuWindow.RefreshAll: " + ex.GetType().Name + ": " + ex.Message);
+                        Telemetry.ReportErrorAsync(ex, "MenuWindow");
+                    }
                     }
                     finally { ModLog.SuppressUserFeedback = false; }
                 }
@@ -650,8 +690,12 @@ namespace DescendersModMenu
             try { UI.SearchPage.SearchTick(); } catch { }
             try { GhostPage.Tick(); } catch (System.Exception ex) { MelonLogger.Error("GhostPage.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostPage"); }
             try { SlowMoOnBail.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SlowMoOnBail.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SlowMoOnBail"); }
+            try { BlackDeath.Tick(); } catch (System.Exception ex) { MelonLogger.Error("BlackDeath.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BlackDeath"); }
+            try { MultiplayerMenuGuard.Tick(); } catch (System.Exception ex) { MelonLogger.Error("MultiplayerMenuGuard.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MultiplayerMenuGuard"); }
             try { ChaosMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ChaosMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ChaosMode"); }
             try { RandomWeatherRoulette.Tick(); } catch (System.Exception ex) { MelonLogger.Error("RandomWeatherRoulette.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette"); }
+            try { DiscoMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("DiscoMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "DiscoMode"); }
+            try { BikeTorch.TickDisco(); } catch (System.Exception ex) { MelonLogger.Error("BikeTorch.TickDisco: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BikeTorch.TickDisco"); }
             try { ModDetection.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ModDetection.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ModDetection"); }
             try { ModChat.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ModChat.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ModChat"); }
             if (!OutfitPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.BindsPage.IsListening && !UI.SearchPage.IsQueryFocused)
@@ -664,11 +708,13 @@ namespace DescendersModMenu
             try { EarthquakeMode.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("EarthquakeMode.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "EarthquakeMode"); }
             try { PoliceChaseMode.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("PoliceChaseMode.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PoliceChaseMode"); }
             try { StickyTyres.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("StickyTyres.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "StickyTyres"); }
+            try { SpiderBike.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("SpiderBike.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SpiderBike"); }
             try { AirControl.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("AirControl.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "AirControl"); }
             try { CenterOfMass.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("CenterOfMass.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CenterOfMass"); }
             try { BoulderDodgeMode.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("BoulderDodgeMode.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BoulderDodgeMode"); }
             try { BikeDamage.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("BikeDamage.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BikeDamage"); }
             try { HoverMode.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("HoverMode.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "HoverMode"); }
+            try { TurboWind.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("TurboWind.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TurboWind"); }
             // BrakeFade heat model runs inside BrakeFade_Patch.Postfix (no separate tick needed)
         }
 
@@ -688,6 +734,7 @@ namespace DescendersModMenu
             try { BigHeadMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("BigHeadMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BigHeadMode"); }
             try { TrailPainter.Tick(); } catch (System.Exception ex) { MelonLogger.Error("TrailPainter.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TrailPainter"); }
             try { BlizzardDial.Tick(); } catch (System.Exception ex) { MelonLogger.Error("BlizzardDial.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BlizzardDial"); }
+            try { TurboWind.Tick(); } catch (System.Exception ex) { MelonLogger.Error("TurboWind.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TurboWind"); }
             try { RandomBikeSwitch.Tick(); } catch (System.Exception ex) { MelonLogger.Error("RandomBikeSwitch.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RandomBikeSwitch"); }
             // Vehicle/Cyclist stat mods that need to win the race against the game's
             // own bike-stat init, which runs after a one-time apply and silently
@@ -725,6 +772,7 @@ namespace DescendersModMenu
             try { BrakeFade.OnGUI(); } catch (System.Exception ex) { MelonLogger.Error("BrakeFade.OnGUI: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BrakeFade"); }
             try { WheelieHUD.OnGUI(); } catch (System.Exception ex) { MelonLogger.Error("WheelieHUD.OnGUI: " + ex.Message); Telemetry.ReportErrorAsync(ex, "WheelieHUD"); }
             try { UI.BindsPage.OnGUI(); } catch { }
+            try { BlackDeath.Draw(); } catch (System.Exception ex) { MelonLogger.Error("BlackDeath.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BlackDeath"); }
         }
 
         public override void OnApplicationQuit()

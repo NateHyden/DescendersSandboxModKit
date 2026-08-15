@@ -31,53 +31,34 @@ namespace DescendersModMenu.UI
         // Auto Balance
         private static Text autoBalVal, autoBalStrVal; private static Image autoBalBar;
         private static Image autoBalTrack; private static RectTransform autoBalKnob;
-        // Bike
-        private static Text bikeVal;
-
-        // ── Trick Set Swap ────────────────────────────────────────────
-        private static Text tssSrcVal;        // shows current source bike name
-        private static Text tssTogVal;        // ON / OFF text
-        private static Image tssTrack;
-        private static RectTransform tssKnob;
-        // FOV
-        private static Text fovVal, fovTogVal;
-        private static Image fovBar, fovTrack;
-        private static RectTransform fovKnob;
-        // Slow Motion
-        private static Text slowVal, slowSpeedVal;
-        private static Image slowSpeedBar, slowTrack;
-        private static RectTransform slowKnob;
-        // Slow Mo on Bail / No Speed Wobbles / Speedrun Timer
         // Quick Brake UI fields
         private static Text _brakeTogVal = null;
         private static Image _brakeTrack = null;
         private static RectTransform _brakeKnob = null;
         private static Image _brakeLevelBar = null;
         private static Text _brakeLevelVal = null;
-        private static Text smobVal, nswVal, compassVal;
-        private static Image smobTrack, nswTrack, compassTrack;
-        private static RectTransform smobKnob, nswKnob, compassKnob;
-        private static Text hoverVal, hoverHeightVal;
-        private static Image hoverTrack;
-        private static RectTransform hoverKnob;
+        private static Text nswVal;
+        private static Image nswTrack;
+        private static RectTransform nswKnob;
         // No Speed Cap
         private static Image capBg, capBdr; private static Text capTxt;
         // ── Pages ─────────────────────────────────────────────────────
-        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22, pg23, pg24;
+        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22, pg23, pg24, pg25, pg26;
         private static int cur = 1;
 
-        // Set before RebuildMenu() to reopen on a specific page id (e.g. 3 = Info/Customize)
+        // Set before RebuildMenu() to reopen on a specific page id (e.g. 25 = Customise)
         // instead of the default first tab. Consumed (reset to -1) on use.
         public static int PendingPage = -1;
 
-        private static readonly int[] PageOrder = { 17, 20, 19, 3, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22 };
-        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info/Customize", "General", "Object Placer", "Xbox Workshop", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "GhostReplay", "MapChange", "Teleport", "Screenshot", "Other", "Perks" };
-        private static readonly string[] GroupLabels = { null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
+        // Favourites … Key Binds, Info, Customise | General … Perks, Career (bottom)
+        private static readonly int[] PageOrder = { 17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22, 26 };
+        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info", "Customise", "General", "Object Placer", "Xbox Workshop", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "Ghost Replay", "Maps", "Find", "Screenshot", "Other", "Perks", "Career" };
+        private static readonly string[] GroupLabels = { null, null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
 
-        private static Image[] _navBars = new Image[22];
-        private static Text[] _navTxts = new Text[22];
-        private static Image[] _navBgs = new Image[22];
-        private static Image[] _activeDots = new Image[22];
+        private static Image[] _navBars = new Image[24];
+        private static Text[] _navTxts = new Text[24];
+        private static Image[] _navBgs = new Image[24];
+        private static Image[] _activeDots = new Image[24];
         private static UnityEngine.UI.Image _infoTabDot;
 
         public static CanvasGroup RootCanvasGroup { get; private set; }
@@ -96,6 +77,7 @@ namespace DescendersModMenu.UI
         private static RectTransform _allModsKnob;
         private static ScrollRect _sibScroll;
         private static CanvasGroup _sibMoreHint;
+        private static CanvasGroup _sibMoreHintTop;
 
         // ─────────────────────────────────────────────────────────────
         public static GameObject CreateMenu()
@@ -149,27 +131,36 @@ namespace DescendersModMenu.UI
                 hdr.AddComponent<WindowDragHandler>();
 
 
+                // Title row near top of header — small pad under the border
+                // (was centred = too much gap; then titleTop=-3 = too tight).
+                const float titleTop = -16f;
+                const float titleRowH = 22f;
+
                 var title = UIHelpers.Txt("T", hdr.transform, "DESCENDERS", 18, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextLight);
                 var trt = UIHelpers.RT(title.gameObject);
-                trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-                trt.offsetMin = new Vector2(16, 0); trt.offsetMax = new Vector2(-220, 0);
+                trt.anchorMin = new Vector2(0, 1); trt.anchorMax = new Vector2(0, 1);
+                trt.pivot = new Vector2(0, 1);
+                trt.sizeDelta = new Vector2(138, titleRowH);
+                trt.anchoredPosition = new Vector2(16, titleTop);
 
                 var sub = UIHelpers.Txt("Sub", hdr.transform, "SANDBOX", 18, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.Accent);
                 var subrt = UIHelpers.RT(sub.gameObject);
-                subrt.anchorMin = Vector2.zero; subrt.anchorMax = Vector2.one;
-                subrt.offsetMin = new Vector2(155, 0); subrt.offsetMax = new Vector2(-80, 0);
+                subrt.anchorMin = new Vector2(0, 1); subrt.anchorMax = new Vector2(0, 1);
+                subrt.pivot = new Vector2(0, 1);
+                subrt.sizeDelta = new Vector2(110, titleRowH);
+                subrt.anchoredPosition = new Vector2(155, titleTop);
 
                 var slash = UIHelpers.Panel("HSlash", hdr.transform, UIHelpers.Accent);
                 var slrt = UIHelpers.RT(slash);
-                slrt.anchorMin = new Vector2(0, 0.5f); slrt.anchorMax = new Vector2(0, 0.5f);
-                slrt.pivot = new Vector2(0, 0.5f); slrt.sizeDelta = new Vector2(2, 28);
-                slrt.anchoredPosition = new Vector2(275, 0);
+                slrt.anchorMin = new Vector2(0, 1); slrt.anchorMax = new Vector2(0, 1);
+                slrt.pivot = new Vector2(0, 0.5f); slrt.sizeDelta = new Vector2(2, 20);
+                slrt.anchoredPosition = new Vector2(275, titleTop - titleRowH * 0.5f);
 
                 var verBadge = UIHelpers.Panel("VBadge", hdr.transform, UIHelpers.AccentDim, UIHelpers.BtnSp);
                 var vbrt = UIHelpers.RT(verBadge);
-                vbrt.anchorMin = new Vector2(0, 0.5f); vbrt.anchorMax = new Vector2(0, 0.5f);
+                vbrt.anchorMin = new Vector2(0, 1); vbrt.anchorMax = new Vector2(0, 1);
                 vbrt.pivot = new Vector2(0, 0.5f); vbrt.sizeDelta = new Vector2(58f, 20f);
-                vbrt.anchoredPosition = new Vector2(288, 0);
+                vbrt.anchoredPosition = new Vector2(288, titleTop - titleRowH * 0.5f);
                 var vbBdr = UIHelpers.Panel("VBBdr", verBadge.transform, UIHelpers.AccentBdr, UIHelpers.BtnSp);
                 vbBdr.GetComponent<Image>().raycastTarget = false; UIHelpers.Fill(UIHelpers.RT(vbBdr));
                 vbBdr.AddComponent<LayoutElement>().ignoreLayout = true;
@@ -293,7 +284,7 @@ namespace DescendersModMenu.UI
                     telExplText.horizontalOverflow = HorizontalWrapMode.Overflow;
                     telExplText.verticalOverflow = VerticalWrapMode.Overflow;
                     telExplText.raycastTarget = false;
-                    telExplText.text = "Please read telemetry page in Info/Customize";
+                    telExplText.text = "Please read telemetry page in Info";
                     var telExplLe = telExpl.AddComponent<LayoutElement>();
                     telExplLe.preferredWidth = telExplText.preferredWidth;
                     telExplLe.preferredHeight = 20;
@@ -353,6 +344,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.AddScrollbar(sibSR);
                 _sibScroll = sibSR;
 
+                // Bottom "scroll for more" hint (▼) — visible when list overflows and you're at the top.
                 var moreHint = UIHelpers.Obj("MoreHint", sidebar.transform);
                 var moreRt = UIHelpers.RT(moreHint);
                 moreRt.anchorMin = new Vector2(0, 0); moreRt.anchorMax = new Vector2(1, 0);
@@ -370,6 +362,25 @@ namespace DescendersModMenu.UI
                 _sibMoreHint.alpha = 0f;
                 _sibMoreHint.blocksRaycasts = false;
                 _sibMoreHint.interactable = false;
+
+                // Top "scroll up" hint (▲) — visible when list overflows and you're at the bottom.
+                var moreHintTop = UIHelpers.Obj("MoreHintTop", sidebar.transform);
+                var moreTopRt = UIHelpers.RT(moreHintTop);
+                moreTopRt.anchorMin = new Vector2(0, 1); moreTopRt.anchorMax = new Vector2(1, 1);
+                moreTopRt.pivot = new Vector2(0.5f, 1);
+                moreTopRt.sizeDelta = new Vector2(0, 26);
+                moreTopRt.anchoredPosition = Vector2.zero;
+                moreHintTop.AddComponent<LayoutElement>().ignoreLayout = true;
+                var moreTopFade = UIHelpers.Panel("Fade", moreHintTop.transform, new Color(0.04f, 0.05f, 0.08f, 0.82f));
+                UIHelpers.Fill(UIHelpers.RT(moreTopFade));
+                moreTopFade.GetComponent<Image>().raycastTarget = false;
+                var moreTopTxt = UIHelpers.Txt("Arr", moreHintTop.transform, "\u25B2", 13, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                UIHelpers.Fill(UIHelpers.RT(moreTopTxt.gameObject));
+                moreTopTxt.raycastTarget = false;
+                _sibMoreHintTop = moreHintTop.AddComponent<CanvasGroup>();
+                _sibMoreHintTop.alpha = 0f;
+                _sibMoreHintTop.blocksRaycasts = false;
+                _sibMoreHintTop.interactable = false;
 
                 sibContent.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 var sVlg = sibContent.AddComponent<VerticalLayoutGroup>();
@@ -463,6 +474,12 @@ namespace DescendersModMenu.UI
                 pg3 = UIHelpers.Obj("P3", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg3));
                 try { InfoPage.CreatePage(pg3.transform); }
                 catch (System.Exception infoEx) { MelonLogger.Error("CreateMenu: InfoPage failed - " + infoEx);  Telemetry.ReportErrorAsync(infoEx, "MenuWindow"); }
+                pg25 = UIHelpers.Obj("P25", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg25));
+                try { InfoPage.CreateCustomisePage(pg25.transform); }
+                catch (System.Exception custEx) { MelonLogger.Error("CreateMenu: CustomisePage failed - " + custEx); Telemetry.ReportErrorAsync(custEx, "MenuWindow"); }
+                pg26 = UIHelpers.Obj("P26", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg26));
+                try { InfoPage.CreateCareerPage(pg26.transform); }
+                catch (System.Exception carEx) { MelonLogger.Error("CreateMenu: CareerPage failed - " + carEx); Telemetry.ReportErrorAsync(carEx, "MenuWindow"); }
                 pg6 = UIHelpers.Obj("P6", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg6)); MovePage.CreatePage(pg6.transform);
                 pg7 = UIHelpers.Obj("P7", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg7)); WorldPage.CreatePage(pg7.transform);
                 pg8 = UIHelpers.Obj("P8", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg8)); BikePage.CreatePage(pg8.transform);
@@ -614,121 +631,11 @@ namespace DescendersModMenu.UI
             UIHelpers.SmallBtn(abTogRow.transform, "-", () => { AutoBalance.StrengthDecrease(); RefreshAll(); });
             UIHelpers.SmallBtn(abTogRow.transform, "+", () => { AutoBalance.StrengthIncrease(); RefreshAll(); });
 
-            // ── Bike Switcher ─────────────────────────────────────────
-            var br = UIHelpers.StatRow("Bike", pg);
-            UIHelpers.SmallBtn(br.transform, "\u25C0", () => { BikeSwitcher.PreviousBike(); RefreshAll(); });
-            bikeVal = UIHelpers.Txt("BV", br.transform, "Enduro", 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
-            bikeVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 80;
-            UIHelpers.SmallBtn(br.transform, "\u25B6", () => { BikeSwitcher.NextBike(); RefreshAll(); });
-
-            // ── Trick Set Swap ────────────────────────────────────────
-            // Source bike picker (◀ name ▶)
-            var tssSrc = UIHelpers.StatRow("Trick Source", pg);
-            UIHelpers.SmallBtn(tssSrc.transform, "\u25C0", () => { TrickSetSwap.PrevSource(); RefreshAll(); });
-            tssSrcVal = UIHelpers.Txt("TSV", tssSrc.transform, TrickSetSwap.CurrentSourceName, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
-            tssSrcVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 80;
-            UIHelpers.SmallBtn(tssSrc.transform, "\u25B6", () => { TrickSetSwap.NextSource(); RefreshAll(); });
-
-            // Toggle row
-            var tssR = UIHelpers.StatRow("Trick Set Swap", pg);
-            tssTogVal = UIHelpers.Txt("TSTV", tssR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-            tssTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-            UIHelpers.Toggle(tssR.transform, "TST", () => { TrickSetSwap.Toggle(); RefreshAll(); }, out tssTrack, out tssKnob);
-
-            // ── FOV (now with toggle) ─────────────────────────────────
-            var fr = UIHelpers.StatRow("FOV", pg);
-            fovTogVal = UIHelpers.Txt("FTV", fr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-            fovTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-            UIHelpers.Toggle(fr.transform, "FT", () => { FOV.Toggle(); RefreshAll(); }, out fovTrack, out fovKnob);
-            fovBar = UIHelpers.MakeBar("FB", fr.transform, (FOV.Level - 1) / 9f);
-            fovVal = UIHelpers.Txt("FV", fr.transform, FOV.DisplayValue, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
-            fovVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 26;
-            UIHelpers.SmallBtn(fr.transform, "-", () => { FOV.Decrease(); RefreshAll(); });
-            UIHelpers.SmallBtn(fr.transform, "+", () => { FOV.Increase(); RefreshAll(); });
-
-            // ── Slow Motion ───────────────────────────────────────────
-            var smr = UIHelpers.StatRow("Slow Motion", pg);
-            slowVal = UIHelpers.Txt("SMV", smr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-            slowVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-            UIHelpers.Toggle(smr.transform, "SMT", () => { SlowMotion.Toggle(); RefreshAll(); }, out slowTrack, out slowKnob);
-            slowSpeedBar = UIHelpers.MakeBar("SmSB", smr.transform, (SlowMotion.Level - 1) / 8f);
-            slowSpeedVal = UIHelpers.Txt("SmSV", smr.transform, SlowMotion.DisplayValue, 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
-            slowSpeedVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-            UIHelpers.SmallBtn(smr.transform, "-", () => { SlowMotion.Decrease(); RefreshAll(); });
-            UIHelpers.SmallBtn(smr.transform, "+", () => { SlowMotion.Increase(); RefreshAll(); });
-            var smHint = UIHelpers.Txt("SMH", smr.transform, "F2", 10, FontStyle.Normal, TextAnchor.MiddleRight, UIHelpers.TextDim);
-            smHint.gameObject.AddComponent<LayoutElement>().preferredWidth = 22;
-
-            // ── Slow Mo on Bail ───────────────────────────────────────
-            var smobr = UIHelpers.StatRow("Slow Mo on Bail", pg);
-            smobVal = UIHelpers.Txt("SbV", smobr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-            smobVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-            UIHelpers.Toggle(smobr.transform, "SbT", () => { SlowMoOnBail.Toggle(); RefreshAll(); }, out smobTrack, out smobKnob);
-
             // ── No Speed Wobbles ──────────────────────────────────────
             var nswr = UIHelpers.StatRow("No Speed Wobbles", pg);
             nswVal = UIHelpers.Txt("NwV", nswr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
             nswVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.Toggle(nswr.transform, "NwT", () => { GameModifierMods.NoSpeedWobblesToggle(); RefreshAll(); }, out nswTrack, out nswKnob);
-
-            // ── Show Compass ───────────────────────────────────────────
-            // Native finish-line compass, normally only shown via the "Show
-            // Compass" Blue crew member perk (or on NoPath maps) — forces it
-            // on regardless of which crew members the player has picked up.
-            var compassRow = UIHelpers.StatRow("Show Compass", pg);
-            compassVal = UIHelpers.Txt("CmpV", compassRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-            compassVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-            UIHelpers.Toggle(compassRow.transform, "CmpT", () => { CompassAlwaysOn.Toggle(); RefreshAll(); }, out compassTrack, out compassKnob);
-            FavouritesManager.RegisterStarButton("CompassAlwaysOn",
-                UIHelpers.StarBtn(compassRow.transform, "CompassAlwaysOn",
-                    () => FavouritesManager.Toggle("CompassAlwaysOn")));
-            var compassNote = UIHelpers.StatRow("", pg);
-            var compassNoteTxt = UIHelpers.Txt("CmpNote", compassNote.transform,
-                "Only points to something in Bike Park or Career.",
-                9, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
-            compassNoteTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
-
-            FavouritesManager.Register(new ModFavEntry
-            {
-                Id = "CompassAlwaysOn",
-                DisplayName = "Show Compass",
-                TabBadge = "GEN",
-                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "CompassAlwaysOn", "Show Compass",
-                    () => CompassAlwaysOn.Enabled, () => CompassAlwaysOn.Toggle(), () => RefreshAll()),
-                IsActive = () => CompassAlwaysOn.Enabled
-            });
-
-            // ── Hover Mode ───────────────────────────────────────────
-            // Floats the bike a selectable height (meters, signed) above/below
-            // terrain via a spring-damper - not a rigid float, see HoverMode.cs.
-            var hoverRow = UIHelpers.StatRow("Hover Mode", pg);
-            hoverVal = UIHelpers.Txt("HovV", hoverRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-            hoverVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-            UIHelpers.Toggle(hoverRow.transform, "HovT", () => { HoverMode.Toggle(); RefreshAll(); }, out hoverTrack, out hoverKnob);
-            hoverHeightVal = UIHelpers.Txt("HovHV", hoverRow.transform, HoverMode.DisplayHeight, 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
-            hoverHeightVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
-            UIHelpers.SmallBtn(hoverRow.transform, "-", () => { HoverMode.DecreaseHeight(); RefreshAll(); });
-            UIHelpers.SmallBtn(hoverRow.transform, "+", () => { HoverMode.IncreaseHeight(); RefreshAll(); });
-            FavouritesManager.RegisterStarButton("HoverMode",
-                UIHelpers.StarBtn(hoverRow.transform, "HoverMode",
-                    () => FavouritesManager.Toggle("HoverMode")));
-            var hoverNote = UIHelpers.StatRow("", pg);
-            var hoverNoteTxt = UIHelpers.Txt("HovNote", hoverNote.transform,
-                "Height is metres above ground - negative sinks below terrain.",
-                9, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
-            hoverNoteTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
-
-            FavouritesManager.Register(new ModFavEntry
-            {
-                Id = "HoverMode",
-                DisplayName = "Hover Mode",
-                TabBadge = "GEN",
-                BuildControls = (fp) => FavsPage.BuildToggleIntensityStepper(fp, "HoverMode", "Hover Mode",
-                    () => HoverMode.Enabled, () => HoverMode.Toggle(),
-                    () => HoverMode.DisplayHeight, () => HoverMode.DecreaseHeight(), () => HoverMode.IncreaseHeight(),
-                    () => RefreshAll()),
-                IsActive = () => HoverMode.Enabled
-            });
 
             // ── QUICK ACTIONS ─────────────────────────────────────────
             UIHelpers.Divider(pg);
@@ -782,12 +689,8 @@ namespace DescendersModMenu.UI
             FavouritesManager.RegisterStarButton("LandingImpact", UIHelpers.StarBtn(lr.transform, "LandingImpact", () => FavouritesManager.Toggle("LandingImpact")));
             FavouritesManager.RegisterStarButton("NoBail", UIHelpers.StarBtn(nr.transform, "NoBail", () => FavouritesManager.Toggle("NoBail")));
             FavouritesManager.RegisterStarButton("AutoBalance", UIHelpers.StarBtn(abTogRow.transform, "AutoBalance", () => FavouritesManager.Toggle("AutoBalance")));
-            FavouritesManager.RegisterStarButton("FOV", UIHelpers.StarBtn(fr.transform, "FOV", () => FavouritesManager.Toggle("FOV")));
-            FavouritesManager.RegisterStarButton("SlowMotion", UIHelpers.StarBtn(smr.transform, "SlowMotion", () => FavouritesManager.Toggle("SlowMotion")));
-            FavouritesManager.RegisterStarButton("SlowMoOnBail", UIHelpers.StarBtn(smobr.transform, "SlowMoOnBail", () => FavouritesManager.Toggle("SlowMoOnBail")));
             FavouritesManager.RegisterStarButton("NoSpeedWobbles", UIHelpers.StarBtn(nswr.transform, "NoSpeedWobbles", () => FavouritesManager.Toggle("NoSpeedWobbles")));
             FavouritesManager.RegisterStarButton("QuickBrake", UIHelpers.StarBtn(brakeRow.transform, "QuickBrake", () => FavouritesManager.Toggle("QuickBrake")));
-            FavouritesManager.RegisterStarButton("BikeSwitcher", UIHelpers.StarBtn(br.transform, "BikeSwitcher", () => FavouritesManager.Toggle("BikeSwitcher")));
             FavouritesManager.RegisterStarButton("Launch", UIHelpers.StarBtn(qar.transform, "Launch", () => FavouritesManager.Toggle("Launch")));
 
             // ── FACTORY REGISTRATIONS (General tab mods) ───────────────
@@ -856,39 +759,6 @@ namespace DescendersModMenu.UI
             });
             FavouritesManager.Register(new ModFavEntry
             {
-                Id = "FOV",
-                DisplayName = "FOV",
-                TabBadge = "GENERAL",
-                BuildControls = (fp) => FavsPage.BuildToggleSlider(fp, "FOV", "FOV",
-                    () => Mods.FOV.Enabled, () => Mods.FOV.Toggle(),
-                    () => Mods.FOV.Level, () => Mods.FOV.Increase(), () => Mods.FOV.Decrease(),
-                    10, () => (Mods.FOV.Level - 1) / 9f, () => RefreshAll(),
-                    () => Mods.FOV.DisplayValue),
-                IsActive = () => Mods.FOV.Enabled
-            });
-            FavouritesManager.Register(new ModFavEntry
-            {
-                Id = "SlowMotion",
-                DisplayName = "Slow Motion",
-                TabBadge = "GENERAL",
-                BuildControls = (fp) => FavsPage.BuildToggleSlider(fp, "SlowMotion", "Slow Motion",
-                    () => Mods.SlowMotion.Enabled, () => Mods.SlowMotion.Toggle(),
-                    () => Mods.SlowMotion.Level, () => Mods.SlowMotion.Increase(), () => Mods.SlowMotion.Decrease(),
-                    9, () => (Mods.SlowMotion.Level - 1) / 8f, () => RefreshAll(),
-                    () => Mods.SlowMotion.DisplayValue),
-                IsActive = () => Mods.SlowMotion.Enabled
-            });
-            FavouritesManager.Register(new ModFavEntry
-            {
-                Id = "SlowMoOnBail",
-                DisplayName = "Slow Mo On Bail",
-                TabBadge = "GENERAL",
-                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "SlowMoOnBail", "Slow Mo On Bail",
-                    () => Mods.SlowMoOnBail.Enabled, () => Mods.SlowMoOnBail.Toggle(), () => RefreshAll()),
-                IsActive = () => Mods.SlowMoOnBail.Enabled
-            });
-            FavouritesManager.Register(new ModFavEntry
-            {
                 Id = "NoSpeedWobbles",
                 DisplayName = "No Speed Wobbles",
                 TabBadge = "GENERAL",
@@ -906,45 +776,6 @@ namespace DescendersModMenu.UI
                     () => Mods.QuickBrake.Level, () => Mods.QuickBrake.Increase(), () => Mods.QuickBrake.Decrease(),
                     10, () => (Mods.QuickBrake.Level - 1) / 9f, () => RefreshAll()),
                 IsActive = () => Mods.QuickBrake.Enabled
-            });
-            FavouritesManager.Register(new ModFavEntry
-            {
-                Id = "BikeSwitcher",
-                DisplayName = "Bike",
-                TabBadge = "GENERAL",
-                BuildControls = (fp) => {
-                    // ── Bike picker row ──
-                    var row = UIHelpers.StatRow("Bike", fp);
-                    UIHelpers.SmallBtn(row.transform, "\u25C0", () => { Mods.BikeSwitcher.PreviousBike(); RefreshAll(); FavsPage.RefreshFavourites(); });
-                    var bv = UIHelpers.Txt("FBV", row.transform, "Enduro", 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
-                    bv.gameObject.AddComponent<LayoutElement>().preferredWidth = 80;
-                    UIHelpers.SmallBtn(row.transform, "\u25B6", () => { Mods.BikeSwitcher.NextBike(); RefreshAll(); FavsPage.RefreshFavourites(); });
-
-                    // ── Trick Source picker row ──
-                    var tsRow = UIHelpers.StatRow("Trick Source", fp);
-                    UIHelpers.SmallBtn(tsRow.transform, "\u25C0", () => { Mods.TrickSetSwap.PrevSource(); RefreshAll(); FavsPage.RefreshFavourites(); });
-                    var tsv = UIHelpers.Txt("FTSV", tsRow.transform, Mods.TrickSetSwap.CurrentSourceName, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
-                    tsv.gameObject.AddComponent<LayoutElement>().preferredWidth = 80;
-                    UIHelpers.SmallBtn(tsRow.transform, "\u25B6", () => { Mods.TrickSetSwap.NextSource(); RefreshAll(); FavsPage.RefreshFavourites(); });
-
-                    // ── Trick Set Swap toggle row ──
-                    var tssRow = UIHelpers.StatRow("Trick Set Swap", fp);
-                    var tssVal = UIHelpers.Txt("FTSSV", tssRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-                    tssVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-                    Image fTssTrack; RectTransform fTssKnob;
-                    UIHelpers.Toggle(tssRow.transform, "FTg_TrickSetSwap",
-                        () => { Mods.TrickSetSwap.Toggle(); RefreshAll(); FavsPage.RefreshFavourites(); },
-                        out fTssTrack, out fTssKnob);
-
-                    FavouritesManager.RegisterRefresh("BikeSwitcher", () => {
-                        if (bv) { switch (Mods.BikeSwitcher.CurrentBikeIndex) { case 0: bv.text = "Enduro"; break; case 1: bv.text = "Downhill"; break; case 2: bv.text = "Hardtail"; break; case 3: bv.text = "BRNZL Enduro"; break; default: bv.text = "Unknown"; break; } }
-                        if (tsv) tsv.text = Mods.TrickSetSwap.CurrentSourceName;
-                        bool tssOn = Mods.TrickSetSwap.Enabled;
-                        if (tssVal) { tssVal.text = tssOn ? "ON" : "OFF"; tssVal.color = tssOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
-                        UIHelpers.SetToggle(fTssTrack, fTssKnob, tssOn);
-                    });
-                },
-                IsActive = () => Mods.TrickSetSwap.Enabled
             });
             FavouritesManager.Register(new ModFavEntry
             {
@@ -969,7 +800,6 @@ namespace DescendersModMenu.UI
                 },
                 IsActive = () => false
             });
-
             UIHelpers.AddScrollForwarders(content.transform);
         }
 
@@ -977,10 +807,11 @@ namespace DescendersModMenu.UI
         {
             var g = UIHelpers.Obj(lbl + "HB", hdr);
             var rt = UIHelpers.RT(g);
-            rt.anchorMin = new Vector2(0, 0.5f); rt.anchorMax = new Vector2(0, 0.5f);
+            // Align with title row near top of header (was centre-anchored).
+            rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1);
             rt.pivot = new Vector2(0, 0.5f);
             rt.sizeDelta = new Vector2(52, 22);
-            rt.anchoredPosition = new Vector2(x, 0);
+            rt.anchoredPosition = new Vector2(x, -27f);
             var im = g.AddComponent<Image>(); im.sprite = UIHelpers.BtnSp;
             im.type = Image.Type.Sliced; im.color = UIHelpers.NeonBlue;
             var btn = g.AddComponent<Button>(); btn.onClick.AddListener(clk);
@@ -1091,10 +922,8 @@ namespace DescendersModMenu.UI
                         return Mods.Acceleration.Enabled || Mods.MaxSpeedMultiplier.Enabled ||
                                     Mods.NoSpeedCap.Enabled || Mods.LandingImpact.Enabled ||
                                     Mods.QuickBrake.Enabled || Mods.NoBail.Enabled ||
-                                    Mods.AutoBalance.Enabled || Mods.FOV.Enabled ||
-                                    Mods.SlowMotion.Enabled || Mods.SlowMoOnBail.Enabled ||
-                                    Mods.GameModifierMods.NoSpeedWobblesEnabled ||
-                                    Mods.CompassAlwaysOn.Enabled || Mods.HoverMode.Enabled;
+                                    Mods.AutoBalance.Enabled ||
+                                    Mods.GameModifierMods.NoSpeedWobblesEnabled;
                     case 6: return MovePage.IsAnyActive;
                     case 7: return WorldPage.IsAnyActive;
                     case 8: return BikePage.IsAnyActive;
@@ -1117,6 +946,8 @@ namespace DescendersModMenu.UI
             catch { return false; }
         }
 
+        private static int _lastCur = -1;
+
         private static void Switch(int pg) { cur = pg; RefreshTabs(); }
 
         // Public wrapper so MenuUI can force the sidebar to a specific
@@ -1126,6 +957,9 @@ namespace DescendersModMenu.UI
 
         private static void RefreshTabs()
         {
+            if (_lastCur == 26 && cur != 26)
+                InfoPage.OnCareerTabClosed();
+
             if (pg1) pg1.SetActive(cur == 1); if (pg2) pg2.SetActive(cur == 2);
             if (pg3) pg3.SetActive(cur == 3); if (pg6) pg6.SetActive(cur == 6);
             if (pg7) pg7.SetActive(cur == 7); if (pg8) pg8.SetActive(cur == 8);
@@ -1146,6 +980,16 @@ namespace DescendersModMenu.UI
             if (pg23) pg23.SetActive(cur == 23);
             if (pg24) pg24.SetActive(cur == 24);
             if (cur == 24) ObjectPlacerPage.RefreshAll();
+            if (pg25) pg25.SetActive(cur == 25);
+            if (cur == 25) InfoPage.RefreshCustomisePage();
+            if (pg26) pg26.SetActive(cur == 26);
+            if (cur == 26)
+            {
+                InfoPage.OnCareerTabOpened();
+                InfoPage.RefreshCareerPage();
+            }
+
+            _lastCur = cur;
 
             for (int i = 0; i < PageOrder.Length; i++)
             {
@@ -1212,67 +1056,20 @@ namespace DescendersModMenu.UI
             if (autoBalStrVal) autoBalStrVal.text = AutoBalance.StrengthLevel.ToString();
             UIHelpers.SetBar(autoBalBar, (AutoBalance.StrengthLevel - 1) / 9f);
 
-            // ── Bike ──────────────────────────────────────────────────
-            if (bikeVal)
-            {
-                switch (BikeSwitcher.CurrentBikeIndex)
-                {
-                    case 0: bikeVal.text = "Enduro"; break;
-                    case 1: bikeVal.text = "Downhill"; break;
-                    case 2: bikeVal.text = "Hardtail"; break;
-                    case 3: bikeVal.text = "BRNZL Enduro"; break;
-                    default: bikeVal.text = "Unknown"; break;
-                }
-            }
-
-            // ── Trick Set Swap ────────────────────────────────────────
-            if (tssSrcVal) tssSrcVal.text = TrickSetSwap.CurrentSourceName;
-            bool tssOn = TrickSetSwap.Enabled;
-            if (tssTogVal) { tssTogVal.text = tssOn ? "ON" : "OFF"; tssTogVal.color = tssOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(tssTrack, tssKnob, tssOn);
-
-            // ── FOV ───────────────────────────────────────────────────
-            bool fovOn = FOV.Enabled;
-            if (fovTogVal) { fovTogVal.text = fovOn ? "ON" : "OFF"; fovTogVal.color = fovOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(fovTrack, fovKnob, fovOn);
-            if (fovVal) fovVal.text = FOV.DisplayValue;
-            UIHelpers.SetBar(fovBar, (FOV.Level - 1) / 9f);
-
-            // ── Slow Motion ───────────────────────────────────────────
-            bool slow = SlowMotion.Enabled;
-            if (slowVal) { slowVal.text = slow ? "ON" : "OFF"; slowVal.color = slow ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(slowTrack, slowKnob, slow);
-            if (slowSpeedVal) slowSpeedVal.text = SlowMotion.DisplayValue;
-            UIHelpers.SetBar(slowSpeedBar, (SlowMotion.Level - 1) / 8f);
-
-            // ── Slow Mo on Bail ───────────────────────────────────────
-            bool smob = SlowMoOnBail.Enabled;
-            if (smobVal) { smobVal.text = smob ? "ON" : "OFF"; smobVal.color = smob ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(smobTrack, smobKnob, smob);
-
             // ── No Speed Wobbles ──────────────────────────────────────
             bool nsw = GameModifierMods.NoSpeedWobblesEnabled;
             if (nswVal) { nswVal.text = nsw ? "ON" : "OFF"; nswVal.color = nsw ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(nswTrack, nswKnob, nsw);
 
-            // ── Show Compass ──────────────────────────────────────────
-            bool compass = CompassAlwaysOn.Enabled;
-            if (compassVal) { compassVal.text = compass ? "ON" : "OFF"; compassVal.color = compass ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(compassTrack, compassKnob, compass);
-
-            // ── Hover Mode ────────────────────────────────────────────
-            bool hover = HoverMode.Enabled;
-            if (hoverVal) { hoverVal.text = hover ? "ON" : "OFF"; hoverVal.color = hover ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            if (hoverHeightVal) hoverHeightVal.text = HoverMode.DisplayHeight;
-            UIHelpers.SetToggle(hoverTrack, hoverKnob, hover);
-
-            // ── Speedrun Timer ────────────────────────────────────────
-            // ── Session live values ───────────────────────────────────
             SessionPage.RefreshAll();
+            try { BikePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("BikePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "BikePage.RefreshAll"); }
+            try { FunPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("FunPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "FunPage.RefreshAll"); }
+            try { WorldPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("WorldPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "WorldPage.RefreshAll"); }
+            try { OtherPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("OtherPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "OtherPage.RefreshAll"); }
 
             // ── Favourites sync ───────────────────────────────────────
-            FavsPage.RefreshFavourites();
-            FavouritesManager.RefreshAllStars();
+            try { FavsPage.RefreshFavourites(); } catch (System.Exception ex) { MelonLogger.Error("FavsPage.RefreshFavourites: " + ex); Telemetry.ReportErrorAsync(ex, "FavsPage.RefreshFavourites"); }
+            try { FavouritesManager.RefreshAllStars(); } catch (System.Exception ex) { MelonLogger.Error("FavouritesManager.RefreshAllStars: " + ex); Telemetry.ReportErrorAsync(ex, "FavouritesManager.RefreshAllStars"); }
         }
 
         private static void FlashHeader(Image img)
@@ -1331,31 +1128,41 @@ namespace DescendersModMenu.UI
         {
             // Unity fake-null: destroyed UI still fails (object)x == null.
             // Xbox set_alpha throws NullReferenceException, not MissingReferenceException.
-            if (!_sibMoreHint || !_sibScroll)
+            if (!_sibScroll)
             {
                 _sibMoreHint = null;
+                _sibMoreHintTop = null;
                 _sibScroll = null;
                 return;
             }
 
             try
             {
-                bool show = false;
+                bool showBottom = false;
+                bool showTop = false;
                 RectTransform content = _sibScroll.content;
                 RectTransform vp = _sibScroll.viewport;
                 if (content && vp)
                 {
                     float extra = content.rect.height - vp.rect.height;
                     bool overflow = extra > 10f;
-                    bool atTop = _sibScroll.verticalNormalizedPosition >= 0.96f;
-                    show = overflow && atTop;
+                    float v = _sibScroll.verticalNormalizedPosition;
+                    bool atTop = v >= 0.96f;
+                    bool atBottom = v <= 0.04f;
+                    showBottom = overflow && atTop;
+                    showTop = overflow && atBottom;
                 }
 
-                _sibMoreHint.alpha = Mathf.MoveTowards(_sibMoreHint.alpha, show ? 1f : 0f, Time.unscaledDeltaTime * 8f);
+                float step = Time.unscaledDeltaTime * 8f;
+                if (_sibMoreHint)
+                    _sibMoreHint.alpha = Mathf.MoveTowards(_sibMoreHint.alpha, showBottom ? 1f : 0f, step);
+                if (_sibMoreHintTop)
+                    _sibMoreHintTop.alpha = Mathf.MoveTowards(_sibMoreHintTop.alpha, showTop ? 1f : 0f, step);
             }
             catch (System.Exception)
             {
                 _sibMoreHint = null;
+                _sibMoreHintTop = null;
                 _sibScroll = null;
             }
         }

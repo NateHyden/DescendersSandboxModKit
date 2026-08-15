@@ -8,6 +8,7 @@ namespace DescendersModMenu.Mods
     {
         // ── State ─────────────────────────────────────────────────────
         public static bool Enabled { get; private set; } = false;
+        public static bool DiscoEnabled { get; private set; } = false;
 
         private static readonly float[]  IntensityValues = { 0.5f, 1.0f, 2.0f, 3.5f, 5.0f };
         private static readonly string[] IntensityLabels = { "Dim", "Low", "Medium", "High", "Max" };
@@ -15,14 +16,52 @@ namespace DescendersModMenu.Mods
 
         public static string IntensityDisplay => IntensityLabels[IntensityIndex];
 
+        private static readonly Color[] DiscoNeon =
+        {
+            new Color(1.00f, 0.05f, 0.55f, 1f),
+            new Color(0.10f, 0.35f, 1.00f, 1f),
+            new Color(0.20f, 1.00f, 0.20f, 1f),
+            new Color(1.00f, 0.90f, 0.05f, 1f),
+            new Color(1.00f, 0.35f, 0.05f, 1f),
+            new Color(0.75f, 0.05f, 1.00f, 1f),
+            new Color(0.05f, 1.00f, 0.95f, 1f),
+            new Color(1.00f, 0.05f, 0.10f, 1f),
+        };
+
         private static Light _torchLight = null;
+        private static int _discoIndex = 0;
+        private static float _discoNextFlip = 0f;
 
         // ── Toggle / Selectors ────────────────────────────────────────
         public static void Toggle()
         {
             Enabled = !Enabled;
+            if (!Enabled && DiscoEnabled)
+                DiscoEnabled = false;
             Apply();
-            ModLog.Debug("[BikeTorch] " + (Enabled ? "ON" : "OFF"));
+            ModLog.Feedback("[BikeTorch] -> " + (Enabled ? "ON" : "OFF"));
+        }
+
+        public static void ToggleDisco()
+        {
+            DiscoEnabled = !DiscoEnabled;
+            if (DiscoEnabled)
+            {
+                // Disco torch needs the light on
+                if (!Enabled)
+                {
+                    Enabled = true;
+                    Apply();
+                }
+                _discoIndex = 0;
+                _discoNextFlip = 0f;
+                ApplyDiscoColour();
+            }
+            else
+            {
+                Apply(); // restores white
+            }
+            ModLog.Feedback("[BikeTorch] Disco -> " + (DiscoEnabled ? "ON" : "OFF"));
         }
 
         public static void PrevIntensity()
@@ -50,8 +89,31 @@ namespace DescendersModMenu.Mods
 
             if ((object)_torchLight != null)
             {
-                _torchLight.enabled      = true;
-                _torchLight.intensity    = IntensityValues[IntensityIndex];
+                _torchLight.enabled   = true;
+                _torchLight.intensity = IntensityValues[IntensityIndex];
+                if (!DiscoEnabled)
+                    _torchLight.color = Color.white;
+            }
+        }
+
+        public static void TickDisco()
+        {
+            if (!DiscoEnabled || !Enabled) return;
+            float now = Time.unscaledTime;
+            if (now < _discoNextFlip) return;
+            _discoIndex = (_discoIndex + 1) % DiscoNeon.Length;
+            _discoNextFlip = now + 0.12f;
+            ApplyDiscoColour();
+        }
+
+        private static void ApplyDiscoColour()
+        {
+            if ((object)_torchLight == null)
+                FindOrCreateTorch();
+            if ((object)_torchLight != null)
+            {
+                _torchLight.enabled = true;
+                _torchLight.color = DiscoNeon[_discoIndex];
             }
         }
 
@@ -113,7 +175,10 @@ namespace DescendersModMenu.Mods
             // Light component will be destroyed by Unity on scene unload.
             // Just clear the cache and state so next scene starts fresh.
             _torchLight = null;
-            Enabled     = false;
+            Enabled = false;
+            DiscoEnabled = false;
+            _discoIndex = 0;
+            _discoNextFlip = 0f;
         }
     }
 }

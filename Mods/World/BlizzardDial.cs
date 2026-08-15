@@ -20,12 +20,13 @@ namespace DescendersModMenu.Mods
 
         public static readonly string[] SeasonNames = { "Spring", "Summer", "Autumn", "Winter" };
 
+        // Season tints must be strong — old 15–35% lerps looked identical in-game.
         private static readonly Color BaseSnowColor = new Color(0.93f, 0.96f, 1f, 1f);
-        private static readonly Color WinterTint = new Color(0.95f, 0.97f, 1f, 1f);
-        private static readonly Color SpringTint = new Color(0.88f, 0.95f, 0.85f, 1f);
-        private static readonly Color SummerTint = new Color(1f, 0.92f, 0.82f, 1f);
-        private static readonly Color AutumnTint = new Color(0.95f, 0.90f, 0.82f, 1f);
-        private static readonly Color RutColor = new Color(0.55f, 0.62f, 0.72f, 1f);
+        private static readonly Color WinterTint = new Color(0.78f, 0.88f, 1f, 1f);   // cold blue-white
+        private static readonly Color SpringTint = new Color(0.72f, 0.95f, 0.70f, 1f); // green melt
+        private static readonly Color SummerTint = new Color(1f, 0.82f, 0.55f, 1f);    // dirty / warm
+        private static readonly Color AutumnTint = new Color(0.95f, 0.70f, 0.45f, 1f); // orange mud
+        private static readonly Color RutColor = new Color(0.45f, 0.50f, 0.58f, 1f);
 
         private const float SurfaceLift = 0.18f;
         private const float MinThickness = 0.35f;
@@ -84,6 +85,11 @@ namespace DescendersModMenu.Mods
 
         public static void NextSeason() { SeasonIndex = (SeasonIndex + 1) % 4; if (Enabled) Apply(); }
         public static void PrevSeason() { SeasonIndex = (SeasonIndex + 3) % 4; if (Enabled) Apply(); }
+        public static void SetSeasonIndex(int v)
+        {
+            SeasonIndex = ((v % 4) + 4) % 4;
+            if (Enabled) Apply();
+        }
 
         public static string SeasonDisplay => SeasonNames[SeasonIndex];
 
@@ -95,10 +101,11 @@ namespace DescendersModMenu.Mods
 
         private static Color SeasonSnowColor()
         {
-            if (SeasonIndex == 1) return Color.Lerp(BaseSnowColor, SummerTint, 0.35f);
-            if (SeasonIndex == 2) return Color.Lerp(BaseSnowColor, AutumnTint, 0.35f);
-            if (SeasonIndex == 3) return Color.Lerp(BaseSnowColor, WinterTint, 0.2f);
-            return Color.Lerp(BaseSnowColor, SpringTint, 0.15f);
+            // Heavy blend so Spring/Summer/Autumn/Winter are obvious once Blizzard is ON.
+            if (SeasonIndex == 1) return Color.Lerp(BaseSnowColor, SummerTint, 0.85f);
+            if (SeasonIndex == 2) return Color.Lerp(BaseSnowColor, AutumnTint, 0.85f);
+            if (SeasonIndex == 3) return Color.Lerp(BaseSnowColor, WinterTint, 0.75f);
+            return Color.Lerp(BaseSnowColor, SpringTint, 0.80f);
         }
 
         public static void ApplyPatch(HarmonyLib.Harmony harmony)

@@ -13,9 +13,26 @@ namespace DescendersModMenu.UI
         private static bool prevVis;
 
         public static bool IsOpen => menuVisible;
+        public static bool Locked { get; private set; }
+
+        public static void SetLocked(bool locked)
+        {
+            Locked = locked;
+            if (locked && menuVisible)
+            {
+                menuVisible = false;
+                if ((object)menuCanvas != null) menuCanvas.SetActive(false);
+                RestoreCursor();
+            }
+        }
 
         public static void ToggleMenu()
         {
+            if (Locked)
+            {
+                ModLog.Feedback("Menu disabled in Multiplayer Race Mode");
+                return;
+            }
             if (menuCanvas == null) menuCanvas = MenuWindow.CreateMenu();
             menuVisible = !menuVisible;
             menuCanvas.SetActive(menuVisible);

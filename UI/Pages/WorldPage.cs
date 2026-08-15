@@ -11,6 +11,8 @@ namespace DescendersModMenu.UI
         // ── Sky Colours ───────────────────────────────────────────────────
         private static Image _stormTrack; private static RectTransform _stormKnob;
         private static Text _stormVal, _skyPresetVal;
+        private static Image _discoTrack; private static RectTransform _discoKnob;
+        private static Text _discoVal, _discoSpeedVal;
 
         // ── Blizzard Dial ────────────────────────────────────────────────
         private static GameObject _bzRow;
@@ -40,6 +42,7 @@ namespace DescendersModMenu.UI
         // Turbo Wind UI refs
         private static Image _windTrack; private static RectTransform _windKnob;
         private static Text _windVal;
+        private static Text _windPowerVal;
 
         // Exploding Props UI refs
         private static Image _explodeTrack; private static RectTransform _explodeKnob;
@@ -51,9 +54,15 @@ namespace DescendersModMenu.UI
         private static Image _hlTrack;
         private static RectTransform _hlKnob;
 
+        private static Image _iceModeTrack; private static RectTransform _iceModeKnob;
+        private static Text _iceModeVal;
+        private static Text _weatherVal, _weatherLastVal;
+        private static Image _weatherTrack;
+        private static RectTransform _weatherKnob;
+
         public static bool IsAnyActive =>
-            SkyColours.CurrentPreset != 0 || SkyColours.StormEnabled ||
-            BlizzardDial.Enabled ||
+            SkyColours.CurrentPreset != 0 || SkyColours.StormEnabled || DiscoMode.Enabled ||
+            BlizzardDial.Enabled || IceMode.Enabled || RandomWeatherRoulette.Enabled ||
             Gravity.Level != 5 ||
             Trees.Enabled || Music.Enabled || Fog.Enabled ||
             TurboWind.Enabled || ExplodingProps.Enabled || HeadlightsOnly.Enabled;
@@ -103,7 +112,7 @@ namespace DescendersModMenu.UI
                 var pg7 = content.transform;
 
                 // ── RESET TAB ─────────────────────────────────────────
-                var rstRow = UIHelpers.StatRow("", pg7);
+                var rstRow = UIHelpers.BareBtnRow(pg7);
                 UIHelpers.ActionBtnOrange(rstRow.transform, "↺  Reset Tab to Defaults", () => { ResetWorldTab(); RefreshAll(); }, 186);
                 UIHelpers.SectionHeader("SKY", pg7);
 
@@ -123,6 +132,16 @@ namespace DescendersModMenu.UI
                 _stormVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(stmr.transform, "StmT", () => { SkyColours.ToggleStorm(); RefreshAll(); }, out _stormTrack, out _stormKnob);
 
+                var discoR = UIHelpers.StatRow("Disco Mode", pg7);
+                _discoVal = UIHelpers.Txt("DscV", discoR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _discoVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(discoR.transform, "DscT", () => { DiscoMode.Toggle(); RefreshAll(); }, out _discoTrack, out _discoKnob);
+                _discoSpeedVal = UIHelpers.Txt("DscSV", discoR.transform, DiscoMode.SpeedDisplay, 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _discoSpeedVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.SmallBtn(discoR.transform, "-", () => { DiscoMode.DecreaseSpeed(); RefreshAll(); });
+                UIHelpers.SmallBtn(discoR.transform, "+", () => { DiscoMode.IncreaseSpeed(); RefreshAll(); });
+                UIHelpers.InfoBox(pg7, "Strobes the sky and ambient light through neon disco colours. Speed = how fast it flips. Warning: flashing lights.");
 
                 UIHelpers.Divider(pg7);
 
@@ -148,7 +167,17 @@ namespace DescendersModMenu.UI
                 _bzSeasonVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 56;
                 UIHelpers.SmallBtn(bzser.transform, "\u25B6", () => { BlizzardDial.NextSeason(); RefreshAll(); });
 
-                UIHelpers.InfoBox(pg7, "Thick snow mesh with wheel ruts (path packs down + darkens). Amount = thickness, Season = tint. Hides grass while on.");
+                UIHelpers.InfoBox(pg7, "Turn Blizzard Dial ON first. Amount = snow thickness. Season = strong snow tint (Spring green / Summer warm / Autumn orange / Winter blue) — does nothing while Blizzard is off. Hides grass while on.");
+
+                var wthR = UIHelpers.StatRow("Random Weather Roulette", pg7);
+                _weatherVal = UIHelpers.Txt("WthV", wthR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _weatherVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(wthR.transform, "WthT", () => { RandomWeatherRoulette.Toggle(); RefreshAll(); }, out _weatherTrack, out _weatherKnob);
+                UIHelpers.InfoBox(pg7, "Flips immediately, then every ~10–18s between Storm, thick Fog, Moon Mode, and Normal. Watch “Current weather”. Reverts when turned off.");
+                var wthLastR = UIHelpers.StatRow("Current weather", pg7);
+                _weatherLastVal = UIHelpers.Txt("WthLV", wthLastR.transform, RandomWeatherRoulette.LastFlipDisplay, 11,
+                    FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.TextDim);
+                _weatherLastVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 160;
 
                 UIHelpers.Divider(pg7);
 
@@ -164,6 +193,12 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(gr.transform, "+", () => { Gravity.Increase(); RefreshAll(); });
                 UIHelpers.Txt("GrHint", gr.transform, "def:-17.5", 9, FontStyle.Italic, TextAnchor.MiddleRight, UIHelpers.TextDim)
                     .gameObject.AddComponent<LayoutElement>().preferredWidth = 52;
+
+                var imr = UIHelpers.StatRow("Ice Grip", pg7);
+                _iceModeVal = UIHelpers.Txt("ImV", imr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _iceModeVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(imr.transform, "ImT", () => { IceMode.Toggle(); RefreshAll(); }, out _iceModeTrack, out _iceModeKnob);
+                UIHelpers.InfoBox(pg7, "Removes tyre grip entirely — the whole world is ice.");
 
                 UIHelpers.Divider(pg7);
 
@@ -228,6 +263,14 @@ namespace DescendersModMenu.UI
                     RefreshAll();
                 }, out _windTrack, out _windKnob);
 
+                var wpr = UIHelpers.StatRow("Wind Power", pg7);
+                UIHelpers.SmallBtn(wpr.transform, "-", () => { TurboWind.DecreasePower(); RefreshAll(); });
+                _windPowerVal = UIHelpers.Txt("WnPV", wpr.transform, TurboWind.PowerDisplay, 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _windPowerVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
+                UIHelpers.SmallBtn(wpr.transform, "+", () => { TurboWind.IncreasePower(); RefreshAll(); });
+                UIHelpers.InfoBox(pg7, "Pushes your bike with a gust and boosts WindZones / grass. Power 1 = breeze, 3 = default, 10 = old max blast.");
+
                 var er = UIHelpers.StatRow("No Mistakes", pg7);
                 _explodeVal = UIHelpers.Txt("ExV", er.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 _explodeVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
@@ -240,53 +283,6 @@ namespace DescendersModMenu.UI
                 }, out _explodeTrack, out _explodeKnob);
 
                 UIHelpers.Divider(pg7);
-                UIHelpers.Divider(pg7);
-
-                // ── Level Tools ───────────────────────────────────────────
-                UIHelpers.SectionHeader("LEVEL", pg7);
-
-                var jr = UIHelpers.StatRow("Jump to Finish", pg7);
-                var jumpStatusTxt = UIHelpers.Txt("JumpStatus", jr.transform, "",
-                    9, FontStyle.Italic, TextAnchor.MiddleRight, UIHelpers.TextDim);
-                jumpStatusTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 130;
-                UIHelpers.ActionBtnOrange(jr.transform, "Jump", () =>
-                {
-                    try
-                    {
-                        // DevCommandsGameplay.JumpToFinish() is a native game dev-command
-                        // that internally calls FinishLine.GetAFinishLine() and dereferences
-                        // the result with no null check - throws NullReferenceException on
-                        // any map with no race/finish structure (most freeride/sandbox/bike
-                        // park maps). Confirmed via IL dump 2026-08-10 after a live crash
-                        // report. Pre-checking here so the player gets a clear reason instead
-                        // of a silent dead click, instead of only catching after the fact.
-                        var fl = FinishLine.GetAFinishLine();
-                        if ((object)fl == null)
-                        {
-                            ModLog.Debug("[JumpToFinish] No FinishLine found on this level - nothing to jump to.");
-                            jumpStatusTxt.text = "No finish line here";
-                            jumpStatusTxt.color = UIHelpers.Orange;
-                            return;
-                        }
-
-                        DevCommandsGameplay.JumpToFinish();
-                        jumpStatusTxt.text = "";
-                    }
-                    catch (System.Exception ex)
-                    {
-                        MelonLogger.Error("[JumpToFinish]: " + ex.Message);
-                        Telemetry.ReportErrorAsync(ex, "WorldPage");
-                        jumpStatusTxt.text = "Failed - see log";
-                        jumpStatusTxt.color = UIHelpers.Orange;
-                    }
-                }, 60);
-
-                var sr = UIHelpers.StatRow("Skip Song", pg7);
-                UIHelpers.ActionBtn(sr.transform, "Skip", () =>
-                {
-                    try { DevCommandsGameplay.SkipSong(); }
-                    catch (System.Exception ex) { MelonLogger.Error("[SkipSong]: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "WorldPage"); }
-                }, 60);
 
                 // ── STAR BUTTONS (Favourites) ──────────────────────────
                 FavouritesManager.RegisterStarButton("Gravity", UIHelpers.StarBtn(gr.transform, "Gravity", () => FavouritesManager.Toggle("Gravity")));
@@ -294,12 +290,15 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("TurboWind", UIHelpers.StarBtn(wr.transform, "TurboWind", () => FavouritesManager.Toggle("TurboWind")));
                 FavouritesManager.RegisterStarButton("ExplodingProps", UIHelpers.StarBtn(er.transform, "ExplodingProps", () => FavouritesManager.Toggle("ExplodingProps")));
                 FavouritesManager.RegisterStarButton("Storm", UIHelpers.StarBtn(stmr.transform, "Storm", () => FavouritesManager.Toggle("Storm")));
+                FavouritesManager.RegisterStarButton("DiscoMode", UIHelpers.StarBtn(discoR.transform, "DiscoMode", () => FavouritesManager.Toggle("DiscoMode")));
                 FavouritesManager.RegisterStarButton("Trees", UIHelpers.StarBtn(ter.transform, "Trees", () => FavouritesManager.Toggle("Trees")));
                 FavouritesManager.RegisterStarButton("Music", UIHelpers.StarBtn(mur.transform, "Music", () => FavouritesManager.Toggle("Music")));
                 FavouritesManager.RegisterStarButton("Fog", UIHelpers.StarBtn(fogr.transform, "Fog", () => FavouritesManager.Toggle("Fog")));
                 FavouritesManager.RegisterStarButton("HeadlightsOnly", UIHelpers.StarBtn(_hlRow.transform, "HeadlightsOnly", () => FavouritesManager.Toggle("HeadlightsOnly")));
                 FavouritesManager.RegisterStarButton("SkyColour", UIHelpers.StarBtn(skpr.transform, "SkyColour", () => FavouritesManager.Toggle("SkyColour")));
                 FavouritesManager.RegisterStarButton("BlizzardDial", UIHelpers.StarBtn(_bzRow.transform, "BlizzardDial", () => FavouritesManager.Toggle("BlizzardDial")));
+                FavouritesManager.RegisterStarButton("IceGrip", UIHelpers.StarBtn(imr.transform, "IceGrip", () => FavouritesManager.Toggle("IceGrip")));
+                FavouritesManager.RegisterStarButton("RandomWeatherRoulette", UIHelpers.StarBtn(wthR.transform, "RandomWeatherRoulette", () => FavouritesManager.Toggle("RandomWeatherRoulette")));
 
                 // ── FACTORY REGISTRATIONS (World tab mods) ─────────────
                 FavouritesManager.Register(new ModFavEntry
@@ -338,8 +337,15 @@ namespace DescendersModMenu.UI
                     Id = "TurboWind",
                     DisplayName = "Turbo Wind",
                     TabBadge = "WORLD",
-                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "TurboWind", "Turbo Wind",
-                        () => TurboWind.Enabled, () => { TurboWind.Toggle(); }, () => RefreshAll()),
+                    BuildControls = (p) =>
+                    {
+                        FavsPage.BuildSimpleToggle(p, "TurboWind", "Turbo Wind",
+                            () => TurboWind.Enabled, () => { TurboWind.Toggle(); }, () => RefreshAll());
+                        FavsPage.BuildSliderOnly(p, "TurboWindPower", "Wind Power",
+                            () => TurboWind.PowerLevel, () => TurboWind.IncreasePower(), () => TurboWind.DecreasePower(),
+                            () => (TurboWind.PowerLevel - 1) / 9f, () => RefreshAll(),
+                            () => TurboWind.PowerDisplay, () => TurboWind.Enabled);
+                    },
                     IsActive = () => TurboWind.Enabled
                 });
                 FavouritesManager.Register(new ModFavEntry
@@ -350,6 +356,17 @@ namespace DescendersModMenu.UI
                     BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "Storm", "Storm",
                         () => SkyColours.StormEnabled, () => SkyColours.ToggleStorm(), () => RefreshAll()),
                     IsActive = () => SkyColours.StormEnabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "DiscoMode",
+                    DisplayName = "Disco Mode",
+                    TabBadge = "WORLD",
+                    BuildControls = (p) => FavsPage.BuildToggleStepper(p, "DiscoMode", "Disco Mode",
+                        () => DiscoMode.Enabled, () => DiscoMode.Toggle(),
+                        () => DiscoMode.SpeedLevel, () => DiscoMode.DecreaseSpeed(), () => DiscoMode.IncreaseSpeed(),
+                        1, 10, () => RefreshAll(), 5),
+                    IsActive = () => DiscoMode.Enabled
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
@@ -393,7 +410,7 @@ namespace DescendersModMenu.UI
                     DisplayName = "Sky Colour",
                     TabBadge = "WORLD",
                     BuildControls = (p) => {
-                        var row = UIHelpers.StatRow("Colour", p);
+                        var row = FavsPage.CompactStatRow("Colour", p);
                         UIHelpers.ActionBtn(row.transform, "Default", () => { SkyColours.RestoreDefault(); RefreshAll(); FavsPage.RefreshFavourites(); }, 50);
                         UIHelpers.ActionBtn(row.transform, "Blood Red", () => { SkyColours.ApplyPreset(1); RefreshAll(); FavsPage.RefreshFavourites(); }, 58);
                         UIHelpers.ActionBtn(row.transform, "Alien", () => { SkyColours.ApplyPreset(2); RefreshAll(); FavsPage.RefreshFavourites(); }, 40);
@@ -409,7 +426,7 @@ namespace DescendersModMenu.UI
                     DisplayName = "Blizzard Dial",
                     TabBadge = "WORLD",
                     BuildControls = (p) => {
-                        var row = UIHelpers.StatRow("Blizzard Dial", p);
+                        var row = FavsPage.CompactStatRow("Blizzard Dial", p);
                         var val = UIHelpers.Txt("BzFV", row.transform, BlizzardDial.Enabled ? "ON" : "OFF", 11,
                             FontStyle.Bold, TextAnchor.MiddleCenter, BlizzardDial.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor);
                         val.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
@@ -418,6 +435,24 @@ namespace DescendersModMenu.UI
                             out favTrack, out favKnob);
                     },
                     IsActive = () => BlizzardDial.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "IceGrip",
+                    DisplayName = "Ice Grip",
+                    TabBadge = "WORLD",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "IceGrip", "Ice Grip",
+                        () => IceMode.Enabled, () => IceMode.Toggle(), () => RefreshAll()),
+                    IsActive = () => IceMode.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "RandomWeatherRoulette",
+                    DisplayName = "Random Weather Roulette",
+                    TabBadge = "WORLD",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "RandomWeatherRoulette", "Random Weather Roulette",
+                        () => RandomWeatherRoulette.Enabled, () => RandomWeatherRoulette.Toggle(), () => RefreshAll()),
+                    IsActive = () => RandomWeatherRoulette.Enabled
                 });
                 RefreshAll();
                 UIHelpers.AddScrollForwarders(pg7);
@@ -448,6 +483,10 @@ namespace DescendersModMenu.UI
             Fog.Reset();
             BlizzardDial.Reset();
             if (HeadlightsOnly.Enabled) HeadlightsOnly.Toggle();
+            if (ExplodingProps.Enabled) ExplodingProps.Toggle();
+            if (IceMode.Enabled) IceMode.Toggle();
+            RandomWeatherRoulette.Reset();
+            DiscoMode.Reset();
         }
 
         public static void RefreshAll()
@@ -472,6 +511,7 @@ namespace DescendersModMenu.UI
 
             if (_windVal) { _windVal.text = TurboWind.Enabled ? "ON" : "OFF"; _windVal.color = TurboWind.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_windTrack, _windKnob, TurboWind.Enabled);
+            if (_windPowerVal) _windPowerVal.text = TurboWind.PowerDisplay;
 
             if (_explodeVal) { _explodeVal.text = ExplodingProps.Enabled ? "ON" : "OFF"; _explodeVal.color = ExplodingProps.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_explodeTrack, _explodeKnob, ExplodingProps.Enabled);
@@ -481,14 +521,28 @@ namespace DescendersModMenu.UI
             if (_stormVal) { _stormVal.text = storm ? "ON" : "OFF"; _stormVal.color = storm ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_stormTrack, _stormKnob, storm);
 
+            bool disco = DiscoMode.Enabled;
+            if (_discoVal) { _discoVal.text = disco ? "ON" : "OFF"; _discoVal.color = disco ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_discoTrack, _discoKnob, disco);
+            if (_discoSpeedVal) _discoSpeedVal.text = DiscoMode.SpeedDisplay;
+
             // Blizzard Dial
             bool bzOn = BlizzardDial.Enabled;
             if (_bzVal) { _bzVal.text = bzOn ? "ON" : "OFF"; _bzVal.color = bzOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_bzTrack, _bzKnob, bzOn);
             if (_bzSnowVal) _bzSnowVal.text = BlizzardDial.SnowLevel.ToString();
             if (_bzSeasonVal) _bzSeasonVal.text = BlizzardDial.SeasonDisplay;
-            if ((object)_bzSnowMinus != null) _bzSnowMinus.interactable = BlizzardDial.SnowLevel > 1;
-            if ((object)_bzSnowPlus != null) _bzSnowPlus.interactable = BlizzardDial.SnowLevel < 10;
+            if ((object)_bzSnowMinus != null && _bzSnowMinus) _bzSnowMinus.interactable = BlizzardDial.SnowLevel > 1;
+            if ((object)_bzSnowPlus != null && _bzSnowPlus) _bzSnowPlus.interactable = BlizzardDial.SnowLevel < 10;
+
+            bool imOn = IceMode.Enabled;
+            if (_iceModeVal) { _iceModeVal.text = imOn ? "ON" : "OFF"; _iceModeVal.color = imOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_iceModeTrack, _iceModeKnob, imOn);
+
+            bool wthOn = RandomWeatherRoulette.Enabled;
+            if (_weatherVal) { _weatherVal.text = wthOn ? "ON" : "OFF"; _weatherVal.color = wthOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_weatherTrack, _weatherKnob, wthOn);
+            if (_weatherLastVal) _weatherLastVal.text = RandomWeatherRoulette.LastFlipDisplay;
         }
     }
 }

@@ -91,7 +91,7 @@ namespace DescendersModMenu.UI
                 var pg6 = content.transform;
 
                 // ── RESET TAB ─────────────────────────────────────────
-                var rstRow = UIHelpers.StatRow("", pg6);
+                var rstRow = UIHelpers.BareBtnRow(pg6);
                 UIHelpers.ActionBtnOrange(rstRow.transform, "↺  Reset Tab to Defaults", () => { ResetMoveTab(); RefreshAll(); }, 186);
                 UIHelpers.SectionHeader("MOVEMENT", pg6);
 
@@ -197,7 +197,7 @@ namespace DescendersModMenu.UI
                 _gmWbVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
                 UIHelpers.SmallBtn(gmWbR.transform, "-", () => { GameModifierMods.WheelieBalanceDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(gmWbR.transform, "+", () => { GameModifierMods.WheelieBalanceIncrease(); RefreshAll(); });
-                UIHelpers.InfoBox(pg6, "How forgiving wheelie balance is. Level 5/6 = vanilla. Lower = twitchier, higher = more assisted.");
+                UIHelpers.InfoBox(pg6, "How forgiving wheelie balance is. Shown as a % offset — near 0% is vanilla. Lower = twitchier, higher = more assisted.");
 
                 // Tweak Speed
                 var gmTsR = UIHelpers.StatRow("Tweak Speed", pg6);
@@ -206,7 +206,7 @@ namespace DescendersModMenu.UI
                 _gmTsVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
                 UIHelpers.SmallBtn(gmTsR.transform, "-", () => { GameModifierMods.TweakSpeedDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(gmTsR.transform, "+", () => { GameModifierMods.TweakSpeedIncrease(); RefreshAll(); });
-                UIHelpers.InfoBox(pg6, "How fast you can tweak/adjust your bike pose mid-trick. Level 5/6 = vanilla.");
+                UIHelpers.InfoBox(pg6, "How fast you can tweak/adjust your bike pose mid-trick. Shown as a % offset — near 0% is vanilla.");
 
                 // Near Miss Sensitivity
                 var nmr = UIHelpers.StatRow("Near Miss Sensitivity", pg6);
@@ -404,21 +404,21 @@ namespace DescendersModMenu.UI
                     DisplayName = "Center of Mass",
                     TabBadge = "MOVE",
                     BuildControls = (p) => {
-                        var r1 = UIHelpers.StatRow("Left / Right", p);
+                        var r1 = FavsPage.CompactStatRow("Left / Right", p);
                         var b1 = UIHelpers.MakeBar("CLr", r1.transform, CenterOfMass.BarLR);
                         var v1 = UIHelpers.Txt("CLrV", r1.transform, CenterOfMass.DisplayLR, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                         v1.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
                         UIHelpers.ActionBtn(r1.transform, "0", () => { CenterOfMass.ResetLR(); MovePage.RefreshAll(); FavsPage.RefreshFavourites(); }, 22);
                         UIHelpers.SmallBtn(r1.transform, "-", () => { CenterOfMass.DecreaseLR(); MovePage.RefreshAll(); FavsPage.RefreshFavourites(); });
                         UIHelpers.SmallBtn(r1.transform, "+", () => { CenterOfMass.IncreaseLR(); MovePage.RefreshAll(); FavsPage.RefreshFavourites(); });
-                        var r2 = UIHelpers.StatRow("Forward / Back", p);
+                        var r2 = FavsPage.CompactStatRow("Forward / Back", p);
                         var b2 = UIHelpers.MakeBar("CFb", r2.transform, CenterOfMass.BarFB);
                         var v2 = UIHelpers.Txt("CFbV", r2.transform, CenterOfMass.DisplayFB, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                         v2.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
                         UIHelpers.ActionBtn(r2.transform, "0", () => { CenterOfMass.ResetFB(); MovePage.RefreshAll(); FavsPage.RefreshFavourites(); }, 22);
                         UIHelpers.SmallBtn(r2.transform, "-", () => { CenterOfMass.DecreaseFB(); MovePage.RefreshAll(); FavsPage.RefreshFavourites(); });
                         UIHelpers.SmallBtn(r2.transform, "+", () => { CenterOfMass.IncreaseFB(); MovePage.RefreshAll(); FavsPage.RefreshFavourites(); });
-                        var r3 = UIHelpers.StatRow("Up / Down", p);
+                        var r3 = FavsPage.CompactStatRow("Up / Down", p);
                         var b3 = UIHelpers.MakeBar("CUd", r3.transform, CenterOfMass.BarUD);
                         var v3 = UIHelpers.Txt("CUdV", r3.transform, CenterOfMass.DisplayUD, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                         v3.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;

@@ -13,6 +13,9 @@ namespace DescendersModMenu.UI
         private static Image _vigTrack; private static RectTransform _vigKnob; private static Text _vigVal;
         private static Image _dofTrack; private static RectTransform _dofKnob; private static Text _dofVal;
         private static Image _cabTrack; private static RectTransform _cabKnob; private static Text _cabVal;
+        private static Image _shadowTrack; private static RectTransform _shadowKnob; private static Text _shadowVal;
+        private static Image _softPTrack; private static RectTransform _softPKnob; private static Text _softPVal;
+        private static Text _aaVal;
         private static Text _qualityVal;
         private static Text _uiRemoverVal;
         private static Image _uiRemoverTrack; private static RectTransform _uiRemoverKnob;
@@ -20,7 +23,9 @@ namespace DescendersModMenu.UI
         public static bool IsAnyActive =>
             !GraphicsSettings.BloomEnabled || !GraphicsSettings.AmbientOccEnabled ||
             !GraphicsSettings.VignetteEnabled || GraphicsSettings.DepthOfFieldEnabled ||
-            !GraphicsSettings.ChromaticAbEnabled || UIRemover.Enabled;
+            !GraphicsSettings.ChromaticAbEnabled || !GraphicsSettings.ShadowsEnabled ||
+            !GraphicsSettings.SoftParticlesEnabled || GraphicsSettings.AntiAliasingLevel >= 0 ||
+            UIRemover.Enabled;
 
         public static GameObject CreatePage(Transform parent)
         {
@@ -63,6 +68,28 @@ namespace DescendersModMenu.UI
                 _cabVal = UIHelpers.Txt("CaV", cabr.transform, "ON", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
                 _cabVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(cabr.transform, "CaT", () => { GraphicsSettings.ToggleChromatic(); RefreshAll(); }, out _cabTrack, out _cabKnob);
+
+                UIHelpers.Divider(pg.transform);
+
+                // ── Render ────────────────────────────────────────────────
+                UIHelpers.SectionHeader("RENDER", pg.transform);
+
+                var shR = UIHelpers.StatRow("Shadows", pg.transform);
+                _shadowVal = UIHelpers.Txt("ShV", shR.transform, "ON", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
+                _shadowVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(shR.transform, "ShT", () => { GraphicsSettings.ToggleShadows(); RefreshAll(); }, out _shadowTrack, out _shadowKnob);
+
+                var spR = UIHelpers.StatRow("Soft Particles", pg.transform);
+                _softPVal = UIHelpers.Txt("SpV", spR.transform, "ON", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
+                _softPVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(spR.transform, "SpT", () => { GraphicsSettings.ToggleSoftParticles(); RefreshAll(); }, out _softPTrack, out _softPKnob);
+
+                var aaR = UIHelpers.StatRow("Anti-Aliasing", pg.transform);
+                _aaVal = UIHelpers.Txt("AaV", aaR.transform, GraphicsSettings.CurrentAaDisplay, 11,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _aaVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
+                UIHelpers.ActionBtn(aaR.transform, "Cycle", () => { GraphicsSettings.CycleAntiAliasing(); RefreshAll(); }, 48);
+                UIHelpers.InfoBox(pg.transform, "Shadows / Soft Particles / AA use Unity quality settings (instant). Cycle AA: Off → 2x → 4x → 8x.");
 
                 UIHelpers.Divider(pg.transform);
 
@@ -141,6 +168,16 @@ namespace DescendersModMenu.UI
             bool cab = GraphicsSettings.ChromaticAbEnabled;
             if (_cabVal) { _cabVal.text = cab ? "ON" : "OFF"; _cabVal.color = cab ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_cabTrack, _cabKnob, cab);
+
+            bool sh = GraphicsSettings.ShadowsEnabled;
+            if (_shadowVal) { _shadowVal.text = sh ? "ON" : "OFF"; _shadowVal.color = sh ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_shadowTrack, _shadowKnob, sh);
+
+            bool soft = GraphicsSettings.SoftParticlesEnabled;
+            if (_softPVal) { _softPVal.text = soft ? "ON" : "OFF"; _softPVal.color = soft ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_softPTrack, _softPKnob, soft);
+
+            if (_aaVal) _aaVal.text = GraphicsSettings.CurrentAaDisplay;
 
             if (_qualityVal)
             {

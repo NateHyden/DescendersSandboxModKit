@@ -266,10 +266,13 @@ namespace DescendersModMenu.UI
             var w = Obj(n, p);
             var wi = w.AddComponent<Image>();
             wi.sprite = BarSp; wi.type = Image.Type.Sliced;
-            wi.color = BarBg; wi.raycastTarget = false;
+            // Invisible track — the row shows through so Favourites / scheme
+            // tints never leave a mismatched maroon/black trough behind the fill.
+            wi.color = Color.clear; wi.raycastTarget = false;
             var le = w.AddComponent<LayoutElement>();
             le.preferredWidth = 70; le.preferredHeight = 4;
             le.minWidth = 70; le.minHeight = 4; le.flexibleHeight = 0;
+            le.flexibleWidth = 0;
 
             var f = Obj("F", w.transform);
             var fi = f.AddComponent<Image>();
@@ -285,6 +288,25 @@ namespace DescendersModMenu.UI
         public static void SetBar(Image fi, float pct)
         {
             if (fi) RT(fi.gameObject).sizeDelta = new Vector2(70f * Mathf.Clamp01(pct), 4);
+        }
+
+        // Bare row for a lone top button (Reset Tab / Remove All Favourites) —
+        // no StatRow background pill, just a centred button.
+        public static GameObject BareBtnRow(Transform p, float height = -1f)
+        {
+            var row = Obj("BareBtnRow", p);
+            var le = row.AddComponent<LayoutElement>();
+            float h = height > 0f ? height : RowH;
+            le.preferredHeight = h; le.minHeight = h; le.flexibleHeight = 0;
+            var hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 8;
+            hlg.padding = new RectOffset(0, 0, 0, 0);
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            return row;
         }
 
         public static GameObject StatRow(string label, Transform p)
@@ -332,7 +354,8 @@ namespace DescendersModMenu.UI
 
         public static void SetStarActive(Button btn, bool active)
         {
-            if ((object)btn == null) return;
+            // Unity fake-null — (object)btn == null misses destroyed UI.
+            if (!btn) return;
             var t = btn.GetComponentInChildren<Text>();
             if (t) t.color = active ? Accent : TextDim;
             var img = btn.GetComponent<Image>();
@@ -417,8 +440,15 @@ namespace DescendersModMenu.UI
             if (knob)
             {
                 knob.anchoredPosition = on ? new Vector2(26, 0) : new Vector2(4, 0);
-                knob.GetComponent<Image>().color = on ? TogKnobOn : TogKnobOff;
+                var knobImg = knob.GetComponent<Image>();
+                if (knobImg) knobImg.color = on ? TogKnobOn : TogKnobOff;
             }
+        }
+
+        // Unity fake-null safe — never use (object)btn != null for Components
+        public static void SetInteractable(UnityEngine.UI.Button btn, bool on)
+        {
+            if (btn) btn.interactable = on;
         }
 
         public static void SectionHeader(string title, Transform p)

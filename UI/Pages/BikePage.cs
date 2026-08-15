@@ -42,6 +42,11 @@ namespace DescendersModMenu.UI
         private static Text _wideTyresVal, _wideTyresLvlVal; private static Image _wideTyresBar;
         private static UnityEngine.UI.Button _wideTyresMinus, _wideTyresPlus;
 
+        // ── Spider Bike ───────────────────────────────────────────────
+        private static Image _spiderTrack; private static RectTransform _spiderKnob;
+        private static Text _spiderVal;
+        private static GameObject _spiderRow;
+
         // ── Sticky Tyres ──────────────────────────────────────────────
         private static Image _stickyTrack; private static RectTransform _stickyKnob;
         private static Text _stickyVal;
@@ -64,22 +69,28 @@ namespace DescendersModMenu.UI
         private static Image _revSteerTrack; private static RectTransform _revSteerKnob;
         private static Text _revSteerVal;
 
-        // ── Ice Mode ──────────────────────────────────────────────────
-        private static Image _iceModeTrack; private static RectTransform _iceModeKnob;
-        private static Text _iceModeVal;
+        // ── Rubber Band Steering ──────────────────────────────────────
+        private static Image _rubberTrack; private static RectTransform _rubberKnob;
+        private static Text _rubberVal, _rubberLvlVal;
+
+        // ── Bike switcher / Trick Set Swap ────────────────────────────
+        private static Text _bikeVal;
+        private static Text _tssSrcVal, _tssTogVal;
+        private static Image _tssTrack;
+        private static RectTransform _tssKnob;
 
         // ── Cut Brakes ────────────────────────────────────────────────
         private static Image _cutBrakesTrack; private static RectTransform _cutBrakesKnob;
         private static Text _cutBrakesVal;
 
         // ── Torch ─────────────────────────────────────────────────────
-        private static Text _torchVal, _torchIntLbl;
-        private static Image _torchTrack;
-        private static RectTransform _torchKnob;
+        private static Text _torchVal, _torchIntLbl, _torchDiscoVal;
+        private static Image _torchTrack, _torchDiscoTrack;
+        private static RectTransform _torchKnob, _torchDiscoKnob;
 
         // ── Row GO refs for highlight ─────────────────────────────────
         private static GameObject _invisBikeRow, _wheelSizeRow, _wideTyresRow, _stickyRow;
-        private static GameObject _revSteerRow, _iceModeRow, _cutBrakesRow, _torchRow;
+        private static GameObject _revSteerRow, _cutBrakesRow, _torchRow, _torchDiscoRow;
 
         // ── Suspension HUD (Telemetry) ────────────────────────────────
         private static GameObject _shRow;
@@ -95,33 +106,34 @@ namespace DescendersModMenu.UI
         private static UnityEngine.UI.Button _bbMinus, _bbPlus;
         private static GameObject _bbRow;
 
-        private static Text _tmLabelVal;
-        private static UnityEngine.UI.Button _tmMinus, _tmPlus;
-        private static GameObject _tmRow;
-
-
         public static void CaptureSceneDefaults()
         {
             BikeSize.CaptureDefaults();
         }
 
         public static bool IsAnyActive =>
+            SpiderBike.Enabled ||
             Suspension.TravelLevel != 5 || Suspension.StiffnessLevel != 5 || Suspension.DampingLevel != 5 ||
             BouncyBike.Enabled ||
-            WheelSize.IsEnabled || WheelSize.IsIndividualMode || InvisibleBike.Enabled || BikeSize.IsModified ||
+            WheelSize.IsEnabled ||
+            (WheelSize.IsIndividualMode && (WheelSize.FrontLevel != 10 || WheelSize.RearLevel != 10)) ||
+            InvisibleBike.Enabled || BikeSize.IsModified ||
             WideTyres.Enabled || StickyTyres.Enabled ||
-            ReverseSteering.Enabled || IceMode.Enabled || CutBrakes.Enabled ||
-            BikeTorch.Enabled || SuspensionHUD.Enabled || BrakeFade.Enabled ||
-            TyrePressure.Enabled || BikeDamage.Enabled || TrickMultiplier.Enabled;
+            ReverseSteering.Enabled || RubberBandSteering.Enabled || CutBrakes.Enabled ||
+            BikeTorch.Enabled || BikeTorch.DiscoEnabled || SuspensionHUD.Enabled || BrakeFade.Enabled ||
+            BrakeFade.BalanceLevel != 6 ||
+            TyrePressure.Enabled || BikeDamage.Enabled || TrickSetSwap.Enabled;
 
         public static void GlobalReset()
         {
             if (InvisibleBike.Enabled) InvisibleBike.SetEnabled(false);
+            if (SpiderBike.Enabled) SpiderBike.Toggle();
             BouncyBike.Reset();
             WheelSize.Reset();
             BikeSize.ResetToDefault();
             BikeSize.Level = 10;
-            TrickMultiplier.Reset();
+            if (TrickSetSwap.Enabled) TrickSetSwap.Disable();
+            RubberBandSteering.Reset();
         }
 
         public static GameObject CreatePage(Transform parent)
@@ -166,8 +178,38 @@ namespace DescendersModMenu.UI
                 var pg8 = content.transform;
 
                 // ── RESET TAB ─────────────────────────────────────────
-                var rstRow = UIHelpers.StatRow("", pg8);
+                var rstRow = UIHelpers.BareBtnRow(pg8);
                 UIHelpers.ActionBtnOrange(rstRow.transform, "↺  Reset Tab to Defaults", () => { ResetBikeTab(); RefreshAll(); }, 186);
+
+                _spiderRow = UIHelpers.StatRow("Spider Bike", pg8);
+                _spiderVal = UIHelpers.Txt("SpV", _spiderRow.transform, "OFF", 11,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _spiderVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(_spiderRow.transform, "SpT", () => { SpiderBike.Toggle(); RefreshAll(); },
+                    out _spiderTrack, out _spiderKnob);
+                UIHelpers.InfoBox(pg8, "Stick to walls, roofs and any surface. Ride like the floor is wherever your tyres are. Stops you bailing from the tilt while it's on.");
+
+                UIHelpers.SectionHeader("BIKE TYPE", pg8);
+
+                var br = UIHelpers.StatRow("Bike", pg8);
+                UIHelpers.SmallBtn(br.transform, "\u25C0", () => { BikeSwitcher.PreviousBike(); RefreshAll(); });
+                _bikeVal = UIHelpers.Txt("BV", br.transform, "Enduro", 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _bikeVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 80;
+                UIHelpers.SmallBtn(br.transform, "\u25B6", () => { BikeSwitcher.NextBike(); RefreshAll(); });
+
+                var tssSrc = UIHelpers.StatRow("Trick Source", pg8);
+                UIHelpers.SmallBtn(tssSrc.transform, "\u25C0", () => { TrickSetSwap.PrevSource(); RefreshAll(); });
+                _tssSrcVal = UIHelpers.Txt("TSV", tssSrc.transform, TrickSetSwap.CurrentSourceName, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _tssSrcVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 80;
+                UIHelpers.SmallBtn(tssSrc.transform, "\u25B6", () => { TrickSetSwap.NextSource(); RefreshAll(); });
+
+                var tssR = UIHelpers.StatRow("Trick Set Swap", pg8);
+                _tssTogVal = UIHelpers.Txt("TSTV", tssR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _tssTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(tssR.transform, "TST", () => { TrickSetSwap.Toggle(); RefreshAll(); }, out _tssTrack, out _tssKnob);
+
+                UIHelpers.Divider(pg8);
+
                 UIHelpers.SectionHeader("SUSPENSION", pg8);
 
                 var tr = UIHelpers.StatRow("Travel", pg8);
@@ -395,12 +437,15 @@ namespace DescendersModMenu.UI
                 _revSteerVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(rsr.transform, "RsT", () => { ReverseSteering.Toggle(); RefreshAll(); }, out _revSteerTrack, out _revSteerKnob);
 
-                _iceModeRow = UIHelpers.StatRow("Ice Grip", pg8);
-                var imr = _iceModeRow;
-                _iceModeVal = UIHelpers.Txt("ImV", imr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-                _iceModeVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-                UIHelpers.Toggle(imr.transform, "ImT", () => { IceMode.Toggle(); RefreshAll(); }, out _iceModeTrack, out _iceModeKnob);
-                UIHelpers.InfoBox(pg8, "Removes tyre grip entirely. For an opposite experience to Sticky Tyres.");
+                var rubR = UIHelpers.StatRow("Rubber Band Steering", pg8);
+                _rubberVal = UIHelpers.Txt("RbV", rubR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _rubberVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(rubR.transform, "RbT", () => { RubberBandSteering.Toggle(); RefreshAll(); }, out _rubberTrack, out _rubberKnob);
+                _rubberLvlVal = UIHelpers.Txt("RbLV", rubR.transform, RubberBandSteering.LevelDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _rubberLvlVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
+                UIHelpers.SmallBtn(rubR.transform, "-", () => { RubberBandSteering.Decrease(); RefreshAll(); });
+                UIHelpers.SmallBtn(rubR.transform, "+", () => { RubberBandSteering.Increase(); RefreshAll(); });
+                UIHelpers.InfoBox(pg8, "Delays your steering and lean input so every move lands late. Level 1 = 50ms, Level 10 = 500ms.");
 
                 _cutBrakesRow = UIHelpers.StatRow("Cut Brakes", pg8);
                 var cbr = _cutBrakesRow;
@@ -432,9 +477,18 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(tcir.transform, "\u25B6",
                     () => { BikeTorch.NextIntensity(); RefreshAll(); });
 
+                _torchDiscoRow = UIHelpers.StatRow("Disco Torch", pg8);
+                var tdr = _torchDiscoRow;
+                _torchDiscoVal = UIHelpers.Txt("TchDV", tdr.transform, "OFF", 11,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _torchDiscoVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(tdr.transform, "TchDT",
+                    () => { BikeTorch.ToggleDisco(); RefreshAll(); },
+                    out _torchDiscoTrack, out _torchDiscoKnob);
+
                 UIHelpers.InfoBox(pg8,
-                    "Enables the bike's headlight. If the game has no built-in light, " +
-                    "a spotlight is added to the front of the bike.");
+                    "Headlight: enables the bike spotlight (or creates one if missing).\n" +
+                    "Disco Torch: cycles the beam through neon colours. Warning: flashing lights.");
 
                 UIHelpers.Divider(pg8);
 
@@ -463,20 +517,12 @@ namespace DescendersModMenu.UI
                 _bbPlus = UIHelpers.SmallBtn(bbr.transform, "\u25B6", () => { BrakeFade.IncreaseBalance(); RefreshAll(); });
                 UIHelpers.InfoBox(pg8, "Your brake discs overheat from hard braking. Brakes weaken above 150°C and fail completely at 300°C. Let go to cool down — going fast cools them quicker. Watch the top-right HUD.");
 
-                _tmRow = UIHelpers.StatRow("Trick Multiplier", pg8);
-                var tmr = _tmRow;
-                _tmMinus = UIHelpers.SmallBtn(tmr.transform, "\u25C0", () => { TrickMultiplier.Decrease(); RefreshAll(); });
-                _tmLabelVal = UIHelpers.Txt("TmLV", tmr.transform,
-                    TrickMultiplier.LevelDisplay, 11,
-                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
-                _tmLabelVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 64;
-                _tmPlus = UIHelpers.SmallBtn(tmr.transform, "\u25B6", () => { TrickMultiplier.Increase(); RefreshAll(); });
-                UIHelpers.InfoBox(pg8, "Raises the max combo multiplier cap above the game's default x3. Reapplies continuously so it survives respawns. Resets to OFF on map change.");
-
                 // ── STAR BUTTONS (Favourites) ──────────────────────────
                 Transform suspHdr = pg8.Find("SUSPENSIONH");
                 if ((object)suspHdr != null)
                     FavouritesManager.RegisterStarButton("Suspension", UIHelpers.StarBtnAbs(suspHdr, "Suspension", () => FavouritesManager.Toggle("Suspension")));
+                FavouritesManager.RegisterStarButton("SpiderBike", UIHelpers.StarBtn(_spiderRow.transform, "SpiderBike", () => FavouritesManager.Toggle("SpiderBike")));
+                FavouritesManager.RegisterStarButton("BikeSwitcher", UIHelpers.StarBtn(br.transform, "BikeSwitcher", () => FavouritesManager.Toggle("BikeSwitcher")));
                 FavouritesManager.RegisterStarButton("BikeSize", UIHelpers.StarBtn(szr.transform, "BikeSize", () => FavouritesManager.Toggle("BikeSize")));
                 FavouritesManager.RegisterStarButton("BouncyBike", UIHelpers.StarBtn(_bbRow2.transform, "BouncyBike", () => FavouritesManager.Toggle("BouncyBike")));
                 FavouritesManager.RegisterStarButton("InvisibleBike", UIHelpers.StarBtn(_invisBikeRow.transform, "InvisibleBike", () => FavouritesManager.Toggle("InvisibleBike")));
@@ -488,15 +534,70 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("TyrePressure", UIHelpers.StarBtn(_tyrePressureRow.transform, "TyrePressure", () => FavouritesManager.Toggle("TyrePressure")));
                 FavouritesManager.RegisterStarButton("BikeDamage", UIHelpers.StarBtn(_bikeDamageRow.transform, "BikeDamage", () => FavouritesManager.Toggle("BikeDamage")));
                 FavouritesManager.RegisterStarButton("ReverseSteering", UIHelpers.StarBtn(_revSteerRow.transform, "ReverseSteering", () => FavouritesManager.Toggle("ReverseSteering")));
-                FavouritesManager.RegisterStarButton("IceGrip", UIHelpers.StarBtn(_iceModeRow.transform, "IceGrip", () => FavouritesManager.Toggle("IceGrip")));
+                FavouritesManager.RegisterStarButton("RubberBandSteering", UIHelpers.StarBtn(rubR.transform, "RubberBandSteering", () => FavouritesManager.Toggle("RubberBandSteering")));
                 FavouritesManager.RegisterStarButton("CutBrakes", UIHelpers.StarBtn(_cutBrakesRow.transform, "CutBrakes", () => FavouritesManager.Toggle("CutBrakes")));
                 FavouritesManager.RegisterStarButton("BikeTorch", UIHelpers.StarBtn(_torchRow.transform, "BikeTorch", () => FavouritesManager.Toggle("BikeTorch")));
+                FavouritesManager.RegisterStarButton("DiscoTorch", UIHelpers.StarBtn(_torchDiscoRow.transform, "DiscoTorch", () => FavouritesManager.Toggle("DiscoTorch")));
                 FavouritesManager.RegisterStarButton("SuspensionHUD", UIHelpers.StarBtn(_shRow.transform, "SuspensionHUD", () => FavouritesManager.Toggle("SuspensionHUD")));
                 FavouritesManager.RegisterStarButton("BrakeFade", UIHelpers.StarBtn(_bfRow.transform, "BrakeFade", () => FavouritesManager.Toggle("BrakeFade")));
                 FavouritesManager.RegisterStarButton("BrakeBalance", UIHelpers.StarBtn(_bbRow.transform, "BrakeBalance", () => FavouritesManager.Toggle("BrakeBalance")));
-                FavouritesManager.RegisterStarButton("TrickMultiplier", UIHelpers.StarBtn(_tmRow.transform, "TrickMultiplier", () => FavouritesManager.Toggle("TrickMultiplier")));
 
                 // ── FACTORY REGISTRATIONS (Bike tab mods) ──────────────
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "SpiderBike",
+                    DisplayName = "Spider Bike",
+                    TabBadge = "BIKE",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "SpiderBike", "Spider Bike",
+                        () => SpiderBike.Enabled, () => SpiderBike.Toggle(), () => RefreshAll()),
+                    IsActive = () => SpiderBike.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "BikeSwitcher",
+                    DisplayName = "Bike",
+                    TabBadge = "BIKE",
+                    BuildControls = (fp) => {
+                        var row = FavsPage.CompactStatRow("Bike", fp);
+                        UIHelpers.SmallBtn(row.transform, "\u25C0", () => { BikeSwitcher.PreviousBike(); RefreshAll(); FavsPage.RefreshFavourites(); });
+                        var bv = UIHelpers.Txt("FBV", row.transform, "Enduro", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                        bv.gameObject.AddComponent<LayoutElement>().preferredWidth = 72;
+                        UIHelpers.SmallBtn(row.transform, "\u25B6", () => { BikeSwitcher.NextBike(); RefreshAll(); FavsPage.RefreshFavourites(); });
+
+                        var tsRow = FavsPage.CompactStatRow("Trick Source", fp);
+                        UIHelpers.SmallBtn(tsRow.transform, "\u25C0", () => { TrickSetSwap.PrevSource(); RefreshAll(); FavsPage.RefreshFavourites(); });
+                        var tsv = UIHelpers.Txt("FTSV", tsRow.transform, TrickSetSwap.CurrentSourceName, 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                        tsv.gameObject.AddComponent<LayoutElement>().preferredWidth = 72;
+                        UIHelpers.SmallBtn(tsRow.transform, "\u25B6", () => { TrickSetSwap.NextSource(); RefreshAll(); FavsPage.RefreshFavourites(); });
+
+                        var tssRow = FavsPage.CompactStatRow("Trick Set Swap", fp);
+                        var tssVal = UIHelpers.Txt("FTSSV", tssRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                        tssVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                        Image fTssTrack; RectTransform fTssKnob;
+                        UIHelpers.Toggle(tssRow.transform, "FTg_TrickSetSwap",
+                            () => { TrickSetSwap.Toggle(); RefreshAll(); FavsPage.RefreshFavourites(); },
+                            out fTssTrack, out fTssKnob);
+
+                        FavouritesManager.RegisterRefresh("BikeSwitcher", () => {
+                            if (bv)
+                            {
+                                switch (BikeSwitcher.CurrentBikeIndex)
+                                {
+                                    case 0: bv.text = "Enduro"; break;
+                                    case 1: bv.text = "Downhill"; break;
+                                    case 2: bv.text = "Hardtail"; break;
+                                    case 3: bv.text = "BRNZL Enduro"; break;
+                                    default: bv.text = "Unknown"; break;
+                                }
+                            }
+                            if (tsv) tsv.text = TrickSetSwap.CurrentSourceName;
+                            bool tssOn = TrickSetSwap.Enabled;
+                            if (tssVal) { tssVal.text = tssOn ? "ON" : "OFF"; tssVal.color = tssOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+                            UIHelpers.SetToggle(fTssTrack, fTssKnob, tssOn);
+                        });
+                    },
+                    IsActive = () => TrickSetSwap.Enabled
+                });
                 FavouritesManager.Register(new ModFavEntry
                 {
                     Id = "Suspension",
@@ -637,12 +738,14 @@ namespace DescendersModMenu.UI
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
-                    Id = "IceGrip",
-                    DisplayName = "Ice Grip",
+                    Id = "RubberBandSteering",
+                    DisplayName = "Rubber Band Steering",
                     TabBadge = "BIKE",
-                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "IceGrip", "Ice Grip",
-                        () => IceMode.Enabled, () => IceMode.Toggle(), () => RefreshAll()),
-                    IsActive = () => IceMode.Enabled
+                    BuildControls = (p) => FavsPage.BuildToggleStepper(p, "RubberBandSteering", "Rubber Band Steering",
+                        () => RubberBandSteering.Enabled, () => RubberBandSteering.Toggle(),
+                        () => RubberBandSteering.Level, () => RubberBandSteering.Decrease(), () => RubberBandSteering.Increase(),
+                        1, 10, () => RefreshAll(), 5),
+                    IsActive = () => RubberBandSteering.Enabled
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
@@ -663,6 +766,15 @@ namespace DescendersModMenu.UI
                         () => BikeTorch.IntensityDisplay, () => BikeTorch.PrevIntensity(), () => BikeTorch.NextIntensity(),
                         () => RefreshAll()),
                     IsActive = () => BikeTorch.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "DiscoTorch",
+                    DisplayName = "Disco Torch",
+                    TabBadge = "BIKE",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "DiscoTorch", "Disco Torch",
+                        () => BikeTorch.DiscoEnabled, () => BikeTorch.ToggleDisco(), () => RefreshAll()),
+                    IsActive = () => BikeTorch.DiscoEnabled
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
@@ -694,18 +806,6 @@ namespace DescendersModMenu.UI
                         1, 11, () => RefreshAll(), 6),
                     IsActive = () => BrakeFade.BalanceLevel != 6
                 });
-                FavouritesManager.Register(new ModFavEntry
-                {
-                    Id = "TrickMultiplier",
-                    DisplayName = "Trick Multiplier",
-                    TabBadge = "BIKE",
-                    BuildControls = (p) => FavsPage.BuildStepper(p, "TrickMultiplier", "Trick Multiplier",
-                        () => TrickMultiplier.Level,
-                        () => TrickMultiplier.Decrease(),
-                        () => TrickMultiplier.Increase(),
-                        0, 3, () => RefreshAll(), 0),
-                    IsActive = () => TrickMultiplier.Enabled
-                });
 
                 RefreshAll();
                 UIHelpers.AddScrollForwarders(pg8);
@@ -736,6 +836,7 @@ namespace DescendersModMenu.UI
             Suspension.SetStiffnessLevel(5);
             Suspension.SetDampingLevel(5);
             BouncyBike.Reset();
+            if (SpiderBike.Enabled) SpiderBike.Toggle();
             if (InvisibleBike.Enabled) InvisibleBike.SetEnabled(false);
             WheelSize.Reset();
             if (WideTyres.Enabled) WideTyres.Toggle();
@@ -745,8 +846,10 @@ namespace DescendersModMenu.UI
             TyrePressure.SetLevel(5);
             if (BikeDamage.Enabled) BikeDamage.Toggle();
             if (ReverseSteering.Enabled) ReverseSteering.Toggle();
-            if (IceMode.Enabled) IceMode.Toggle();
+            RubberBandSteering.Reset();
+            if (TrickSetSwap.Enabled) TrickSetSwap.Disable();
             if (CutBrakes.Enabled) CutBrakes.Toggle();
+            if (BikeTorch.DiscoEnabled) BikeTorch.ToggleDisco();
             if (BikeTorch.Enabled) BikeTorch.Toggle();
             if (SuspensionHUD.Enabled) SuspensionHUD.Toggle();
             if (BrakeFade.Enabled) BrakeFade.Toggle();
@@ -760,6 +863,9 @@ namespace DescendersModMenu.UI
         // ── RefreshAll ────────────────────────────────────────────────
         public static void RefreshAll()
         {
+            // Scene unload clears UI refs; skip until CreatePage runs again
+            if ((object)_travelVal == null && (object)_spiderVal == null) return;
+
             // Suspension
             if (_travelVal) _travelVal.text = Suspension.TravelLevel.ToString();
             if (_stiffVal) _stiffVal.text = Suspension.StiffnessLevel.ToString();
@@ -768,26 +874,31 @@ namespace DescendersModMenu.UI
             UIHelpers.SetBar(_stiffBar, (Suspension.StiffnessLevel - 1) / 9f);
             UIHelpers.SetBar(_dampBar, (Suspension.DampingLevel - 1) / 9f);
 
+            // Spider Bike
+            bool spOn = SpiderBike.Enabled;
+            if (_spiderVal) { _spiderVal.text = spOn ? "ON" : "OFF"; _spiderVal.color = spOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_spiderTrack, _spiderKnob, spOn);
+
             // Bouncy Bike
             bool bbOn = BouncyBike.Enabled;
             if (_bbVal) { _bbVal.text = bbOn ? "ON" : "OFF"; _bbVal.color = bbOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_bbTrack, _bbKnob, bbOn);
             if (_bbLvlVal) _bbLvlVal.text = BouncyBike.BouncinessLevel.ToString();
-            if ((object)_bbMinus2 != null) _bbMinus2.interactable = BouncyBike.BouncinessLevel > 1;
-            if ((object)_bbPlus2 != null) _bbPlus2.interactable = BouncyBike.BouncinessLevel < 10;
+            UIHelpers.SetInteractable(_bbMinus2, BouncyBike.BouncinessLevel > 1);
+            UIHelpers.SetInteractable(_bbPlus2, BouncyBike.BouncinessLevel < 10);
 
             // Bike Size level
             if (_bikeSizeLvlVal) _bikeSizeLvlVal.text = BikeSize.Level.ToString();
-            if ((object)_bikeSizeMinus != null) _bikeSizeMinus.interactable = BikeSize.Level > 1;
-            if ((object)_bikeSizePlus != null) _bikeSizePlus.interactable = BikeSize.Level < 20;
+            UIHelpers.SetInteractable(_bikeSizeMinus, BikeSize.Level > 1);
+            UIHelpers.SetInteractable(_bikeSizePlus, BikeSize.Level < 20);
 
             // Wheel Size level — both-wheels disabled while individual mode is active
             if (_wheelSizeLvlVal) _wheelSizeLvlVal.text = WheelSize.Level.ToString();
             bool bothActive = WheelSize.IsEnabled && !WheelSize.IsIndividualMode;
-            if ((object)_wheelSizeMinus2 != null) _wheelSizeMinus2.interactable = bothActive && WheelSize.Level > 1;
-            if ((object)_wheelSizePlus2 != null) _wheelSizePlus2.interactable = bothActive && WheelSize.Level < 20;
+            UIHelpers.SetInteractable(_wheelSizeMinus2, bothActive && WheelSize.Level > 1);
+            UIHelpers.SetInteractable(_wheelSizePlus2, bothActive && WheelSize.Level < 20);
 
-            // Individual wheel levels
+            // Individual wheel levels — hide the extra rows unless they're actually off default
             if (_frontWheelLvlVal) _frontWheelLvlVal.text = WheelSize.FrontLevel.ToString();
             if (_rearWheelLvlVal) _rearWheelLvlVal.text = WheelSize.RearLevel.ToString();
             UIHelpers.SetRowActive(_frontWheelRow, WheelSize.IsIndividualMode && WheelSize.FrontLevel != 10);
@@ -796,12 +907,10 @@ namespace DescendersModMenu.UI
             // Invisible Bike
             if (_invisBikeVal) { _invisBikeVal.text = InvisibleBike.Enabled ? "ON" : "OFF"; _invisBikeVal.color = InvisibleBike.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_invisBikeTrack, _invisBikeKnob, InvisibleBike.Enabled);
-            UIHelpers.SetRowActive(_invisBikeRow, InvisibleBike.Enabled);
 
             // Wheel Size
             if (_wheelSizeTogVal) { _wheelSizeTogVal.text = WheelSize.IsEnabled ? "ON" : "OFF"; _wheelSizeTogVal.color = WheelSize.IsEnabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_wheelSizeTrack, _wheelSizeKnob, WheelSize.IsEnabled);
-            UIHelpers.SetRowActive(_wheelSizeRow, WheelSize.IsEnabled);
 
             // Wide Tyres
             bool wtOn = WideTyres.Enabled;
@@ -809,26 +918,23 @@ namespace DescendersModMenu.UI
             UIHelpers.SetToggle(_wideTyresTrack, _wideTyresKnob, wtOn);
             if (_wideTyresLvlVal) _wideTyresLvlVal.text = WideTyres.Level.ToString();
             UIHelpers.SetBar(_wideTyresBar, (WideTyres.Level - 1) / 19f);
-            if ((object)_wideTyresMinus != null) _wideTyresMinus.interactable = wtOn;
-            if ((object)_wideTyresPlus != null) _wideTyresPlus.interactable = wtOn;
-            UIHelpers.SetRowActive(_wideTyresRow, wtOn);
+            UIHelpers.SetInteractable(_wideTyresMinus, wtOn);
+            UIHelpers.SetInteractable(_wideTyresPlus, wtOn);
 
             // Sticky Tyres
             bool stOn = StickyTyres.Enabled;
             if (_stickyVal) { _stickyVal.text = stOn ? "ON" : "OFF"; _stickyVal.color = stOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_stickyTrack, _stickyKnob, stOn);
-            UIHelpers.SetRowActive(_stickyRow, stOn);
 
-            // Tyre Pressure
+            // Tyre Pressure — keep the extra Pressure row hidden until the toggle is on
             bool tpOn = TyrePressure.Enabled;
             if (_tyrePressureVal) { _tyrePressureVal.text = tpOn ? "ON" : "OFF"; _tyrePressureVal.color = tpOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_tyrePressureTrack, _tyrePressureKnob, tpOn);
-            UIHelpers.SetRowActive(_tyrePressureRow, tpOn);
             UIHelpers.SetRowActive(_tyrePressureLvlRow, tpOn);
             if (_tyrePressureLvlVal) _tyrePressureLvlVal.text = TyrePressure.Level.ToString();
             if (_tyrePressureLabelVal) _tyrePressureLabelVal.text = TyrePressure.PressureLabel;
-            if ((object)_tyrePressureMinus != null) _tyrePressureMinus.interactable = tpOn && TyrePressure.Level > 1;
-            if ((object)_tyrePressurePlus != null) _tyrePressurePlus.interactable = tpOn && TyrePressure.Level < 10;
+            UIHelpers.SetInteractable(_tyrePressureMinus, tpOn && TyrePressure.Level > 1);
+            UIHelpers.SetInteractable(_tyrePressurePlus, tpOn && TyrePressure.Level < 10);
 
             // Bike Damage
             bool bdOn = BikeDamage.Enabled;
@@ -839,49 +945,92 @@ namespace DescendersModMenu.UI
             bool revOn = ReverseSteering.Enabled;
             if (_revSteerVal) { _revSteerVal.text = revOn ? "ON" : "OFF"; _revSteerVal.color = revOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_revSteerTrack, _revSteerKnob, revOn);
-            UIHelpers.SetRowActive(_revSteerRow, revOn);
 
-            // Ice Grip
-            bool imOn = IceMode.Enabled;
-            if (_iceModeVal) { _iceModeVal.text = imOn ? "ON" : "OFF"; _iceModeVal.color = imOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(_iceModeTrack, _iceModeKnob, imOn);
-            UIHelpers.SetRowActive(_iceModeRow, imOn);
+            bool rubOn = RubberBandSteering.Enabled;
+            if (_rubberVal) { _rubberVal.text = rubOn ? "ON" : "OFF"; _rubberVal.color = rubOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_rubberTrack, _rubberKnob, rubOn);
+            if (_rubberLvlVal) _rubberLvlVal.text = RubberBandSteering.LevelDisplay;
 
             // Cut Brakes
             bool cbOn = CutBrakes.Enabled;
             if (_cutBrakesVal) { _cutBrakesVal.text = cbOn ? "ON" : "OFF"; _cutBrakesVal.color = cbOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_cutBrakesTrack, _cutBrakesKnob, cbOn);
-            UIHelpers.SetRowActive(_cutBrakesRow, cbOn);
 
             // Torch
             bool torch = BikeTorch.Enabled;
             if (_torchVal) { _torchVal.text = torch ? "ON" : "OFF"; _torchVal.color = torch ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_torchTrack, _torchKnob, torch);
-            UIHelpers.SetRowActive(_torchRow, torch);
             if (_torchIntLbl) _torchIntLbl.text = BikeTorch.IntensityDisplay;
+
+            bool discoTorch = BikeTorch.DiscoEnabled;
+            if (_torchDiscoVal) { _torchDiscoVal.text = discoTorch ? "ON" : "OFF"; _torchDiscoVal.color = discoTorch ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_torchDiscoTrack, _torchDiscoKnob, discoTorch);
 
             // Suspension HUD
             bool shOn = SuspensionHUD.Enabled;
             if (_shVal) { _shVal.text = shOn ? "ON" : "OFF"; _shVal.color = shOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_shTrack, _shKnob, shOn);
-            UIHelpers.SetRowActive(_shRow, shOn);
 
             // Brake Fade
             bool bfOn = BrakeFade.Enabled;
             if (_bfVal) { _bfVal.text = bfOn ? "ON" : "OFF"; _bfVal.color = bfOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_bfTrack, _bfKnob, bfOn);
-            UIHelpers.SetRowActive(_bfRow, bfOn);
 
             // Brake Balance
-            UIHelpers.SetRowActive(_bbRow, true);
             if (_bbLabelVal) _bbLabelVal.text = BrakeFade.BalanceDisplay;
-            if ((object)_bbMinus != null) _bbMinus.interactable = BrakeFade.BalanceLevel > 1;
-            if ((object)_bbPlus != null) _bbPlus.interactable = BrakeFade.BalanceLevel < 11;
+            UIHelpers.SetInteractable(_bbMinus, BrakeFade.BalanceLevel > 1);
+            UIHelpers.SetInteractable(_bbPlus, BrakeFade.BalanceLevel < 11);
 
-            // Trick Multiplier
-            if (_tmLabelVal) _tmLabelVal.text = TrickMultiplier.LevelDisplay;
-            if ((object)_tmMinus != null) _tmMinus.interactable = TrickMultiplier.Level > 0;
-            if ((object)_tmPlus != null) _tmPlus.interactable = TrickMultiplier.Level < 3;
+            if (_bikeVal)
+            {
+                switch (BikeSwitcher.CurrentBikeIndex)
+                {
+                    case 0: _bikeVal.text = "Enduro"; break;
+                    case 1: _bikeVal.text = "Downhill"; break;
+                    case 2: _bikeVal.text = "Hardtail"; break;
+                    case 3: _bikeVal.text = "BRNZL Enduro"; break;
+                    default: _bikeVal.text = "Unknown"; break;
+                }
+            }
+            if (_tssSrcVal) _tssSrcVal.text = TrickSetSwap.CurrentSourceName;
+            bool tssOn = TrickSetSwap.Enabled;
+            if (_tssTogVal) { _tssTogVal.text = tssOn ? "ON" : "OFF"; _tssTogVal.color = tssOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_tssTrack, _tssKnob, tssOn);
+        }
+
+        public static void ClearUiRefs()
+        {
+            _travelVal = _stiffVal = _dampVal = null;
+            _travelBar = _stiffBar = _dampBar = null;
+            _bbRow2 = null; _bbVal = _bbLvlVal = null; _bbTrack = null; _bbKnob = null;
+            _bbMinus2 = _bbPlus2 = null;
+            _bikeSizeLvlVal = null; _bikeSizeMinus = _bikeSizePlus = null;
+            _wheelSizeLvlVal = null; _wheelSizeMinus2 = _wheelSizePlus2 = null;
+            _frontWheelLvlVal = _rearWheelLvlVal = null;
+            _frontWheelRow = _rearWheelRow = null;
+            _invisBikeTrack = null; _invisBikeKnob = null; _invisBikeVal = null;
+            _wheelSizeTrack = null; _wheelSizeKnob = null; _wheelSizeTogVal = null;
+            _wideTyresTrack = null; _wideTyresKnob = null;
+            _wideTyresVal = _wideTyresLvlVal = null; _wideTyresBar = null;
+            _wideTyresMinus = _wideTyresPlus = null;
+            _spiderTrack = null; _spiderKnob = null; _spiderVal = null; _spiderRow = null;
+            _stickyTrack = null; _stickyKnob = null; _stickyVal = null;
+            _tyrePressureTrack = null; _tyrePressureKnob = null;
+            _tyrePressureVal = _tyrePressureLvlVal = _tyrePressureLabelVal = null;
+            _tyrePressureMinus = _tyrePressurePlus = null;
+            _tyrePressureRow = _tyrePressureLvlRow = null;
+            _bikeDamageRow = null; _bikeDamageVal = null; _bikeDamageTrack = null; _bikeDamageKnob = null;
+            _revSteerTrack = null; _revSteerKnob = null; _revSteerVal = null;
+            _rubberTrack = null; _rubberKnob = null; _rubberVal = _rubberLvlVal = null;
+            _bikeVal = null; _tssSrcVal = _tssTogVal = null; _tssTrack = null; _tssKnob = null;
+            _cutBrakesTrack = null; _cutBrakesKnob = null; _cutBrakesVal = null;
+            _torchVal = _torchIntLbl = _torchDiscoVal = null;
+            _torchTrack = _torchDiscoTrack = null; _torchKnob = _torchDiscoKnob = null;
+            _invisBikeRow = _wheelSizeRow = _wideTyresRow = _stickyRow = null;
+            _revSteerRow = _cutBrakesRow = _torchRow = _torchDiscoRow = null;
+            _shRow = null; _shVal = null; _shTrack = null; _shKnob = null;
+            _bfRow = null; _bfVal = null; _bfTrack = null; _bfKnob = null;
+            _bbLabelVal = null; _bbMinus = _bbPlus = null; _bbRow = null;
         }
     }
 }

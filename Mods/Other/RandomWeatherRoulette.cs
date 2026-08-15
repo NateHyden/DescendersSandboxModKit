@@ -4,17 +4,9 @@ using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Cycles between Storm, Fog, Moon and Normal (nothing) every so often
-    // instead of a single fixed weather pick. Reuses SkyColours' existing
-    // storm system and MoonMode's low-gravity effect; Fog is its own tiny
-    // self-contained density override — Fog.cs only ever REMOVES fog
-    // (no "make it thicker" mode), so that piece is implemented directly
-    // against RenderSettings here instead of going through Fog.cs.
-    //
-    // Same snapshot/restore shape as ChaosMode/RandomBikeSwitch: not
-    // hooked into ModEntry's scene-transition system (it holds no cached
-    // per-scene object refs, only a bool/float override state), so it
-    // just keeps ticking across scene loads like its siblings do.
+    // Cycles Storm / Fog / Moon / Normal. Fog must set Linear distances —
+    // Descenders often uses FogMode.Linear where fogDensity alone does nothing
+    // (that made Fog look like a no-op while Moon was the only obvious flip).
     public static class RandomWeatherRoulette
     {
         public enum WeatherState { Normal, Storm, Fog, Moon }
@@ -23,22 +15,25 @@ namespace DescendersModMenu.Mods
         public static WeatherState CurrentState { get; private set; } = WeatherState.Normal;
         public static string LastFlipDisplay { get; private set; } = "--";
 
-        private const float MinInterval = 12f;
-        private const float MaxInterval = 25f;
+        private const float MinInterval = 10f;
+        private const float MaxInterval = 18f;
         private static float _nextFlipTime = 0f;
 
-        // Baseline captured on enable, restored on disable — same shape
-        // as ChaosMode's snapshot/restore for the mods it borrows.
         private static bool _snapStorm = false;
         private static bool _snapMoon = false;
         private static bool _hasSnapshot = false;
 
-        // Our own fog override — Fog.cs is a removal-only toggle, so a
-        // "make it foggy" state needs its own density save/restore.
-        private const float HeavyFogDensity = 0.06f;
-        private static float _savedFogDensity = -1f;
-        private static bool _savedFogState = true;
+        // Fog override (Fog.cs only removes fog — we thicken it here).
         private static bool _fogOverrideActive = false;
+        private static bool _savedFogEnabled = false;
+        private static FogMode _savedFogMode = FogMode.ExponentialSquared;
+        private static float _savedFogDensity = 0.01f;
+        private static float _savedFogStart = 0f;
+        private static float _savedFogEnd = 300f;
+        private static Color _savedFogColor = Color.gray;
+
+        private const float HeavyFogStart = 2f;
+        private const float HeavyFogEnd = 45f;
 
         public static void Toggle()
         {
@@ -48,18 +43,21 @@ namespace DescendersModMenu.Mods
                 _snapStorm = SkyColours.StormEnabled;
                 _snapMoon = MoonMode.IsActive;
                 _hasSnapshot = true;
-                // Start from a clean Normal state — whatever was already
-                // on gets folded back in when the snapshot is restored.
                 if (SkyColours.StormEnabled) SkyColours.ToggleStorm();
                 if (MoonMode.IsActive) MoonMode.Toggle();
                 CurrentState = WeatherState.Normal;
+                LastFlipDisplay = "Normal";
+                // Flip immediately so the feature is obvious — old code waited
+                // 12–25s before the first change.
+                FlipNow(preferNonNormal: true);
                 ScheduleNext();
                 ModLog.Debug("[RandomWeatherRoulette] ON — snapshotted Storm=" + _snapStorm + " Moon=" + _snapMoon);
             }
             else
             {
-                ApplyState(WeatherState.Normal); // turn off whatever's currently running
+                ApplyState(WeatherState.Normal);
                 RestoreSnapshot();
+                LastFlipDisplay = "--";
                 ModLog.Debug("[RandomWeatherRoulette] OFF — restored original weather.");
             }
         }
@@ -72,10 +70,26 @@ namespace DescendersModMenu.Mods
         public static void Tick()
         {
             if (!Enabled) return;
-            if (Time.unscaledTime < _nextFlipTime) return;
 
+            // Game/scene code can overwrite RenderSettings — reassert fog.
+            if (CurrentState == WeatherState.Fog)
+                ApplyFog(force: true);
+
+            if (Time.unscaledTime < _nextFlipTime) return;
+            FlipNow(preferNonNormal: false);
+            ScheduleNext();
+        }
+
+        private static void FlipNow(bool preferNonNormal)
+        {
             WeatherState next;
-            do { next = (WeatherState)Random.Range(0, 4); } while (next == CurrentState);
+            int guard = 0;
+            do
+            {
+                next = (WeatherState)Random.Range(0, 4);
+                guard++;
+            }
+            while ((next == CurrentState || (preferNonNormal && next == WeatherState.Normal)) && guard < 12);
 
             try
             {
@@ -83,13 +97,15 @@ namespace DescendersModMenu.Mods
                 LastFlipDisplay = next.ToString();
                 ModLog.Feedback("[RandomWeatherRoulette] -> " + next);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] Tick: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette"); }
-            ScheduleNext();
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("[RandomWeatherRoulette] Flip: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette");
+            }
         }
 
         private static void ApplyState(WeatherState next)
         {
-            // Turn off whatever the current state was switching FROM.
             switch (CurrentState)
             {
                 case WeatherState.Storm: if (SkyColours.StormEnabled) SkyColours.ToggleStorm(); break;
@@ -97,31 +113,45 @@ namespace DescendersModMenu.Mods
                 case WeatherState.Moon: if (MoonMode.IsActive) MoonMode.Toggle(); break;
             }
 
-            // Turn on whatever we're switching TO.
             switch (next)
             {
                 case WeatherState.Storm: if (!SkyColours.StormEnabled) SkyColours.ToggleStorm(); break;
-                case WeatherState.Fog: ApplyFog(); break;
+                case WeatherState.Fog: ApplyFog(force: false); break;
                 case WeatherState.Moon: if (!MoonMode.IsActive) MoonMode.Toggle(); break;
             }
 
             CurrentState = next;
         }
 
-        private static void ApplyFog()
+        private static void ApplyFog(bool force)
         {
             try
             {
                 if (!_fogOverrideActive)
                 {
+                    _savedFogEnabled = RenderSettings.fog;
+                    _savedFogMode = RenderSettings.fogMode;
                     _savedFogDensity = RenderSettings.fogDensity;
-                    _savedFogState = RenderSettings.fog;
+                    _savedFogStart = RenderSettings.fogStartDistance;
+                    _savedFogEnd = RenderSettings.fogEndDistance;
+                    _savedFogColor = RenderSettings.fogColor;
                     _fogOverrideActive = true;
                 }
+                else if (!force && CurrentState == WeatherState.Fog)
+                    return;
+
                 RenderSettings.fog = true;
-                RenderSettings.fogDensity = HeavyFogDensity;
+                RenderSettings.fogMode = FogMode.Linear;
+                RenderSettings.fogStartDistance = HeavyFogStart;
+                RenderSettings.fogEndDistance = HeavyFogEnd;
+                RenderSettings.fogDensity = 0.08f;
+                RenderSettings.fogColor = new Color(0.55f, 0.62f, 0.70f, 1f);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] ApplyFog: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette"); }
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("[RandomWeatherRoulette] ApplyFog: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette");
+            }
         }
 
         private static void RestoreFog()
@@ -129,10 +159,18 @@ namespace DescendersModMenu.Mods
             if (!_fogOverrideActive) return;
             try
             {
-                RenderSettings.fog = _savedFogState;
+                RenderSettings.fog = _savedFogEnabled;
+                RenderSettings.fogMode = _savedFogMode;
                 RenderSettings.fogDensity = _savedFogDensity;
+                RenderSettings.fogStartDistance = _savedFogStart;
+                RenderSettings.fogEndDistance = _savedFogEnd;
+                RenderSettings.fogColor = _savedFogColor;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] RestoreFog: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette"); }
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("[RandomWeatherRoulette] RestoreFog: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette");
+            }
             _fogOverrideActive = false;
         }
 
@@ -144,17 +182,25 @@ namespace DescendersModMenu.Mods
                 if (_snapStorm && !SkyColours.StormEnabled) SkyColours.ToggleStorm();
                 if (_snapMoon && !MoonMode.IsActive) MoonMode.Toggle();
             }
-            catch (System.Exception ex) { MelonLogger.Error("[RandomWeatherRoulette] RestoreSnapshot: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette"); }
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("[RandomWeatherRoulette] RestoreSnapshot: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "RandomWeatherRoulette");
+            }
             _hasSnapshot = false;
         }
 
         public static void Reset()
         {
-            if (Enabled) { ApplyState(WeatherState.Normal); RestoreSnapshot(); }
+            if (Enabled)
+            {
+                ApplyState(WeatherState.Normal);
+                RestoreSnapshot();
+            }
             Enabled = false;
             CurrentState = WeatherState.Normal;
             LastFlipDisplay = "--";
-            _fogOverrideActive = false;
+            if (_fogOverrideActive) RestoreFog();
         }
     }
 }

@@ -52,7 +52,7 @@ namespace DescendersModMenu.UI
             new ColorScheme("Vaporwave",   new Color(1.000f, 0.200f, 0.800f), new Color(1.000f, 0.200f, 0.800f)),
             new ColorScheme("Radioactive", new Color(0.780f, 1.000f, 0.000f), new Color(0.780f, 1.000f, 0.000f)),
             new ColorScheme("Nightshade",  new Color(0.430f, 0.200f, 1.000f), new Color(0.430f, 0.200f, 1.000f)),
-            new ColorScheme("Inferno",     new Color(1.000f, 0.235f, 0.078f), new Color(1.000f, 0.235f, 0.078f)),
+            new ColorScheme("Voltage",     new Color(1.000f, 0.950f, 0.050f), new Color(1.000f, 0.950f, 0.050f)),
             new ColorScheme("Frostbite",   new Color(0.400f, 0.560f, 0.780f), new Color(0.400f, 0.560f, 0.780f)),
             new ColorScheme("Blackout",    new Color(0.850f, 0.850f, 0.870f), new Color(0.850f, 0.850f, 0.870f), 0.15f),
         };
@@ -191,8 +191,7 @@ namespace DescendersModMenu.UI
         // persists the choice to file. ───────────────────────────────
         public static void SelectScheme(int index)
         {
-            MenuWindow.PendingPage = 3;      // Info/Customise page
-            InfoPage.PendingSubTab = 2;      // Customise sub-tab
+            MenuWindow.PendingPage = 25;     // Customise page
             Apply(index, true);
             Save();
         }

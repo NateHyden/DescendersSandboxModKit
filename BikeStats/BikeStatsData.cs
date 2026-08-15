@@ -67,6 +67,7 @@ namespace DescendersModMenu.BikeStats
         public int WideTyresLevel = 5;
         public bool StickyTyresEnabled = false;
         public float StickyForce = 150f;
+        public bool SpiderBikeEnabled = false;
 
         // ── Wheelie Angle Limit / Air Control ──────────────────────────
         public bool WheelieAngleLimitEnabled = false;
@@ -84,9 +85,14 @@ namespace DescendersModMenu.BikeStats
         public bool MirrorModeEnabled = false;
         public bool DrunkModeEnabled = false;
         public bool FlyModeEnabled = false;
+        public bool HoverModeEnabled = false;
+        public float HoverModeHeight = 3f;
         public bool EspEnabled = false;
         public bool SpeedrunTimerEnabled = false;
+        public bool SessionHUDEnabled = false;
+        public int TrickMultiplierLevel = 0;
         public bool SlowMoOnBailEnabled = false;
+        public bool BlackDeathEnabled = false;
         public bool GhostReplayEnabled = false;
 
         // ── Floats ─────────────────────────────────────────────────────

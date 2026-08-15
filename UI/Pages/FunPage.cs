@@ -40,18 +40,29 @@ namespace DescendersModMenu.UI
             PlayerSize.CaptureDefaults();
         }
 
+        private static Text _hoverVal, _hoverHeightVal;
+        private static Image _hoverTrack;
+        private static RectTransform _hoverKnob;
+
         public static bool IsAnyActive =>
             InvisiblePlayer.Enabled || MoonMode.IsActive || PlayerSize.IsModified ||
             MirrorMode.Enabled || FlyMode.Enabled || DrunkMode.Enabled ||
-            CameraShake.Enabled;
+            CameraShake.Enabled || HoverMode.Enabled;
 
         public static void GlobalReset()
         {
             if (InvisiblePlayer.Enabled) InvisiblePlayer.SetEnabled(false);
             if (MoonMode.IsActive) MoonMode.Toggle();
+            if (HoverMode.Enabled) HoverMode.Toggle();
+            HoverMode.SetHeight(3f);
             PlayerSize.ApplyLevel(10);
+            if (MirrorMode.Enabled) MirrorMode.Toggle();
+            if (FlyMode.Enabled) FlyMode.Toggle();
             FlyMode.SetMoveSpeed(30f);
             FlyMode.SetClimbSpeed(20f);
+            if (DrunkMode.Enabled) DrunkMode.Toggle();
+            if (CameraShake.Enabled) CameraShake.Toggle();
+            CameraShake.SetLevel(5);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -93,7 +104,7 @@ namespace DescendersModMenu.UI
                 var pg9 = content.transform;
 
                 // ── RESET TAB ─────────────────────────────────────────
-                var rstRow = UIHelpers.StatRow("", pg9);
+                var rstRow = UIHelpers.BareBtnRow(pg9);
                 UIHelpers.ActionBtnOrange(rstRow.transform, "↺  Reset Tab to Defaults", () => { GlobalReset(); RefreshAll(); }, 186);
                 UIHelpers.SectionHeader("PLAYER SIZE", pg9);
                 var psr = UIHelpers.StatRow("Size", pg9);
@@ -189,6 +200,16 @@ namespace DescendersModMenu.UI
                 _drunkVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(drnkr.transform, "DrT", () => { DrunkMode.Toggle(); RefreshAll(); }, out _drunkTrack, out _drunkKnob);
 
+                var hoverRow = UIHelpers.StatRow("Hover Mode", pg9);
+                _hoverVal = UIHelpers.Txt("HovV", hoverRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _hoverVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(hoverRow.transform, "HovT", () => { HoverMode.Toggle(); RefreshAll(); }, out _hoverTrack, out _hoverKnob);
+                _hoverHeightVal = UIHelpers.Txt("HovHV", hoverRow.transform, HoverMode.DisplayHeight, 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+                _hoverHeightVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
+                UIHelpers.SmallBtn(hoverRow.transform, "-", () => { HoverMode.DecreaseHeight(); RefreshAll(); });
+                UIHelpers.SmallBtn(hoverRow.transform, "+", () => { HoverMode.IncreaseHeight(); RefreshAll(); });
+                UIHelpers.InfoBox(pg9, "Height is metres above ground - negative sinks below terrain.");
+
                 UIHelpers.Divider(pg9);
 
                 // ── CAMERA ────────────────────────────────────────────
@@ -228,6 +249,7 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("FlyMoveSpeed", UIHelpers.StarBtn(flyMoveRow.transform, "FlyMoveSpeed", () => FavouritesManager.Toggle("FlyMoveSpeed")));
                 FavouritesManager.RegisterStarButton("FlyClimbSpeed", UIHelpers.StarBtn(flyClimbRow.transform, "FlyClimbSpeed", () => FavouritesManager.Toggle("FlyClimbSpeed")));
                 FavouritesManager.RegisterStarButton("MirrorMode", UIHelpers.StarBtn(_mirrorRow.transform, "MirrorMode", () => FavouritesManager.Toggle("MirrorMode")));
+                FavouritesManager.RegisterStarButton("HoverMode", UIHelpers.StarBtn(hoverRow.transform, "HoverMode", () => FavouritesManager.Toggle("HoverMode")));
                 FavouritesManager.RegisterStarButton("CameraShake", UIHelpers.StarBtn(csr.transform, "CameraShake", () => FavouritesManager.Toggle("CameraShake")));
                 FavouritesManager.RegisterStarButton("PlayerSize", UIHelpers.StarBtn(psr.transform, "PlayerSize", () => FavouritesManager.Toggle("PlayerSize")));
                 FavouritesManager.RegisterStarButton("InvisiblePlayer", UIHelpers.StarBtn(_invisPlayerRow.transform, "InvisiblePlayer", () => FavouritesManager.Toggle("InvisiblePlayer")));
@@ -287,6 +309,17 @@ namespace DescendersModMenu.UI
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
+                    Id = "HoverMode",
+                    DisplayName = "Hover Mode",
+                    TabBadge = "FUN",
+                    BuildControls = (p) => FavsPage.BuildToggleIntensityStepper(p, "HoverMode", "Hover Mode",
+                        () => HoverMode.Enabled, () => HoverMode.Toggle(),
+                        () => HoverMode.DisplayHeight, () => HoverMode.DecreaseHeight(), () => HoverMode.IncreaseHeight(),
+                        () => MenuWindow.RefreshAll()),
+                    IsActive = () => HoverMode.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
                     Id = "CameraShake",
                     DisplayName = "Camera Shake",
                     TabBadge = "FUN",
@@ -341,12 +374,11 @@ namespace DescendersModMenu.UI
         {
             // Player size level
             if (_playerSizeLvlVal) _playerSizeLvlVal.text = PlayerSize.Level.ToString();
-            if ((object)_playerSizeMinus != null) _playerSizeMinus.interactable = PlayerSize.Level > 1;
-            if ((object)_playerSizePlus != null) _playerSizePlus.interactable = PlayerSize.Level < 20;
+            if ((object)_playerSizeMinus != null && _playerSizeMinus) _playerSizeMinus.interactable = PlayerSize.Level > 1;
+            if ((object)_playerSizePlus != null && _playerSizePlus) _playerSizePlus.interactable = PlayerSize.Level < 20;
 
             if (_invisVal) { _invisVal.text = InvisiblePlayer.Enabled ? "ON" : "OFF"; _invisVal.color = InvisiblePlayer.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_invisTrack, _invisKnob, InvisiblePlayer.Enabled);
-            UIHelpers.SetRowActive(_invisPlayerRow, InvisiblePlayer.Enabled);
 
             // Moon Mode
             if (_moonTxt) { _moonTxt.text = MoonMode.IsActive ? "MOON MODE ACTIVE" : "ACTIVATE MOON MODE"; _moonTxt.color = new Color(0, 0, 0, 1); }
@@ -356,25 +388,27 @@ namespace DescendersModMenu.UI
             bool mmOn = MirrorMode.Enabled;
             if (_mirrorVal) { _mirrorVal.text = mmOn ? "ON" : "OFF"; _mirrorVal.color = mmOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_mirrorTrack, _mirrorKnob, mmOn);
-            UIHelpers.SetRowActive(_mirrorRow, mmOn);
 
             bool flyOn = FlyMode.Enabled;
             if (_flyVal) { _flyVal.text = flyOn ? "ON" : "OFF"; _flyVal.color = flyOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_flyTrack, _flyKnob, flyOn);
-            UIHelpers.SetRowActive(_flyRow, flyOn);
 
             if (_flyMoveVal) _flyMoveVal.text = FlyMode.MoveSpeed.ToString("0");
-            if ((object)_flyMoveMinus != null) _flyMoveMinus.interactable = FlyMode.MoveSpeed > FlyMode.MinMoveSpeed;
-            if ((object)_flyMovePlus != null) _flyMovePlus.interactable = FlyMode.MoveSpeed < FlyMode.MaxMoveSpeed;
+            if ((object)_flyMoveMinus != null && _flyMoveMinus) _flyMoveMinus.interactable = FlyMode.MoveSpeed > FlyMode.MinMoveSpeed;
+            if ((object)_flyMovePlus != null && _flyMovePlus) _flyMovePlus.interactable = FlyMode.MoveSpeed < FlyMode.MaxMoveSpeed;
 
             if (_flyClimbVal) _flyClimbVal.text = FlyMode.ClimbSpeed.ToString("0");
-            if ((object)_flyClimbMinus != null) _flyClimbMinus.interactable = FlyMode.ClimbSpeed > FlyMode.MinClimbSpeed;
-            if ((object)_flyClimbPlus != null) _flyClimbPlus.interactable = FlyMode.ClimbSpeed < FlyMode.MaxClimbSpeed;
+            if ((object)_flyClimbMinus != null && _flyClimbMinus) _flyClimbMinus.interactable = FlyMode.ClimbSpeed > FlyMode.MinClimbSpeed;
+            if ((object)_flyClimbPlus != null && _flyClimbPlus) _flyClimbPlus.interactable = FlyMode.ClimbSpeed < FlyMode.MaxClimbSpeed;
 
             bool drunkOn = DrunkMode.Enabled;
             if (_drunkVal) { _drunkVal.text = drunkOn ? "ON" : "OFF"; _drunkVal.color = drunkOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_drunkTrack, _drunkKnob, drunkOn);
-            UIHelpers.SetRowActive(_drunkRow, drunkOn);
+
+            bool hover = HoverMode.Enabled;
+            if (_hoverVal) { _hoverVal.text = hover ? "ON" : "OFF"; _hoverVal.color = hover ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            if (_hoverHeightVal) _hoverHeightVal.text = HoverMode.DisplayHeight;
+            UIHelpers.SetToggle(_hoverTrack, _hoverKnob, hover);
 
             // Camera Shake
             bool shOn = CameraShake.Enabled;

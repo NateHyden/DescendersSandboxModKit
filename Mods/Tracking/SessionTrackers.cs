@@ -152,6 +152,7 @@ namespace DescendersModMenu.Mods
             if ((object)_cachedRb != null)
                 impactSpeed = _cachedRb.velocity.magnitude;
 
+            BlackDeath.OnBail();
             SlowMoOnBail.OnBail();
             InstantRespawn.OnBail();
             BikeDamage.OnBail(BailCount, impactSpeed);

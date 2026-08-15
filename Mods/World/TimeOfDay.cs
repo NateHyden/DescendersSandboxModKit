@@ -19,6 +19,13 @@ namespace DescendersModMenu.Mods
         private static int _sceneDefaultLevel = 4;
         private static bool _sceneDefaultCaptured = false;
 
+        // Cached TOD_Sky + Cycle.Hour accessors — cleared on scene unload
+        private static MonoBehaviour _sky;
+        private static FieldInfo _cycleField;
+        private static FieldInfo _hourField;
+        private static PropertyInfo _hourProp;
+        private static bool _resolved;
+
         public static string DisplayValue { get { return Labels[Level - 1]; } }
 
         public static void Increase() { if (Level < 10) { Level++; Apply(); } }
@@ -33,11 +40,19 @@ namespace DescendersModMenu.Mods
 
         public static void ResetToSceneDefault()
         {
-            // Only capture if we have not already — re-capturing after a mod change
-            // would read the modified hour, not the original scene hour
             if (!_sceneDefaultCaptured)
                 CaptureSceneDefault();
             SetLevel(_sceneDefaultLevel);
+        }
+
+        public static void ClearCache()
+        {
+            _sky = null;
+            _cycleField = null;
+            _hourField = null;
+            _hourProp = null;
+            _resolved = false;
+            _sceneDefaultCaptured = false;
         }
 
         public static void CaptureSceneDefault()
@@ -45,37 +60,29 @@ namespace DescendersModMenu.Mods
             _sceneDefaultCaptured = false;
             try
             {
-                MonoBehaviour[] all = UnityEngine.Object.FindObjectsOfType<MonoBehaviour>();
-                for (int i = 0; i < all.Length; i++)
-                {
-                    if (all[i].GetType().Name != "TOD_Sky") continue;
-                    System.Reflection.FieldInfo cycleField = all[i].GetType().GetField("Cycle",
-                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                    if ((object)cycleField == null) break;
-                    object cycle = cycleField.GetValue(all[i]);
-                    if ((object)cycle == null) break;
-                    System.Reflection.FieldInfo hourField = cycle.GetType().GetField("Hour",
-                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                    if ((object)hourField == null) break;
-                    float hour = (float)hourField.GetValue(cycle);
-                    int best = 4;
-                    float bestDiff = float.MaxValue;
-                    for (int j = 0; j < Hours.Length; j++)
-                    {
-                        float diff = Mathf.Abs(Hours[j] - hour);
-                        if (diff < bestDiff) { bestDiff = diff; best = j + 1; }
-                    }
-                    _sceneDefaultLevel = best;
-                    _sceneDefaultCaptured = true;
-                    Level = best;
-                    ModLog.Debug("[TimeOfDay] Scene default: " + hour + "h → Level " + best + " (" + Labels[best - 1] + ")");
+                if (!EnsureSky())
                     return;
+
+                object cycle = _cycleField.GetValue(_sky);
+                if ((object)cycle == null) return;
+
+                float hour = ReadHour(cycle);
+                int best = 4;
+                float bestDiff = float.MaxValue;
+                for (int j = 0; j < Hours.Length; j++)
+                {
+                    float diff = Mathf.Abs(Hours[j] - hour);
+                    if (diff < bestDiff) { bestDiff = diff; best = j + 1; }
                 }
+                _sceneDefaultLevel = best;
+                _sceneDefaultCaptured = true;
+                Level = best;
+                ModLog.Debug("[TimeOfDay] Scene default: " + hour + "h → Level " + best + " (" + Labels[best - 1] + ")");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[TimeOfDay] CaptureSceneDefault: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
+            catch (System.Exception ex) { MelonLogger.Error("[TimeOfDay] CaptureSceneDefault: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
         }
 
-        // Used by Save/Load � stores the level without touching the game world
+        // Used by Save/Load — stores the level without touching the game world
         public static void SetLevelSilent(int level)
         {
             if (level < 1) level = 1;
@@ -85,56 +92,79 @@ namespace DescendersModMenu.Mods
 
         public static void Apply()
         {
-            // Capture the scene default BEFORE we change it — OnSceneWasInitialized
-            // may have been too early if TOD_Sky wasn't ready yet
             if (!_sceneDefaultCaptured)
                 CaptureSceneDefault();
             try
             {
-                // Find TOD_Sky by scanning all MonoBehaviours
-                MonoBehaviour[] all = UnityEngine.Object.FindObjectsOfType<MonoBehaviour>();
-                MonoBehaviour sky = null;
-                for (int i = 0; i < all.Length; i++)
+                if (!EnsureSky())
                 {
-                    if (all[i].GetType().Name == "TOD_Sky")
-                    {
-                        sky = all[i];
-                        break;
-                    }
+                    ModLog.Warn("[TimeOfDay] TOD_Sky not found on this map.");
+                    return;
                 }
-                if ((object)sky == null) { ModLog.Warn("[TimeOfDay] TOD_Sky not found on this map."); return; }
 
-                // Get Cycle object
-                FieldInfo cycleField = sky.GetType().GetField("Cycle",
-                    BindingFlags.Public | BindingFlags.Instance);
-                if ((object)cycleField == null) { ModLog.Warn("[TimeOfDay] Cycle field not found."); return; }
-
-                object cycle = cycleField.GetValue(sky);
+                object cycle = _cycleField.GetValue(_sky);
                 if ((object)cycle == null) { ModLog.Warn("[TimeOfDay] Cycle is null."); return; }
 
-                // Set Hour
-                FieldInfo hourField = cycle.GetType().GetField("Hour",
-                    BindingFlags.Public | BindingFlags.Instance);
-                if ((object)hourField != null)
+                if ((object)_hourField != null)
                 {
-                    hourField.SetValue(cycle, Hours[Level - 1]);
+                    _hourField.SetValue(cycle, Hours[Level - 1]);
                     ModLog.Debug("[TimeOfDay] Set to " + Labels[Level - 1] + " (" + Hours[Level - 1] + "h)");
                     return;
                 }
 
-                // Some versions use property
-                PropertyInfo hourProp = cycle.GetType().GetProperty("Hour",
-                    BindingFlags.Public | BindingFlags.Instance);
-                if ((object)hourProp != null)
+                if ((object)_hourProp != null)
                 {
-                    hourProp.SetValue(cycle, Hours[Level - 1], null);
+                    _hourProp.SetValue(cycle, Hours[Level - 1], null);
                     ModLog.Debug("[TimeOfDay] Set to " + Labels[Level - 1] + " (" + Hours[Level - 1] + "h)");
                     return;
                 }
 
                 ModLog.Warn("[TimeOfDay] Hour field/property not found on Cycle.");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[TimeOfDay] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
+            catch (System.Exception ex) { MelonLogger.Error("[TimeOfDay] Apply: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
+        }
+
+        private static bool EnsureSky()
+        {
+            if (_resolved && (object)_sky != null && _sky)
+                return (object)_cycleField != null;
+
+            _resolved = true;
+            _sky = null;
+            _cycleField = null;
+            _hourField = null;
+            _hourProp = null;
+
+            MonoBehaviour[] all = UnityEngine.Object.FindObjectsOfType<MonoBehaviour>();
+            for (int i = 0; i < all.Length; i++)
+            {
+                if (all[i].GetType().Name != "TOD_Sky") continue;
+                _sky = all[i];
+                break;
+            }
+            if ((object)_sky == null) return false;
+
+            _cycleField = _sky.GetType().GetField("Cycle", BindingFlags.Public | BindingFlags.Instance);
+            if ((object)_cycleField == null) return false;
+
+            object cycle = _cycleField.GetValue(_sky);
+            if ((object)cycle == null) return false;
+
+            System.Type cycleType = cycle.GetType();
+            _hourField = cycleType.GetField("Hour", BindingFlags.Public | BindingFlags.Instance);
+            if ((object)_hourField == null)
+                _hourProp = cycleType.GetProperty("Hour", BindingFlags.Public | BindingFlags.Instance);
+
+            return true;
+        }
+
+        private static float ReadHour(object cycle)
+        {
+            if ((object)_hourField != null)
+                return (float)_hourField.GetValue(cycle);
+            if ((object)_hourProp != null)
+                return (float)_hourProp.GetValue(cycle, null);
+            return Hours[3];
         }
     }
 }

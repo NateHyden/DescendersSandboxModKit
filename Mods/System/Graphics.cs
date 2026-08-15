@@ -13,6 +13,12 @@ namespace DescendersModMenu.Mods
         public static bool DepthOfFieldEnabled { get; private set; } = false;
         public static bool ChromaticAbEnabled { get; private set; } = true;
 
+        // Extra Unity QualitySettings knobs (no PP profile needed)
+        public static bool ShadowsEnabled { get; private set; } = true;
+        public static bool SoftParticlesEnabled { get; private set; } = true;
+        public static int AntiAliasingLevel { get; private set; } = -1; // -1 = untouched; 0/2/4/8
+        public static readonly string[] AaLabels = { "Off", "2x", "4x", "8x" };
+
         public static string[] QualityNames = { "Low", "Medium", "High", "Ultra" };
 
         // Quality level recorded on first scene init — before any mod touches it
@@ -154,6 +160,63 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[Graphics] ChromaticAb -> " + (ChromaticAbEnabled ? "ON" : "OFF"));
         }
 
+        public static void ToggleShadows()
+        {
+            ShadowsEnabled = !ShadowsEnabled;
+            try
+            {
+                QualitySettings.shadows = ShadowsEnabled ? ShadowQuality.All : ShadowQuality.Disable;
+                ModLog.Feedback("[Graphics] Shadows -> " + (ShadowsEnabled ? "ON" : "OFF"));
+            }
+            catch (System.Exception ex) { MelonLogger.Error("[Graphics] Shadows: " + ex.Message); Telemetry.ReportErrorAsync(ex, "Graphics"); }
+        }
+
+        public static void ToggleSoftParticles()
+        {
+            SoftParticlesEnabled = !SoftParticlesEnabled;
+            try
+            {
+                QualitySettings.softParticles = SoftParticlesEnabled;
+                ModLog.Feedback("[Graphics] SoftParticles -> " + (SoftParticlesEnabled ? "ON" : "OFF"));
+            }
+            catch (System.Exception ex) { MelonLogger.Error("[Graphics] SoftParticles: " + ex.Message); Telemetry.ReportErrorAsync(ex, "Graphics"); }
+        }
+
+        public static void CycleAntiAliasing()
+        {
+            // Cycle Off -> 2x -> 4x -> 8x -> Off
+            int cur = AntiAliasingLevel < 0 ? QualitySettings.antiAliasing : AntiAliasingLevel;
+            int next;
+            if (cur <= 0) next = 2;
+            else if (cur <= 2) next = 4;
+            else if (cur <= 4) next = 8;
+            else next = 0;
+            AntiAliasingLevel = next;
+            try
+            {
+                QualitySettings.antiAliasing = next;
+                ModLog.Feedback("[Graphics] AA -> " + AaLabel(next));
+            }
+            catch (System.Exception ex) { MelonLogger.Error("[Graphics] AA: " + ex.Message); Telemetry.ReportErrorAsync(ex, "Graphics"); }
+        }
+
+        public static string AaLabel(int level)
+        {
+            if (level <= 0) return AaLabels[0];
+            if (level <= 2) return AaLabels[1];
+            if (level <= 4) return AaLabels[2];
+            return AaLabels[3];
+        }
+
+        public static string CurrentAaDisplay
+        {
+            get
+            {
+                int v = AntiAliasingLevel >= 0 ? AntiAliasingLevel : QualitySettings.antiAliasing;
+                return AaLabel(v);
+            }
+        }
+
         public static void SetQuality(int level)
         {
             try
@@ -222,6 +285,9 @@ namespace DescendersModMenu.Mods
             VignetteEnabled = true;
             DepthOfFieldEnabled = false;
             ChromaticAbEnabled = true;
+            ShadowsEnabled = true;
+            SoftParticlesEnabled = true;
+            AntiAliasingLevel = -1;
         }
     }
 }

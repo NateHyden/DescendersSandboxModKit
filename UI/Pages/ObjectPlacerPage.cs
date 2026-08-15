@@ -93,7 +93,7 @@ namespace DescendersModMenu.UI
 
                 var c = _listRoot;
 
-                var rst = UIHelpers.StatRow("", c);
+                var rst = UIHelpers.BareBtnRow(c);
                 UIHelpers.ActionBtnOrange(rst.transform, "↺  Reset Placed", () => { ObjectPlacer.ClearAll(); RefreshAll(); }, 140);
 
                 UIHelpers.SectionHeader("PLACE", c);
