@@ -1,5 +1,6 @@
 using MelonLoader;
 using UnityEngine;
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -38,11 +39,12 @@ namespace DescendersModMenu.Mods
         // ── Rigidbody cache ──────────────────────────────────────────
         private static bool EnsureRb()
         {
-            if ((object)_rb != null) return true;
+            if (UnityNull.Alive(_rb)) return true;
+            _rb = null;
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) return false;
+            if (!UnityNull.Alive(player)) return false;
             _rb = player.GetComponentInChildren<Rigidbody>();
-            return (object)_rb != null;
+            return UnityNull.Alive(_rb);
         }
 
         // ── Apply ────────────────────────────────────────────────────
@@ -98,7 +100,7 @@ namespace DescendersModMenu.Mods
             OffsetLR = 0f;
             OffsetFB = 0f;
             OffsetUD = 0f;
-            try { if ((object)_rb != null) _rb.ResetCenterOfMass(); } catch { }
+            try { if (UnityNull.Alive(_rb)) _rb.ResetCenterOfMass(); } catch { }
             _rb = null;
         }
     }

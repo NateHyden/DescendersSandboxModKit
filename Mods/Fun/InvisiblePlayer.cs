@@ -26,23 +26,34 @@ namespace DescendersModMenu.Mods
             try
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null) return;
+                if (!UnityNull.Alive(player)) return;
                 Transform cyclist = player.transform.Find("Cyclist");
-                if ((object)cyclist == null) return;
+                if (!UnityNull.Alive(cyclist)) return;
                 if (invisible)
                 {
                     Renderer[] all = cyclist.GetComponentsInChildren<Renderer>(true);
                     var toHide = new System.Collections.Generic.List<Renderer>();
-                    for (int i = 0; i < all.Length; i++) if (all[i].enabled) toHide.Add(all[i]);
+                    for (int i = 0; i < all.Length; i++)
+                    {
+                        if (!UnityNull.Alive(all[i])) continue;
+                        if (all[i].enabled) toHide.Add(all[i]);
+                    }
                     _hiddenRenderers = toHide.ToArray();
-                    for (int i = 0; i < _hiddenRenderers.Length; i++) _hiddenRenderers[i].enabled = false;
+                    for (int i = 0; i < _hiddenRenderers.Length; i++)
+                    {
+                        if (UnityNull.Alive(_hiddenRenderers[i]))
+                            _hiddenRenderers[i].enabled = false;
+                    }
                 }
                 else
                 {
                     if ((object)_hiddenRenderers != null)
                     {
                         for (int i = 0; i < _hiddenRenderers.Length; i++)
-                            if ((object)_hiddenRenderers[i] != null) _hiddenRenderers[i].enabled = true;
+                        {
+                            if (UnityNull.Alive(_hiddenRenderers[i]))
+                                _hiddenRenderers[i].enabled = true;
+                        }
                         _hiddenRenderers = null;
                     }
                 }

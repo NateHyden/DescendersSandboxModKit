@@ -90,7 +90,7 @@ namespace DescendersModMenu.Mods
         public static void Postfix(UI_InGame __instance)
         {
             if (!CompassAlwaysOn.Enabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             try
             {
@@ -120,7 +120,7 @@ namespace DescendersModMenu.Mods
 
                 icon.transform.parent.gameObject.SetActive(true);
 
-                if ((object)Camera.main == null) return;
+                if (!UnityNull.Alive(Camera.main)) return;
 
                 Vector3 finishFlat = finish.transform.position;
                 finishFlat.y = 0f;

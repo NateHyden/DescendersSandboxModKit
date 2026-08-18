@@ -21,8 +21,14 @@ namespace DescendersModMenu.UI
         private static Text _hudTogVal = null;
         private static Image _hudTrack = null;
         private static RectTransform _hudKnob = null;
+        private static LayoutElement _inputRowLe = null;
+        private static LayoutElement _inputBgLe = null;
+        private static LayoutElement _sendBtnLe = null;
 
-        private const int DisplayChars = 48;
+        private const float InputLineH = 14f;
+        private const float InputPadV = 6f;
+        private const int InputMaxLines = 4;
+        private const float InputMinH = 20f;
 
         public static void CreatePage(Transform parent)
         {
@@ -82,9 +88,9 @@ namespace DescendersModMenu.UI
                 var hdrSpacer = UIHelpers.Obj("HdrSp", hdrRow.transform);
                 hdrSpacer.AddComponent<LayoutElement>().flexibleWidth = 1;
 
-                var hudLbl = UIHelpers.Txt("HudLbl", hdrRow.transform, "On-Screen", 10,
+                var hudLbl = UIHelpers.Txt("HudLbl", hdrRow.transform, "On-Screen Chat Popup", 10,
                     FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextMid);
-                hudLbl.gameObject.AddComponent<LayoutElement>().preferredWidth = 68;
+                hudLbl.gameObject.AddComponent<LayoutElement>().preferredWidth = 128;
                 _hudTogVal = UIHelpers.Txt("HudVal", hdrRow.transform,
                     ChatHUD.Enabled ? "ON" : "OFF", 11, FontStyle.Bold, TextAnchor.MiddleRight,
                     ChatHUD.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor);
@@ -100,19 +106,30 @@ namespace DescendersModMenu.UI
                 var onlineRow = UIHelpers.Obj("ORow", pg.transform);
                 onlineRow.AddComponent<Image>().color = UIHelpers.RowBg;
                 var orLe = onlineRow.AddComponent<LayoutElement>();
-                orLe.preferredHeight = 28; orLe.minHeight = 28;
+                orLe.preferredHeight = 16; orLe.minHeight = 16; orLe.flexibleHeight = 0;
                 var orHlg = onlineRow.AddComponent<HorizontalLayoutGroup>();
-                orHlg.padding = new RectOffset(10, 10, 0, 0);
+                orHlg.padding = new RectOffset(8, 8, 0, 0);
+                orHlg.spacing = 0;
                 orHlg.childAlignment = TextAnchor.MiddleLeft;
+                orHlg.childForceExpandWidth = true;
+                orHlg.childForceExpandHeight = true;
+                orHlg.childControlWidth = true;
+                orHlg.childControlHeight = true;
                 _onlineText = UIHelpers.Txt("OL", onlineRow.transform,
-                    "\u25CF 0 mod users online in this session",
-                    10, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.OnColor);
+                    "\u25CF Nobody else with the mod in this session",
+                    9, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.OnColor);
+                _onlineText.horizontalOverflow = HorizontalWrapMode.Overflow;
+                _onlineText.verticalOverflow = VerticalWrapMode.Truncate;
+                var olLe = _onlineText.gameObject.AddComponent<LayoutElement>();
+                olLe.flexibleWidth = 1; olLe.minHeight = 14; olLe.preferredHeight = 14;
 
-                // ── Chat box ──────────────────────────────────────────
+                // ── Chat box (fills remaining space so input stays at bottom) ──
                 var chatBox = UIHelpers.Obj("ChatBox", pg.transform);
                 chatBox.AddComponent<Image>().color = UIHelpers.WinPanel;
                 var cbLe = chatBox.AddComponent<LayoutElement>();
-                cbLe.preferredHeight = 320; cbLe.minHeight = 200;
+                cbLe.flexibleHeight = 1f;
+                cbLe.minHeight = 120f;
+                cbLe.preferredHeight = 200f;
                 var scrollObj = UIHelpers.Obj("Scroll", chatBox.transform);
                 UIHelpers.Fill(UIHelpers.RT(scrollObj));
                 _chatScroll = scrollObj.AddComponent<ScrollRect>();
@@ -131,47 +148,51 @@ namespace DescendersModMenu.UI
                 _chatScroll.content = crt;
                 content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 var cvlg = content.AddComponent<VerticalLayoutGroup>();
-                cvlg.spacing = 1; cvlg.padding = new RectOffset(6, 6, 4, 4);
+                cvlg.spacing = 4; cvlg.padding = new RectOffset(6, 6, 4, 4);
                 cvlg.childAlignment = TextAnchor.UpperLeft;
                 cvlg.childForceExpandWidth = true; cvlg.childForceExpandHeight = false;
+                cvlg.childControlWidth = true; cvlg.childControlHeight = true;
                 _chatContent = content.transform;
+                UIHelpers.AddScrollbar(_chatScroll);
 
-                // ── Input row ─────────────────────────────────────────
+                // ── Input row (pinned under chat by flexible chat height) ──
                 var inputRow = UIHelpers.Obj("InputRow", pg.transform);
                 inputRow.AddComponent<Image>().color = UIHelpers.RowBg;
-                var irLe = inputRow.AddComponent<LayoutElement>();
-                irLe.preferredHeight = 36; irLe.minHeight = 36;
+                _inputRowLe = inputRow.AddComponent<LayoutElement>();
+                _inputRowLe.preferredHeight = 26; _inputRowLe.minHeight = 26; _inputRowLe.flexibleHeight = 0;
                 var irHlg = inputRow.AddComponent<HorizontalLayoutGroup>();
-                irHlg.padding = new RectOffset(8, 8, 4, 4);
+                irHlg.padding = new RectOffset(6, 6, 3, 3);
                 irHlg.spacing = 6;
-                irHlg.childAlignment = TextAnchor.MiddleLeft;
-                irHlg.childForceExpandHeight = true;
+                irHlg.childAlignment = TextAnchor.UpperLeft;
+                irHlg.childForceExpandHeight = false;
                 irHlg.childForceExpandWidth = false;
+                irHlg.childControlHeight = true;
+                irHlg.childControlWidth = true;
                 var inputBg = UIHelpers.Obj("IB", inputRow.transform);
                 inputBg.AddComponent<Image>().color = UIHelpers.WinOuter;
-                var ibLe = inputBg.AddComponent<LayoutElement>();
-                ibLe.flexibleWidth = 1; ibLe.minHeight = 26; ibLe.preferredHeight = 26;
+                _inputBgLe = inputBg.AddComponent<LayoutElement>();
+                _inputBgLe.flexibleWidth = 1; _inputBgLe.minHeight = InputMinH; _inputBgLe.preferredHeight = InputMinH;
                 var ibHlg = inputBg.AddComponent<HorizontalLayoutGroup>();
-                ibHlg.padding = new RectOffset(8, 8, 0, 0);
-                ibHlg.childAlignment = TextAnchor.MiddleLeft;
-                ibHlg.childForceExpandWidth = true; ibHlg.childForceExpandHeight = true;
+                ibHlg.padding = new RectOffset(8, 20, 2, 2);
+                ibHlg.childAlignment = TextAnchor.UpperLeft;
+                ibHlg.childForceExpandWidth = true; ibHlg.childForceExpandHeight = false;
+                ibHlg.childControlWidth = true; ibHlg.childControlHeight = true;
                 _inputText = UIHelpers.Txt("IT", inputBg.transform, "Type a message...",
-                    11, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+                    11, FontStyle.Normal, TextAnchor.UpperLeft, UIHelpers.TextDim);
                 _inputText.horizontalOverflow = HorizontalWrapMode.Wrap;
-                _inputText.verticalOverflow = VerticalWrapMode.Truncate;
+                _inputText.verticalOverflow = VerticalWrapMode.Overflow;
                 var itLe = _inputText.gameObject.AddComponent<LayoutElement>();
-                itLe.flexibleWidth = 1; itLe.minWidth = 0;
+                itLe.flexibleWidth = 1; itLe.minWidth = 0; itLe.minHeight = InputLineH;
 
                 // Flashing cursor dot
                 _chatCursor = UIHelpers.Txt("ChCur", inputBg.transform, "●",
-                    10, FontStyle.Normal, TextAnchor.MiddleCenter, UIHelpers.OnColor);
-                // ignoreLayout + anchor to far right so it never moves with text
+                    10, FontStyle.Normal, TextAnchor.UpperRight, UIHelpers.OnColor);
                 _chatCursor.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                 var ccRT = UIHelpers.RT(_chatCursor.gameObject);
-                ccRT.anchorMin = new Vector2(1, 0); ccRT.anchorMax = new Vector2(1, 1);
-                ccRT.pivot = new Vector2(1, 0.5f);
-                ccRT.sizeDelta = new Vector2(14, 0);
-                ccRT.anchoredPosition = new Vector2(-6, 0);
+                ccRT.anchorMin = new Vector2(1, 1); ccRT.anchorMax = new Vector2(1, 1);
+                ccRT.pivot = new Vector2(1, 1);
+                ccRT.sizeDelta = new Vector2(14, 14);
+                ccRT.anchoredPosition = new Vector2(-4, -2);
                 _chatCursor.gameObject.SetActive(false);
 
                 // Click to focus
@@ -181,25 +202,30 @@ namespace DescendersModMenu.UI
                 chatFocusBtn.onClick.AddListener(() => { _chatFocused = true; });
 
                 var sendBtn = UIHelpers.Btn("SB", inputRow.transform, "SEND",
-                    new Vector2(70, 26), 12, () => { SendMessage(); },
+                    new Vector2(64, 20), 11, () => { SendMessage(); },
                     UIHelpers.NeonBlue, Color.black);
-                var sbLe = sendBtn.gameObject.AddComponent<LayoutElement>();
-                sbLe.preferredWidth = 70; sbLe.minWidth = 70;
-                sbLe.preferredHeight = 26; sbLe.minHeight = 26;
+                _sendBtnLe = sendBtn.gameObject.AddComponent<LayoutElement>();
+                _sendBtnLe.preferredWidth = 64; _sendBtnLe.minWidth = 64;
+                _sendBtnLe.preferredHeight = 20; _sendBtnLe.minHeight = 20;
 
                 // ── Status ────────────────────────────────────────────
                 var statusRow = UIHelpers.Obj("SR", pg.transform);
                 statusRow.AddComponent<Image>().color = UIHelpers.RowBg;
                 var srLe = statusRow.AddComponent<LayoutElement>();
-                srLe.preferredHeight = 22; srLe.minHeight = 22;
+                srLe.preferredHeight = 16; srLe.minHeight = 16; srLe.flexibleHeight = 0;
                 var srHlg = statusRow.AddComponent<HorizontalLayoutGroup>();
-                srHlg.padding = new RectOffset(10, 10, 0, 0);
+                srHlg.padding = new RectOffset(8, 8, 0, 0);
                 srHlg.childAlignment = TextAnchor.MiddleLeft;
+                srHlg.childForceExpandHeight = true;
+                srHlg.childControlHeight = true;
                 _statusText = UIHelpers.Txt("ST", statusRow.transform,
                     "0/" + ModChat.MaxLength + " \u2014 Enter to send \u2014 Only visible to mod users",
                     9, FontStyle.Italic, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+                var stLe = _statusText.gameObject.AddComponent<LayoutElement>();
+                stLe.flexibleWidth = 1; stLe.preferredHeight = 14;
 
                 RebuildMessages();
+                ResizeInputBox();
             }
             catch (System.Exception ex) { MelonLogger.Error("ChatPage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ChatPage"); }
         }
@@ -212,7 +238,13 @@ namespace DescendersModMenu.UI
             // not (object)x == null, or every Tick throws MissingReferenceException.
             if (!_inputText) return;
 
-            if (ModChat.HasNewMessages) { RebuildMessages(); ModChat.ClearNewFlag(); }
+            if (ModChat.HasNewMessages)
+            {
+                RebuildMessages();
+                ModChat.ClearNewFlag();
+                if (MenuWindow.IsChatOpen)
+                    ModChat.MarkAsRead();
+            }
 
             // Click-away to unfocus
             if (_chatFocused && Input.GetMouseButtonDown(0))
@@ -247,10 +279,14 @@ namespace DescendersModMenu.UI
             if (_onlineText)
             {
                 if (!ModChat.InRoom)
+                {
                     _onlineText.text = "○ Not in Photon room (" + ModChat.ConnectionStateLabel
                         + ", players=" + ModChat.PlayerListCount + ")";
+                }
                 else
-                    _onlineText.text = "● " + ModDetection.ModUsers.Count + " mod users online in this session";
+                {
+                    _onlineText.text = "● " + FormatModUsersOnline(ModDetection.ModUsers);
+                }
             }
             RefreshHudToggle();
 
@@ -265,10 +301,7 @@ namespace DescendersModMenu.UI
             }
             if (_inputBuffer.Length > 0)
             {
-                string display = _inputBuffer.Length > DisplayChars
-                    ? _inputBuffer.Substring(_inputBuffer.Length - DisplayChars)
-                    : _inputBuffer;
-                _inputText.text = display;
+                _inputText.text = SoftWrapForDisplay(_inputBuffer);
                 _inputText.color = UIHelpers.TextLight;
             }
             else
@@ -276,6 +309,7 @@ namespace DescendersModMenu.UI
                 _inputText.text = "Type a message...";
                 _inputText.color = UIHelpers.TextDim;
             }
+            ResizeInputBox();
         }
 
         // Menu GameObject is destroyed on scene change — drop stale Unity refs.
@@ -291,6 +325,9 @@ namespace DescendersModMenu.UI
             _hudTogVal = null;
             _hudTrack = null;
             _hudKnob = null;
+            _inputRowLe = null;
+            _inputBgLe = null;
+            _sendBtnLe = null;
             _chatFocused = false;
             _inputBuffer = "";
         }
@@ -301,7 +338,12 @@ namespace DescendersModMenu.UI
             _inputBuffer = "";
             if (string.IsNullOrEmpty(msg)) return;
             _chatFocused = false;
-            if ((object)_inputText != null) { _inputText.text = "Type a message..."; _inputText.color = UIHelpers.TextDim; }
+            if (_inputText)
+            {
+                _inputText.text = "Type a message...";
+                _inputText.color = UIHelpers.TextDim;
+            }
+            ResizeInputBox();
             ModChat.Send(msg);
         }
 
@@ -312,36 +354,133 @@ namespace DescendersModMenu.UI
                 GameObject.Destroy(_chatContent.GetChild(i).gameObject);
             foreach (var msg in ModChat.Messages)
             {
+                // Phone-style bubble: meta row + wrapping body (grows with text).
                 var row = UIHelpers.Obj("MR", _chatContent);
                 row.AddComponent<Image>().color = msg.IsSelf
                     ? new Color(0f, 0.16f, 0.32f, 0.35f)
                     : new Color(0, 0, 0, 0);
-                var le = row.AddComponent<LayoutElement>(); le.minHeight = 22; le.preferredHeight = 22;
-                var hlg = row.AddComponent<HorizontalLayoutGroup>();
-                hlg.padding = new RectOffset(msg.IsSelf ? 4 : 2, 2, 2, 2);
-                hlg.spacing = 4; hlg.childAlignment = TextAnchor.MiddleLeft;
-                hlg.childForceExpandHeight = false; hlg.childForceExpandWidth = false;
+                var le = row.AddComponent<LayoutElement>();
+                le.minHeight = 28; le.flexibleHeight = 0;
+                row.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+                var vlg = row.AddComponent<VerticalLayoutGroup>();
+                vlg.padding = new RectOffset(msg.IsSelf ? 6 : 4, 6, 4, 4);
+                vlg.spacing = 2;
+                vlg.childAlignment = TextAnchor.UpperLeft;
+                vlg.childForceExpandWidth = true;
+                vlg.childForceExpandHeight = false;
+                vlg.childControlWidth = true;
+                vlg.childControlHeight = true;
+
+                var meta = UIHelpers.Obj("Meta", row.transform);
+                meta.AddComponent<LayoutElement>().preferredHeight = 16;
+                var mHlg = meta.AddComponent<HorizontalLayoutGroup>();
+                mHlg.spacing = 4;
+                mHlg.childAlignment = TextAnchor.MiddleLeft;
+                mHlg.childForceExpandWidth = false;
+                mHlg.childForceExpandHeight = false;
                 if (msg.IsSelf)
                 {
-                    var bar = UIHelpers.Obj("B", row.transform);
+                    var bar = UIHelpers.Obj("B", meta.transform);
                     bar.AddComponent<Image>().color = UIHelpers.NeonBlue;
-                    bar.AddComponent<LayoutElement>().preferredWidth = 2;
+                    var barLe = bar.AddComponent<LayoutElement>();
+                    barLe.preferredWidth = 2; barLe.preferredHeight = 12;
                 }
-                UIHelpers.Txt("T", row.transform, msg.Time, 9, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim)
+                UIHelpers.Txt("T", meta.transform, msg.Time, 9, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim)
                     .gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-                UIHelpers.Txt("G", row.transform, "[MOD]", 9, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.Accent)
+                UIHelpers.Txt("G", meta.transform, "[MOD]", 9, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.Accent)
                     .gameObject.AddComponent<LayoutElement>().preferredWidth = 32;
-                UIHelpers.Txt("N", row.transform, msg.PlayerName, 11, FontStyle.Bold, TextAnchor.MiddleLeft,
+                UIHelpers.Txt("N", meta.transform, msg.PlayerName, 11, FontStyle.Bold, TextAnchor.MiddleLeft,
                     msg.IsSelf ? UIHelpers.NeonBlue : UIHelpers.Orange)
-                    .gameObject.AddComponent<LayoutElement>().preferredWidth = 80;
-                UIHelpers.Txt("M", row.transform, msg.Text, 11, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextLight)
                     .gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+                var body = UIHelpers.Txt("M", row.transform, SoftWrapForDisplay(msg.Text),
+                    11, FontStyle.Normal, TextAnchor.UpperLeft, UIHelpers.TextLight);
+                body.horizontalOverflow = HorizontalWrapMode.Wrap;
+                body.verticalOverflow = VerticalWrapMode.Overflow;
+                var bodyLe = body.gameObject.AddComponent<LayoutElement>();
+                bodyLe.flexibleWidth = 1;
+                bodyLe.minHeight = InputLineH;
             }
             Canvas.ForceUpdateCanvases();
-            if ((object)_chatScroll != null) _chatScroll.verticalNormalizedPosition = 0f;
+            if (_chatScroll) _chatScroll.verticalNormalizedPosition = 0f;
         }
 
         public static void RefreshAll() => RebuildMessages();
+
+        // Unity Text only wraps on whitespace — break long runs so "hhhh…" wraps.
+        private static string SoftWrapForDisplay(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+            const int chunk = 28;
+            var sb = new System.Text.StringBuilder(text.Length + 8);
+            int run = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                sb.Append(c);
+                if (char.IsWhiteSpace(c))
+                    run = 0;
+                else
+                {
+                    run++;
+                    if (run >= chunk)
+                    {
+                        sb.Append('\u200B');
+                        run = 0;
+                    }
+                }
+            }
+            return sb.ToString();
+        }
+
+        private static void ResizeInputBox()
+        {
+            if (!_inputText || (object)_inputBgLe == null || (object)_inputRowLe == null) return;
+
+            float textH = InputLineH;
+            if (_inputBuffer.Length > 0)
+            {
+                // Measure wrapped height against current box width.
+                float w = UIHelpers.RT(_inputText.gameObject).rect.width;
+                if (w < 40f && _chatBoxRect) w = _chatBoxRect.rect.width - 28f;
+                if (w < 40f) w = 400f;
+                textH = Mathf.Max(InputLineH, _inputText.preferredHeight);
+                // Cap to max lines
+                float maxH = InputLineH * InputMaxLines;
+                if (textH > maxH) textH = maxH;
+            }
+
+            float bgH = Mathf.Max(InputMinH, textH + 4f);
+            float rowH = bgH + InputPadV;
+            _inputBgLe.preferredHeight = bgH;
+            _inputBgLe.minHeight = bgH;
+            _inputRowLe.preferredHeight = rowH;
+            _inputRowLe.minHeight = rowH;
+            if ((object)_sendBtnLe != null)
+                _sendBtnLe.preferredHeight = Mathf.Min(bgH, 28f);
+        }
+
+        private static string FormatModUsersOnline(System.Collections.Generic.IList<ModDetection.ModUser> users)
+        {
+            if (users == null || users.Count == 0)
+                return "Nobody else with the mod in this session";
+
+            if (users.Count == 1)
+            {
+                string n = string.IsNullOrEmpty(users[0].Name) ? "Someone" : users[0].Name;
+                return n + " is in this session";
+            }
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            for (int i = 0; i < users.Count; i++)
+            {
+                if (i > 0)
+                    sb.Append(i == users.Count - 1 ? " and " : ", ");
+                sb.Append(string.IsNullOrEmpty(users[i].Name) ? "Someone" : users[i].Name);
+            }
+            sb.Append(" are in this session");
+            return sb.ToString();
+        }
 
         private static void RefreshHudToggle()
         {

@@ -63,7 +63,7 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                if ((object)_handler != null && (object)(_handler as UnityEngine.Object) != null)
+                if (UnityNull.Alive(_handler))
                     _handler.enabled = false;
             }
             catch { }
@@ -172,8 +172,8 @@ namespace DescendersModMenu.Mods
         private void OnCollisionEnter(Collision collision)
         {
             if (!ExplodingProps.Enabled) return;
-            if ((object)_vehicle == null) return;
-            if ((object)_rb == null) return;
+            if (!UnityNull.Alive(_vehicle)) return;
+            if (!UnityNull.Alive(_rb)) return;
             if (Time.unscaledTime - _lastBounceTime < BounceCooldown) return;
             if (collision.contacts.Length == 0) return;
 

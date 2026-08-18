@@ -68,21 +68,21 @@ namespace DescendersModMenu.Mods
             if (!Enabled) return;
             try
             {
-                if ((object)_cachedPlayer == null || !_cachedPlayer.activeInHierarchy)
+                if (!UnityNull.Alive(_cachedPlayer) || !_cachedPlayer.activeInHierarchy)
                 {
                     _cachedPlayer = GameObject.Find("Player_Human");
                     _cachedVehicle = null;
                     _cachedRb = null;
                 }
-                if ((object)_cachedPlayer == null) return;
+                if (!UnityNull.Alive(_cachedPlayer)) return;
 
-                if ((object)_cachedVehicle == null)
+                if (!UnityNull.Alive(_cachedVehicle))
                     _cachedVehicle = _cachedPlayer.GetComponent<Vehicle>();
-                if ((object)_cachedVehicle == null) return;
+                if (!UnityNull.Alive(_cachedVehicle)) return;
 
-                if ((object)_cachedRb == null)
+                if (!UnityNull.Alive(_cachedRb))
                     _cachedRb = _cachedPlayer.GetComponentInChildren<Rigidbody>();
-                if ((object)_cachedRb == null) return;
+                if (!UnityNull.Alive(_cachedRb)) return;
 
                 // Same onGround property SessionTrackers/NoSpeedCap already
                 // found and use — a bool property on Vehicle whose obfuscated

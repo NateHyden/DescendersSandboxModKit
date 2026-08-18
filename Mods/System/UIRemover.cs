@@ -39,16 +39,16 @@ namespace DescendersModMenu.Mods
                 for (int i = 0; i < all.Length; i++)
                 {
                     var cv = all[i];
-                    if ((object)cv == null) continue;
+                    if (!UnityNull.Alive(cv)) continue;
                     if (!cv.isRootCanvas) continue;
                     if (!cv.enabled) continue;
 
-                    // Skip our mod menu canvas
-                    if ((object)UI.MenuWindow.RootCanvasGroup != null)
+                    // Skip our mod menu canvas (RootCanvasGroup is destroyed on map change)
+                    if (UnityNull.Alive(UI.MenuWindow.RootCanvasGroup))
                     {
                         Canvas modCanvas = UI.MenuWindow.RootCanvasGroup
                             .gameObject.GetComponentInParent<Canvas>();
-                        if ((object)modCanvas != null && modCanvas == cv) continue;
+                        if (UnityNull.Alive(modCanvas) && modCanvas == cv) continue;
                     }
 
                     // Disable canvas rendering (leaves GameObject + EventSystem alive)
@@ -56,8 +56,8 @@ namespace DescendersModMenu.Mods
 
                     // Also disable GraphicRaycaster so hidden UI can't intercept clicks
                     var gr = cv.GetComponent<GraphicRaycaster>();
-                    bool grWasOn = (object)gr != null && gr.enabled;
-                    if ((object)gr != null) gr.enabled = false;
+                    bool grWasOn = UnityNull.Alive(gr) && gr.enabled;
+                    if (UnityNull.Alive(gr)) gr.enabled = false;
 
                     _hidden.Add(new HiddenCanvas
                     {
@@ -83,8 +83,8 @@ namespace DescendersModMenu.Mods
                 try
                 {
                     var h = _hidden[i];
-                    if ((object)h.canvas != null) h.canvas.enabled = true;
-                    if ((object)h.raycaster != null) h.raycaster.enabled = h.wasRaycasterEnabled;
+                    if (UnityNull.Alive(h.canvas)) h.canvas.enabled = true;
+                    if (UnityNull.Alive(h.raycaster)) h.raycaster.enabled = h.wasRaycasterEnabled;
                 }
                 catch { }
             }

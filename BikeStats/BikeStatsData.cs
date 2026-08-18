@@ -181,5 +181,16 @@ namespace DescendersModMenu.BikeStats
 
         // ── UI Remover ─────────────────────────────────────────────────
         public bool UIRemoverEnabled = false;
+
+        // ── Lava Rising (difficulty + height records — Enabled is never persisted) ─
+        public int LavaDifficultyLevel = 2; // 1=Easy 2=Normal 3=Hard 4=Insane
+        public string LavaHeightRecords = "";
+
+        // ── Session extras ─────────────────────────────────────────────
+        public bool CompassAlwaysOnEnabled = false;
+        public bool SpectateModeEnabled = false;
+        public bool ScreenshotModeEnabled = false;
+        public bool RubberBandSteeringEnabled = false;
+        public int RubberBandSteeringLevel = 5;
     }
 }

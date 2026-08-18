@@ -79,15 +79,18 @@ namespace DescendersModMenu.Mods
         {
             if (!Enabled)
             {
-                if ((object)_torchLight != null)
+                if (UnityNull.Alive(_torchLight))
                     _torchLight.enabled = false;
                 return;
             }
 
-            if ((object)_torchLight == null)
+            if (!UnityNull.Alive(_torchLight))
+            {
+                _torchLight = null;
                 FindOrCreateTorch();
+            }
 
-            if ((object)_torchLight != null)
+            if (UnityNull.Alive(_torchLight))
             {
                 _torchLight.enabled   = true;
                 _torchLight.intensity = IntensityValues[IntensityIndex];
@@ -108,9 +111,12 @@ namespace DescendersModMenu.Mods
 
         private static void ApplyDiscoColour()
         {
-            if ((object)_torchLight == null)
+            if (!UnityNull.Alive(_torchLight))
+            {
+                _torchLight = null;
                 FindOrCreateTorch();
-            if ((object)_torchLight != null)
+            }
+            if (UnityNull.Alive(_torchLight))
             {
                 _torchLight.enabled = true;
                 _torchLight.color = DiscoNeon[_discoIndex];

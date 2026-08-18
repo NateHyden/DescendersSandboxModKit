@@ -434,17 +434,36 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Rep step multiplier (x1-x10, independent per row) ────────────
+        // ── Rep step multiplier (x1-x10 by 1, then x20-x200 by 10) ────
         private const int RepBaseStep = 1000;
+        private const int RepMultiplierSoftCap = 10;
+        private const int RepMultiplierHardCap = 200;
+        private const int RepMultiplierCoarseStep = 10;
+
         public static int RepMultiplierLevel { get; private set; } = 1;
         public static int InGameRepMultiplierLevel { get; private set; } = 1;
         public static int RepStepAmount { get { return RepBaseStep * RepMultiplierLevel; } }
         public static int InGameRepStepAmount { get { return RepBaseStep * InGameRepMultiplierLevel; } }
 
-        public static void IncreaseRepMultiplier() { if (RepMultiplierLevel < 10) RepMultiplierLevel++; }
-        public static void DecreaseRepMultiplier() { if (RepMultiplierLevel > 1) RepMultiplierLevel--; }
-        public static void IncreaseInGameRepMultiplier() { if (InGameRepMultiplierLevel < 10) InGameRepMultiplierLevel++; }
-        public static void DecreaseInGameRepMultiplier() { if (InGameRepMultiplierLevel > 1) InGameRepMultiplierLevel--; }
+        private static int BumpRepMultiplier(int level, int dir)
+        {
+            if (dir > 0)
+            {
+                if (level < RepMultiplierSoftCap) return level + 1;
+                if (level < RepMultiplierHardCap)
+                    return Math.Min(RepMultiplierHardCap, level + RepMultiplierCoarseStep);
+                return level;
+            }
+            if (level > RepMultiplierSoftCap)
+                return Math.Max(RepMultiplierSoftCap, level - RepMultiplierCoarseStep);
+            if (level > 1) return level - 1;
+            return level;
+        }
+
+        public static void IncreaseRepMultiplier() { RepMultiplierLevel = BumpRepMultiplier(RepMultiplierLevel, 1); }
+        public static void DecreaseRepMultiplier() { RepMultiplierLevel = BumpRepMultiplier(RepMultiplierLevel, -1); }
+        public static void IncreaseInGameRepMultiplier() { InGameRepMultiplierLevel = BumpRepMultiplier(InGameRepMultiplierLevel, 1); }
+        public static void DecreaseInGameRepMultiplier() { InGameRepMultiplierLevel = BumpRepMultiplier(InGameRepMultiplierLevel, -1); }
 
         public static void AdjustRep(int amount)
         {

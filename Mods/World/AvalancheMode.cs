@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -82,12 +83,12 @@ namespace DescendersModMenu.Mods
 
             // Despawn + hit detection
             GameObject player = GameObject.Find("Player_Human");
-            Vector3 playerPos = (object)player != null ? player.transform.position : Vector3.zero;
+            Vector3 playerPos = UnityNull.Alive(player) ? player.transform.position : Vector3.zero;
 
             for (int i = _hazards.Count - 1; i >= 0; i--)
             {
                 var h = _hazards[i];
-                if ((object)h.Go == null) { _hazards.RemoveAt(i); continue; }
+                if (!UnityNull.Alive(h.Go)) { _hazards.RemoveAt(i); continue; }
 
                 h.Age += Time.deltaTime;
 
@@ -95,7 +96,7 @@ namespace DescendersModMenu.Mods
                 bool tooFar = false;
                 bool stuck = false;
 
-                if ((object)player != null)
+                if (UnityNull.Alive(player))
                 {
                     float dist = Vector3.Distance(h.Go.transform.position, playerPos);
                     tooFar = dist > DespawnDist;
@@ -109,7 +110,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 // Mark stuck only after 12s with very low velocity
-                if ((object)h.Rb != null)
+                if (UnityNull.Alive(h.Rb))
                     stuck = h.Age > 12f && h.Rb.velocity.magnitude < 0.5f;
 
                 if (tooOld || tooFar || stuck)
@@ -117,8 +118,8 @@ namespace DescendersModMenu.Mods
                     ModLog.Debug("[Avalanche] Despawn: tooOld=" + tooOld
                         + " tooFar=" + tooFar + " stuck=" + stuck
                         + " age=" + h.Age.ToString("F1")
-                        + " vel=" + ((object)h.Rb != null ? h.Rb.velocity.magnitude.ToString("F1") : "?")
-                        + " dist=" + ((object)player != null ? Vector3.Distance(h.Go.transform.position, playerPos).ToString("F1") : "?"));
+                        + " vel=" + (UnityNull.Alive(h.Rb) ? h.Rb.velocity.magnitude.ToString("F1") : "?")
+                        + " dist=" + (UnityNull.Alive(player) ? Vector3.Distance(h.Go.transform.position, playerPos).ToString("F1") : "?"));
                     GameObject.Destroy(h.Go);
                     _hazards.RemoveAt(i);
                 }
@@ -131,18 +132,18 @@ namespace DescendersModMenu.Mods
             if (!Enabled) return;
 
             GameObject player = GameObject.Find("Player_Human");
-            Vector3 playerPos = (object)player != null ? player.transform.position : Vector3.zero;
+            Vector3 playerPos = UnityNull.Alive(player) ? player.transform.position : Vector3.zero;
 
             for (int i = 0; i < _hazards.Count; i++)
             {
                 var h = _hazards[i];
-                if ((object)h.Go == null || (object)h.Rb == null) continue;
+                if (!UnityNull.Alive(h.Go) || !UnityNull.Alive(h.Rb)) continue;
 
                 // Extra downforce — always
                 h.Rb.AddForce(Vector3.down * ExtraGravity, ForceMode.Acceleration);
 
                 // Attraction — full 3D direction toward player, never lift above player height
-                if ((object)player != null && AttractionForce > 0f)
+                if (UnityNull.Alive(player) && AttractionForce > 0f)
                 {
                     Vector3 toPlayer = playerPos - h.Go.transform.position;
 
@@ -162,14 +163,14 @@ namespace DescendersModMenu.Mods
             if (_hazards.Count >= MaxHazards) return;
 
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) return;
+            if (!UnityNull.Alive(player)) return;
 
             Vector3 playerPos = player.transform.position;
 
             // Don't spawn if any existing hazard is still very close to player
             for (int i = 0; i < _hazards.Count; i++)
             {
-                if ((object)_hazards[i].Go == null) continue;
+                if (!UnityNull.Alive(_hazards[i].Go)) continue;
                 if (Vector3.Distance(_hazards[i].Go.transform.position, playerPos) < MinSpawnDist)
                 {
                     ModLog.Debug("[Avalanche] Skipping spawn — hazard still close.");

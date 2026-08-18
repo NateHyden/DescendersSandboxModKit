@@ -30,13 +30,14 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                if ((object)_cached == null)
+                if (!UnityNull.Alive(_cached))
                 {
+                    _cached = null;
                     GameObject playerInfoObject = GameObject.Find("PlayerInfo_Human");
-                    if ((object)playerInfoObject == null) return;
+                    if (!UnityNull.Alive(playerInfoObject)) return;
                     _cached = playerInfoObject.GetComponent<PlayerInfoImpact>();
                 }
-                if ((object)_cached == null) return;
+                if (!UnityNull.Alive(_cached)) return;
                 _cached.Nobail(Enabled);
             }
             catch (System.Exception ex) { MelonLogger.Error("NoBail.Apply: " + ex.Message); Telemetry.ReportErrorAsync(ex, "NoBail"); }
@@ -78,7 +79,7 @@ namespace DescendersModMenu.Mods
         public static void Postfix(Vehicle __instance)
         {
             if (!NoBail.Enabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             try
             {

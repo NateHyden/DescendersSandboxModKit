@@ -169,6 +169,7 @@
     <Compile Include="Mods\Player\MirrorMode.cs" />
     <Compile Include="Mods\Player\OutfitPresets.cs" />
     <Compile Include="Mods\Player\SpeedrunTimer.cs" />
+    <Compile Include="Mods\Modes\LavaRising.cs" />
     <Compile Include="Mods\Modes\PoliceChaseMod.cs" />
     <Compile Include="Mods\Modes\SurvivalMode.cs" />
     <Compile Include="Mods\Modes\TrickAttackMode.cs" />
@@ -227,6 +228,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\KeyBindManager.cs" />
     <Compile Include="Core\ModEntry.cs" />
+    <Compile Include="Core\UnityNull.cs" />
     <Compile Include="Core\Telemetry.cs" />
     <Compile Include="Core\TelemetryConfig.cs" Condition="Exists('Core\TelemetryConfig.cs')" />
     <Compile Include="UI\Core\ColorSchemeManager.cs" />
@@ -246,6 +248,7 @@
     <Compile Include="UI\Pages\GhostPage.cs" />
     <Compile Include="UI\Pages\GraphicsPage.cs" />
     <Compile Include="UI\Pages\InfoPage.cs" />
+    <Compile Include="UI\Pages\LavaRisingPage.cs" />
     <Compile Include="UI\Pages\MapPage.cs" />
     <Compile Include="UI\Pages\ModesPage.cs" />
     <Compile Include="UI\Pages\MovePage.cs" />
@@ -256,6 +259,7 @@
     <Compile Include="UI\Pages\BindsPage.cs" />
     <Compile Include="UI\Pages\PerksPage.cs" />
     <Compile Include="UI\Pages\WorldPage.cs" />
+    <Compile Include="UI\HUDs\LavaRisingHUD.cs" />
     <Compile Include="UI\HUDs\PoliceHUD.cs" />
     <Compile Include="UI\HUDs\SessionHUD.cs" />
     <Compile Include="UI\HUDs\SurvivalHUD.cs" />

@@ -282,10 +282,10 @@ namespace DescendersModMenu.Mods
                 _vc = player.GetComponent<VehicleController>();
                 _rb = player.GetComponentInChildren<Rigidbody>();
 
-                if ((object)_vehicle == null || (object)_rb == null)
+                if (!UnityNull.Alive(_vehicle) || !UnityNull.Alive(_rb))
                 {
-                    ModLog.Warn("[ObjectPlacer] vehicle=" + ((object)_vehicle != null)
-                        + " rb=" + ((object)_rb != null) + " - aborting.");
+                    ModLog.Warn("[ObjectPlacer] vehicle=" + UnityNull.Alive(_vehicle)
+                        + " rb=" + UnityNull.Alive(_rb) + " - aborting.");
                     return;
                 }
 
@@ -336,6 +336,7 @@ namespace DescendersModMenu.Mods
         {
             try
             {
+                if (!UnityNull.Alive(_playerTrans)) return;
                 Vector3 forward = _playerTrans.forward; forward.y = 0f;
                 if (forward.sqrMagnitude < 0.01f) forward = Vector3.forward;
                 forward.Normalize();
@@ -345,7 +346,7 @@ namespace DescendersModMenu.Mods
                 Vector3 spawnPos = new Vector3(targetXZ.x, groundY, targetXZ.z);
 
                 _ghost = BuildSelectedObject("ObjectPlacer_Ghost");
-                if ((object)_ghost == null)
+                if (!UnityNull.Alive(_ghost))
                 {
                     ModLog.Warn("[ObjectPlacer] BuildSelectedObject returned null.");
                     IsPlacing = false;
@@ -372,7 +373,7 @@ namespace DescendersModMenu.Mods
         {
             if (!Enabled) return;
             if (WasCancelPressed()) { Exit(true); return; }
-            if ((object)_vehicle == null || (object)_rb == null) { Exit(); return; }
+            if (!UnityNull.Alive(_vehicle) || !UnityNull.Alive(_rb)) { Exit(); return; }
 
             try
             {
@@ -384,7 +385,7 @@ namespace DescendersModMenu.Mods
                     _rb.isKinematic = true;
                 }
 
-                if (!IsPlacing || (object)_ghost == null) return;
+                if (!IsPlacing || !UnityNull.Alive(_ghost)) return;
 
                 InControl.InputDevice dev = InControl.InputManager.ActiveDevice;
 
@@ -452,7 +453,7 @@ namespace DescendersModMenu.Mods
                     BumpCamDistance(-1);
 
                 Camera cam = Camera.main;
-                if ((object)cam != null && (object)_ghost != null)
+                if ((object)cam != null && UnityNull.Alive(_ghost))
                 {
                     Quaternion heading = Quaternion.Euler(0f, _yaw, 0f);
                     cam.transform.position = _ghost.transform.position + heading * CurrentCamOffset;
@@ -470,7 +471,7 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                if ((object)_ghost == null) return;
+                if (!UnityNull.Alive(_ghost)) return;
 
                 Vector3 pos = _ghost.transform.position;
                 Quaternion rot = _ghost.transform.rotation;
@@ -511,13 +512,13 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                if ((object)_ghost != null) { GameObject.Destroy(_ghost); _ghost = null; }
+                if (UnityNull.Alive(_ghost)) { GameObject.Destroy(_ghost); _ghost = null; }
                 IsPlacing = false;
 
-                if ((object)_vehicle != null && (object)_physField != null)
+                if (UnityNull.Alive(_vehicle) && (object)_physField != null)
                     _physField.SetValue(_vehicle, true);
 
-                if ((object)_rb != null)
+                if (UnityNull.Alive(_rb))
                 {
                     _rb.isKinematic = _savedKinematic;
                     _rb.useGravity = _savedGravity;
@@ -525,7 +526,7 @@ namespace DescendersModMenu.Mods
                     _rb.angularVelocity = Vector3.zero;
                 }
 
-                if ((object)_vc != null && (object)_toggleCtrl != null)
+                if (UnityNull.Alive(_vc) && (object)_toggleCtrl != null)
                     _toggleCtrl.Invoke(_vc, new object[] { true, true });
 
                 NoBail.SetEnabled(_savedNoBail);
@@ -548,7 +549,7 @@ namespace DescendersModMenu.Mods
 
         private static void ApplyGhostRotation()
         {
-            if ((object)_ghost == null) return;
+            if (!UnityNull.Alive(_ghost)) return;
             EnsureCatalog();
             Quaternion extra = Quaternion.identity;
             if (SelectedIndex >= 0 && SelectedIndex < _catalog.Count
@@ -560,11 +561,11 @@ namespace DescendersModMenu.Mods
 
         private static void RefreshGhostShape()
         {
-            if (!IsPlacing || (object)_ghost == null) return;
+            if (!IsPlacing || !UnityNull.Alive(_ghost)) return;
             Vector3 pos = _ghost.transform.position;
             GameObject.Destroy(_ghost);
             _ghost = BuildSelectedObject("ObjectPlacer_Ghost");
-            if ((object)_ghost == null) return;
+            if (!UnityNull.Alive(_ghost)) return;
             _ghost.transform.position = pos;
             ApplyGhostRotation();
             PrepareInstance(_ghost, true);
@@ -1019,7 +1020,7 @@ namespace DescendersModMenu.Mods
             if (Physics.Raycast(castFrom, Vector3.down, out hit, 1000f))
                 return hit.point.y;
 
-            return (object)_playerTrans != null ? _playerTrans.position.y : worldPos.y;
+            return UnityNull.Alive(_playerTrans) ? _playerTrans.position.y : worldPos.y;
         }
 
         public static void ClearAll()
@@ -1029,12 +1030,12 @@ namespace DescendersModMenu.Mods
 
         private static void ClearPlaced(bool log)
         {
-            bool had = _placedRamps.Count > 0 || (object)_ghost != null;
+            bool had = _placedRamps.Count > 0 || UnityNull.Alive(_ghost);
             for (int i = 0; i < _placedRamps.Count; i++)
                 if ((object)_placedRamps[i] != null) GameObject.Destroy(_placedRamps[i]);
             _placedRamps.Clear();
 
-            if ((object)_ghost != null) { GameObject.Destroy(_ghost); _ghost = null; }
+            if (UnityNull.Alive(_ghost)) { GameObject.Destroy(_ghost); _ghost = null; }
             IsPlacing = false;
 
             if (log && had) ModLog.Feedback("[ObjectPlacer] Cleared session objects.");

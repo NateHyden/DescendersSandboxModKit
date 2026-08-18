@@ -180,6 +180,15 @@ namespace DescendersModMenu.BikeStats
                     // Trick Set Swap
                     TrickSetSwapEnabled = TrickSetSwap.Enabled,
                     TrickSetSwapSourceName = TrickSetSwap.CurrentSourceName,
+
+                    LavaDifficultyLevel = LavaRising.DifficultyLevel,
+                    LavaHeightRecords = LavaRising.ExportRecords(),
+
+                    CompassAlwaysOnEnabled = CompassAlwaysOn.Enabled,
+                    SpectateModeEnabled = SpectateMode.Enabled,
+                    ScreenshotModeEnabled = ScreenshotMode.Enabled,
+                    RubberBandSteeringEnabled = RubberBandSteering.Enabled,
+                    RubberBandSteeringLevel = RubberBandSteering.Level,
                 };
 
                 string json = JsonUtility.ToJson(data, true);
@@ -356,6 +365,20 @@ namespace DescendersModMenu.BikeStats
                     TrickSetSwap.SetSourceByName(data.TrickSetSwapSourceName);
                 if (data.TrickSetSwapEnabled && !TrickSetSwap.Enabled) TrickSetSwap.Toggle();
 
+                int lavaLv = data.LavaDifficultyLevel;
+                if (lavaLv < 1 || lavaLv > 4) lavaLv = 2;
+                LavaRising.SetDifficulty(lavaLv);
+                if (!string.IsNullOrEmpty(data.LavaHeightRecords))
+                    LavaRising.ImportRecords(data.LavaHeightRecords);
+
+                if (data.CompassAlwaysOnEnabled && !CompassAlwaysOn.Enabled) CompassAlwaysOn.Toggle();
+                if (data.SpectateModeEnabled && !SpectateMode.Enabled) SpectateMode.Toggle();
+                if (data.ScreenshotModeEnabled && !ScreenshotMode.Enabled) ScreenshotMode.Toggle();
+                int rbLevel = data.RubberBandSteeringLevel;
+                if (rbLevel < 1 || rbLevel > 10) rbLevel = 5;
+                RubberBandSteering.SetLevel(rbLevel);
+                if (data.RubberBandSteeringEnabled && !RubberBandSteering.Enabled) RubberBandSteering.Toggle();
+
                 ModLog.Debug("[StatsManager] Loaded from: " + SaveFile);
             }
             catch (Exception ex) { MelonLogger.Error("[StatsManager] LoadStats: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "StatsManager"); }
@@ -386,6 +409,10 @@ namespace DescendersModMenu.BikeStats
                 OtherPage.GlobalReset();
                 TrickMultiplier.Reset();
                 if (CompassAlwaysOn.Enabled) CompassAlwaysOn.Toggle();
+                if (SpectateMode.Enabled) SpectateMode.Toggle();
+                if (ScreenshotMode.Enabled) ScreenshotMode.Toggle();
+                if (RubberBandSteering.Enabled) RubberBandSteering.Toggle();
+                RubberBandSteering.SetLevel(5);
 
                 Acceleration.SetLevel(1);
                 MaxSpeedMultiplier.SetLevel(1);
@@ -517,6 +544,10 @@ namespace DescendersModMenu.BikeStats
                 if (TrickAttackMode.CurrentState != TrickAttackMode.State.Off) TrickAttackMode.Reset();
                 if (BoulderDodgeMode.Enabled) BoulderDodgeMode.Reset();
                 if (SurvivalMode.Enabled) SurvivalMode.Reset();
+                LavaRising.Reset();
+                LavaRising.SetDifficulty(2);
+                LavaRising.ClearRecords();
+                PersistClearedLavaRecords();
 
                 ModLog.Debug("[StatsManager] Reset to defaults.");
             }
@@ -537,6 +568,22 @@ namespace DescendersModMenu.BikeStats
         {
             if (!Directory.Exists(SaveFolder))
                 Directory.CreateDirectory(SaveFolder);
+        }
+
+        // Keep BikeStats.json in sync when RESET clears lava records in memory.
+        private static void PersistClearedLavaRecords()
+        {
+            try
+            {
+                if (!File.Exists(SaveFile)) return;
+                string json = File.ReadAllText(SaveFile);
+                BikeStatsData data = JsonUtility.FromJson<BikeStatsData>(json);
+                if (data == null) return;
+                data.LavaDifficultyLevel = 2;
+                data.LavaHeightRecords = "";
+                File.WriteAllText(SaveFile, JsonUtility.ToJson(data, true));
+            }
+            catch (Exception ex) { ModLog.Warn("[StatsManager] PersistClearedLavaRecords: " + ex.Message); }
         }
     }
 }

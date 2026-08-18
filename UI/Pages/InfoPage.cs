@@ -689,7 +689,7 @@ namespace DescendersModMenu.UI
                 CareerReset.IncreaseRepMultiplier();
                 RefreshCareerResult();
             });
-            UIHelpers.InfoBox(vlg.transform, "+/- rep per click, scaled by the x1-x10 multiplier on the right. Updates TOTALREP (sponsor tiers) and the persistent lifetime rep total (the one submitted to Steam).");
+            UIHelpers.InfoBox(vlg.transform, "+/- rep per click, scaled by the multiplier on the right (x1-x10 by 1, then x20-x200 by 10). Updates TOTALREP (sponsor tiers) and the persistent lifetime rep total (the one submitted to Steam).");
 
             var inGameRepRow = UIHelpers.StatRow("Adjust In-Game Rep", vlg.transform);
             _inGameRepMinus = UIHelpers.SmallBtn(inGameRepRow.transform, "\u25C0", () =>
@@ -718,7 +718,7 @@ namespace DescendersModMenu.UI
                 CareerReset.IncreaseInGameRepMultiplier();
                 RefreshCareerResult();
             });
-            UIHelpers.InfoBox(vlg.transform, "+/- rep per click, scaled by the x1-x10 multiplier on the right. Adjusts the current session's combo-score rep counter only - resets to 0 at the start of each session, separate from your Total Rep above.");
+            UIHelpers.InfoBox(vlg.transform, "+/- rep per click, scaled by the multiplier on the right (x1-x10 by 1, then x20-x200 by 10). Adjusts the current session's combo-score rep counter only - resets to 0 at the start of each session, separate from your Total Rep above.");
 
             var resultRow = UIHelpers.StatRow("Last Result", vlg.transform);
             _careerResultTxt = UIHelpers.Txt("CRResult", resultRow.transform, CareerReset.LastResult,
@@ -876,7 +876,8 @@ namespace DescendersModMenu.UI
 
         private static void RefreshCareerResult()
         {
-            if ((object)_careerResultTxt != null) _careerResultTxt.text = CareerReset.LastResult;
+            if ((object)_careerResultTxt != null && _careerResultTxt)
+                _careerResultTxt.text = CareerReset.LastResult;
 
             if (_sponsorVal) _sponsorVal.text = CareerReset.CurrentSponsorName;
 

@@ -39,28 +39,29 @@ namespace DescendersModMenu.Mods
 
         private static bool FindHeadBone()
         {
-            if ((object)_headBone != null) return true;
+            if (UnityNull.Alive(_headBone)) return true;
+            _headBone = null;
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) return false;
+            if (!UnityNull.Alive(player)) return false;
 
             Transform[] all = player.GetComponentsInChildren<Transform>(true);
             for (int i = 0; i < all.Length; i++)
-                if (string.Equals(all[i].name, "bicycleDude_Rig_V02_Slave_C_Head1", System.StringComparison.Ordinal))
+                if (UnityNull.Alive(all[i]) && string.Equals(all[i].name, "bicycleDude_Rig_V02_Slave_C_Head1", System.StringComparison.Ordinal))
                 { _headBone = all[i]; break; }
 
-            if ((object)_headBone == null)
+            if (!UnityNull.Alive(_headBone))
             {
                 for (int i = 0; i < all.Length; i++)
-                    if (all[i].name.IndexOf("Head", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (UnityNull.Alive(all[i]) && all[i].name.IndexOf("Head", System.StringComparison.OrdinalIgnoreCase) >= 0)
                     { _headBone = all[i]; ModLog.Debug("[BigHeadMode] Exact bone name missed, using fallback: " + all[i].name); break; }
             }
 
-            if ((object)_headBone == null)
+            if (!UnityNull.Alive(_headBone))
             {
                 ModLog.Warn("[BigHeadMode] No head bone found. Candidate bones containing 'Neck' or 'Spine':");
                 for (int i = 0; i < all.Length; i++)
-                    if (all[i].name.IndexOf("Neck", System.StringComparison.OrdinalIgnoreCase) >= 0
-                        || all[i].name.IndexOf("Spine", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (UnityNull.Alive(all[i]) && (all[i].name.IndexOf("Neck", System.StringComparison.OrdinalIgnoreCase) >= 0
+                        || all[i].name.IndexOf("Spine", System.StringComparison.OrdinalIgnoreCase) >= 0))
                         ModLog.Debug("  - " + all[i].name);
                 return false;
             }
@@ -82,7 +83,7 @@ namespace DescendersModMenu.Mods
 
         private static void ApplyScale()
         {
-            if ((object)_headBone == null) return;
+            if (!UnityNull.Alive(_headBone)) { _headBone = null; return; }
             _headBone.localScale = _defaultScale * Scales[Level - 1];
         }
 
@@ -93,7 +94,12 @@ namespace DescendersModMenu.Mods
         public static void Tick()
         {
             if (!Enabled) return;
-            if ((object)_headBone == null) { if (!FindHeadBone()) return; if (!_captured) { _defaultScale = _headBone.localScale; _captured = true; } }
+            if (!UnityNull.Alive(_headBone))
+            {
+                _headBone = null;
+                if (!FindHeadBone()) return;
+                if (!_captured) { _defaultScale = _headBone.localScale; _captured = true; }
+            }
             ApplyScale();
         }
 

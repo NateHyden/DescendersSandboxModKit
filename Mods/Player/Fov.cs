@@ -59,10 +59,10 @@ namespace DescendersModMenu.Mods
                 float target = GetFOV();
                 for (int i = 0; i < _cameras.Length; i++)
                 {
-                    if ((object)_cameras[i] == null) continue;
+                    if (!UnityNull.Alive(_cameras[i])) continue;
                     // Fresh fetch every call — survives camera mode switches
                     CameraAngle ca = _caField.GetValue(_cameras[i]) as CameraAngle;
-                    if ((object)ca == null) continue;
+                    if (!UnityNull.Alive(ca)) continue;
 
                     // Capture default on first encounter (before we overwrite it)
                     if (_defaults[i] < 0f)
@@ -84,12 +84,13 @@ namespace DescendersModMenu.Mods
         {
             try
             {
+                EnsureCameras();
                 if ((object)_cameras == null || (object)_caField == null) return;
                 for (int i = 0; i < _cameras.Length; i++)
                 {
-                    if ((object)_cameras[i] == null) continue;
+                    if (!UnityNull.Alive(_cameras[i])) continue;
                     CameraAngle ca = _caField.GetValue(_cameras[i]) as CameraAngle;
-                    if ((object)ca == null) continue;
+                    if (!UnityNull.Alive(ca)) continue;
                     // Use captured default; fall back to 85f if not yet captured
                     ca.targetFOV = (_defaults != null && _defaults[i] > 0f)
                         ? _defaults[i]
@@ -119,8 +120,20 @@ namespace DescendersModMenu.Mods
         // ── Internals ─────────────────────────────────────────────────
         private static void EnsureCameras()
         {
-            // Rebuild camera list if empty
-            if ((object)_cameras == null || _cameras.Length == 0)
+            bool rebuild = (object)_cameras == null || _cameras.Length == 0;
+            if (!rebuild)
+            {
+                for (int i = 0; i < _cameras.Length; i++)
+                {
+                    if (!UnityNull.Alive(_cameras[i]))
+                    {
+                        rebuild = true;
+                        break;
+                    }
+                }
+            }
+
+            if (rebuild)
             {
                 _cameras = UnityEngine.Object.FindObjectsOfType<BikeCamera>();
                 _defaults = new float[_cameras.Length];
@@ -131,8 +144,18 @@ namespace DescendersModMenu.Mods
             // Find the CameraAngle FieldInfo once per camera set
             if (!_fieldScan && _cameras.Length > 0)
             {
+                BikeCamera probe = null;
+                for (int i = 0; i < _cameras.Length; i++)
+                {
+                    if (UnityNull.Alive(_cameras[i]))
+                    {
+                        probe = _cameras[i];
+                        break;
+                    }
+                }
+                if (!UnityNull.Alive(probe)) return;
                 _fieldScan = true;
-                FieldInfo[] fields = _cameras[0].GetType().GetFields(
+                FieldInfo[] fields = probe.GetType().GetFields(
                     BindingFlags.Public | BindingFlags.Instance);
                 for (int j = 0; j < fields.Length; j++)
                 {

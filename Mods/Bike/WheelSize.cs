@@ -40,14 +40,18 @@ namespace DescendersModMenu.Mods
                 {
                     float fs = ScaleLevels[FrontLevel - 1];
                     float rs = ScaleLevels[RearLevel - 1];
-                    if ((object)_cachedFrontBone != null) _cachedFrontBone.localScale = new Vector3(fs, fs, fs);
-                    if ((object)_cachedBackBone != null) _cachedBackBone.localScale = new Vector3(rs, rs, rs);
+                    if (UnityNull.Alive(_cachedFrontBone)) _cachedFrontBone.localScale = new Vector3(fs, fs, fs);
+                    else _cachedFrontBone = null;
+                    if (UnityNull.Alive(_cachedBackBone)) _cachedBackBone.localScale = new Vector3(rs, rs, rs);
+                    else _cachedBackBone = null;
                 }
                 else if (IsEnabled && Level != 10)
                 {
                     float scale = ScaleLevels[Level - 1];
-                    if ((object)_cachedFrontBone != null) _cachedFrontBone.localScale = new Vector3(scale, scale, scale);
-                    if ((object)_cachedBackBone != null) _cachedBackBone.localScale = new Vector3(scale, scale, scale);
+                    if (UnityNull.Alive(_cachedFrontBone)) _cachedFrontBone.localScale = new Vector3(scale, scale, scale);
+                    else _cachedFrontBone = null;
+                    if (UnityNull.Alive(_cachedBackBone)) _cachedBackBone.localScale = new Vector3(scale, scale, scale);
+                    else _cachedBackBone = null;
                 }
             }
             catch { }

@@ -240,7 +240,7 @@ namespace DescendersModMenu.Mods
         public static void Postfix(Vehicle __instance)
         {
             if (!GameModifierMods.NoSpeedWobblesEnabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             if (!_cached)
             {
@@ -278,7 +278,7 @@ namespace DescendersModMenu.Mods
         public static void Postfix(BikeCamera __instance)
         {
             if (!GameModifierMods.NoSpeedWobblesEnabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             if (!_cached)
             {

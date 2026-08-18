@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using MelonLoader;
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -86,7 +87,7 @@ namespace DescendersModMenu.Mods
             if (!Enabled && !ShowWorldObjects) return;
 
             Camera cam = Camera.main;
-            if ((object)cam == null) return;
+            if (!UnityNull.Alive(cam)) return;
 
             if ((object)_labelStyle == null)
             {
@@ -130,11 +131,14 @@ namespace DescendersModMenu.Mods
                 try
                 {
                     ESPTarget target = _targets[i];
-                    if ((object)target == null) continue;
+                    if ((object)target == null || !UnityNull.Alive(target.Root))
+                    {
+                        _targets.RemoveAt(i);
+                        i--;
+                        continue;
+                    }
 
-                    Vector3 rootPos;
-                    try { rootPos = target.Root.position; }
-                    catch { continue; }
+                    Vector3 rootPos = target.Root.position;
 
                     Vector3 worldPos = rootPos + Vector3.up * HeadHeightOffset;
                     Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
@@ -177,11 +181,14 @@ namespace DescendersModMenu.Mods
                 try
                 {
                     WorldTarget target = _worldTargets[i];
-                    if ((object)target == null) continue;
+                    if ((object)target == null || !UnityNull.Alive(target.Root))
+                    {
+                        _worldTargets.RemoveAt(i);
+                        i--;
+                        continue;
+                    }
 
-                    Vector3 rootPos;
-                    try { rootPos = target.Root.position; }
-                    catch { continue; }
+                    Vector3 rootPos = target.Root.position;
 
                     Vector3 screenPos = cam.WorldToScreenPoint(rootPos);
                     if (screenPos.z <= 0f) continue;
@@ -227,7 +234,7 @@ namespace DescendersModMenu.Mods
                 for (int i = 0; i < vehicles.Length; i++)
                 {
                     Vehicle v = vehicles[i];
-                    if ((object)v == null) continue;
+                    if (!UnityNull.Alive(v)) continue;
 
                     GameObject root = v.gameObject;
                     if ((object)root == null || !root.activeInHierarchy) continue;

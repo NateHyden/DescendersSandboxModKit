@@ -90,6 +90,7 @@ namespace DescendersModMenu.Mods
                 S("RandomBike", () => RandomBikeSwitch.Enabled, RandomBikeSwitch.Toggle),
                 S("RandomMutator", () => RandomMutatorOnCheckpoint.Enabled, RandomMutatorOnCheckpoint.Toggle),
                 S("RandomWeather", () => RandomWeatherRoulette.Enabled, RandomWeatherRoulette.Toggle),
+                S("LavaRising", () => LavaRising.Enabled, LavaRising.Toggle),
                 S("Avalanche", () => AvalancheMode.Enabled, AvalancheMode.Toggle),
                 S("Earthquake", () => EarthquakeMode.Enabled, EarthquakeMode.Toggle),
                 S("PoliceChase", () => PoliceChaseMode.Enabled, PoliceChaseMode.Toggle),
@@ -114,6 +115,12 @@ namespace DescendersModMenu.Mods
                         bool on = slots[i].Get();
                         _snap[i] = on;
                         if (!on) continue;
+                        if (slots[i].Name == "LavaRising")
+                        {
+                            LavaRising.PauseForAllMods();
+                            n++;
+                            continue;
+                        }
                         slots[i].Toggle();
                         n++;
                     }
@@ -148,6 +155,12 @@ namespace DescendersModMenu.Mods
                     if (!_snap[i]) continue;
                     try
                     {
+                        if (slots[i].Name == "LavaRising")
+                        {
+                            LavaRising.ResumeFromAllMods();
+                            n++;
+                            continue;
+                        }
                         if (!slots[i].Get()) slots[i].Toggle();
                         n++;
                     }

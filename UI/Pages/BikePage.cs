@@ -864,7 +864,7 @@ namespace DescendersModMenu.UI
         public static void RefreshAll()
         {
             // Scene unload clears UI refs; skip until CreatePage runs again
-            if ((object)_travelVal == null && (object)_spiderVal == null) return;
+            if (!UnityNull.Alive(_travelVal) && !UnityNull.Alive(_spiderVal)) return;
 
             // Suspension
             if (_travelVal) _travelVal.text = Suspension.TravelLevel.ToString();

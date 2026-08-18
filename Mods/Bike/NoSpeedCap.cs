@@ -126,7 +126,7 @@ namespace DescendersModMenu.Mods
         public static void Postfix(VehicleController __instance)
         {
             if (!NoSpeedCap.Enabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             // Cache fields
             if ((object)_vehicleField == null)
@@ -148,7 +148,7 @@ namespace DescendersModMenu.Mods
             if ((object)_vehicleField == null) return;
 
             Vehicle vehicle = _vehicleField.GetValue(__instance) as Vehicle;
-            if ((object)vehicle == null) return;
+            if (!UnityNull.Alive(vehicle)) return;
 
             // Only for local player
             if (!string.Equals(vehicle.gameObject.name, "Player_Human",
@@ -222,7 +222,7 @@ namespace DescendersModMenu.Mods
         {
             _active = false;
             if (!NoSpeedCap.Enabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
             if (!string.Equals(__instance.gameObject.name, "Player_Human",
                 System.StringComparison.Ordinal)) return;
 
@@ -231,9 +231,9 @@ namespace DescendersModMenu.Mods
             Rigidbody rb = null;
             if ((object)_rbField != null)
                 rb = _rbField.GetValue(__instance) as Rigidbody;
-            if ((object)rb == null) return;
+            if (!UnityNull.Alive(rb)) return;
 
-            // Save real velocity and zero it so E{Kza thinks speed=0
+            // Save real velocity and zero it so E{Kza thinks speed=0}
             _savedVelocity = rb.velocity;
             rb.velocity = Vector3.zero;
             _active = true;
@@ -250,7 +250,7 @@ namespace DescendersModMenu.Mods
             Rigidbody rb = null;
             if ((object)_rbField != null)
                 rb = _rbField.GetValue(__instance) as Rigidbody;
-            if ((object)rb == null) return;
+            if (!UnityNull.Alive(rb)) return;
 
             Vector3 accelDelta = rb.velocity; // what E{Kza added to "zero"
             rb.velocity = _savedVelocity + accelDelta; // real velocity + uncapped accel

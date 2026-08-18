@@ -50,7 +50,11 @@ namespace DescendersModMenu.Mods
         public static void Tick()
         {
             if (!Enabled) return;
-            if ((object)_trail == null) Apply(true);
+            if (!UnityNull.Alive(_trail))
+            {
+                _trail = null;
+                Apply(true);
+            }
         }
 
 
@@ -59,13 +63,14 @@ namespace DescendersModMenu.Mods
             try
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null) { ModLog.Warn("[TrailPainter] Player_Human not found."); return; }
+                if (!UnityNull.Alive(player)) { ModLog.Warn("[TrailPainter] Player_Human not found."); return; }
                 Transform bikeModel = player.transform.Find("BikeModel");
-                Transform anchor = (object)bikeModel != null ? bikeModel : player.transform;
+                Transform anchor = UnityNull.Alive(bikeModel) ? bikeModel : player.transform;
 
                 if (on)
                 {
-                    if ((object)_trail != null) return; // already applied
+                    if (UnityNull.Alive(_trail)) return; // already applied
+                    _trail = null;
                     GameObject trailObj = new GameObject("SandboxTrail");
                     trailObj.transform.SetParent(anchor, false);
                     // Anchor's local origin sits near wheel-contact height on
@@ -84,11 +89,9 @@ namespace DescendersModMenu.Mods
                 }
                 else
                 {
-                    if ((object)_trail != null)
-                    {
+                    if (UnityNull.Alive(_trail))
                         UnityEngine.Object.Destroy(_trail.gameObject);
-                        _trail = null;
-                    }
+                    _trail = null;
                 }
             }
             catch (System.Exception ex) { MelonLogger.Error("[TrailPainter] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TrailPainter"); }
@@ -96,7 +99,7 @@ namespace DescendersModMenu.Mods
 
         private static void ApplyColour()
         {
-            if ((object)_trail == null) return;
+            if (!UnityNull.Alive(_trail)) { _trail = null; return; }
             Color c = Palette[ColourIndex];
             _trail.startColor = c;
             Color end = c; end.a = 0f;

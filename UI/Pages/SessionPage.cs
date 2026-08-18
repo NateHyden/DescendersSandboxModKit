@@ -41,6 +41,7 @@ namespace DescendersModMenu.UI
         private static RectTransform _compassKnob;
         private static Text _tmLabelVal;
         private static UnityEngine.UI.Button _tmMinus, _tmPlus;
+        private static Text _jumpStatusTxt;
 
         public static bool IsAnyActive =>
             SpeedrunTimer.Enabled || SessionHUD.Enabled || SpectateMode.Enabled ||
@@ -179,7 +180,7 @@ namespace DescendersModMenu.UI
                 shTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
                 UIHelpers.ActionBtn(sessionHdr.transform, "Reset All", () =>
                 {
-                    TopSpeed.Reset();
+                    TopSpeed.ResetSession();
                     SessionTrackers.ResetBails();
                     SessionTrackers.ResetCheckpoints();
                     SessionTrackers.ResetAirtime();
@@ -197,7 +198,7 @@ namespace DescendersModMenu.UI
                 _topSpeedVal = UIHelpers.Txt("TSV", tsr.transform, TopSpeed.DisplayValue,
                     12, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
                 _topSpeedVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
-                UIHelpers.ActionBtn(tsr.transform, "Reset", () => { TopSpeed.Reset(); RefreshAll(); }, 52);
+                UIHelpers.ActionBtn(tsr.transform, "Reset", () => { TopSpeed.ResetSession(); RefreshAll(); }, 52);
 
                 var srtr = UIHelpers.StatRow("Speedrun Timer", c);
                 _srtVal = UIHelpers.Txt("SrV", srtr.transform, "OFF", 11, FontStyle.Bold,
@@ -205,7 +206,7 @@ namespace DescendersModMenu.UI
                 _srtVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(srtr.transform, "SrT", () => { SpeedrunTimer.Toggle(); RefreshAll(); },
                     out _srtTrack, out _srtKnob);
-                UIHelpers.ActionBtn(srtr.transform, "Reset", () => { SpeedrunTimer.ResetTime(); }, 52);
+                UIHelpers.ActionBtn(srtr.transform, "Reset", () => { SpeedrunTimer.ResetTime(); RefreshAll(); }, 52);
                 UIHelpers.InfoBox(c, "Requires Speedrun Timer ON in Settings > Gameplay.");
 
                 var tmr = UIHelpers.StatRow("Trick Multiplier", c);
@@ -245,6 +246,46 @@ namespace DescendersModMenu.UI
                     12, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
                 _peakGforceVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
                 UIHelpers.ActionBtn(pgfr.transform, "Reset", () => { SessionTrackers.ResetGForce(); RefreshAll(); }, 52);
+
+                UIHelpers.Divider(c);
+
+                UIHelpers.SectionHeader("RUN", c);
+
+                var jr = UIHelpers.StatRow("Jump to Finish", c);
+                _jumpStatusTxt = UIHelpers.Txt("JumpStatus", jr.transform, "",
+                    9, FontStyle.Italic, TextAnchor.MiddleRight, UIHelpers.TextDim);
+                _jumpStatusTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 130;
+                UIHelpers.ActionBtnOrange(jr.transform, "Jump", () =>
+                {
+                    try
+                    {
+                        var fl = FinishLine.GetAFinishLine();
+                        if (!UnityNull.Alive(fl))
+                        {
+                            ModLog.Debug("[JumpToFinish] No FinishLine found on this level - nothing to jump to.");
+                            if (_jumpStatusTxt) { _jumpStatusTxt.text = "No finish line here"; _jumpStatusTxt.color = UIHelpers.Orange; }
+                            return;
+                        }
+
+                        DevCommandsGameplay.JumpToFinish();
+                        if (_jumpStatusTxt) _jumpStatusTxt.text = "";
+                    }
+                    catch (System.Exception ex)
+                    {
+                        MelonLogger.Error("[JumpToFinish]: " + ex.Message);
+                        Telemetry.ReportErrorAsync(ex, "SessionPage");
+                        if (_jumpStatusTxt) { _jumpStatusTxt.text = "Failed - see log"; _jumpStatusTxt.color = UIHelpers.Orange; }
+                    }
+                }, 60);
+                FavouritesManager.RegisterStarButton("JumpToFinish", UIHelpers.StarBtn(jr.transform, "JumpToFinish", () => FavouritesManager.Toggle("JumpToFinish")));
+
+                var skipRow = UIHelpers.StatRow("Skip Song", c);
+                UIHelpers.ActionBtn(skipRow.transform, "Skip", () =>
+                {
+                    try { DevCommandsGameplay.SkipSong(); }
+                    catch (System.Exception ex) { MelonLogger.Error("[SkipSong]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionPage"); }
+                }, 60);
+                FavouritesManager.RegisterStarButton("SkipSong", UIHelpers.StarBtn(skipRow.transform, "SkipSong", () => FavouritesManager.Toggle("SkipSong")));
 
                 // ── STAR BUTTONS (Favourites) ──────────────────────────
                 FavouritesManager.RegisterStarButton("ShowHUD", UIHelpers.StarBtn(hudr.transform, "ShowHUD", () => FavouritesManager.Toggle("ShowHUD")));
@@ -320,6 +361,41 @@ namespace DescendersModMenu.UI
                         0, 3, () => MenuWindow.RefreshAll(), 0),
                     IsActive = () => TrickMultiplier.Enabled
                 });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "JumpToFinish",
+                    DisplayName = "Jump to Finish",
+                    TabBadge = "SESSION",
+                    BuildControls = (p) =>
+                    {
+                        var row = FavsPage.CompactStatRow("Jump to Finish", p);
+                        UIHelpers.ActionBtnOrange(row.transform, "Jump", () =>
+                        {
+                            try
+                            {
+                                var fl = FinishLine.GetAFinishLine();
+                                if (!UnityNull.Alive(fl)) return;
+                                DevCommandsGameplay.JumpToFinish();
+                            }
+                            catch (System.Exception ex) { MelonLogger.Error("[JumpToFinish]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionPage"); }
+                        }, 60);
+                    },
+                    IsActive = () => false
+                });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "SkipSong",
+                    DisplayName = "Skip Song",
+                    TabBadge = "SESSION",
+                    BuildControls = (p) =>
+                    {
+                        var row = FavsPage.CompactStatRow("Skip Song", p);
+                        UIHelpers.ActionBtn(row.transform, "Skip", () =>
+                        {
+                            try { DevCommandsGameplay.SkipSong(); }
+                            catch (System.Exception ex) { MelonLogger.Error("[SkipSong]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionPage"); }
+                        }, 60);
+                    },
+                    IsActive = () => false
+                });
 
                 UIHelpers.AddScrollForwarders(c);
             }
@@ -377,6 +453,51 @@ namespace DescendersModMenu.UI
             if (_tmLabelVal) _tmLabelVal.text = TrickMultiplier.LevelDisplay;
             if ((object)_tmMinus != null && _tmMinus) _tmMinus.interactable = TrickMultiplier.Level > 0;
             if ((object)_tmPlus != null && _tmPlus) _tmPlus.interactable = TrickMultiplier.Level < 3;
+        }
+
+        public static void ClearUiRefs()
+        {
+            _sessionTimeVal = null;
+            _topSpeedVal = null;
+            _bailCountVal = null;
+            _checkpointCountVal = null;
+            _airtimeVal = null;
+            _gforceVal = null;
+            _peakGforceVal = null;
+            _srtVal = null;
+            _srtTrack = null;
+            _srtKnob = null;
+            _hudTogVal = null;
+            _hudTrack = null;
+            _hudKnob = null;
+            _specTogVal = null;
+            _specTargetVal = null;
+            _specDistVal = null;
+            _specTrack = null;
+            _specKnob = null;
+            _fovVal = null;
+            _fovTogVal = null;
+            _fovBar = null;
+            _fovTrack = null;
+            _fovKnob = null;
+            _slowVal = null;
+            _slowSpeedVal = null;
+            _slowSpeedBar = null;
+            _slowTrack = null;
+            _slowKnob = null;
+            _smobVal = null;
+            _smobTrack = null;
+            _smobKnob = null;
+            _blackDeathVal = null;
+            _blackDeathTrack = null;
+            _blackDeathKnob = null;
+            _compassVal = null;
+            _compassTrack = null;
+            _compassKnob = null;
+            _tmLabelVal = null;
+            _tmMinus = null;
+            _tmPlus = null;
+            _jumpStatusTxt = null;
         }
 
         public static void TickLive()

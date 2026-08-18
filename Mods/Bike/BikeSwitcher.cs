@@ -39,14 +39,15 @@ namespace DescendersModMenu.Mods
                 GameData gameData = UnityEngine.Object.FindObjectOfType<GameData>();
                 if (object.ReferenceEquals(gameData, null))
                 {
-                    ModLog.Warn("BikeSwitcher: GameData not found.");
+                    // Expected in menus / lobby — not a real failure.
+                    ModLog.Debug("BikeSwitcher: GameData not found.");
                     return;
                 }
 
                 PlayerInfoImpact player = GetPlayerImpact();
                 if (object.ReferenceEquals(player, null))
                 {
-                    ModLog.Warn("BikeSwitcher: PlayerInfoImpact not found.");
+                    ModLog.Debug("BikeSwitcher: PlayerInfoImpact not found.");
                     return;
                 }
 
@@ -67,7 +68,7 @@ namespace DescendersModMenu.Mods
 
                 if (object.ReferenceEquals(playerObject, null))
                 {
-                    ModLog.Warn("BikeSwitcher: Player_Human GameObject not found.");
+                    ModLog.Debug("BikeSwitcher: Player_Human GameObject not found.");
                     return;
                 }
 
@@ -243,7 +244,7 @@ namespace DescendersModMenu.Mods
                 PlayerManager playerManager = UnityEngine.Object.FindObjectOfType<PlayerManager>();
                 if (object.ReferenceEquals(playerManager, null))
                 {
-                    ModLog.Warn("BikeSwitcher: PlayerManager not found.");
+                    ModLog.Debug("BikeSwitcher: PlayerManager not found.");
                     return null;
                 }
 

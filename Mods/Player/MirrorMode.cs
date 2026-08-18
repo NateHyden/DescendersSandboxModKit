@@ -1,5 +1,6 @@
 ﻿using MelonLoader;
 using UnityEngine;
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -38,9 +39,9 @@ namespace DescendersModMenu.Mods
         {
             if (!Enabled) return;
             Camera cam = Camera.main;
-            if ((object)cam == null) return;
+            if (!UnityNull.Alive(cam)) return;
 
-            if ((object)_lastCam != null && (object)_lastCam != (object)cam)
+            if (UnityNull.Alive(_lastCam) && (object)_lastCam != (object)cam)
                 try { _lastCam.ResetProjectionMatrix(); } catch { }
 
             if ((object)_lastCam != (object)cam)
@@ -64,9 +65,9 @@ namespace DescendersModMenu.Mods
             GL.invertCulling = false;
             try
             {
-                if ((object)_lastCam != null) _lastCam.ResetProjectionMatrix();
+                if (UnityNull.Alive(_lastCam)) _lastCam.ResetProjectionMatrix();
                 Camera cam = Camera.main;
-                if ((object)cam != null && (object)cam != (object)_lastCam)
+                if (UnityNull.Alive(cam) && (object)cam != (object)_lastCam)
                     cam.ResetProjectionMatrix();
             }
             catch { }
@@ -80,7 +81,7 @@ namespace DescendersModMenu.Mods
             _weEnabledReverseSteer = false;
             Enabled = false;
             GL.invertCulling = false;
-            try { Camera cam = Camera.main; if ((object)cam != null) cam.ResetProjectionMatrix(); } catch { }
+            try { Camera cam = Camera.main; if (UnityNull.Alive(cam)) cam.ResetProjectionMatrix(); } catch { }
             _lastCam = null;
         }
     }

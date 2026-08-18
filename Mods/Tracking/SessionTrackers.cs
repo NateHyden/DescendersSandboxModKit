@@ -149,7 +149,7 @@ namespace DescendersModMenu.Mods
 
             // Capture impact speed for BikeDamage before respawn resets velocity
             float impactSpeed = 0f;
-            if ((object)_cachedRb != null)
+            if (UnityNull.Alive(_cachedRb))
                 impactSpeed = _cachedRb.velocity.magnitude;
 
             BlackDeath.OnBail();
@@ -203,17 +203,17 @@ namespace DescendersModMenu.Mods
                     _sessionStartTime = Time.unscaledTime;
 
                 // Re-find player if cache is stale
-                if ((object)_cachedPlayer == null || !_cachedPlayer.activeInHierarchy)
+                if (!UnityNull.Alive(_cachedPlayer) || !_cachedPlayer.activeInHierarchy)
                 {
                     _cachedPlayer = GameObject.Find("Player_Human");
                     _cachedVehicle = null;
                     _cachedRb = null;  // invalidate Rigidbody cache with player
                 }
-                if ((object)_cachedPlayer == null) return;
+                if (!UnityNull.Alive(_cachedPlayer)) return;
 
-                if ((object)_cachedVehicle == null)
+                if (!UnityNull.Alive(_cachedVehicle))
                     _cachedVehicle = _cachedPlayer.GetComponent<Vehicle>();
-                if ((object)_cachedVehicle == null) return;
+                if (!UnityNull.Alive(_cachedVehicle)) return;
 
                 // ── Airtime tracking ─────────────────────────────────────
                 bool onGround = true;
@@ -275,9 +275,9 @@ namespace DescendersModMenu.Mods
                 _wasOnGround = onGround;
 
                 // ── G-Force tracking ──────────────────────────────────────
-                if ((object)_cachedRb == null)
+                if (!UnityNull.Alive(_cachedRb))
                     _cachedRb = _cachedPlayer.GetComponentInChildren<Rigidbody>();
-                if ((object)_cachedRb != null)
+                if (UnityNull.Alive(_cachedRb))
                 {
                     Vector3 currentVelocity = _cachedRb.velocity;
                     if (_hasLastVelocity)

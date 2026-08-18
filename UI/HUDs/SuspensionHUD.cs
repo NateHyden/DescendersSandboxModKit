@@ -176,7 +176,16 @@ namespace DescendersModMenu.Mods
             EnsureWheels();
 
             // If neither wheel is available yet, bail silently
-            if ((object)_frontWheel == null && (object)_rearWheel == null) return;
+            if (!UnityNull.Alive(_frontWheel) && !UnityNull.Alive(_rearWheel))
+            {
+                if ((object)_frontWheel != null || (object)_rearWheel != null)
+                {
+                    _frontWheel = null;
+                    _rearWheel = null;
+                    _wheelsSearched = false;
+                }
+                return;
+            }
 
             float s = Screen.height / 1080f;
             float barW = BarW * s;
@@ -320,10 +329,21 @@ namespace DescendersModMenu.Mods
         // ─────────────────────────────────────────────────────────────
         private static void EnsureWheels()
         {
-            if (_wheelsSearched) return;       // already ran search this scene
+            if (_wheelsSearched)
+            {
+                if (((object)_frontWheel != null && !UnityNull.Alive(_frontWheel))
+                    || ((object)_rearWheel != null && !UnityNull.Alive(_rearWheel)))
+                {
+                    _frontWheel = null;
+                    _rearWheel = null;
+                    _wheelsSearched = false;
+                }
+                else
+                    return;
+            }
 
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) return; // silent — player not spawned yet
+            if (!UnityNull.Alive(player)) return; // silent — player not spawned yet
 
             // Mark searched so we don't repeat every frame even if search partially fails
             _wheelsSearched = true;
@@ -380,8 +400,9 @@ namespace DescendersModMenu.Mods
             if (_fieldCached) return;
             _fieldCached = true; // set early — prevents re-scan on failure
 
-            Wheel w = (object)_frontWheel != null ? _frontWheel : _rearWheel;
-            if ((object)w == null)
+            Wheel w = UnityNull.Alive(_frontWheel) ? _frontWheel
+                : (UnityNull.Alive(_rearWheel) ? _rearWheel : null);
+            if (!UnityNull.Alive(w))
             {
                 ModLog.Warn("[SuspensionHUD] EnsureField: no wheel to introspect.");
                 return;
@@ -470,7 +491,11 @@ namespace DescendersModMenu.Mods
 
         private static float GetCompression(Wheel w)
         {
-            if ((object)w == null) return 0f;
+            if (!UnityNull.Alive(w))
+            {
+                if ((object)w != null) _wheelsSearched = false;
+                return 0f;
+            }
             if ((object)_suspField == null) return 0f;
             try
             {

@@ -79,7 +79,7 @@ namespace DescendersModMenu.Mods
         {
             get
             {
-                if (!Enabled || (object)_ball == null || (object)_player == null)
+                if (!Enabled || !UnityNull.Alive(_ball) || !UnityNull.Alive(_player))
                     return -1f;
                 return Vector3.Distance(_player.transform.position,
                                         _ball.transform.position);
@@ -90,7 +90,7 @@ namespace DescendersModMenu.Mods
         {
             get
             {
-                if ((object)_playerRb == null) return 0f;
+                if (!UnityNull.Alive(_playerRb)) return 0f;
                 return _playerRb.velocity.magnitude;
             }
         }
@@ -161,10 +161,12 @@ namespace DescendersModMenu.Mods
                 ManualReset();
 
             // Find/cache player
-            if ((object)_player == null)
+            if (!UnityNull.Alive(_player))
             {
                 _player = GameObject.Find("Player_Human");
-                if ((object)_player != null)
+                _playerRb = null;
+                _cyclist = null;
+                if (UnityNull.Alive(_player))
                 {
                     _playerRb = _player.GetComponentInChildren<Rigidbody>();
                     // Find Cyclist on Player_Human reliably
@@ -176,9 +178,11 @@ namespace DescendersModMenu.Mods
                         { _cyclist = cyclists[i]; break; }
                     }
                 }
+                else
+                    _player = null;
                 _hasLastPos = false;
             }
-            if ((object)_player == null) return;
+            if (!UnityNull.Alive(_player)) return;
 
             // Respawn detection
             Vector3 pos = _player.transform.position;
@@ -211,7 +215,13 @@ namespace DescendersModMenu.Mods
                 if (_caughtTimer <= 0f) IsCaught = false;
             }
 
-            if ((object)_ball == null) { SpawnBall(); return; }
+            if (!UnityNull.Alive(_ball))
+            {
+                _ball = null;
+                _ballRb = null;
+                SpawnBall();
+                return;
+            }
 
             // Flash ball
             _flashTimer -= dt;
@@ -239,7 +249,13 @@ namespace DescendersModMenu.Mods
         public static void FixedTick()
         {
             if (!Enabled || WaitingForReset || IsCountingDown) return;
-            if ((object)_ball == null || (object)_player == null) return;
+            if (!UnityNull.Alive(_ball) || !UnityNull.Alive(_ballRb))
+            {
+                _ball = null;
+                _ballRb = null;
+                return;
+            }
+            if (!UnityNull.Alive(_player)) return;
 
             float dt = Time.fixedDeltaTime;
 
@@ -271,7 +287,7 @@ namespace DescendersModMenu.Mods
             }
 
             // ── Target speed tied to player speed ─────────────────────
-            float playerSpeed = (object)_playerRb != null
+            float playerSpeed = UnityNull.Alive(_playerRb)
                 ? _playerRb.velocity.magnitude : 10f;
             float targetSpeed = Mathf.Clamp(
                 playerSpeed * ActiveSpeedRatio * burstMultiplier,
@@ -396,7 +412,7 @@ namespace DescendersModMenu.Mods
             WaitingForReset = true;
 
             // Force bail
-            if ((object)_cyclist != null)
+            if (UnityNull.Alive(_cyclist))
             {
                 try { _cyclist.Bail(); }
                 catch (System.Exception ex)
@@ -404,7 +420,7 @@ namespace DescendersModMenu.Mods
             }
 
             // Zero out player rigidbody velocity for a hard stop feel
-            if ((object)_playerRb != null)
+            if (UnityNull.Alive(_playerRb))
                 _playerRb.velocity = Vector3.zero;
 
             ModLog.Debug("[PoliceChase] CAUGHT! Total=" + CaughtCount);
@@ -413,7 +429,9 @@ namespace DescendersModMenu.Mods
         // ── Ball spawning ─────────────────────────────────────────────
         private static void SpawnBall()
         {
-            if ((object)_ball != null) return;
+            if (UnityNull.Alive(_ball)) return;
+            _ball = null;
+            _ballRb = null;
 
             _ball = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             _ball.name = "PolicePursuer";
@@ -459,10 +477,10 @@ namespace DescendersModMenu.Mods
 
         private static void ResetBallBehindPlayer()
         {
-            if ((object)_ball == null) return;
-            if ((object)_player == null)
+            if (!UnityNull.Alive(_ball)) return;
+            if (!UnityNull.Alive(_player))
                 _player = GameObject.Find("Player_Human");
-            if ((object)_player == null) return;
+            if (!UnityNull.Alive(_player)) return;
 
             // Spawn ABOVE and BEHIND the player — gravity drops it onto terrain.
             // Spawning directly behind using transform.forward risks embedding in slope.
@@ -470,7 +488,7 @@ namespace DescendersModMenu.Mods
                 + Vector3.up * 50f                                // drop from 50m above
                 - _player.transform.forward * SpawnDistance;      // behind the player
             _ball.transform.position = spawnPos;
-            if ((object)_ballRb != null)
+            if (UnityNull.Alive(_ballRb))
             {
                 _ballRb.velocity = Vector3.zero;
                 _ballRb.angularVelocity = Vector3.zero;

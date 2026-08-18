@@ -80,7 +80,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 Vehicle vehicle = _vehicleField.GetValue(__instance) as Vehicle;
-                if ((object)vehicle == null) return;
+                if (!UnityNull.Alive(vehicle)) return;
 
                 if (!string.Equals(vehicle.gameObject.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;
@@ -88,13 +88,14 @@ namespace DescendersModMenu.Mods
                 // Not braking — restore drag and do nothing
                 if (vehicle.NYsPlot <= 0f)
                 {
-                    if ((object)_rb != null) _rb.drag = _origDrag;
+                    if (UnityNull.Alive(_rb)) _rb.drag = _origDrag;
                     return;
                 }
 
-                // Resolve Rigidbody once
-                if ((object)_rb == null)
+                // Resolve Rigidbody once (re-find after map change / Unity fake-null)
+                if (!UnityNull.Alive(_rb))
                 {
+                    _rb = null;
                     PropertyInfo[] props = typeof(Vehicle).GetProperties(
                         BindingFlags.Public | BindingFlags.Instance);
                     for (int i = 0; i < props.Length; i++)
@@ -103,13 +104,13 @@ namespace DescendersModMenu.Mods
                             "Rigidbody", System.StringComparison.Ordinal))
                         { _rb = props[i].GetValue(vehicle, null) as Rigidbody; break; }
                     }
-                    if ((object)_rb != null) _origDrag = _rb.drag;
+                    if (UnityNull.Alive(_rb)) _origDrag = _rb.drag;
                 }
 
                 // Scale brake force by level — L1 barely touches it, L9 maxes it
                 vehicle.NYsPlot = Mathf.Clamp(vehicle.NYsPlot * QuickBrake.GetMultiplier(), 0f, 1f);
 
-                if ((object)_rb == null) return;
+                if (!UnityNull.Alive(_rb)) return;
 
                 if (QuickBrake.Level >= 10)
                 {
@@ -134,7 +135,7 @@ namespace DescendersModMenu.Mods
 
         public static void ClearCache()
         {
-            try { if ((object)_rb != null) _rb.drag = _origDrag; } catch { }
+            try { if (UnityNull.Alive(_rb)) _rb.drag = _origDrag; } catch { }
             _vehicleField = null;
             _rb = null;
             _origDrag = 0f;

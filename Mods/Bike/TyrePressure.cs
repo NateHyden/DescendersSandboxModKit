@@ -124,12 +124,12 @@ namespace DescendersModMenu.Mods
             float mult = TyrePressure.CachedMultiplier;
             if (mult == 1.0f) return;
 
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             try
             {
                 Transform t = __instance.transform;
-                if ((object)t == null || (object)t.parent == null) return;
+                if (!UnityNull.Alive(t) || !UnityNull.Alive(t.parent)) return;
                 if (!string.Equals(t.parent.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;
 

@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -96,17 +97,17 @@ namespace DescendersModMenu.Mods
 
             // Distance-based cleanup + null sweep
             GameObject player = GameObject.Find("Player_Human");
-            Vector3 playerPos = (object)player != null
+            Vector3 playerPos = UnityNull.Alive(player)
                 ? player.transform.position : Vector3.zero;
 
             for (int i = _boulders.Count - 1; i >= 0; i--)
             {
                 var b = _boulders[i];
-                if ((object)b.Go == null) { _boulders.RemoveAt(i); continue; }
+                if (!UnityNull.Alive(b.Go)) { _boulders.RemoveAt(i); continue; }
 
                 b.Age += Time.deltaTime;
 
-                if ((object)player != null)
+                if (UnityNull.Alive(player))
                 {
                     float dist = Vector3.Distance(b.Go.transform.position, playerPos);
                     if (dist > CleanupDist)
@@ -126,7 +127,7 @@ namespace DescendersModMenu.Mods
             for (int i = 0; i < _boulders.Count; i++)
             {
                 var b = _boulders[i];
-                if ((object)b.Go == null || (object)b.Rb == null) continue;
+                if (!UnityNull.Alive(b.Go) || !UnityNull.Alive(b.Rb)) continue;
                 if (b.Locked) continue;
 
                 // Extra gravity while falling
@@ -163,7 +164,7 @@ namespace DescendersModMenu.Mods
             }
 
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) return;
+            if (!UnityNull.Alive(player)) return;
 
             Vector3 playerPos = player.transform.position;
 
@@ -251,6 +252,7 @@ namespace DescendersModMenu.Mods
         // ── Lock boulder in place ─────────────────────────────────────
         private static void LockBoulder(BoulderEntry b)
         {
+            if (!UnityNull.Alive(b.Rb)) return;
             b.Locked          = true;
             b.Rb.velocity        = Vector3.zero;
             b.Rb.angularVelocity = Vector3.zero;

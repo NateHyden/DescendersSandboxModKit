@@ -62,7 +62,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 Cyclist c = GetCyclist();
-                if ((object)c == null) return;
+                if (!UnityNull.Alive(c)) return;
                 FieldInfo f = GetField(c);
                 if ((object)f == null) return;
                 f.SetValue(c, GetThreshold());
@@ -80,7 +80,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 Cyclist c = GetCyclist();
-                if ((object)c == null || (object)_threshField == null) return;
+                if (!UnityNull.Alive(c) || (object)_threshField == null) return;
                 _threshField.SetValue(c, DefaultThreshold);
                 ModLog.Debug("[LandingImpact] Restored default threshold: " + DefaultThreshold);
             }
@@ -95,7 +95,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 Cyclist c = GetCyclist();
-                if ((object)c == null) return;
+                if (!UnityNull.Alive(c)) return;
                 FieldInfo f = GetField(c);
                 if ((object)f == null) return;
 
@@ -117,11 +117,12 @@ namespace DescendersModMenu.Mods
 
         private static Cyclist GetCyclist()
         {
-            if ((object)_cachedCyclist != null) return _cachedCyclist;
+            if (UnityNull.Alive(_cachedCyclist)) return _cachedCyclist;
+            _cachedCyclist = null;
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) return null;
+            if (!UnityNull.Alive(player)) return null;
             _cachedCyclist = player.GetComponent<Cyclist>();
-            return _cachedCyclist;
+            return UnityNull.Alive(_cachedCyclist) ? _cachedCyclist : null;
         }
 
         private static FieldInfo GetField(Cyclist c)

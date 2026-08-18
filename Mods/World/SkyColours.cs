@@ -120,10 +120,11 @@ namespace DescendersModMenu.Mods
 
         public static void CreateRain()
         {
-            if ((object)_rainObj != null) return;
+            if (UnityNull.Alive(_rainObj)) return;
+            _rainObj = null;
 
             Camera cam = Camera.main;
-            if ((object)cam == null) return;
+            if (!UnityNull.Alive(cam)) return;
 
             _rainObj = new GameObject("ModRain");
             _rainObj.transform.SetParent(cam.transform, false);
@@ -178,21 +179,17 @@ namespace DescendersModMenu.Mods
 
         public static void DestroyRain()
         {
-            if ((object)_rainPS != null)
-            {
+            if (UnityNull.Alive(_rainPS))
                 _rainPS.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                _rainPS = null;
-            }
-            if ((object)_rainObj != null)
-            {
+            _rainPS = null;
+            if (UnityNull.Alive(_rainObj))
                 Object.DestroyImmediate(_rainObj);
-                _rainObj = null;
-            }
+            _rainObj = null;
         }
 
         public static void UpdateRainIntensity()
         {
-            if ((object)_rainPS == null) return;
+            if (!UnityNull.Alive(_rainPS)) return;
             var emission = _rainPS.emission;
             emission.rateOverTime = GetRainEmissionRate();
         }
@@ -309,7 +306,7 @@ namespace DescendersModMenu.Mods
                 int applied = 0;
                 for (int i = 0; i < _cachedRainPS.Length; i++)
                 {
-                    if ((object)_cachedRainPS[i] == null) continue;
+                    if (!UnityNull.Alive(_cachedRainPS[i])) continue;
                     try
                     {
                         var em = _cachedRainPS[i].emission;
@@ -695,14 +692,15 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                if ((object)_skyComp == null)
+                if (!UnityNull.Alive(_skyComp))
                 {
+                    _skyComp = null;
                     MonoBehaviour[] all = Object.FindObjectsOfType<MonoBehaviour>();
                     for (int i = 0; i < all.Length; i++)
                         if (string.Equals(all[i].GetType().Name, "TOD_Sky", System.StringComparison.Ordinal))
                         { _skyComp = all[i]; break; }
                 }
-                if ((object)_skyComp == null) return;
+                if (!UnityNull.Alive(_skyComp)) return;
                 if ((object)_cycleField == null)
                     _cycleField = _skyComp.GetType().GetField("Cycle", BindingFlags.Public | BindingFlags.Instance);
                 if ((object)_cycleField == null) return;
@@ -724,8 +722,11 @@ namespace DescendersModMenu.Mods
             TickStorm(ref _tickEfhType, ref _tickSetEnvFlag);
 
             // Create rain if storm is on but rain doesn't exist yet (deferred from ToggleStorm)
-            if (StormEnabled && (object)_rainObj == null)
+            if (StormEnabled && !UnityNull.Alive(_rainObj))
+            {
+                _rainObj = null;
                 CreateRain();
+            }
         }
 
         private static EffectList[] _cachedEffectLists = null;
@@ -774,6 +775,7 @@ namespace DescendersModMenu.Mods
 
                 for (int i = 0; i < _cachedEffectLists.Length; i++)
                 {
+                    if (!UnityNull.Alive(_cachedEffectLists[i])) continue;
                     try
                     {
                         setEnvFlag.Invoke(_cachedEffectLists[i], _stormArgsCache);
@@ -793,7 +795,7 @@ namespace DescendersModMenu.Mods
             float mult = RainMultipliers[RainIntensityLevel - 1];
             for (int i = 0; i < _cachedRainPS.Length; i++)
             {
-                if ((object)_cachedRainPS[i] == null) continue;
+                if (!UnityNull.Alive(_cachedRainPS[i])) continue;
                 try
                 {
                     var em = _cachedRainPS[i].emission;

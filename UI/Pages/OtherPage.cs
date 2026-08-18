@@ -24,7 +24,6 @@ namespace DescendersModMenu.UI
         // Random Mutator
         private static Text _mutatorVal; private static Image _mutatorTrack; private static RectTransform _mutatorKnob;
         private static Text _mutatorLastVal;
-        private static Text _jumpStatusTxt;
 
         public static bool IsAnyActive =>
             TrailPainter.Enabled || ConfettiOnTrick.Enabled || BigHeadMode.Enabled ||
@@ -142,46 +141,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
-                UIHelpers.SectionHeader("LEVEL", c);
-
-                var jr = UIHelpers.StatRow("Jump to Finish", c);
-                _jumpStatusTxt = UIHelpers.Txt("JumpStatus", jr.transform, "",
-                    9, FontStyle.Italic, TextAnchor.MiddleRight, UIHelpers.TextDim);
-                _jumpStatusTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 130;
-                UIHelpers.ActionBtnOrange(jr.transform, "Jump", () =>
-                {
-                    try
-                    {
-                        var fl = FinishLine.GetAFinishLine();
-                        if ((object)fl == null)
-                        {
-                            ModLog.Debug("[JumpToFinish] No FinishLine found on this level - nothing to jump to.");
-                            if (_jumpStatusTxt) { _jumpStatusTxt.text = "No finish line here"; _jumpStatusTxt.color = UIHelpers.Orange; }
-                            return;
-                        }
-
-                        DevCommandsGameplay.JumpToFinish();
-                        if (_jumpStatusTxt) _jumpStatusTxt.text = "";
-                    }
-                    catch (System.Exception ex)
-                    {
-                        MelonLogger.Error("[JumpToFinish]: " + ex.Message);
-                        Telemetry.ReportErrorAsync(ex, "OtherPage");
-                        if (_jumpStatusTxt) { _jumpStatusTxt.text = "Failed - see log"; _jumpStatusTxt.color = UIHelpers.Orange; }
-                    }
-                }, 60);
-                FavouritesManager.RegisterStarButton("JumpToFinish", UIHelpers.StarBtn(jr.transform, "JumpToFinish", () => FavouritesManager.Toggle("JumpToFinish")));
-
-                var sr = UIHelpers.StatRow("Skip Song", c);
-                UIHelpers.ActionBtn(sr.transform, "Skip", () =>
-                {
-                    try { DevCommandsGameplay.SkipSong(); }
-                    catch (System.Exception ex) { MelonLogger.Error("[SkipSong]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OtherPage"); }
-                }, 60);
-                FavouritesManager.RegisterStarButton("SkipSong", UIHelpers.StarBtn(sr.transform, "SkipSong", () => FavouritesManager.Toggle("SkipSong")));
-
-                UIHelpers.Divider(c);
-
                 // ── Favourites/Search registry ──────────────────────────
                 // RegisterStarButton (above) only wires the star icon on
                 // THIS page's own rows. Register(ModFavEntry) is the
@@ -255,43 +214,6 @@ namespace DescendersModMenu.UI
                     BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "RandomMutatorOnCheckpoint", "Random Mutator on Checkpoint",
                         () => RandomMutatorOnCheckpoint.Enabled, () => { RandomMutatorOnCheckpoint.Toggle(); }, () => RefreshAll()),
                     IsActive = () => RandomMutatorOnCheckpoint.Enabled
-                });
-                FavouritesManager.Register(new ModFavEntry
-                {
-                    Id = "JumpToFinish",
-                    DisplayName = "Jump to Finish",
-                    TabBadge = "OTHER",
-                    BuildControls = (p) =>
-                    {
-                        var row = FavsPage.CompactStatRow("Jump to Finish", p);
-                        UIHelpers.ActionBtnOrange(row.transform, "Jump", () =>
-                        {
-                            try
-                            {
-                                var fl = FinishLine.GetAFinishLine();
-                                if ((object)fl == null) return;
-                                DevCommandsGameplay.JumpToFinish();
-                            }
-                            catch (System.Exception ex) { MelonLogger.Error("[JumpToFinish]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OtherPage"); }
-                        }, 60);
-                    },
-                    IsActive = () => false
-                });
-                FavouritesManager.Register(new ModFavEntry
-                {
-                    Id = "SkipSong",
-                    DisplayName = "Skip Song",
-                    TabBadge = "OTHER",
-                    BuildControls = (p) =>
-                    {
-                        var row = FavsPage.CompactStatRow("Skip Song", p);
-                        UIHelpers.ActionBtn(row.transform, "Skip", () =>
-                        {
-                            try { DevCommandsGameplay.SkipSong(); }
-                            catch (System.Exception ex) { MelonLogger.Error("[SkipSong]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OtherPage"); }
-                        }, 60);
-                    },
-                    IsActive = () => false
                 });
 
                 RefreshAll();

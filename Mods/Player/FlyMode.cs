@@ -59,7 +59,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null)
+                if (!UnityNull.Alive(player))
                 {
                     ModLog.Warn("[FlyMode] Player_Human not found.");
                     Enabled = false; return;
@@ -72,13 +72,13 @@ namespace DescendersModMenu.Mods
                 // Rigidbody lives on a child — use GetComponentInChildren
                 _rb = player.GetComponentInChildren<Rigidbody>();
 
-                if ((object)_vehicle == null)
+                if (!UnityNull.Alive(_vehicle))
                 {
                     ModLog.Warn("[FlyMode] Vehicle not found.");
                     Enabled = false; return;
                 }
 
-                if ((object)_rb == null)
+                if (!UnityNull.Alive(_rb))
                 {
                     ModLog.Warn("[FlyMode] Rigidbody not found.");
                     Enabled = false; return;
@@ -139,10 +139,10 @@ namespace DescendersModMenu.Mods
             try
             {
                 // Re-enable vehicle physics
-                if ((object)_vehicle != null && (object)_physField != null)
+                if (UnityNull.Alive(_vehicle) && (object)_physField != null)
                     _physField.SetValue(_vehicle, true);
 
-                if ((object)_rb != null)
+                if (UnityNull.Alive(_rb))
                 {
                     _rb.isKinematic = _savedKinematic;
                     _rb.useGravity = _savedGravity;
@@ -151,7 +151,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 // Re-enable controller input
-                if ((object)_vc != null && (object)_toggleCtrl != null)
+                if (UnityNull.Alive(_vc) && (object)_toggleCtrl != null)
                     _toggleCtrl.Invoke(_vc, new object[] { true, true });
 
                 // Restore bail behaviour
@@ -172,7 +172,14 @@ namespace DescendersModMenu.Mods
         public static void Tick()
         {
             if (!Enabled) return;
-            if ((object)_vehicle == null || (object)_rb == null) return;
+            // Map change destroys Rigidbody; (object)_rb == null misses Unity fake-null
+            // and get_isKinematic() then NREs (Discord reports from Xbox + Steam).
+            if (!UnityNull.Alive(_vehicle) || !UnityNull.Alive(_rb) || !UnityNull.Alive(_playerTrans))
+            {
+                Enabled = false;
+                Disable();
+                return;
+            }
 
             try
             {
@@ -222,7 +229,7 @@ namespace DescendersModMenu.Mods
 
                 // Keep camera locked behind the bike
                 Camera cam = Camera.main;
-                if ((object)cam != null)
+                if (UnityNull.Alive(cam))
                 {
                     Vector3 offset = new Vector3(0f, 1.5f, -4.5f);
                     cam.transform.position = _playerTrans.position + newRot * offset;

@@ -103,13 +103,13 @@ namespace DescendersModMenu.Mods
                 if (!GetBones(out frontBone, out backBone)) return;
 
                 float w = Width;
-                if ((object)frontBone != null)
+                if (UnityNull.Alive(frontBone))
                 {
                     float bs = frontBone.localScale.y;
                     if (bs <= 0f) bs = 1f;
                     frontBone.localScale = new Vector3(w * bs, bs, bs);
                 }
-                if ((object)backBone != null)
+                if (UnityNull.Alive(backBone))
                 {
                     float bs = backBone.localScale.y;
                     if (bs <= 0f) bs = 1f;
@@ -186,7 +186,7 @@ namespace DescendersModMenu.Mods
                             System.StringComparison.Ordinal)) continue;
 
                         Transform t = fields[i].GetValue(bikeAnim) as Transform;
-                        if ((object)t == null) continue;
+                        if (!UnityNull.Alive(t)) continue;
 
                         if (string.Equals(t.name, "backWheel_Jnt", System.StringComparison.Ordinal))
                         { _backBoneField = fields[i]; ModLog.Debug("[WideTyres] Found back bone: " + fields[i].Name); }
@@ -206,6 +206,9 @@ namespace DescendersModMenu.Mods
                 frontBone = bikeModel.Find("root_Jnt/Frame_Jnt/steer_Jnt/forkShockAbsorber_Jnt/frontWheel_Jnt");
                 backBone = bikeModel.Find("root_Jnt/Frame_Jnt/backWheelRotator_Jnt/BackWheelShockAbsorber_Jnt/backWheel_Jnt");
             }
+
+            if (!UnityNull.Alive(frontBone)) frontBone = null;
+            if (!UnityNull.Alive(backBone)) backBone = null;
 
             return true;
         }

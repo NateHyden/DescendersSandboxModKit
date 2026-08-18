@@ -89,7 +89,7 @@ namespace DescendersModMenu.Mods
                 {
                     for (int i = 0; i < _dirLights.Length; i++)
                     {
-                        if ((object)_dirLights[i] != null)
+                        if (UnityNull.Alive(_dirLights[i]))
                             _dirLights[i].enabled = false;
                     }
                     ModLog.Debug("[HeadlightsOnly] Disabled " + _dirLights.Length + " directional light(s).");
@@ -138,7 +138,7 @@ namespace DescendersModMenu.Mods
                 {
                     for (int i = 0; i < _dirLights.Length; i++)
                     {
-                        if ((object)_dirLights[i] != null)
+                        if (UnityNull.Alive(_dirLights[i]))
                             _dirLights[i].enabled = _dirLightWasEnabled[i];
                     }
                     ModLog.Debug("[HeadlightsOnly] Directional lights restored.");

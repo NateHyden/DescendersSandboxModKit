@@ -251,7 +251,7 @@ namespace DescendersModMenu.Mods
         public static float GetSpeedKmh()
         {
             EnsureRigidbody();
-            if ((object)_rigidbody == null) return 0f;
+            if (!UnityNull.Alive(_rigidbody)) return 0f;
             return _rigidbody.velocity.magnitude * 3.6f;
         }
 
@@ -266,9 +266,9 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                float frontComp = (object)_frontWheel != null
+                float frontComp = UnityNull.Alive(_frontWheel)
                     ? Mathf.Clamp01((float)_suspField.GetValue(_frontWheel)) : 0f;
-                float rearComp = (object)_rearWheel != null
+                float rearComp = UnityNull.Alive(_rearWheel)
                     ? Mathf.Clamp01((float)_suspField.GetValue(_rearWheel)) : 0f;
 
                 bool grounded = frontComp > 0.01f || rearComp > 0.01f;
@@ -287,15 +287,28 @@ namespace DescendersModMenu.Mods
         // ── EnsureRigidbody — caches rigidbody + wheels for speed and ground detection ──
         private static void EnsureRigidbody()
         {
+            if (_searched)
+            {
+                bool dead = ((object)_rigidbody != null && !UnityNull.Alive(_rigidbody))
+                    || ((object)_frontWheel != null && !UnityNull.Alive(_frontWheel))
+                    || ((object)_rearWheel != null && !UnityNull.Alive(_rearWheel));
+                if (dead)
+                {
+                    _rigidbody = null;
+                    _frontWheel = null;
+                    _rearWheel = null;
+                    _searched = false;
+                }
+            }
             if (_searched) return;
             _searched = true;
             try
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null) { _searched = false; return; }
+                if (!UnityNull.Alive(player)) { _searched = false; return; }
 
                 _rigidbody = player.GetComponent<Rigidbody>();
-                if ((object)_rigidbody == null)
+                if (!UnityNull.Alive(_rigidbody))
                     ModLog.Warn("[BrakeFade] Rigidbody not found on Player_Human.");
                 else
                     ModLog.Debug("[BrakeFade] Rigidbody cached OK.");
@@ -303,19 +316,19 @@ namespace DescendersModMenu.Mods
                 // Cache wheels for suspension-based ground detection
                 Transform ft = player.transform.Find("wheel_front");
                 Transform rt = player.transform.Find("wheel_back");
-                if ((object)ft != null) _frontWheel = ft.GetComponent<Wheel>();
-                if ((object)rt != null) _rearWheel = rt.GetComponent<Wheel>();
+                if (UnityNull.Alive(ft)) _frontWheel = ft.GetComponent<Wheel>();
+                if (UnityNull.Alive(rt)) _rearWheel = rt.GetComponent<Wheel>();
 
-                Wheel w = (object)_frontWheel != null ? _frontWheel : _rearWheel;
-                if ((object)w != null)
+                Wheel w = UnityNull.Alive(_frontWheel) ? _frontWheel : _rearWheel;
+                if (UnityNull.Alive(w))
                 {
                     _suspField = w.GetType().GetField(
                         "<suspensionPress>k__BackingField",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 }
 
-                ModLog.Debug("[BrakeFade] Wheels: front=" + ((object)_frontWheel != null)
-                    + " rear=" + ((object)_rearWheel != null)
+                ModLog.Debug("[BrakeFade] Wheels: front=" + UnityNull.Alive(_frontWheel)
+                    + " rear=" + UnityNull.Alive(_rearWheel)
                     + " suspField=" + ((object)_suspField != null));
             }
             catch (System.Exception ex)
@@ -491,7 +504,7 @@ namespace DescendersModMenu.Mods
         public static void Postfix(VehicleController __instance)
         {
             if (!BrakeFade.Enabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             try
             {
@@ -514,7 +527,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 Vehicle vehicle = _vehicleField.GetValue(__instance) as Vehicle;
-                if ((object)vehicle == null) return;
+                if (!UnityNull.Alive(vehicle)) return;
 
                 if (!string.Equals(vehicle.gameObject.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;

@@ -66,10 +66,10 @@ namespace DescendersModMenu.Mods
                 if ((object)list == null || list.Count == 0) { ModLog.Warn("[TeleportCP] No checkpoints in list."); return; }
                 index = UnityEngine.Mathf.Clamp(index, 0, list.Count - 1);
                 Checkpoint cp = list[index];
-                if ((object)cp == null) { ModLog.Warn("[TeleportCP] Checkpoint at index " + index + " is null."); return; }
+                if (!UnityNull.Alive(cp)) { ModLog.Warn("[TeleportCP] Checkpoint at index " + index + " is null."); return; }
 
                 GameObject local = GameObject.Find("Player_Human");
-                if ((object)local == null) { ModLog.Warn("[TeleportCP] Player_Human not found."); return; }
+                if (!UnityNull.Alive(local)) { ModLog.Warn("[TeleportCP] Player_Human not found."); return; }
 
                 Vehicle vehicle = local.GetComponent<Vehicle>();
                 Vector3 dest = cp.transform.position + cp.transform.up * 1.5f;

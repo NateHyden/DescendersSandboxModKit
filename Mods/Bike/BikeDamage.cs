@@ -109,12 +109,13 @@ namespace DescendersModMenu.Mods
             if (!Enabled) return;
             try
             {
-                if ((object)_cachedRb == null)
+                if (!UnityNull.Alive(_cachedRb))
                 {
+                    _cachedRb = null;
                     GameObject player = GameObject.Find("Player_Human");
-                    if ((object)player == null) return;
+                    if (!UnityNull.Alive(player)) return;
                     _cachedRb = player.GetComponentInChildren<Rigidbody>();
-                    if ((object)_cachedRb == null) return;
+                    if (!UnityNull.Alive(_cachedRb)) return;
                 }
 
                 float currentSpeed = _cachedRb.velocity.magnitude;
@@ -125,13 +126,13 @@ namespace DescendersModMenu.Mods
                     try
                     {
                         GameObject player2 = GameObject.Find("Player_Human");
-                        if ((object)player2 != null)
+                        if (UnityNull.Alive(player2))
                         {
                             Transform bm = player2.transform.Find("BikeModel");
-                            if ((object)bm != null)
+                            if (UnityNull.Alive(bm))
                             {
                                 Transform sb = bm.Find("root_Jnt/Frame_Jnt/steer_Jnt");
-                                if ((object)sb != null)
+                                if (UnityNull.Alive(sb))
                                 {
                                     _steerBone = sb;
                                     _steerBoneNeutral = sb.localRotation;
@@ -175,12 +176,17 @@ namespace DescendersModMenu.Mods
                 // Reapply wheel physics radius + kill friction (fights physics reset)
                 if (_rearWheelGone)
                 {
+                    if ((object)_rearWheel != null && !UnityNull.Alive(_rearWheel))
+                    {
+                        _rearWheel = null;
+                        _wheelSearched = false;
+                    }
                     if (!_wheelSearched) FindRearWheel();
-                    if ((object)_rearWheel != null && (object)_radiusField != null && _defaultRearRadius > 0f)
+                    if (UnityNull.Alive(_rearWheel) && (object)_radiusField != null && _defaultRearRadius > 0f)
                         _radiusField.SetValue(_rearWheel, _defaultRearRadius * 0.01f);
 
                     // Make rear wheel slippery — near-zero roll friction
-                    if ((object)_rearWheel != null)
+                    if (UnityNull.Alive(_rearWheel))
                     {
                         if ((object)_rollFrictionProp == null)
                             _rollFrictionProp = typeof(Wheel).GetProperty(
@@ -204,22 +210,27 @@ namespace DescendersModMenu.Mods
             {
                 // Restore handlebar visual to neutral rotation (bars appear straight)
                 // steer_Jnt was cached in FixedTick before any offset was applied
-                if (needsSteer && (object)_steerBone != null)
+                if (needsSteer && UnityNull.Alive(_steerBone))
                     _steerBone.localRotation = _steerBoneNeutral;
 
                 // Rear wheel bone scale — shrink visually (fights Animation reset)
                 if (needsWheel)
                 {
+                    if ((object)_rearWheelBone != null && !UnityNull.Alive(_rearWheelBone))
+                    {
+                        _rearWheelBone = null;
+                        _boneCacheSearched = false;
+                    }
                     if (!_boneCacheSearched)
                     {
-                        _boneCacheSearched = true;
                         GameObject player = GameObject.Find("Player_Human");
-                        if ((object)player == null) return;
+                        if (!UnityNull.Alive(player)) return;
+                        _boneCacheSearched = true;
                         Transform bikeModel = player.transform.Find("BikeModel");
-                        if ((object)bikeModel == null) return;
+                        if (!UnityNull.Alive(bikeModel)) return;
 
                         BikeAnimation bikeAnim = bikeModel.GetComponent<BikeAnimation>();
-                        if ((object)bikeAnim != null)
+                        if (UnityNull.Alive(bikeAnim))
                         {
                             FieldInfo[] fields = bikeAnim.GetType().GetFields(
                                 BindingFlags.Public | BindingFlags.Instance);
@@ -228,7 +239,7 @@ namespace DescendersModMenu.Mods
                                 if (!string.Equals(fields[i].FieldType.Name, "Transform",
                                     System.StringComparison.Ordinal)) continue;
                                 Transform t = fields[i].GetValue(bikeAnim) as Transform;
-                                if ((object)t == null) continue;
+                                if (!UnityNull.Alive(t)) continue;
                                 if (string.Equals(t.name, "backWheel_Jnt",
                                     System.StringComparison.Ordinal))
                                 { _rearWheelBone = t; break; }
@@ -240,10 +251,10 @@ namespace DescendersModMenu.Mods
                                 "root_Jnt/Frame_Jnt/backWheelRotator_Jnt/BackWheelShockAbsorber_Jnt/backWheel_Jnt");
                         }
                         ModLog.Debug("[BikeDamage] Rear bone: "
-                            + ((object)_rearWheelBone != null ? "OK" : "MISSING"));
+                            + (UnityNull.Alive(_rearWheelBone) ? "OK" : "MISSING"));
                     }
 
-                    if ((object)_rearWheelBone != null)
+                    if (UnityNull.Alive(_rearWheelBone))
                         _rearWheelBone.localScale = new Vector3(0.01f, 0.01f, 0.01f);
                 }
             }
@@ -255,16 +266,16 @@ namespace DescendersModMenu.Mods
 
         private static void FindRearWheel()
         {
-            _wheelSearched = true;
             try
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null) return;
+                if (!UnityNull.Alive(player)) return;
+                _wheelSearched = true;
                 Wheel[] wheels = player.GetComponentsInChildren<Wheel>();
                 if (wheels == null) return;
                 for (int i = 0; i < wheels.Length; i++)
                 {
-                    if ((object)wheels[i] == null) continue;
+                    if (!UnityNull.Alive(wheels[i])) continue;
                     if (string.Equals(wheels[i].gameObject.name, "wheel_front",
                         System.StringComparison.Ordinal)) continue;
 
@@ -286,12 +297,12 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                if ((object)_rearWheel != null && (object)_radiusField != null && _defaultRearRadius > 0f)
+                if (UnityNull.Alive(_rearWheel) && (object)_radiusField != null && _defaultRearRadius > 0f)
                     _radiusField.SetValue(_rearWheel, _defaultRearRadius);
                 // Restore roll friction (default ~1.0)
-                if ((object)_rearWheel != null && (object)_rollFrictionProp != null)
+                if (UnityNull.Alive(_rearWheel) && (object)_rollFrictionProp != null)
                     _rollFrictionProp.SetValue(_rearWheel, 1.0f, null);
-                if ((object)_rearWheelBone != null)
+                if (UnityNull.Alive(_rearWheelBone))
                     _rearWheelBone.localScale = Vector3.one;
             }
             catch { }
@@ -365,7 +376,7 @@ namespace DescendersModMenu.Mods
         {
             if (!BikeDamage.Enabled) return;
             if (BikeDamage.SteerOffset == 0f) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             try
             {
@@ -384,7 +395,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 Vehicle vehicle = _vehicleField.GetValue(__instance) as Vehicle;
-                if ((object)vehicle == null) return;
+                if (!UnityNull.Alive(vehicle)) return;
                 if (!string.Equals(vehicle.gameObject.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;
 

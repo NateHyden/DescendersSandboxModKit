@@ -66,7 +66,7 @@ namespace DescendersModMenu.Mods
 
         public static void Postfix(Vehicle __instance)
         {
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
             if (!string.Equals(__instance.gameObject.name, "Player_Human",
                 System.StringComparison.Ordinal)) return;
 
@@ -80,12 +80,19 @@ namespace DescendersModMenu.Mods
                 // Limiter logic only runs when the toggle is on
                 if (!WheelieAngleLimit.Enabled) return;
 
+                if (((object)_frontWheel != null && !UnityNull.Alive(_frontWheel))
+                    || ((object)_rearWheel != null && !UnityNull.Alive(_rearWheel)))
+                {
+                    _frontWheel = null;
+                    _rearWheel = null;
+                    _cached = false;
+                }
                 if (!_cached) CacheRefs(__instance);
 
                 Rigidbody rb = null;
                 if ((object)_rbProp != null)
                     rb = _rbProp.GetValue(__instance, null) as Rigidbody;
-                if ((object)rb == null) return;
+                if (!UnityNull.Alive(rb)) return;
 
                 // Read grounded state via reflection (TDEX{ib has { in name — can't use directly)
                 bool frontGrounded = IsGrounded(_frontWheel);
@@ -124,13 +131,14 @@ namespace DescendersModMenu.Mods
 
         private static bool IsGrounded(Wheel w)
         {
-            if ((object)w == null || (object)_wheelGroundedProp == null) return false;
+            if (!UnityNull.Alive(w) || (object)_wheelGroundedProp == null) return false;
             try { return (bool)_wheelGroundedProp.GetValue(w, null); }
             catch { return false; }
         }
 
         private static void CacheRefs(Vehicle v)
         {
+            if (!UnityNull.Alive(v)) { _cached = false; return; }
             _cached = true;
 
             // Rigidbody property on Vehicle
@@ -158,6 +166,11 @@ namespace DescendersModMenu.Mods
             Wheel[] wheels = v.GetComponentsInChildren<Wheel>();
             if ((object)wheels != null && wheels.Length >= 2)
             {
+                if (!UnityNull.Alive(wheels[0]) || !UnityNull.Alive(wheels[1]))
+                {
+                    _cached = false;
+                    return;
+                }
                 if (wheels[0].transform.localPosition.z >= wheels[1].transform.localPosition.z)
                 { _frontWheel = wheels[0]; _rearWheel = wheels[1]; }
                 else

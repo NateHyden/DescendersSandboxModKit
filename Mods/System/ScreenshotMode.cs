@@ -113,7 +113,7 @@ namespace DescendersModMenu.Mods
                         for (int i = 0; i < all.Length; i++)
                         {
                             var cv = all[i];
-                            if ((object)cv == null || !cv.isRootCanvas || !cv.gameObject.activeSelf) continue;
+                            if (!UnityNull.Alive(cv) || !cv.isRootCanvas || !cv.gameObject.activeSelf) continue;
                             var cg = cv.GetComponent<CanvasGroup>();
                             if ((object)cg != null && (object)cg == UI.MenuWindow.RootCanvasGroup) continue;
                             cv.gameObject.SetActive(false);
@@ -148,7 +148,7 @@ namespace DescendersModMenu.Mods
                 case 3:
                     // Restore all UI
                     for (int i = 0; i < _hiddenCanvases.Count; i++)
-                        try { if ((object)_hiddenCanvases[i] != null) _hiddenCanvases[i].gameObject.SetActive(true); } catch { }
+                        try { if (UnityNull.Alive(_hiddenCanvases[i])) _hiddenCanvases[i].gameObject.SetActive(true); } catch { }
                     _hiddenCanvases.Clear();
                     if (_menuWasOpen) UI.MenuUI.ToggleMenu();
 

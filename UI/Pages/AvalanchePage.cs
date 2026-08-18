@@ -226,10 +226,10 @@ namespace DescendersModMenu.UI
         // ── Tick ──────────────────────────────────────────────────────
         public static void Tick()
         {
-            if ((object)_activeText != null)
+            if (UnityNull.Alive(_activeText))
                 _activeText.text = AvalancheMode.ActiveCount + " / " + AvalancheMode.MaxHazards;
 
-            if ((object)_timerText != null)
+            if (UnityNull.Alive(_timerText))
             {
                 if (AvalancheMode.Enabled && AvalancheMode.ShowTimer)
                 {
@@ -250,6 +250,16 @@ namespace DescendersModMenu.UI
             UIHelpers.SetToggle(_failTrack, _failKnob, AvalancheMode.InstantFail);
             UIHelpers.SetToggle(_diffTrack, _diffKnob, AvalancheMode.DifficultyScale);
             UIHelpers.SetToggle(_timerTrack, _timerKnob, AvalancheMode.ShowTimer);
+        }
+
+        public static void ClearUiRefs()
+        {
+            _enableTrack = null; _enableKnob = null;
+            _failTrack = null; _failKnob = null;
+            _diffTrack = null; _diffKnob = null;
+            _timerTrack = null; _timerKnob = null;
+            _timerText = null;
+            _activeText = null;
         }
     }
 }

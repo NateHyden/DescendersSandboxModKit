@@ -167,7 +167,13 @@ namespace DescendersModMenu.UI
 
         public static void Tick()
         {
-            if ((object)_statusText == null) return;
+            // Menu is destroyed on scene unload — (object)==null misses Unity fake-null,
+            // and Text.set_text then NREs on Behaviour.isActiveAndEnabled (Jamie Discord).
+            if (!UnityNull.Alive(_statusText))
+            {
+                ClearUiRefs();
+                return;
+            }
 
             string label = GhostReplay.GetStateLabel();
             Color col = UIHelpers.OffColor;
@@ -180,14 +186,14 @@ namespace DescendersModMenu.UI
             _statusText.text = label;
             _statusText.color = col;
 
-            if (_recTimeText)
+            if (UnityNull.Alive(_recTimeText))
                 _recTimeText.text = GhostReplay.IsRecording ? FormatTime(GhostReplay.RunTime) : "0:00";
 
-            if (_savedTimeText)
+            if (UnityNull.Alive(_savedTimeText))
                 _savedTimeText.text = GhostReplay.HasSavedRun
                     ? FormatTime(GhostReplay.SavedRunTime) : "--:--";
 
-            if (_savedPanel)
+            if (UnityNull.Alive(_savedPanel))
                 _savedPanel.SetActive(GhostReplay.HasSavedRun);
         }
 
@@ -201,7 +207,18 @@ namespace DescendersModMenu.UI
 
         public static void RefreshAll()
         {
+            if (!UnityNull.Alive(_enableTrack)) return;
             UIHelpers.SetToggle(_enableTrack, _enableKnob, GhostReplay.Enabled);
+        }
+
+        public static void ClearUiRefs()
+        {
+            _enableTrack = null;
+            _enableKnob = null;
+            _statusText = null;
+            _recTimeText = null;
+            _savedTimeText = null;
+            _savedPanel = null;
         }
     }
 }

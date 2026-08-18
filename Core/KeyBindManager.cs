@@ -39,8 +39,8 @@ namespace DescendersModMenu
             // ── Actions ───────────────────────────────────────────────────
             "SuperLaunch",     "TeleportCheckpoint",
             // ── Modes ─────────────────────────────────────────────────────
-            "AvalancheMode",   "EarthquakeMode",   "PoliceChase",     "BoulderDodge",
-            "SurvivalMode",    "TrickAttack",     "SpiderBike"
+            "LavaRising",      "AvalancheMode",   "EarthquakeMode",   "PoliceChase",
+            "BoulderDodge",    "SurvivalMode",    "TrickAttack",      "SpiderBike"
         };
 
         public static readonly string[] ModLabels = new string[]
@@ -63,8 +63,8 @@ namespace DescendersModMenu
             // ── Actions ───────────────────────────────────────────────────
             "Super Launch",      "Teleport to Checkpoint",
             // ── Modes ─────────────────────────────────────────────────────
-            "Avalanche Mode",    "Earthquake Mode",        "Police Chase",       "Boulder Dodge",
-            "Survival Mode",     "Trick Attack",         "Spider Bike"
+            "The floor is LAVA", "Avalanche Mode",        "Earthquake Mode",     "Police Chase",
+            "Boulder Dodge",     "Survival Mode",         "Trick Attack",        "Spider Bike"
         };
 
         public static int Count { get { return ModIds.Length; } }
@@ -210,6 +210,11 @@ namespace DescendersModMenu
             return -1;
         }
 
+        public static bool IsKeyBoundToMod(KeyCode key)
+        {
+            return FindConflict(key, -1) >= 0;
+        }
+
         public static int IndexOf(string id)
         {
             for (int i = 0; i < ModIds.Length; i++)
@@ -272,6 +277,11 @@ namespace DescendersModMenu
             }
         }
 
+        private static void RefreshModeUi()
+        {
+            try { ModesPage.RefreshAll(); } catch { }
+        }
+
         private static void FireMod(string id)
         {
             try
@@ -324,12 +334,13 @@ namespace DescendersModMenu
                     case "Music":              Music.Toggle();                                    break;
                     case "SuperLaunch":        DoSuperLaunch();                                   break;
                     case "TeleportCheckpoint": TeleportToCheckpoint.Teleport();                   break;
-                    case "AvalancheMode":      AvalancheMode.Toggle();                            break;
-                    case "EarthquakeMode":     EarthquakeMode.Toggle();                           break;
-                    case "PoliceChase":        PoliceChaseMode.Toggle();                          break;
-                    case "BoulderDodge":       BoulderDodgeMode.Toggle();                         break;
-                    case "SurvivalMode":       SurvivalMode.Toggle();                             break;
-                    case "TrickAttack":        TrickAttackMode.Toggle();                          break;
+                    case "LavaRising":         LavaRising.Toggle(); RefreshModeUi();                 break;
+                    case "AvalancheMode":      AvalancheMode.Toggle(); RefreshModeUi();              break;
+                    case "EarthquakeMode":     EarthquakeMode.Toggle(); RefreshModeUi();             break;
+                    case "PoliceChase":        PoliceChaseMode.Toggle(); RefreshModeUi();            break;
+                    case "BoulderDodge":       BoulderDodgeMode.Toggle(); RefreshModeUi();           break;
+                    case "SurvivalMode":       SurvivalMode.Toggle(); RefreshModeUi();              break;
+                    case "TrickAttack":        TrickAttackMode.Toggle(); RefreshModeUi();           break;
                     default: ModLog.Warn("[KeyBindManager] Unknown mod id: " + id);      break;
                 }
             }

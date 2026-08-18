@@ -124,9 +124,10 @@ namespace DescendersModMenu.Mods
         private static Wheel[] GetWheels()
         {
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) { ModLog.Warn("[Suspension] Player_Human not found."); return null; }
+            // Expected during lobby / map load / before deferred reapply lands.
+            if ((object)player == null) { ModLog.Debug("[Suspension] Player_Human not found."); return null; }
             Wheel[] wheels = player.GetComponentsInChildren<Wheel>();
-            if (wheels == null || wheels.Length == 0) { ModLog.Warn("[Suspension] No Wheel components found."); return null; }
+            if (wheels == null || wheels.Length == 0) { ModLog.Debug("[Suspension] No Wheel components found."); return null; }
             return wheels;
         }
     }

@@ -262,7 +262,7 @@ namespace DescendersModMenu.UI
 
         private static void RefreshCpIndex()
         {
-            if ((object)_cpIndexText == null) return;
+            if (!UnityNull.Alive(_cpIndexText)) return;
             int count = TeleportToCheckpoint.CheckpointCount;
             if (count == 0)
             { _cpIndexText.text = "No CPs"; _cpIndexText.color = UIHelpers.TextDim; return; }
@@ -299,7 +299,7 @@ namespace DescendersModMenu.UI
         }
         private static void UL(string ov = null)
         {
-            if ((object)PlayerNameText == null) return;
+            if (!UnityNull.Alive(PlayerNameText)) return;
             if (ov != null) { PlayerNameText.text = ov; return; }
             if (_pl.Count == 0) { PlayerNameText.text = "No players \u2014 press Scan"; return; }
             var e = _pl[_i]; PlayerNameText.text = "(" + (_i + 1) + "/" + _pl.Count + ") " + e.Name;

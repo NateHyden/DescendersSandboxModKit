@@ -30,7 +30,7 @@ namespace DescendersModMenu.UI
         private static RectTransform _pcKnob;
 
         public static bool IsAnyActive =>
-            AvalancheMode.Enabled || EarthquakeMode.Enabled ||
+            LavaRising.Enabled || AvalancheMode.Enabled || EarthquakeMode.Enabled ||
             PoliceChaseMode.Enabled || TrickAttackMode.CurrentState != TrickAttackMode.State.Off ||
             BoulderDodgeMode.Enabled || SurvivalMode.Enabled;
 
@@ -69,6 +69,8 @@ namespace DescendersModMenu.UI
                 UIHelpers.Fill(UIHelpers.RT(contentArea));
 
                 // ── Sub-tabs ──────────────────────────────────────────
+                AddSubTab(tabBar.transform, contentArea.transform, "The floor is LAVA",
+                    t => LavaRisingPage.CreatePage(t));
                 AddSubTab(tabBar.transform, contentArea.transform, "Avalanche",
                     t => AvalanchePage.CreatePage(t));
                 AddSubTab(tabBar.transform, contentArea.transform, "Earthquake",
@@ -248,8 +250,9 @@ namespace DescendersModMenu.UI
             UIHelpers.SetBar(_eqIntBar, (EarthquakeMode.IntensityLevel - 1) / 9f);
             UIHelpers.SetBar(_eqFreqBar, (EarthquakeMode.FrequencyLevel - 1) / 9f);
             UIHelpers.SetBar(_eqDurBar, (EarthquakeMode.DurationLevel - 1) / 9f);
-            // Only show frequency slider in Timed mode
-            if ((object)_eqFreqRow != null)
+            // Only show frequency slider in Timed mode.
+            // Unity fake-null: (object)x != null is true for destroyed UI after a map change.
+            if (UnityNull.Alive(_eqFreqRow))
                 _eqFreqRow.SetActive(EarthquakeMode.FrequencyMode == 0);
         }
 
@@ -785,24 +788,25 @@ namespace DescendersModMenu.UI
             for (int i = 0; i < _tabPages.Count; i++)
             {
                 bool on = (i == idx);
-                if ((object)_tabPages[i] != null) _tabPages[i].SetActive(on);
-                if ((object)_tabBgs[i] != null) _tabBgs[i].color = on ? UIHelpers.RowBg : new Color(0, 0, 0, 0);
-                if ((object)_tabTxts[i] != null) _tabTxts[i].color = on ? UIHelpers.Accent : UIHelpers.TextDim;
+                if (UnityNull.Alive(_tabPages[i])) _tabPages[i].SetActive(on);
+                if (UnityNull.Alive(_tabBgs[i])) _tabBgs[i].color = on ? UIHelpers.RowBg : new Color(0, 0, 0, 0);
+                if (UnityNull.Alive(_tabTxts[i])) _tabTxts[i].color = on ? UIHelpers.Accent : UIHelpers.TextDim;
             }
         }
 
         public static void Tick()
         {
-            if (_activeTab == 0) AvalanchePage.Tick();
-            if (_activeTab == 2) TickPoliceChasePage();
-            if (_activeTab == 3) TickTrickAttackInput();
-            if (_activeTab == 4) TickBoulderDodgePage();
-            if (_activeTab == 5) TickSurvivalPage();
+            if (_activeTab == 0) LavaRisingPage.Tick();
+            if (_activeTab == 1) AvalanchePage.Tick();
+            if (_activeTab == 3) TickPoliceChasePage();
+            if (_activeTab == 4) TickTrickAttackInput();
+            if (_activeTab == 5) TickBoulderDodgePage();
+            if (_activeTab == 6) TickSurvivalPage();
         }
 
         private static void TickBoulderDodgePage()
         {
-            if (_bdCountLbl == null) return;
+            if (!UnityNull.Alive(_bdCountLbl)) return;
             int count = BoulderDodgeMode.ActiveCount;
             _bdCountLbl.text = count.ToString();
             _bdCountLbl.color = count > 0 ? UIHelpers.Accent : UIHelpers.TextDim;
@@ -810,7 +814,7 @@ namespace DescendersModMenu.UI
 
         private static void TickSurvivalPage()
         {
-            if (_svHPLbl == null) return;
+            if (!UnityNull.Alive(_svHPLbl)) return;
             if (SurvivalMode.IsGameOver)
             {
                 _svHPLbl.text = "GAME OVER";
@@ -833,7 +837,7 @@ namespace DescendersModMenu.UI
 
         private static void TickPoliceChasePage()
         {
-            if (_pcStatusTxt == null) return;
+            if (!UnityNull.Alive(_pcStatusTxt)) return;
             if (PoliceChaseMode.IsCountingDown)
             {
                 int secs = Mathf.CeilToInt(PoliceChaseMode.CountdownRemaining);
@@ -854,9 +858,31 @@ namespace DescendersModMenu.UI
 
         public static void RefreshAll()
         {
-            if (_activeTab == 0) AvalanchePage.RefreshAll();
+            LavaRisingPage.RefreshAll();
+            AvalanchePage.RefreshAll();
             RefreshEarthquake();
             RefreshPoliceChase();
+        }
+
+        public static void ClearUiRefs()
+        {
+            _tabPages.Clear();
+            _tabTxts.Clear();
+            _tabBgs.Clear();
+            _eqIntVal = null; _eqFreqVal = null; _eqDurVal = null; _eqTogVal = null; _eqModeLbl = null;
+            _eqIntBar = null; _eqFreqBar = null; _eqDurBar = null; _eqTrack = null;
+            _eqKnob = null;
+            _eqFreqRow = null;
+            _taTogVal = null; _taTargetInput = null; _taTimeLbl = null;
+            _taTrack = null; _taKnob = null; _taInputRect = null;
+            _pcTogVal = null; _pcStatusTxt = null;
+            _pcTrack = null; _pcKnob = null;
+            _bdTogVal = null; _bdIntervalLbl = null; _bdSizeLbl = null; _bdForwardLbl = null; _bdCountLbl = null;
+            _bdTrack = null; _bdKnob = null;
+            _svTogVal = null; _svBailLbl = null; _svBleedLbl = null; _svHealLbl = null; _svHPLbl = null;
+            _svTrack = null; _svKnob = null;
+            LavaRisingPage.ClearUiRefs();
+            AvalanchePage.ClearUiRefs();
         }
     }
 }

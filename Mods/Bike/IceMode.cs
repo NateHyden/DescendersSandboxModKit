@@ -94,11 +94,12 @@ namespace DescendersModMenu.Mods
 
         internal static void ClampAirSpin(Vehicle vehicle)
         {
+            if (!UnityNull.Alive(vehicle)) return;
             if (!IsVehicleAirborne(vehicle)) return;
             try
             {
                 Rigidbody rb = vehicle.GetComponent<Rigidbody>();
-                if ((object)rb == null) return;
+                if (!UnityNull.Alive(rb)) return;
                 float mag = rb.angularVelocity.magnitude;
                 if (mag > MaxAirAngularSpeed)
                     rb.angularVelocity = rb.angularVelocity * (MaxAirAngularSpeed / mag);
@@ -115,12 +116,12 @@ namespace DescendersModMenu.Mods
         public static void Postfix(Wheel __instance)
         {
             if (!IceMode.Enabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             try
             {
                 Transform t = __instance.transform;
-                if ((object)t == null || (object)t.parent == null) return;
+                if (!UnityNull.Alive(t) || !UnityNull.Alive(t.parent)) return;
                 if (!string.Equals(t.parent.name, "Player_Human", System.StringComparison.Ordinal)) return;
 
                 if ((object)_rollFrictionProp == null)
@@ -143,7 +144,7 @@ namespace DescendersModMenu.Mods
         public static void Postfix(Vehicle __instance)
         {
             if (!IceMode.Enabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             try
             {

@@ -1,6 +1,7 @@
 using MelonLoader;
 using UnityEngine;
 using HarmonyLib;
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -52,7 +53,7 @@ namespace DescendersModMenu.Mods
                 _steerTime = 0f;
                 _camRollTime = 0f;
                 _cam = Camera.main;
-                if ((object)_cam != null) _baseFOV = _cam.fieldOfView;
+                if (UnityNull.Alive(_cam)) _baseFOV = _cam.fieldOfView;
                 // Cache CameraAngle once on enable — reused every LateTick
                 _cachedAngle = null;
                 BikeCamera[] cams = GameObject.FindObjectsOfType<BikeCamera>();
@@ -65,7 +66,7 @@ namespace DescendersModMenu.Mods
                         if (!string.Equals(fields[j].FieldType.Name, "CameraAngle",
                             System.StringComparison.Ordinal)) continue;
                         CameraAngle ca = fields[j].GetValue(cams[i]) as CameraAngle;
-                        if ((object)ca != null) { _baseFOV = ca.targetFOV; _cachedAngle = ca; }
+                        if (UnityNull.Alive(ca)) { _baseFOV = ca.targetFOV; _cachedAngle = ca; }
                         break;
                     }
                 }
@@ -74,7 +75,7 @@ namespace DescendersModMenu.Mods
             else
             {
                 // Restore FOV
-                if ((object)_cam != null) _cam.fieldOfView = _baseFOV;
+                if (UnityNull.Alive(_cam)) _cam.fieldOfView = _baseFOV;
                 _cachedAngle = null;
                 ModLog.Feedback("[DrunkMode] OFF");
             }
@@ -100,7 +101,7 @@ namespace DescendersModMenu.Mods
         private static void OnPreRenderCamera(Camera cam)
         {
             if (!Enabled) return;
-            if ((object)cam == null || (object)Camera.main == null || cam != Camera.main) return;
+            if (!UnityNull.Alive(cam) || !UnityNull.Alive(Camera.main) || cam != Camera.main) return;
 
             _cam = cam;
 
@@ -114,7 +115,7 @@ namespace DescendersModMenu.Mods
             // control or know the timing of. Direct write makes us the
             // final, guaranteed authority on the rendered value, exactly
             // like the camera roll write below already was.
-            if ((object)_cachedAngle != null)
+            if (UnityNull.Alive(_cachedAngle))
                 _cachedAngle.targetFOV = _baseFOV + fovWobble;
             _cam.fieldOfView = _baseFOV + fovWobble;
 
@@ -131,7 +132,7 @@ namespace DescendersModMenu.Mods
         // Called from Harmony postfix on Vehicle.FixedUpdate — adds steering wobble
         public static void ApplySteeringWobble(Vehicle vehicle)
         {
-            if (!Enabled || (object)vehicle == null) return;
+            if (!Enabled || !UnityNull.Alive(vehicle)) return;
 
             _steerTime += Time.fixedDeltaTime * 0.7f;
 
@@ -164,8 +165,8 @@ namespace DescendersModMenu.Mods
         {
             if (Enabled)
             {
-                if ((object)_cam != null) _cam.fieldOfView = _baseFOV;
-                if ((object)_cam != null) _cam.transform.rotation *= Quaternion.Euler(0f, 0f, -_lastRoll);
+                if (UnityNull.Alive(_cam)) _cam.fieldOfView = _baseFOV;
+                if (UnityNull.Alive(_cam)) _cam.transform.rotation *= Quaternion.Euler(0f, 0f, -_lastRoll);
                 Enabled = false;
             }
             _lastRoll = 0f;

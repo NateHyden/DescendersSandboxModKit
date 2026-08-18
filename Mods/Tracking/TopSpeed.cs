@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using MelonLoader;
 using UnityEngine;
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -32,11 +33,18 @@ namespace DescendersModMenu.Mods
         public static void StartTracking() { _tracking = true; }
         public static void StopTracking() { _tracking = false; }
 
-        public static void Reset()
+        // Clears the on-screen session stat only — does not touch TopSpeed.txt.
+        public static void ResetSession()
         {
             SessionTopSpeed = 0f;
             _cachedPlayer = null;
             _cachedRb = null;
+        }
+
+        // Clears session stat and wipes the persisted all-time record file.
+        public static void Reset()
+        {
+            ResetSession();
             Save();
         }
 
@@ -52,17 +60,17 @@ namespace DescendersModMenu.Mods
             if (!_tracking) return;
             try
             {
-                // Re-find player if cache is stale
-                if ((object)_cachedPlayer == null || !_cachedPlayer.activeInHierarchy)
+                // Re-find player if cache is stale (Unity fake-null after map change)
+                if (!UnityNull.Alive(_cachedPlayer) || !_cachedPlayer.activeInHierarchy)
                 {
                     _cachedPlayer = GameObject.Find("Player_Human");
                     _cachedRb = null;
                 }
-                if ((object)_cachedPlayer == null) return;
+                if (!UnityNull.Alive(_cachedPlayer)) return;
 
-                if ((object)_cachedRb == null)
+                if (!UnityNull.Alive(_cachedRb))
                     _cachedRb = _cachedPlayer.GetComponent<Rigidbody>();
-                if ((object)_cachedRb == null) return;
+                if (!UnityNull.Alive(_cachedRb)) return;
 
                 // Match the game's speedo formula exactly:
                 // velocity.magnitude * 3.6 / gravity.magnitude * 9.81

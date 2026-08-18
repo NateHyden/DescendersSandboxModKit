@@ -64,13 +64,13 @@ namespace DescendersModMenu.Mods
             try
             {
                 GameObject player = GameObject.Find("Player_Human");
-                if ((object)player == null) { ModLog.Warn("[HoverMode] Player_Human not found."); Enabled = false; return; }
+                if (!UnityNull.Alive(player)) { ModLog.Warn("[HoverMode] Player_Human not found."); Enabled = false; return; }
 
                 _playerTrans = player.transform;
                 _vehicle = player.GetComponent<Vehicle>();
                 _rb = player.GetComponentInChildren<Rigidbody>();
 
-                if ((object)_vehicle == null || (object)_rb == null)
+                if (!UnityNull.Alive(_vehicle) || !UnityNull.Alive(_rb))
                 {
                     ModLog.Warn("[HoverMode] Vehicle/Rigidbody not found.");
                     Enabled = false; return;
@@ -94,7 +94,7 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                if ((object)_rb != null) _rb.useGravity = _savedGravity;
+                if (UnityNull.Alive(_rb)) _rb.useGravity = _savedGravity;
             }
             catch (System.Exception ex) { MelonLogger.Error("[HoverMode] Disable: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "HoverMode"); }
 
@@ -106,7 +106,12 @@ namespace DescendersModMenu.Mods
         public static void FixedTick()
         {
             if (!Enabled) return;
-            if ((object)_rb == null || (object)_playerTrans == null) return;
+            if (!UnityNull.Alive(_rb) || !UnityNull.Alive(_playerTrans))
+            {
+                Enabled = false;
+                Disable();
+                return;
+            }
 
             try
             {

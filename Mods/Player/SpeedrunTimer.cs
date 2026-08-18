@@ -29,7 +29,7 @@ namespace DescendersModMenu.Mods
             {
                 if (Enabled)
                 {
-                    if ((object)_timer == null)
+                    if (!UnityNull.Alive(_timer))
                     {
                         UI_SpeedrunTimer[] found = Resources.FindObjectsOfTypeAll<UI_SpeedrunTimer>();
                         if (found != null && found.Length > 0)
@@ -39,13 +39,13 @@ namespace DescendersModMenu.Mods
                         }
                     }
 
-                    if ((object)_timer == null)
+                    if (!UnityNull.Alive(_timer))
                     {
                         UIManager uiManager = Object.FindObjectOfType<UIManager>();
                         if ((object)uiManager != null)
                         {
                             _timer = uiManager.SpawnByType<UI_SpeedrunTimer>();
-                            if ((object)_timer != null)
+                            if (UnityNull.Alive(_timer))
                                 ModLog.Debug("[SpeedrunTimer] Spawned via UIManager.");
                             else
                                 ModLog.Warn("[SpeedrunTimer] SpawnByType returned null.");
@@ -54,12 +54,12 @@ namespace DescendersModMenu.Mods
                             ModLog.Warn("[SpeedrunTimer] UIManager not found.");
                     }
 
-                    if ((object)_timer != null)
+                    if (UnityNull.Alive(_timer))
                         _timer.gameObject.SetActive(true);
                 }
                 else
                 {
-                    if ((object)_timer != null)
+                    if (UnityNull.Alive(_timer))
                         _timer.gameObject.SetActive(false);
                 }
             }

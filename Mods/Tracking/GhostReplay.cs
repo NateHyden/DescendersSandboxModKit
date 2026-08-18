@@ -133,12 +133,14 @@ namespace DescendersModMenu.Mods
                 _state = GhostState.WaitingForMove;
                 ModLog.Debug("[GhostReplay] Reset — keeping spawn at " + _spawnPos);
 
-                if ((object)_ghostObj != null && _savedRun.Count > 0)
+                if (UnityNull.Alive(_ghostObj) && _savedRun.Count > 0)
                 {
                     _ghostObj.transform.position = _savedRun[0].Position;
                     _ghostObj.transform.rotation = _savedRun[0].Rotation;
                     _ghostObj.SetActive(true);
                 }
+                else if (!UnityNull.Alive(_ghostObj))
+                    _ghostObj = null;
             }
             // WaitingForMarker — B does nothing for ghost replay, game handles respawn
         }
@@ -150,7 +152,7 @@ namespace DescendersModMenu.Mods
             if (_state == GhostState.WaitingForMarker || _state == GhostState.WaitingForMove || _state == GhostState.Recording)
             {
                 GameObject p = GameObject.Find("Player_Human");
-                _spawnPos = (object)p != null ? p.transform.position : Vector3.zero;
+                _spawnPos = UnityNull.Alive(p) ? p.transform.position : Vector3.zero;
                 _graceEnd = Time.realtimeSinceStartup + GracePeriod;
                 _state = GhostState.WaitingForMove;
                 IsRecording = false;
@@ -160,12 +162,14 @@ namespace DescendersModMenu.Mods
                 _frameCount = 0;
                 ModLog.Debug("[GhostReplay] LS — spawn set at " + _spawnPos + " waiting for move.");
 
-                if ((object)_ghostObj != null && _savedRun.Count > 0)
+                if (UnityNull.Alive(_ghostObj) && _savedRun.Count > 0)
                 {
                     _ghostObj.transform.position = _savedRun[0].Position;
                     _ghostObj.transform.rotation = _savedRun[0].Rotation;
                     _ghostObj.SetActive(true);
                 }
+                else if (!UnityNull.Alive(_ghostObj))
+                    _ghostObj = null;
             }
         }
 
@@ -176,7 +180,7 @@ namespace DescendersModMenu.Mods
             if (!Enabled) return;
 
             GameObject player = GameObject.Find("Player_Human");
-            if ((object)player == null) return;
+            if (!UnityNull.Alive(player)) return;
             Vector3 playerPos = player.transform.position;
 
             if (Time.realtimeSinceStartup - _lastLogTime > 2f)
@@ -186,7 +190,7 @@ namespace DescendersModMenu.Mods
                     + " frames=" + _currentRun.Count
                     + " saved=" + _savedRun.Count
                     + " dist=" + Vector3.Distance(playerPos, _spawnPos).ToString("F2")
-                    + " ghost=" + ((object)_ghostObj != null && _ghostObj.activeSelf));
+                    + " ghost=" + (UnityNull.Alive(_ghostObj) && _ghostObj.activeSelf));
             }
 
             switch (_state)
@@ -203,12 +207,14 @@ namespace DescendersModMenu.Mods
                     }
 
                     // Pin ghost to start of saved run every frame while waiting
-                    if ((object)_ghostObj != null && _savedRun.Count > 0)
+                    if (UnityNull.Alive(_ghostObj) && _savedRun.Count > 0)
                     {
                         _ghostObj.transform.position = _savedRun[0].Position;
                         _ghostObj.transform.rotation = _savedRun[0].Rotation;
                         _ghostObj.SetActive(true);
                     }
+                    else if (!UnityNull.Alive(_ghostObj))
+                        _ghostObj = null;
 
                     // Detect movement
                     if (Vector3.Distance(playerPos, _spawnPos) > 0.02f)
@@ -225,7 +231,8 @@ namespace DescendersModMenu.Mods
                             _playbackIdx = 0;
                             _playbackTime = 0f;
                             IsPlaying = true;
-                            if ((object)_ghostObj != null) _ghostObj.SetActive(true);
+                            if (UnityNull.Alive(_ghostObj)) _ghostObj.SetActive(true);
+                            else _ghostObj = null;
                             ModLog.Debug("[GhostReplay] MOVING — recording + ghost started simultaneously.");
                         }
                         else
@@ -251,14 +258,23 @@ namespace DescendersModMenu.Mods
                     }
 
                     // Advance ghost playback
-                    if (IsPlaying && (object)_ghostObj != null && _ghostObj.activeSelf)
+                    if (IsPlaying && UnityNull.Alive(_ghostObj) && _ghostObj.activeSelf)
                         AdvancePlayback();
+                    else if (!UnityNull.Alive(_ghostObj))
+                        _ghostObj = null;
                     break;
             }
         }
 
         private static void AdvancePlayback()
         {
+            if (!UnityNull.Alive(_ghostObj))
+            {
+                _ghostObj = null;
+                IsPlaying = false;
+                return;
+            }
+
             _playbackTime += Time.deltaTime;
 
             while (_playbackIdx < _savedRun.Count - 1
@@ -396,7 +412,8 @@ namespace DescendersModMenu.Mods
 
         private static void DestroyGhost()
         {
-            if ((object)_ghostObj != null) { GameObject.Destroy(_ghostObj); _ghostObj = null; }
+            if (UnityNull.Alive(_ghostObj)) GameObject.Destroy(_ghostObj);
+            _ghostObj = null;
             IsPlaying = false;
         }
 
@@ -421,7 +438,8 @@ namespace DescendersModMenu.Mods
             _savedRun.Clear();
             SavedRunTime = 0f;
             IsPlaying = false;
-            if ((object)_ghostObj != null) _ghostObj.SetActive(false);
+            if (UnityNull.Alive(_ghostObj)) _ghostObj.SetActive(false);
+            else _ghostObj = null;
             ModLog.Debug("[GhostReplay] Saved run cleared.");
         }
 

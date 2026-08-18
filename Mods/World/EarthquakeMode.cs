@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
 
@@ -152,13 +153,14 @@ namespace DescendersModMenu.Mods
 
         private static void FireImpulse()
         {
-            if ((object)_rb == null)
+            if (!UnityNull.Alive(_rb))
             {
+                _rb = null;
                 GameObject player = GameObject.Find("Player_Human");
                 if ((object)player == null) return;
                 _rb = player.GetComponentInChildren<Rigidbody>();
             }
-            if ((object)_rb == null) return;
+            if (!UnityNull.Alive(_rb)) return;
 
             float f = ImpulseForce;
             // Horizontal shaking only — tiny Y so the player stays on the bike

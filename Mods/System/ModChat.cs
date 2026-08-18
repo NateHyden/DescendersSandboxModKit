@@ -13,7 +13,7 @@ namespace DescendersModMenu.Mods
     {
         public const byte EventCode = 99;
         public const int MaxMessages = 50;
-        public const int MaxLength = 120;
+        public const int MaxLength = 300;
 
         public class ChatMessage
         {
@@ -26,8 +26,13 @@ namespace DescendersModMenu.Mods
         private static readonly List<ChatMessage> _messages = new List<ChatMessage>();
         public static IList<ChatMessage> Messages { get { return _messages; } }
 
+        // UI dirty flag — ChatPage rebuilds when true (not the same as unread).
         public static bool HasNewMessages { get; private set; }
         public static void ClearNewFlag() { HasNewMessages = false; }
+
+        // Unread count for the Chat tab badge. Cleared when the Chat page is opened.
+        public static int UnreadCount { get; private set; }
+        public static void MarkAsRead() { UnreadCount = 0; }
 
         // Photon reflection cache
         private static Type _photonType = null;
@@ -43,7 +48,8 @@ namespace DescendersModMenu.Mods
         private static bool _resolved = false;
         private static bool _photonAccessEnabled = false; // don't touch PhotonNetwork statics until game is ready
         private static bool _initRequested = false;
-        private static string _trackedRoomKey = null; // null until first sample; clears chat on lobby/room change
+        private static bool _wasInRoom; // clears chat only when leaving a multiplayer room
+        private static bool _roomStateKnown;
 
         // True when PhotonNetwork.inRoom — RaiseEvent only works then.
         public static bool InRoom
@@ -164,18 +170,25 @@ namespace DescendersModMenu.Mods
             CheckLobbyChanged();
         }
 
+        // Only clear when leaving a Photon room. Room-name flicker used to wipe
+        // the history mid-session; map swaps clear via OnMapChanged instead.
         private static void CheckLobbyChanged()
         {
-            string key = InRoom ? ("in:" + RoomName) : "out";
-            if (_trackedRoomKey == null)
+            bool inRoom = InRoom;
+            if (!_roomStateKnown)
             {
-                _trackedRoomKey = key;
+                _wasInRoom = inRoom;
+                _roomStateKnown = true;
                 return;
             }
-            if (string.Equals(_trackedRoomKey, key, StringComparison.Ordinal))
-                return;
+            if (_wasInRoom && !inRoom)
+                ClearMessages();
+            _wasInRoom = inRoom;
+        }
 
-            _trackedRoomKey = key;
+        // Called from ModEntry on scene unload (map / session change).
+        public static void OnMapChanged()
+        {
             ClearMessages();
         }
 
@@ -530,6 +543,9 @@ namespace DescendersModMenu.Mods
             if (_messages.Count > MaxMessages)
                 _messages.RemoveAt(0);
             HasNewMessages = true;
+            // Count as unread unless the player is already looking at Chat.
+            if (!msg.IsSelf && !MenuWindow.IsChatOpen)
+                UnreadCount++;
             ModLog.Debug("[ModChat] <" + msg.PlayerName + "> " + msg.Text);
             try { ChatHUD.Notify(msg); }
             catch (Exception ex)
@@ -541,8 +557,10 @@ namespace DescendersModMenu.Mods
 
         public static void ClearMessages()
         {
+            UnreadCount = 0;
             if (_messages.Count == 0)
             {
+                HasNewMessages = true;
                 try { ChatHUD.Reset(); } catch { }
                 return;
             }
@@ -553,7 +571,7 @@ namespace DescendersModMenu.Mods
 
         public static void Reset()
         {
-            _trackedRoomKey = null;
+            _roomStateKnown = false;
             ClearMessages();
             if (!_photonAccessEnabled) return;
             if (_subscribed) return;

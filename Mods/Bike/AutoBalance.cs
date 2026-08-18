@@ -76,7 +76,7 @@ namespace DescendersModMenu.Mods
         public static void Postfix(Vehicle __instance)
         {
             if (!AutoBalance.Enabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             try
             {
@@ -84,7 +84,7 @@ namespace DescendersModMenu.Mods
                     System.StringComparison.Ordinal)) return;
 
                 Rigidbody rb = __instance.GetComponent<Rigidbody>();
-                if ((object)rb == null) return;
+                if (!UnityNull.Alive(rb)) return;
 
                 // Roll-only correction using world-space vectors � no Euler angles,
                 // so no gimbal lock during backflips/frontflips.

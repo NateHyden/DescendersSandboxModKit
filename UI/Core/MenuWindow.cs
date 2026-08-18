@@ -60,6 +60,9 @@ namespace DescendersModMenu.UI
         private static Image[] _navBgs = new Image[24];
         private static Image[] _activeDots = new Image[24];
         private static UnityEngine.UI.Image _infoTabDot;
+        private static GameObject _chatUnreadBadge;
+        private static Text _chatUnreadTxt;
+        private static int _lastUnreadShown = -1;
 
         public static CanvasGroup RootCanvasGroup { get; private set; }
         public static RectTransform RootRT { get; private set; }
@@ -303,6 +306,21 @@ namespace DescendersModMenu.UI
                 _hdrLoadImg = HeaderBtn(hdr.transform, "LOAD", 443f, () => { StatsManager.LoadStats(); RefreshAll(); FlashHeader(_hdrLoadImg); });
                 _hdrResetImg = HeaderBtn(hdr.transform, "RESET", 503f, () => { StatsManager.ResetStats(); RefreshAll(); FlashHeader(_hdrResetImg); });
 
+                // Brief note under SAVE / LOAD / RESET (centred under the trio)
+                var slrHint = UIHelpers.Txt("SLRHint", hdr.transform,
+                    "(Saves, Loads and resets active mods)",
+                    8, FontStyle.Normal, TextAnchor.UpperCenter, Color.white);
+                var slrHintRt = UIHelpers.RT(slrHint.gameObject);
+                slrHintRt.anchorMin = new Vector2(0, 1); slrHintRt.anchorMax = new Vector2(0, 1);
+                slrHintRt.pivot = new Vector2(0.5f, 1);
+                slrHintRt.sizeDelta = new Vector2(180, 16);
+                // Buttons: SAVE@383, LOAD@443, RESET@503 (w=52) → group centre ≈ 469
+                slrHintRt.anchoredPosition = new Vector2(469f, -42f);
+                slrHint.horizontalOverflow = HorizontalWrapMode.Overflow;
+                slrHint.verticalOverflow = VerticalWrapMode.Overflow;
+                slrHint.raycastTarget = false;
+                slrHint.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
                 // Body
                 var body = UIHelpers.Obj("Body", win.transform);
                 var bodyRT = UIHelpers.RT(body);
@@ -452,6 +470,22 @@ namespace DescendersModMenu.UI
                         idrt.anchorMin = new Vector2(1f, 0.5f); idrt.anchorMax = new Vector2(1f, 0.5f);
                         idrt.pivot = new Vector2(1f, 0.5f); idrt.sizeDelta = new Vector2(7, 7); idrt.anchoredPosition = new Vector2(-10, 0);
                         infoDotObj.AddComponent<LayoutElement>().ignoreLayout = true;
+                    }
+                    if (pageNum == 12)
+                    {
+                        // Unread message count badge on the Chat tab
+                        var badge = UIHelpers.Panel("ChatUnread", item.transform, UIHelpers.Orange, UIHelpers.BtnSp);
+                        _chatUnreadBadge = badge;
+                        var brt = UIHelpers.RT(badge);
+                        brt.anchorMin = new Vector2(1f, 0.5f); brt.anchorMax = new Vector2(1f, 0.5f);
+                        brt.pivot = new Vector2(1f, 0.5f);
+                        brt.sizeDelta = new Vector2(18, 14);
+                        brt.anchoredPosition = new Vector2(-6, 0);
+                        badge.AddComponent<LayoutElement>().ignoreLayout = true;
+                        _chatUnreadTxt = UIHelpers.Txt("CU", badge.transform, "0", 9,
+                            FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
+                        UIHelpers.Fill(UIHelpers.RT(_chatUnreadTxt.gameObject));
+                        badge.SetActive(false);
                     }
                     var btn = item.AddComponent<Button>();
                     btn.onClick.AddListener(() => Switch(PageOrder[navIdx]));
@@ -948,12 +982,23 @@ namespace DescendersModMenu.UI
 
         private static int _lastCur = -1;
 
-        private static void Switch(int pg) { cur = pg; RefreshTabs(); }
+        private static void Switch(int pg)
+        {
+            cur = pg;
+            if (pg == 12) ModChat.MarkAsRead();
+            RefreshTabs();
+            UpdateChatUnreadBadge(true);
+        }
 
         // Public wrapper so MenuUI can force the sidebar to a specific
         // page (e.g. General) on a normal F6/dpad open, independent of
         // whatever the ColorSchemeManager reopen-on-Customise flow does.
         public static void GoToPage(int pg) { Switch(pg); }
+
+        public static bool IsChatOpen
+        {
+            get { return MenuUI.IsOpen && cur == 12; }
+        }
 
         private static void RefreshTabs()
         {
@@ -1005,6 +1050,26 @@ namespace DescendersModMenu.UI
             if (cur == 3) InfoPage.Refresh();
             if (cur == 22) { Mods.PerkMenu.ForceReload(); PerksPage.Rebuild(); }
             if (_infoTabDot) _infoTabDot.color = DiagnosticsManager.FailCount > 0 ? UIHelpers.OffColor : UIHelpers.OnColor;
+            UpdateChatUnreadBadge(true);
+        }
+
+        private static void UpdateChatUnreadBadge(bool force)
+        {
+            if (!_chatUnreadBadge) return;
+            int n = ModChat.UnreadCount;
+            if (!force && n == _lastUnreadShown) return;
+            _lastUnreadShown = n;
+            if (n <= 0)
+            {
+                _chatUnreadBadge.SetActive(false);
+                return;
+            }
+            _chatUnreadBadge.SetActive(true);
+            if (_chatUnreadTxt)
+                _chatUnreadTxt.text = n > 99 ? "99+" : n.ToString();
+            // Widen slightly for multi-digit counts
+            var rt = UIHelpers.RT(_chatUnreadBadge);
+            rt.sizeDelta = new Vector2(n > 9 ? 22f : 18f, 14f);
         }
 
         // ── RefreshAll ────────────────────────────────────────────────
@@ -1066,6 +1131,7 @@ namespace DescendersModMenu.UI
             try { FunPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("FunPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "FunPage.RefreshAll"); }
             try { WorldPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("WorldPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "WorldPage.RefreshAll"); }
             try { OtherPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("OtherPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "OtherPage.RefreshAll"); }
+            try { ModesPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("ModesPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "ModesPage.RefreshAll"); }
 
             // ── Favourites sync ───────────────────────────────────────
             try { FavsPage.RefreshFavourites(); } catch (System.Exception ex) { MelonLogger.Error("FavsPage.RefreshFavourites: " + ex); Telemetry.ReportErrorAsync(ex, "FavsPage.RefreshFavourites"); }
@@ -1089,39 +1155,44 @@ namespace DescendersModMenu.UI
             if (MenuUI.IsOpen) SessionPage.TickLive();
 
             // Update status — reapplied every tick so it survives menu rebuilds after scene changes
-            if ((object)_updateStatusText != null)
+            // Unity fake-null: (object)==null misses destroyed header Text (same class as GhostPage).
+            if (!UnityNull.Alive(_updateStatusText))
             {
-                if (!UpdateChecker.CheckComplete)
-                {
-                    _updateStatusText.text = "checking for updates...";
-                    _updateStatusText.color = UIHelpers.TextDim;
-                    _updateStatusText.fontStyle = FontStyle.Normal;
-                }
-                else if (UpdateChecker.UpdateAvailable)
-                {
-                    _updateStatusText.text = "\u25B2 v" + UpdateChecker.LatestVersion + " available";
-                    _updateStatusText.color = new UnityEngine.Color(1f, 0.20f, 0.20f, 1f); // red
-                    _updateStatusText.fontStyle = FontStyle.Bold;
-                }
-                else
-                {
-                    _updateStatusText.text = "\u2713 v" + BuildInfo.Version + " up to date";
-                    _updateStatusText.color = UIHelpers.OnColor; // lime green
-                    _updateStatusText.fontStyle = FontStyle.Normal;
-                }
+                _updateStatusText = null;
+            }
+            else if (!UpdateChecker.CheckComplete)
+            {
+                _updateStatusText.text = "checking for updates...";
+                _updateStatusText.color = UIHelpers.TextDim;
+                _updateStatusText.fontStyle = FontStyle.Normal;
+            }
+            else if (UpdateChecker.UpdateAvailable)
+            {
+                _updateStatusText.text = "\u25B2 v" + UpdateChecker.LatestVersion + " available";
+                _updateStatusText.color = new UnityEngine.Color(1f, 0.20f, 0.20f, 1f); // red
+                _updateStatusText.fontStyle = FontStyle.Bold;
+            }
+            else
+            {
+                _updateStatusText.text = "\u2713 v" + BuildInfo.Version + " up to date";
+                _updateStatusText.color = UIHelpers.OnColor; // lime green
+                _updateStatusText.fontStyle = FontStyle.Normal;
             }
 
             if (_hdrFlashTimer > 0f)
             {
                 _hdrFlashTimer -= UnityEngine.Time.deltaTime;
-                if (_hdrFlashTimer <= 0f && (object)_hdrFlashImg != null)
+                if (_hdrFlashTimer <= 0f && UnityNull.Alive(_hdrFlashImg))
                 {
                     _hdrFlashImg.color = UIHelpers.NeonBlue;
                     _hdrFlashImg = null;
                 }
+                else if (_hdrFlashTimer <= 0f)
+                    _hdrFlashImg = null;
             }
 
             if (MenuUI.IsOpen) UpdateSidebarMoreHint();
+            if (MenuUI.IsOpen) UpdateChatUnreadBadge(false);
         }
 
         private static void UpdateSidebarMoreHint()

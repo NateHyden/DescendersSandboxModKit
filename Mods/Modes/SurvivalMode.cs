@@ -1,4 +1,5 @@
 using MelonLoader;
+using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -162,13 +163,14 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                if ((object)_rb == null)
+                if (!UnityNull.Alive(_rb))
                 {
+                    _rb = null;
                     GameObject player = GameObject.Find("Player_Human");
                     if ((object)player == null) return 0f;
                     _rb = player.GetComponentInChildren<Rigidbody>();
                 }
-                if ((object)_rb == null) return 0f;
+                if (!UnityNull.Alive(_rb)) return 0f;
                 return _rb.velocity.y;
             }
             catch { _rb = null; return 0f; }

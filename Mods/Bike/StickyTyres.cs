@@ -33,14 +33,15 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                // Cache rigidbody
-                if ((object)_rb == null)
+                // Cache rigidbody — Unity fake-null after map change
+                if (!UnityNull.Alive(_rb))
                 {
+                    _rb = null;
                     GameObject player = GameObject.Find("Player_Human");
                     if ((object)player == null) return;
                     _rb = player.GetComponentInChildren<Rigidbody>();
                 }
-                if ((object)_rb == null) return;
+                if (!UnityNull.Alive(_rb)) return;
 
                 // Cast a ray from the bike's centre in its local-down direction.
                 // This automatically adapts to the bike's current orientation —

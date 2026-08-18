@@ -51,7 +51,7 @@ namespace DescendersModMenu.Mods
 
         private static bool EnsureRefs()
         {
-            if ((object)_ppb == null)
+            if (!UnityNull.Alive(_ppb))
             {
                 MonoBehaviour[] all = Object.FindObjectsOfType<MonoBehaviour>();
                 for (int i = 0; i < all.Length; i++)
@@ -60,7 +60,7 @@ namespace DescendersModMenu.Mods
                         System.StringComparison.Ordinal))
                     { _ppb = all[i]; break; }
                 }
-                if ((object)_ppb == null) { ModLog.Warn("[Graphics] PostProcessingBehaviour not found."); return false; }
+                if (!UnityNull.Alive(_ppb)) { ModLog.Warn("[Graphics] PostProcessingBehaviour not found."); return false; }
                 ModLog.Debug("[Graphics] Found PostProcessingBehaviour.");
             }
 

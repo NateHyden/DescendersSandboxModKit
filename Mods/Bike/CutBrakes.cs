@@ -50,7 +50,7 @@ namespace DescendersModMenu.Mods
         public static void Postfix(VehicleController __instance)
         {
             if (!CutBrakes.Enabled) return;
-            if ((object)__instance == null) return;
+            if (!UnityNull.Alive(__instance)) return;
 
             try
             {
@@ -70,7 +70,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 Vehicle vehicle = _vehicleField.GetValue(__instance) as Vehicle;
-                if ((object)vehicle == null) return;
+                if (!UnityNull.Alive(vehicle)) return;
 
                 // Only affect local player
                 if (!string.Equals(vehicle.gameObject.name, "Player_Human",

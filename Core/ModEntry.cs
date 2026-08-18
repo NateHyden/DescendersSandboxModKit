@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "1.8.0";
+        public const string Version = "1.9.0";
         public const string DownloadLink = null;
     }
 
@@ -233,13 +233,19 @@ namespace DescendersModMenu
             // trip over. CreateMenu() re-populates it fresh next time the
             // menu is actually built, so this is a pure no-op if it isn't.
             try { FavouritesManager.ClearStarButtons(); } catch (System.Exception ex) { MelonLogger.Error("FavouritesManager.ClearStarButtons: " + ex.Message); Telemetry.ReportErrorAsync(ex, "FavouritesManager"); }
+            try { ModChat.OnMapChanged(); } catch { }
+            try { ModesPage.ClearUiRefs(); } catch { }
             try { ChatPage.ClearUiRefs(); } catch { }
+            try { LavaRisingPage.ClearUiRefs(); } catch { }
             try { InfoPage.ClearUiRefs(); } catch { }
             try { FavsPage.ClearUiRefs(); } catch { }
             try { MapPage.ClearUiRefs(); } catch { }
             try { EspPage.ClearUiRefs(); } catch { }
             try { ObjectPlacerPage.ClearUiRefs(); } catch { }
             try { BikePage.ClearUiRefs(); } catch { }
+            try { GhostPage.ClearUiRefs(); } catch { }
+            try { SessionPage.ClearUiRefs(); } catch { }
+            try { LavaRising.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("LavaRising.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LavaRising"); }
             try { CompassAlwaysOn.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("CompassAlwaysOn.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CompassAlwaysOn"); }
             try { TimeOfDay.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("TimeOfDay.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
             try { PlayerCache.Clear(); } catch (System.Exception ex) { MelonLogger.Error("PlayerCache.Clear: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PlayerCache"); }
@@ -419,6 +425,7 @@ namespace DescendersModMenu
             EarthquakeMode.Reset(); PoliceChaseMode.Reset();
             TrickAttackMode.Reset(); BoulderDodgeMode.Reset();
             SurvivalMode.Reset();
+            LavaRising.Reset();
             SessionTrackers.Reset(); ExplodingProps.Reset();
             Trees.Reset(); BouncyBike.Reset(); BlizzardDial.Reset(); DiscoMode.Reset();
             ObjectPlacer.Reset();
@@ -644,8 +651,14 @@ namespace DescendersModMenu
                     _pendingRStickSave = false;
                     if (GhostReplay.IsRecording && GhostReplay.RecordedFrames >= 30) { GhostReplay.SaveRun(); GhostPage.RefreshAll(); }
                 }
-                if (!UI.BindsPage.IsListening && (Input.GetKeyDown(KeyCode.F6)
-                    || KeyBindManager.CheckMenuOpenPressed())) MenuUI.ToggleMenu();
+                if (!UI.BindsPage.IsListening)
+                {
+                    bool menuKey = KeyBindManager.CheckMenuOpenPressed();
+                    if (!menuKey && Input.GetKeyDown(KeyCode.F6)
+                        && !KeyBindManager.IsKeyBoundToMod(KeyCode.F6))
+                        menuKey = true;
+                    if (menuKey) MenuUI.ToggleMenu();
+                }
             }
             catch (System.Exception ex) { MelonLogger.Error("ToggleMenu: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ToggleMenu"); }
             try { UI.BindsPage.CheckController(); } catch (System.Exception ex) { MelonLogger.Error("BindsPage.CheckController: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BindsPage.CheckController"); }
@@ -672,6 +685,7 @@ namespace DescendersModMenu
                 try { SessionTrackers.CheckpointTick(); } catch (System.Exception ex) { MelonLogger.Error("SessionTrackers.CheckpointTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionTrackers"); }
             try { ModesPage.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ModesPage.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ModesPage"); }
             try { AvalancheMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("AvalancheMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "AvalancheMode"); }
+            try { LavaRising.Tick(); } catch (System.Exception ex) { MelonLogger.Error("LavaRising.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LavaRising"); }
             try { PoliceChaseMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("PoliceChaseMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PoliceChaseMode"); }
             try { TrickAttackMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("TrickAttackMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TrickAttackMode"); }
             try { BoulderDodgeMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("BoulderDodgeMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BoulderDodgeMode"); }
@@ -706,6 +720,7 @@ namespace DescendersModMenu
         public override void OnFixedUpdate()
         {
             try { AvalancheMode.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("AvalancheMode.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "AvalancheMode"); }
+            try { LavaRising.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("LavaRising.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LavaRising"); }
             try { EarthquakeMode.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("EarthquakeMode.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "EarthquakeMode"); }
             try { PoliceChaseMode.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("PoliceChaseMode.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PoliceChaseMode"); }
             try { StickyTyres.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("StickyTyres.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "StickyTyres"); }
@@ -765,6 +780,7 @@ namespace DescendersModMenu
             try { ESP.OnGUI(); } catch (System.Exception ex) { MelonLogger.Error("ESP.OnGUI: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ESP"); }
             try { GhostHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("GhostHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostHUD"); }
             try { PoliceHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("PoliceHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PoliceHUD"); }
+            try { LavaRisingHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("LavaRisingHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LavaRisingHUD"); }
             try { TrickAttackHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("TrickAttackHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TrickAttackHUD"); }
             try { SurvivalHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("SurvivalHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SurvivalHUD"); }
             try { SessionHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("SessionHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionHUD"); }
