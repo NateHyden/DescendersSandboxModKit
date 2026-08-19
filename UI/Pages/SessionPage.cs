@@ -42,6 +42,7 @@ namespace DescendersModMenu.UI
         private static Text _tmLabelVal;
         private static UnityEngine.UI.Button _tmMinus, _tmPlus;
         private static Text _jumpStatusTxt;
+        private static Text _respawnStartStatusTxt;
 
         public static bool IsAnyActive =>
             SpeedrunTimer.Enabled || SessionHUD.Enabled || SpectateMode.Enabled ||
@@ -275,6 +276,41 @@ namespace DescendersModMenu.UI
                 }, 60);
                 FavouritesManager.RegisterStarButton("JumpToFinish", UIHelpers.StarBtn(jr.transform, "JumpToFinish", () => FavouritesManager.Toggle("JumpToFinish")));
 
+                var respawnStartRow = UIHelpers.StatRow("Respawn at Start", c);
+                _respawnStartStatusTxt = UIHelpers.Txt("RspStartStatus", respawnStartRow.transform, "",
+                    9, FontStyle.Italic, TextAnchor.MiddleRight, UIHelpers.TextDim);
+                _respawnStartStatusTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 130;
+                UIHelpers.ActionBtnOrange(respawnStartRow.transform, "Go", () =>
+                {
+                    try
+                    {
+                        PlayerManager pm = UnityEngine.Object.FindObjectOfType<PlayerManager>();
+                        if ((object)pm == null)
+                        {
+                            if (_respawnStartStatusTxt) { _respawnStartStatusTxt.text = "Not in a session"; _respawnStartStatusTxt.color = UIHelpers.Orange; }
+                            return;
+                        }
+                        var getPii = typeof(PlayerManager).GetMethod("GetPlayerImpact",
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        if ((object)getPii == null) return;
+                        object pii = getPii.Invoke(pm, null);
+                        if ((object)pii == null) return;
+                        var respawn = pii.GetType().GetMethod("RespawnAtStartLine",
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                            null, new System.Type[] { typeof(bool) }, null);
+                        if ((object)respawn == null) return;
+                        respawn.Invoke(pii, new object[] { true });
+                        if (_respawnStartStatusTxt) _respawnStartStatusTxt.text = "";
+                    }
+                    catch (System.Exception ex)
+                    {
+                        MelonLogger.Error("[RespawnAtStart]: " + ex.Message);
+                        Telemetry.ReportErrorAsync(ex, "SessionPage");
+                        if (_respawnStartStatusTxt) { _respawnStartStatusTxt.text = "Failed - see log"; _respawnStartStatusTxt.color = UIHelpers.Orange; }
+                    }
+                }, 60);
+                FavouritesManager.RegisterStarButton("RespawnAtStart", UIHelpers.StarBtn(respawnStartRow.transform, "RespawnAtStart", () => FavouritesManager.Toggle("RespawnAtStart")));
+
                 var skipRow = UIHelpers.StatRow("Skip Song", c);
                 UIHelpers.ActionBtn(skipRow.transform, "Skip", () =>
                 {
@@ -372,6 +408,35 @@ namespace DescendersModMenu.UI
                                 DevCommandsGameplay.JumpToFinish();
                             }
                             catch (System.Exception ex) { MelonLogger.Error("[JumpToFinish]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionPage"); }
+                        }, 60);
+                    },
+                    IsActive = () => false
+                });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "RespawnAtStart",
+                    DisplayName = "Respawn at Start",
+                    TabBadge = "SESSION",
+                    BuildControls = (p) =>
+                    {
+                        var row = FavsPage.CompactStatRow("Respawn at Start", p);
+                        UIHelpers.ActionBtnOrange(row.transform, "Go", () =>
+                        {
+                            try
+                            {
+                                PlayerManager pm = UnityEngine.Object.FindObjectOfType<PlayerManager>();
+                                if ((object)pm == null) return;
+                                var getPii = typeof(PlayerManager).GetMethod("GetPlayerImpact",
+                                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                                if ((object)getPii == null) return;
+                                object pii = getPii.Invoke(pm, null);
+                                if ((object)pii == null) return;
+                                var respawn = pii.GetType().GetMethod("RespawnAtStartLine",
+                                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                                    null, new System.Type[] { typeof(bool) }, null);
+                                if ((object)respawn == null) return;
+                                respawn.Invoke(pii, new object[] { true });
+                            }
+                            catch (System.Exception ex) { MelonLogger.Error("[RespawnAtStart]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionPage"); }
                         }, 60);
                     },
                     IsActive = () => false
@@ -493,6 +558,7 @@ namespace DescendersModMenu.UI
             _tmMinus = null;
             _tmPlus = null;
             _jumpStatusTxt = null;
+            _respawnStartStatusTxt = null;
         }
 
         public static void TickLive()

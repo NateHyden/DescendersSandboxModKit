@@ -315,6 +315,25 @@ namespace DescendersModMenu.UI
             }, 100);
         }
 
+        /// <summary>Toggle-only row (no slider) for simple on/off mods.</summary>
+        public static void BuildToggleOnly(Transform parent, string id, string label,
+            FavBoolGetter getState, FavAction doToggle)
+        {
+            bool initOn = getState();
+            var row = CompactStatRow(label, parent);
+            var togVal = UIHelpers.Txt("FTV_" + id, row.transform, initOn ? "ON" : "OFF", 11,
+                FontStyle.Bold, TextAnchor.MiddleCenter, initOn ? UIHelpers.OnColor : UIHelpers.OffColor);
+            togVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            Image track; RectTransform knob;
+            UIHelpers.Toggle(row.transform, "FTg_" + id, () =>
+            {
+                doToggle();
+                RefreshFavourites();
+                FavouritesManager.RefreshAllStars();
+            }, out track, out knob);
+            UIHelpers.SetToggle(track, knob, initOn);
+        }
+
         /// <summary>Toggle + level slider row (e.g. Wide Tyres, Acceleration)</summary>
         public static void BuildToggleSlider(Transform parent, string id, string label,
             FavBoolGetter getState, FavAction doToggle,

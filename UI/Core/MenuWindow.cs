@@ -1066,6 +1066,7 @@ namespace DescendersModMenu.UI
 
             SessionPage.RefreshAll();
             try { BikePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("BikePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "BikePage.RefreshAll"); }
+            try { MovePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("MovePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "MovePage.RefreshAll"); }
             try { FunPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("FunPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "FunPage.RefreshAll"); }
             try { WorldPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("WorldPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "WorldPage.RefreshAll"); }
             try { OtherPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("OtherPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "OtherPage.RefreshAll"); }
@@ -1074,6 +1075,7 @@ namespace DescendersModMenu.UI
             // ── Favourites sync ───────────────────────────────────────
             try { FavsPage.RefreshFavourites(); } catch (System.Exception ex) { MelonLogger.Error("FavsPage.RefreshFavourites: " + ex); Telemetry.ReportErrorAsync(ex, "FavsPage.RefreshFavourites"); }
             try { FavouritesManager.RefreshAllStars(); } catch (System.Exception ex) { MelonLogger.Error("FavouritesManager.RefreshAllStars: " + ex); Telemetry.ReportErrorAsync(ex, "FavouritesManager.RefreshAllStars"); }
+            try { RefreshTabs(); } catch { }
         }
 
         private static void FlashHeader(Image img)

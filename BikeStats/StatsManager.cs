@@ -162,6 +162,7 @@ namespace DescendersModMenu.BikeStats
                     ScreenshotModeEnabled = ScreenshotMode.Enabled,
                     RubberBandSteeringEnabled = RubberBandSteering.Enabled,
                     RubberBandSteeringLevel = RubberBandSteering.Level,
+                    PedalWhileTweakEnabled = PedalWhileTweak.Enabled,
                 };
 
                 string json = JsonUtility.ToJson(data, true);
@@ -206,12 +207,12 @@ namespace DescendersModMenu.BikeStats
                 Suspension.SetTravelLevel(data.SuspTravelLevel);
                 Suspension.SetStiffnessLevel(data.SuspStiffnessLevel);
                 Suspension.SetDampingLevel(data.SuspDampingLevel);
-                GameModifierMods.SetWheelieBalanceLevel(data.WheelieBalanceLevel);
-                GameModifierMods.SetInAirCorrLevel(data.InAirCorrLevel);
-                GameModifierMods.SetFakieBalanceLevel(data.FakieBalanceLevel);
-                GameModifierMods.SetPumpStrengthLevel(data.PumpStrengthLevel);
-                GameModifierMods.SetTweakSpeedLevel(data.TweakSpeedLevel);
-                GameModifierMods.SetIcePhysicsLevel(data.IcePhysicsLevel);
+                GameModifierMods.SetWheelieBalanceLevel(data.WheelieBalanceLevel < 2 ? 5 : data.WheelieBalanceLevel);
+                GameModifierMods.SetInAirCorrLevel(data.InAirCorrLevel < 2 ? 5 : data.InAirCorrLevel);
+                GameModifierMods.SetFakieBalanceLevel(data.FakieBalanceLevel < 2 ? 5 : data.FakieBalanceLevel);
+                GameModifierMods.SetPumpStrengthLevel(data.PumpStrengthLevel < 2 ? 5 : data.PumpStrengthLevel);
+                GameModifierMods.SetTweakSpeedLevel(data.TweakSpeedLevel < 2 ? 5 : data.TweakSpeedLevel);
+                GameModifierMods.SetIcePhysicsLevel(data.IcePhysicsLevel < 2 ? 5 : data.IcePhysicsLevel);
                 FOV.SetLevel(data.FovLevel);
                 Gravity.SetLevel(data.GravityLevel);
                 WideTyres.SetLevel(data.WideTyresLevel);
@@ -328,6 +329,7 @@ namespace DescendersModMenu.BikeStats
                 if (rbLevel < 1 || rbLevel > 10) rbLevel = 5;
                 RubberBandSteering.SetLevel(rbLevel);
                 if (data.RubberBandSteeringEnabled && !RubberBandSteering.Enabled) RubberBandSteering.Toggle();
+                if (data.PedalWhileTweakEnabled && !PedalWhileTweak.Enabled) PedalWhileTweak.Toggle();
 
                 ModLog.Debug("[StatsManager] Loaded from: " + SaveFile);
             }
@@ -360,6 +362,7 @@ namespace DescendersModMenu.BikeStats
                 if (ScreenshotMode.Enabled) ScreenshotMode.Toggle();
                 if (RubberBandSteering.Enabled) RubberBandSteering.Toggle();
                 RubberBandSteering.SetLevel(5);
+                if (PedalWhileTweak.Enabled) PedalWhileTweak.Toggle();
 
                 Acceleration.SetLevel(1);
                 MaxSpeedMultiplier.SetLevel(1);

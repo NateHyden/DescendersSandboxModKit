@@ -50,12 +50,12 @@ namespace DescendersModMenu.BikeStats
         public int BouncyBikeLevel = 5;
 
         // ── Game Modifiers ─────────────────────────────────────────────
-        public int WheelieBalanceLevel = 1;
-        public int InAirCorrLevel = 1;
-        public int FakieBalanceLevel = 1;
-        public int PumpStrengthLevel = 1;
-        public int TweakSpeedLevel = 1;
-        public int IcePhysicsLevel = 1;
+        public int WheelieBalanceLevel = 5;
+        public int InAirCorrLevel = 5;
+        public int FakieBalanceLevel = 5;
+        public int PumpStrengthLevel = 5;
+        public int TweakSpeedLevel = 5;
+        public int IcePhysicsLevel = 5;
 
         // ── World / Graphics ───────────────────────────────────────────
         public int GravityLevel = 5;
@@ -188,6 +188,7 @@ namespace DescendersModMenu.BikeStats
         public bool ScreenshotModeEnabled = false;
         public bool RubberBandSteeringEnabled = false;
         public int RubberBandSteeringLevel = 5;
+        public bool PedalWhileTweakEnabled = false;
     }
 }
 

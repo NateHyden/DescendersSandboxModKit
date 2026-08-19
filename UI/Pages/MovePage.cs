@@ -24,6 +24,10 @@ namespace DescendersModMenu.UI
         private static Text _gmWbVal, _gmTsVal;
         private static Image _gmWbBar, _gmTsBar;
 
+        private static Text _pwtTogVal;
+        private static Image _pwtTrack;
+        private static RectTransform _pwtKnob;
+
         // ── Wheelie HUD row fields ────────────────────────────────────
         private static GameObject _whRow;
         private static Text _whTogVal;
@@ -43,7 +47,13 @@ namespace DescendersModMenu.UI
             Movement.SpinEnabled || Movement.HopEnabled ||
             Movement.WheelieEnabled || Movement.LeanEnabled ||
             WheelieAngleLimit.Enabled || AirControl.Enabled ||
-            WheelieHUD.Enabled;
+            WheelieHUD.Enabled ||
+            GameModifierMods.PumpStrengthLevel != 5 ||
+            GameModifierMods.WheelieBalanceLevel != 5 ||
+            GameModifierMods.TweakSpeedLevel != 5 ||
+            PedalWhileTweak.Enabled ||
+            NearMissSensitivity.Enabled ||
+            CenterOfMass.OffsetLR != 0f || CenterOfMass.OffsetFB != 0f || CenterOfMass.OffsetUD != 0f;
 
         public static GameObject CreatePage(Transform parent)
         {
@@ -194,6 +204,15 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(gmTsR.transform, "-", () => { GameModifierMods.TweakSpeedDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(gmTsR.transform, "+", () => { GameModifierMods.TweakSpeedIncrease(); RefreshAll(); });
                 UIHelpers.InfoBox(pg6, "How fast you can tweak/adjust your bike pose mid-trick. Shown as a % offset — near 0% is vanilla.");
+
+                var pwtR = UIHelpers.StatRow("Pedal While Tweak", pg6);
+                _pwtTogVal = UIHelpers.Txt("PwtTV", pwtR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _pwtTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                Image pwtTrack; RectTransform pwtKnob;
+                UIHelpers.Toggle(pwtR.transform, "PwtT", () => { PedalWhileTweak.Toggle(); RefreshAll(); }, out pwtTrack, out pwtKnob);
+                _pwtTrack = pwtTrack; _pwtKnob = pwtKnob;
+                UIHelpers.InfoBox(pg6, "Restores pedal input when the right stick is deflected, overriding the game's default behaviour of cutting acceleration during tweaks.");
+                FavouritesManager.RegisterStarButton("PedalWhileTweak", UIHelpers.StarBtn(pwtR.transform, "PedalWhileTweak", () => FavouritesManager.Toggle("PedalWhileTweak")));
 
                 var nmr = UIHelpers.StatRow("Near Miss Sensitivity", pg6);
                 _nmBar = UIHelpers.MakeBar("NmB", nmr.transform, (NearMissSensitivity.Level - 1) / 9f);
@@ -369,6 +388,15 @@ namespace DescendersModMenu.UI
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
+                    Id = "PedalWhileTweak",
+                    DisplayName = "Pedal While Tweak",
+                    TabBadge = "MOVE",
+                    BuildControls = (p) => FavsPage.BuildToggleOnly(p, "PedalWhileTweak", "Pedal While Tweak",
+                        () => PedalWhileTweak.Enabled, () => { PedalWhileTweak.Toggle(); RefreshAll(); }),
+                    IsActive = () => PedalWhileTweak.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
                     Id = "NearMiss",
                     DisplayName = "Near Miss Sensitivity",
                     TabBadge = "MOVE",
@@ -497,6 +525,10 @@ namespace DescendersModMenu.UI
 
             if (_gmTsVal) _gmTsVal.text = GameModifierMods.DeltaDisplay(GameModifierMods.TweakSpeedLevel);
             UIHelpers.SetBar(_gmTsBar, (GameModifierMods.TweakSpeedLevel - 1) / 9f);
+
+            bool pwtOn = PedalWhileTweak.Enabled;
+            if (_pwtTogVal) { _pwtTogVal.text = pwtOn ? "ON" : "OFF"; _pwtTogVal.color = pwtOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_pwtTrack, _pwtKnob, pwtOn);
 
             // ── Center of Mass ────────────────────────────────────────
             if (_comLRVal) _comLRVal.text = CenterOfMass.DisplayLR;

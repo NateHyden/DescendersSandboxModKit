@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "1.9.0";
+        public const string Version = "1.9.5";
         public const string DownloadLink = null;
     }
 
@@ -28,6 +28,9 @@ namespace DescendersModMenu
         private bool _pendingAutoLoad = true;
         private bool _pendingTelemetryPing = true;
         private bool _pendingModifierDump = true;
+        private bool _reapplyGameModifiers;
+        private int _reapplyWheelieBalance, _reapplyInAirCorr, _reapplyFakieBalance;
+        private int _reapplyPumpStrength, _reapplyTweakSpeed, _reapplyIcePhysics;
         private bool _reapplyFlyMode, _reapplyDrunkMode, _reapplyMirrorMode, _reapplyWideTyres;
         private int _reapplyWideTyresLevel;
         private bool _reapplyFov, _reapplySpeedrunTimer, _reapplyAcceleration, _reapplyMaxSpeed;
@@ -114,6 +117,8 @@ namespace DescendersModMenu
             catch (System.Exception ex) { MelonLogger.Error("TrickSetSwap patch: " + ex.Message); DiagnosticsManager.Report("TrickSetSwap", false, ex.Message);  Telemetry.ReportErrorAsync(ex, "TrickSetSwap"); }
             try { MapChanger.ApplyPatch(harmony); DiagnosticsManager.Report("MapChanger", true); }
             catch (System.Exception ex) { ModLog.Warn("MapChanger.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("MapChanger", false, ex.Message); }
+            try { PedalWhileTweak.ApplyPatch(harmony); DiagnosticsManager.Report("PedalWhileTweak", true); }
+            catch (System.Exception ex) { MelonLogger.Error("PedalWhileTweak.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("PedalWhileTweak", false, ex.Message); Telemetry.ReportErrorAsync(ex, "PedalWhileTweak"); }
             try { NoBail.ApplyPatch(harmony); }
             catch (System.Exception ex) { MelonLogger.Error("NoBail.ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "NoBail"); }
             try { SlowMoOnBail.ApplyPatch(harmony); }
@@ -236,11 +241,20 @@ namespace DescendersModMenu
             bool wasReverseSteering = ReverseSteering.Enabled;
             bool wasRubberBandSteering = RubberBandSteering.Enabled;
             int rubberBandLevel = RubberBandSteering.Level;
+            bool wasPedalWhileTweak = PedalWhileTweak.Enabled;
             bool wasAutoBalance = AutoBalance.Enabled;
             int autoBalanceLv = AutoBalance.StrengthLevel;
             bool wasQuickBrake = QuickBrake.Enabled;
             bool wasWheelieAngle = WheelieAngleLimit.Enabled;
             bool wasNoSpeedWobbles = GameModifierMods.NoSpeedWobblesEnabled;
+            int snapWheelieBalance = GameModifierMods.WheelieBalanceLevel;
+            int snapInAirCorr      = GameModifierMods.InAirCorrLevel;
+            int snapFakieBalance   = GameModifierMods.FakieBalanceLevel;
+            int snapPumpStrength   = GameModifierMods.PumpStrengthLevel;
+            int snapTweakSpeed     = GameModifierMods.TweakSpeedLevel;
+            int snapIcePhysics     = GameModifierMods.IcePhysicsLevel;
+            bool gameModneed = snapWheelieBalance != 5 || snapInAirCorr != 5 || snapFakieBalance != 5
+                || snapPumpStrength != 5 || snapTweakSpeed != 5 || snapIcePhysics != 5;
             bool wasSlowMoOnBail = SlowMoOnBail.Enabled;
             bool wasBlackDeath = BlackDeath.Enabled;
             bool wasIceMode = IceMode.Enabled;
@@ -370,6 +384,7 @@ namespace DescendersModMenu
             SlowMotion.Reset(); QuickBrake.Reset(); QuickBrake_Patch.ClearCache();
             CutBrakes.Reset(); ReverseSteering.Reset(); AutoBalance.Reset();
             RubberBandSteering.Reset(); RubberBandSteering.ClearCache();
+            PedalWhileTweak.Reset();
             WideTyres.Reset(); IceMode.Reset(); TyrePressure.Reset(); InstantRespawn.Reset(); BikeDamage.Reset(); HeadlightsOnly.Reset(); UIRemover.Reset(); ScreenshotMode.Reset(); SpeedrunTimer.Reset();
             GameModifierMods.NoSpeedWobblesReset();
             MirrorMode.Reset(); FlyMode.Reset(); DrunkMode.Reset(); HoverMode.Reset();
@@ -411,6 +426,7 @@ namespace DescendersModMenu
             if (wasCutBrakes) { CutBrakes.Toggle(); ModLog.Debug("[Reapply] IMM CutBrakes -> " + CutBrakes.Enabled); }
             if (wasReverseSteering) { ReverseSteering.Toggle(); ModLog.Debug("[Reapply] IMM ReverseSteering -> " + ReverseSteering.Enabled); }
             if (wasRubberBandSteering) { RubberBandSteering.SetLevel(rubberBandLevel); RubberBandSteering.Toggle(); ModLog.Debug("[Reapply] IMM RubberBandSteering -> " + RubberBandSteering.Enabled + " lv=" + rubberBandLevel); }
+            if (wasPedalWhileTweak) { PedalWhileTweak.Toggle(); ModLog.Debug("[Reapply] IMM PedalWhileTweak -> " + PedalWhileTweak.Enabled); }
             if (wasAutoBalance) { AutoBalance.SetStrengthLevel(autoBalanceLv); AutoBalance.Toggle(); ModLog.Debug("[Reapply] IMM AutoBalance -> " + AutoBalance.Enabled + " lv=" + autoBalanceLv); }
             if (wasQuickBrake) { QuickBrake.Toggle(); ModLog.Debug("[Reapply] IMM QuickBrake -> " + QuickBrake.Enabled); }
             if (wasWheelieAngle) { WheelieAngleLimit.Toggle(); ModLog.Debug("[Reapply] IMM WheelieAngle -> " + WheelieAngleLimit.Enabled); }
@@ -430,6 +446,7 @@ namespace DescendersModMenu
             if (wasNoBail) { NoBail.Toggle(); ModLog.Debug("[Reapply] IMM NoBail -> " + NoBail.Enabled); }
             if (gravNeed) { Gravity.SetLevel(gravLevel); Gravity.Apply(); ModLog.Debug("[Reapply] IMM Gravity lv=" + gravLevel); }
             ModLog.Debug("[Reapply] Immediate restores done.");
+            try { MenuWindow.RefreshAll(); } catch { }
 
             _reapplyFlyMode = wasFlyMode; _reapplyDrunkMode = wasDrunkMode;
             _reapplyMirrorMode = wasMirrorMode; _reapplyWideTyres = wasWideTyres;
@@ -461,6 +478,10 @@ namespace DescendersModMenu
             _reapplyIndividualWheel = wasIndividualWheel; _reapplyFrontWheelLevel = frontWheelLv; _reapplyRearWheelLevel = rearWheelLv;
             _reapplyBrakeFade = wasBrakeFade;
 
+            _reapplyGameModifiers = gameModneed;
+            _reapplyWheelieBalance = snapWheelieBalance; _reapplyInAirCorr = snapInAirCorr;
+            _reapplyFakieBalance = snapFakieBalance; _reapplyPumpStrength = snapPumpStrength;
+            _reapplyTweakSpeed = snapTweakSpeed; _reapplyIcePhysics = snapIcePhysics;
             if (_reapplyBrakeFade) { _reapplyBrakeFade = false; BrakeFade.SetBalanceLevel(brakeBalanceLv); BrakeFade.Toggle(); ModLog.Debug("[Reapply] IMM BrakeFade -> " + BrakeFade.Enabled); }
             if (_reapplySuspensionHUD) { _reapplySuspensionHUD = false; if (!SuspensionHUD.Enabled) SuspensionHUD.Toggle(); ModLog.Debug("[Reapply] IMM SuspensionHUD -> " + SuspensionHUD.Enabled); }
             if (_reapplyScreenshotMode) { _reapplyScreenshotMode = false; ScreenshotMode.Toggle(); ModLog.Debug("[Reapply] IMM ScreenshotMode -> " + ScreenshotMode.Enabled); }
@@ -471,7 +492,7 @@ namespace DescendersModMenu
                 wasLandingImpact || wasMoveSpin || wasMoveHop || wasMoveWheelie || wasMoveLean ||
                 wasBikeTorch || wasCamShake || wasNearMiss || wasExploding ||
                 wasHoverMode || wasBouncyBike || wasBlizzard || wasDisco || wasDiscoTorch ||
-                comNeed || suspNeed ||
+                comNeed || suspNeed || gameModneed || wasPedalWhileTweak ||
                 bikeScaleNeed || playerScaleNeed || wasInvisBike || wasInvisPlayer || wasWheelSize || wasIndividualWheel;
 
             if (_pendingReapply) ModLog.Debug("[Reapply] Deferred queued — waiting for Player_Human...");
@@ -550,6 +571,22 @@ namespace DescendersModMenu
                     if (_reapplyInvisiblePlayer) { _reapplyInvisiblePlayer = false; try { InvisiblePlayer.SetEnabled(true); ok++; ModLog.Debug("[Reapply]   + InvisiblePlayer"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! InvisiblePlayer: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! InvisiblePlayer"); } }
                     if (_reapplyWheelSize) { _reapplyWheelSize = false; try { WheelSize.ApplyFromSave(true, _reapplyWheelSizeLevel, _reapplyWheelSizeMode); ok++; ModLog.Debug("[Reapply]   + WheelSize level=" + _reapplyWheelSizeLevel); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! WheelSize: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! WheelSize"); } }
                     if (_reapplyIndividualWheel) { _reapplyIndividualWheel = false; try { WheelSize.ApplyIndividualFromSave(_reapplyFrontWheelLevel, _reapplyRearWheelLevel); ok++; ModLog.Debug("[Reapply]   + IndividualWheel F=" + _reapplyFrontWheelLevel + " R=" + _reapplyRearWheelLevel); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! IndividualWheel: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! IndividualWheel"); } }
+                    if (_reapplyGameModifiers)
+                    {
+                        _reapplyGameModifiers = false;
+                        try
+                        {
+                            GameModifierMods.SetWheelieBalanceLevel(_reapplyWheelieBalance);
+                            GameModifierMods.SetInAirCorrLevel(_reapplyInAirCorr);
+                            GameModifierMods.SetFakieBalanceLevel(_reapplyFakieBalance);
+                            GameModifierMods.SetPumpStrengthLevel(_reapplyPumpStrength);
+                            GameModifierMods.SetTweakSpeedLevel(_reapplyTweakSpeed);
+                            GameModifierMods.SetIcePhysicsLevel(_reapplyIcePhysics);
+                            ok++;
+                            ModLog.Debug("[Reapply]   + GameModifiers tweak=" + _reapplyTweakSpeed + " wheelie=" + _reapplyWheelieBalance);
+                        }
+                        catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! GameModifiers: " + ex.Message); Telemetry.ReportErrorAsync(ex, "Reapply   ! GameModifiers"); }
+                    }
 
                     ModLog.Debug("[Reapply] === DONE: " + ok + " applied, " + fail + " failed ===");
 
@@ -586,19 +623,27 @@ namespace DescendersModMenu
                 if (Input.GetKeyDown(KeyCode.JoystickButton8))
                 {
                     if (SurvivalMode.Enabled && SurvivalMode.IsGameOver) SurvivalMode.ResetRun();
-                    else { GhostReplay.SetSpawnMarker(); GhostPage.RefreshAll(); }
+                    else if (GhostReplay.IsRecording) { GhostReplay.SetSpawnMarker(); GhostPage.RefreshAll(); }
                 }
-                if (Input.GetKeyDown(KeyCode.JoystickButton9))
+                if (GhostReplay.IsRecording || GhostReplay.Enabled)
                 {
-                    float now = Time.realtimeSinceStartup;
-                    float gap = now - _lastRStickClick; _lastRStickClick = now;
-                    if (gap < 0.4f) { GhostReplay.Toggle(); GhostPage.RefreshAll(); _lastRStickClick = -999f; }
-                    else { _pendingRStickSave = true; _rStickSaveTime = now + 0.4f; }
+                    if (Input.GetKeyDown(KeyCode.JoystickButton9))
+                    {
+                        float now = Time.realtimeSinceStartup;
+                        float gap = now - _lastRStickClick; _lastRStickClick = now;
+                        if (gap < 0.4f) { GhostReplay.Toggle(); GhostPage.RefreshAll(); _lastRStickClick = -999f; }
+                        else { _pendingRStickSave = true; _rStickSaveTime = now + 0.4f; }
+                    }
+                    if (_pendingRStickSave && Time.realtimeSinceStartup >= _rStickSaveTime)
+                    {
+                        _pendingRStickSave = false;
+                        if (GhostReplay.IsRecording && GhostReplay.RecordedFrames >= 30) { GhostReplay.SaveRun(); GhostPage.RefreshAll(); }
+                    }
                 }
-                if (_pendingRStickSave && Time.realtimeSinceStartup >= _rStickSaveTime)
+                else
                 {
                     _pendingRStickSave = false;
-                    if (GhostReplay.IsRecording && GhostReplay.RecordedFrames >= 30) { GhostReplay.SaveRun(); GhostPage.RefreshAll(); }
+                    _lastRStickClick = -999f;
                 }
                 if (!UI.BindsPage.IsListening)
                 {

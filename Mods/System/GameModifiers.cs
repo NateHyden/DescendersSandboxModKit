@@ -8,14 +8,14 @@ namespace DescendersModMenu.Mods
 {
     public static class GameModifierMods
     {
-        public static int WheelieBalanceLevel { get; private set; } = 1;
-        public static int InAirCorrLevel { get; private set; } = 1;
-        public static int FakieBalanceLevel { get; private set; } = 1;
-        public static int PumpStrengthLevel { get; private set; } = 1;
-        public static int TweakSpeedLevel { get; private set; } = 1;
-        public static int IcePhysicsLevel { get; private set; } = 1;
+        public static int WheelieBalanceLevel { get; private set; } = 5;
+        public static int InAirCorrLevel { get; private set; } = 5;
+        public static int FakieBalanceLevel { get; private set; } = 5;
+        public static int PumpStrengthLevel { get; private set; } = 5;
+        public static int TweakSpeedLevel { get; private set; } = 5;
+        public static int IcePhysicsLevel { get; private set; } = 5;
 
-        private static float Delta(int level) { return (level - 5.5f) * 20f; }
+        private static float Delta(int level) { return (level - 5f) * 20f; }
         public static string DeltaDisplay(int level) { return Delta(level).ToString("+0;-0") + "%"; }
 
         public static void WheelieBalanceIncrease() { if (WheelieBalanceLevel < 10) { WheelieBalanceLevel++; ApplyMod("WHEELIEBALANCE", WheelieBalanceLevel); } }
@@ -150,6 +150,7 @@ namespace DescendersModMenu.Mods
 
         public static void ApplyMod(string modName, int level)
         {
+            if (level == 5 && modName != "OFFROADFRICTION") return;
             try
             {
                 GameData gameData = UnityEngine.Object.FindObjectOfType<GameData>();

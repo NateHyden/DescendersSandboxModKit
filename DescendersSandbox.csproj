@@ -219,6 +219,7 @@
     <Compile Include="Mods\Other\RandomMutatorOnCheckpoint.cs" />
     <Compile Include="Mods\Other\RandomBikeSwitch.cs" />
     <Compile Include="Mods\Other\RubberBandSteering.cs" />
+    <Compile Include="Mods\Bike\PedalWhileTweak.cs" />
     <Compile Include="Mods\Other\RandomWeatherRoulette.cs" />
     <Compile Include="Mods\World\Fog.cs" />
     <Compile Include="Mods\World\Music.cs" />
