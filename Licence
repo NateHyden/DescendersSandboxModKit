@@ -1,51 +1,45 @@
-Descenders Mod Menu / DescendersToolKit License / DescendersSandboxModKit
-Copyright (c) 2026 NateHyden
-
+DescendersSandboxModKit License
+Copyright (c) 2026-present NateHyden
 This project and its source code are made publicly available for educational
-and reference purposes only. Viewing this repository does not grant any
-rights beyond those explicitly listed below.
+and reference purposes only. Viewing this repository does not grant any rights
+beyond those explicitly listed below.
 
-## Permissions
-
+PERMISSIONS
 - You may view and read the source code.
 - You may learn from the code and its structure.
-- You may reference brief code snippets (under ~20 lines) for educational
-  or discussion purposes, provided you credit the original author (NateHyden)
-  and link back to the official source.
-- You may redistribute the compiled mod menu DLL, provided the original
-  author is credited and a link to the official source (GitHub and/or
-  Nexus Mods) is included.
+- You may reference brief code snippets for educational or discussion purposes,
+  provided you clearly credit NateHyden as the original author and include a
+  link to the official source.
+- You may redistribute the unmodified compiled DLL, provided the original author
+  (NateHyden) is credited and a link to an official source is included.
 
-## Restrictions
-
-You may NOT, without prior written permission from the author:
-
-- Reupload this project, in whole or in part, as your own work.
-- Publicly release, publish, or distribute a fork or derivative of this
-  project (this does not restrict GitHub's own fork feature, only the
-  public release or distribution of anything built from it).
-- Distribute modified versions of this project or its compiled output.
-- Sell this software, or include it in any paid software, paid mod pack,
-  or paid bundle.
-- Remove, obscure, or alter author credits from the source or compiled
+RESTRICTIONS
+Without prior written permission from the author, you may NOT:
+- Reupload, republish, or redistribute this project or any part of it as your
+  own work.
+- Publicly release, publish, or distribute any fork, derivative, or modified
+  version of this project or its compiled output. Private forks via GitHub's
+  fork feature are permitted, but may not be publicly distributed in any form.
+- Distribute modified versions of the compiled DLL under any name.
+- Sell this software, or include it in any paid product, paid mod pack, or paid
+  bundle.
+- Remove, obscure, or alter any author credits from the source code or compiled
   software.
+- Use this source code as training data for any AI, machine learning, or
+  automated code generation model or system.
 
-## Disclaimer
-
-This software is provided "as is", without warranty of any kind, express
-or implied, including but not limited to warranties of merchantability,
-fitness for a particular purpose, and non-infringement. The author is not
-liable for any damages, bans, crashes, save corruption, or other issues
-arising from the use of this software.
-
-## Permission Requests
-
+DISCLAIMER
+This software is provided "as is", without warranty of any kind, express or
+implied, including but not limited to warranties of merchantability, fitness
+for a particular purpose, and non-infringement. The author is not liable for
+any damages, bans, crashes, data loss, save corruption, or other issues arising
+from the use of this software. Use at your own risk.
+PERMISSION REQUESTS
 For permission requests, licensing questions, or collaboration inquiries,
-contact the author via GitHub or Nexus Mods (links below).
+contact the author via GitHub or Nexus Mods.
 
-## Official Sources
-
-The original project and official releases are maintained by NateHyden.
-
-- GitHub: https://github.com/NateHyden/DescendersToolKit
-- Nexus Mods: https://www.nexusmods.com/descenders/mods/8
+OFFICIAL SOURCES
+The original project and all official releases are maintained solely by NateHyden.
+  GitHub:     https://github.com/NateHyden/DescendersSandboxModKit
+  GitHub:     https://github.com/NateHyden/DescendersToolKit
+  Nexus Mods: https://www.nexusmods.com/descenders/mods/8
