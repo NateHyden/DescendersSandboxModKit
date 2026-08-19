@@ -8,7 +8,7 @@ drop in custom game modes like Earthquake, Police Chase, and Trick Attack,
 and — separately — edit your own career progression if you want to.
 
 > ⚠️ Features are intended for **Free Ride and Bike Park** sessions
-> only and will not work in events or online lobbies — it's a sandbox for
+> only and will not work in online lobbies race lobbies — it's a sandbox for
 > messing around solo or with friends offline, not a competitive advantage
 > tool. The **Career** tools are the one exception: those are built
 > specifically to edit career-mode progression (missions, rep, sponsors,
