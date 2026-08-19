@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
@@ -39,17 +39,14 @@ namespace DescendersModMenu.Mods
         public static float TimeRemaining { get; private set; } = 0f;
         public static int ScoreGained { get; private set; } = 0;
 
-        // combo.score resets to 0 on each landing (committed) and each bail (lost).
-        // We accumulate committed combos ourselves and add the live combo on top.
-        private static int _snapshotScore = 0; // pre-run combo offset at LS click
-        private static int _accumulated = 0; // committed trick score during this run
-        private static int _prevRawCombo = 0; // last frame's raw combo (detects drops)
+        private static int _snapshotScore = 0;
+        private static int _accumulated = 0;
+        private static int _prevRawCombo = 0;
         private static int _bailCountAtRun = 0;
         private static int _bailCountFrame = 0;
         private static float _resultTimer = 0f;
         private const float ResultDuration = 4f;
 
-        // Reflection cache
         private static VehicleTricks _tricks = null;
         private static FieldInfo _comboFld = null;
         private static FieldInfo _scoreFld = null;
@@ -131,7 +128,6 @@ namespace DescendersModMenu.Mods
 
                 if (currentBails > _bailCountFrame)
                 {
-                    // BAIL — lose current combo, clear everything
                     ModLog.Debug("[TrickAttack] Bail — clearing. lostCombo="
                         + liveScore);
                     _accumulated = 0;
@@ -142,11 +138,9 @@ namespace DescendersModMenu.Mods
                 }
                 else if (rawCombo < _prevRawCombo - 20 && _prevRawCombo > 0)
                 {
-                    // Combo dropped significantly without a bail = LANDED
-                    // Bank whatever was live before the drop
                     int banked = Mathf.Max(0, _prevRawCombo - _snapshotScore);
                     _accumulated += banked;
-                    _snapshotScore = 0; // new baseline after landing
+                    _snapshotScore = 0;
                     ModLog.Debug("[TrickAttack] Landed! banked=" + banked
                         + " total=" + _accumulated);
                 }
@@ -157,7 +151,6 @@ namespace DescendersModMenu.Mods
                 if (TimeRemaining <= 0f)
                 {
                     TimeRemaining = 0f;
-                    // Use final accumulated + whatever live combo exists at buzzer
                     ScoreGained = _accumulated + liveScore;
                     CurrentState = ScoreGained >= TargetScore ? State.Success : State.Fail;
                     _resultTimer = ResultDuration;
@@ -177,7 +170,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Raw combo.score (no multiplier applied) ───────────────────
         private static int ReadRawComboScore()
         {
             try
@@ -229,7 +221,6 @@ namespace DescendersModMenu.Mods
         private static int ReadObscuredInt(object val)
         {
             if ((object)val == null) return 0;
-            // Try op_Implicit (ObscuredInt → int)
             try
             {
                 MethodInfo op = val.GetType().GetMethod("op_Implicit",
@@ -258,3 +249,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

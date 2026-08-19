@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using System.Collections.Generic;
@@ -14,7 +14,7 @@ namespace DescendersModMenu.Mods
         public static int MaxHazards = 3;
         public static float HazardLifetime = 60f;
         public static float HazardSize = 2.0f;
-        public static float AttractionForce = 5f;   // None=0 / Slight=2 / Medium=5 / Strong=10
+        public static float AttractionForce = 5f;
         public static float MinSpawnDist = 8f;
         public static float ExtraGravity = 18f;
         public static float SpawnDistance = 15f;
@@ -27,10 +27,8 @@ namespace DescendersModMenu.Mods
         public static bool UseBox = false;
         public static bool ShowTimer = true;
 
-        // Survival
         public static float SurvivalTime = 0f;
 
-        // Internal
         private static float _spawnTimer = 0f;
         private static float _modeTimer = 0f;
 
@@ -49,7 +47,7 @@ namespace DescendersModMenu.Mods
             Enabled = !Enabled;
             if (Enabled)
             {
-                _spawnTimer = SpawnInterval; // spawn on first tick
+                _spawnTimer = SpawnInterval;
                 _modeTimer = 0f;
                 SurvivalTime = 0f;
                 ModLog.Debug("[Avalanche] ON");
@@ -70,7 +68,6 @@ namespace DescendersModMenu.Mods
             SurvivalTime += Time.deltaTime;
             _spawnTimer += Time.deltaTime;
 
-            // Difficulty scaling
             float interval = SpawnInterval;
             if (DifficultyScale)
             {
@@ -81,7 +78,6 @@ namespace DescendersModMenu.Mods
 
             if (_spawnTimer >= interval) { _spawnTimer = 0f; TrySpawn(); }
 
-            // Despawn + hit detection
             GameObject player = GameObject.Find("Player_Human");
             Vector3 playerPos = UnityNull.Alive(player) ? player.transform.position : Vector3.zero;
 
@@ -101,7 +97,6 @@ namespace DescendersModMenu.Mods
                     float dist = Vector3.Distance(h.Go.transform.position, playerPos);
                     tooFar = dist > DespawnDist;
 
-                    // Hit detection — slightly generous radius
                     if (InstantFail && dist < (HazardSize * 0.5f) + 1.5f)
                     {
                         ModLog.Debug("[Avalanche] Hit! Bailing.");
@@ -109,7 +104,6 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // Mark stuck only after 12s with very low velocity
                 if (UnityNull.Alive(h.Rb))
                     stuck = h.Age > 12f && h.Rb.velocity.magnitude < 0.5f;
 
@@ -139,15 +133,12 @@ namespace DescendersModMenu.Mods
                 var h = _hazards[i];
                 if (!UnityNull.Alive(h.Go) || !UnityNull.Alive(h.Rb)) continue;
 
-                // Extra downforce — always
                 h.Rb.AddForce(Vector3.down * ExtraGravity, ForceMode.Acceleration);
 
-                // Attraction — full 3D direction toward player, never lift above player height
                 if (UnityNull.Alive(player) && AttractionForce > 0f)
                 {
                     Vector3 toPlayer = playerPos - h.Go.transform.position;
 
-                    // Only clamp Y if ball is already below player — don't fight gravity on downslopes
                     if (h.Go.transform.position.y < playerPos.y)
                         toPlayer.y = 0f;
 
@@ -167,7 +158,6 @@ namespace DescendersModMenu.Mods
 
             Vector3 playerPos = player.transform.position;
 
-            // Don't spawn if any existing hazard is still very close to player
             for (int i = 0; i < _hazards.Count; i++)
             {
                 if (!UnityNull.Alive(_hazards[i].Go)) continue;
@@ -178,7 +168,6 @@ namespace DescendersModMenu.Mods
                 }
             }
 
-            // Full 360° circle around player at SpawnDistance
             float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
             float radius = Random.Range(SpawnDistance * 0.8f, SpawnDistance);
             Vector3 offset = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
@@ -187,7 +176,6 @@ namespace DescendersModMenu.Mods
             float terrainY = GetTerrainHeight(spawnXZ);
             Vector3 spawnPos = new Vector3(spawnXZ.x, terrainY + SpawnHeight, spawnXZ.z);
 
-            // Create object
             GameObject hazard = UseBox
                 ? GameObject.CreatePrimitive(PrimitiveType.Cube)
                 : GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -195,7 +183,6 @@ namespace DescendersModMenu.Mods
             hazard.transform.position = spawnPos;
             hazard.transform.localScale = Vector3.one * HazardSize;
 
-            // Colour — rocky grey-brown tint
             var rend = hazard.GetComponent<Renderer>();
             if ((object)rend != null)
                 rend.material.color = new Color(
@@ -203,7 +190,6 @@ namespace DescendersModMenu.Mods
                     Random.Range(0.25f, 0.40f),
                     Random.Range(0.20f, 0.35f));
 
-            // Zero-friction physics material
             var col = hazard.GetComponent<Collider>();
             if ((object)col != null)
             {
@@ -216,7 +202,6 @@ namespace DescendersModMenu.Mods
                 col.material = mat;
             }
 
-            // Rigidbody
             var rb = hazard.AddComponent<Rigidbody>();
             rb.mass = 80f;
             rb.drag = 0f;
@@ -225,7 +210,6 @@ namespace DescendersModMenu.Mods
             rb.interpolation = RigidbodyInterpolation.Interpolate;
             rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
-            // Push toward player direction, always slightly downhill
             Vector3 toward = (playerPos - spawnPos).normalized;
             toward.y = Mathf.Min(toward.y, -0.1f);
             rb.AddForce(toward * ForwardImpulse, ForceMode.Impulse);
@@ -238,7 +222,6 @@ namespace DescendersModMenu.Mods
         // ── Terrain height ────────────────────────────────────────────
         private static float GetTerrainHeight(Vector3 worldPos)
         {
-            // Try Unity Terrain first
             Terrain terrain = Terrain.activeTerrain;
             if ((object)(UnityEngine.Object)terrain != null
                 && (object)(UnityEngine.Object)terrain.terrainData != null)
@@ -248,10 +231,9 @@ namespace DescendersModMenu.Mods
                 float nz = Mathf.InverseLerp(0f, terrain.terrainData.size.z, rel.z);
                 float h = terrain.terrainData.GetInterpolatedHeight(nx, nz)
                           + terrain.transform.position.y;
-                if (h > 1f) return h; // only trust it if non-zero
+                if (h > 1f) return h;
             }
 
-            // Raycast fallback — cast from high above
             RaycastHit hit;
             Vector3 castFrom = new Vector3(worldPos.x, worldPos.y + 500f, worldPos.z);
             if (Physics.Raycast(castFrom, Vector3.down, out hit, 1000f))
@@ -260,7 +242,6 @@ namespace DescendersModMenu.Mods
                 return hit.point.y;
             }
 
-            // Last resort — use player's current Y so ball spawns above them
             GameObject player = GameObject.Find("Player_Human");
             float playerY = (object)player != null ? player.transform.position.y : 0f;
             ModLog.Debug("[Avalanche] Using player Y as terrain: " + playerY);
@@ -302,3 +283,4 @@ namespace DescendersModMenu.Mods
         public static int ActiveCount { get { return _hazards.Count; } }
     }
 }
+

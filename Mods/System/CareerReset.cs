@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using System;
 using System.Reflection;
@@ -262,7 +262,6 @@ namespace DescendersModMenu.Mods
             return "Sponsor tier tasks " + before + "->999";
         }
 
-        // ── Reset Level Progress (missions + tour/group unlocks) ────────
         public static void ResetLevelProgress()
         {
             try
@@ -308,10 +307,6 @@ namespace DescendersModMenu.Mods
                         + "live IsComplete flags were not touched, only MissionsManager.Reload() ran.");
                 }
 
-                // MissionsManager.Reload() is public, clean-named, and confirmed NOT stubbed in the
-                // post-update decompile: it clears the internal completed-mission save list and the
-                // claimed-group-reward list, then kicks off the manager's own reload coroutine.
-                // This is the closest live equivalent to the gutted ResetCompletionData().
                 try
                 {
                     mm.Reload();
@@ -338,7 +333,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Reset Sponsor Progress (division + reputation) ──────────────
         public static void ResetSponsorProgress()
         {
             try
@@ -357,11 +351,6 @@ namespace DescendersModMenu.Mods
                 ModLog.Feedback("[CareerReset] Sponsor division: " + before + " -> Novice "
                     + "(persisted via PrefsManager key \"SPONSORDIVISION\").");
 
-                // TOTALREP is the reputation/quest-progress counter UI_SponsorOffice itself reads
-                // to decide which sponsor tiers show as complete/in-progress/locked (compared directly
-                // against SponsorProgressCard.Tier.numQuests). Confirmed by reading that comparison in
-                // the decompile, not guessed - most of the OTHER PrefsManager-adjacent int fields in
-                // this build are decoy strings that don't correspond to anything real.
                 object prefsInstance = FindSingletonInstance(typeof(PrefsManager));
                 PrefsManager prefs = prefsInstance as PrefsManager;
                 int beforeRep = -1;
@@ -372,8 +361,6 @@ namespace DescendersModMenu.Mods
                     beforeRep = prefs.GetInt("TOTALREP");
                     prefs.SetInt("TOTALREP", 0);
 
-                    // Mirror of TryCompleteSponsorInterestNodes - zero the pre-sponsorship
-                    // "team node" counters too, so this is the true inverse of Complete All Missions.
                     for (int i = 1; i <= 3; i++)
                     {
                         string key = "SPONSOR_" + i;
@@ -384,8 +371,6 @@ namespace DescendersModMenu.Mods
                         }
                     }
 
-                    // Mirror of TryMaxSponsorTier - this is the counter that actually drives the
-                    // sponsored-state tier circles (InitializeTeamProgression), not TOTALREP.
                     int beforeTeamTasks = prefs.GetInt("TEAMTASKSCOMPLETED");
                     if (beforeTeamTasks != 0)
                     {
@@ -420,8 +405,6 @@ namespace DescendersModMenu.Mods
         }
 
         // ── Adjust Rep (+/-) ─────────────────────────────────────────────
-        // Same "TOTALREP" PrefsManager key TryCompleteViaProgressNodes/ResetSponsorProgress
-        // already use - this just nudges it instead of setting an absolute target.
         public static int CurrentRep
         {
             get
@@ -434,7 +417,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Rep step multiplier (x1-x10 by 1, then x20-x200 by 10) ────
         private const int RepBaseStep = 1000;
         private const int RepMultiplierSoftCap = 10;
         private const int RepMultiplierHardCap = 200;
@@ -487,11 +469,6 @@ namespace DescendersModMenu.Mods
 
                 ModLog.Feedback("[CareerReset] TOTALREP: " + before + " -> " + after + " (" + (amount >= 0 ? "+" : "") + amount + ")");
 
-                // TOTALREP only drives sponsor-tier gating - it is NOT the value shown
-                // in the on-screen HUD counter (confirmed 2026-08-04: TOTALREP sits in
-                // the low thousands, the HUD counter runs 1,000,000+, a scale mismatch
-                // that can't be the same field). AdjustLiveRep hits the actual live
-                // field the HUD reads.
                 bool liveOk = AdjustLiveRep(amount);
 
                 LastResult = "Rep " + before + " -> " + after + (liveOk ? " (+ live HUD updated)" : " (live HUD field not found - see log)");
@@ -504,30 +481,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Live On-Screen Rep Counter ───────────────────────────────────
-        // CORRECTED 2026-08-04 (previous field was wrong - see below).
-        //
-        // The bottom-of-screen "R" HUD value is DevCommandsBackEnd.M{~]Ee, a clean
-        // static int wrapper (same pattern/class as the sponsor-switching field) over
-        // DescendersBackEnd.M{~]Ee, an abstract ObscuredInt property on the platform
-        // backend singleton. Confirmed directly in the decompile: this exact field is
-        // what DescendersBackEndSteam submits to Steam's leaderboard as
-        // "reputation_s2_<teamID>" - i.e. it's the actual persistent reputation
-        // counter, not a per-session score.
-        //
-        // What was wrong before: PlayerInfoImpact.d]kxXXv.LgqK]Lp. That field is real
-        // and does accumulate on trick combos, but it lives on a stats sub-object that
-        // gets freshly reconstructed each session (gated on SessionStarted()) -
-        // confirmed live, it read back as 0 immediately after being written to. It's
-        // a session-local combo-score counter, not the lifetime rep total.
-        //
-        // PERSISTENCE CAVEAT: this in-memory value is what SubmitToLeaderboard/SetStat
-        // send to Steam - but only when the game's own sync code actually calls those
-        // (end of run/session, not continuously). Changing this field updates what
-        // will be submitted next time that fires; it doesn't push to Steam's servers
-        // immediately by itself. If the number doesn't survive a full session/lobby
-        // restart, that sync timing is the next thing to check - would need a fresh
-        // scene dump captured right after a submission point to confirm.
         private static PropertyInfo _backendRepProp;
         private static bool _backendRepPropSearched;
 
@@ -586,14 +539,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── In-Game Rep (session-local combo score) ──────────────────────
-        // This is the OTHER field from the original investigation:
-        // PlayerInfoImpact.d]kxXXv.LgqK]Lp - a CodeStage ObscuredInt on a per-player
-        // stats sub-object that accumulates every time a trick combo scores. It's
-        // NOT the persistent "Total Rep" (that's DevCommandsBackEnd.M{~]Ee, above) -
-        // this one gets freshly reconstructed to 0 each session (gated on
-        // SessionStarted()), confirmed live. That makes it exactly the "current
-        // in-game session" counter, as opposed to the lifetime total.
         public static int CurrentInGameRep
         {
             get
@@ -683,23 +628,6 @@ namespace DescendersModMenu.Mods
             return true;
         }
 
-        // ObscuredInt's own conversion operators were renamed along with everything
-        // else in this obfuscated build (the [SpecialName] "op_Implicit" methods got
-        // scrambled to DZlraRf), so the implicit int<->ObscuredInt conversions the
-        // type is normally used with don't work from source compiled against this
-        // DLL - both overloads have to be invoked explicitly via reflection.
-        //
-        // CRITICAL: DZlraRf(ObscuredInt) is not unique - there are THREE overloads
-        // that all take a single ObscuredInt parameter and differ only by RETURN
-        // TYPE (int, ObscuredFloat, ObscuredDouble - the obfuscator collapsed what
-        // used to be differently-named conversion methods onto the same string).
-        // GetMethod(name, flags, binder, parameterTypes, modifiers) matches on
-        // parameter types only, so it can silently return the WRONG overload here -
-        // confirmed live: it picked one of the float/double versions, and casting
-        // that boxed result to int threw "Cannot cast from source type to
-        // destination type". Have to walk GetMethods() and check ReturnType too.
-        // (Not currently used by LiveRepValue/AdjustLiveRep anymore - kept in case a
-        // future field needs the same ObscuredInt encode/decode dance.)
         private static int DecodeObscuredInt(ObscuredInt oi)
         {
             MethodInfo m = FindDZlraRfOverload(new Type[] { typeof(ObscuredInt) }, typeof(int));
@@ -716,10 +644,6 @@ namespace DescendersModMenu.Mods
 
         private static MethodInfo FindDZlraRfOverload(Type[] paramTypes, Type returnType)
         {
-            // NOTE: uses .Equals(), never == or != on Type objects - Type's operator
-            // overloads compile to calls to Type.op_Equality/op_Inequality, and this
-            // build's mscorlib.dll is missing those (a documented, recurring gotcha
-            // in this project - "Type::op_Equality spam" in How_to_fix_after_update.md).
             MethodInfo[] candidates = typeof(ObscuredInt).GetMethods(BindingFlags.Public | BindingFlags.Static);
             for (int i = 0; i < candidates.Length; i++)
             {
@@ -750,17 +674,6 @@ namespace DescendersModMenu.Mods
             return null;
         }
 
-        // ── Unlock All (bikes + gear) ─────────────────────────────────────
-        // CustomizationManager.IsItemUnlocked() reads, verbatim from the post-update
-        // decompile:
-        //     return this.<unlockedList>.Contains(item) || this.mZVyMyX;
-        // mZVyMyX is a public bool property (plain-ASCII obfuscated name - no escapes
-        // needed, safe to reference directly, NOT a runtime-subclass situation) backed
-        // by PrefsManager key "UnlockAll". Flipping it true makes every
-        // CustomizationItem report as unlocked immediately. Bikes are covered by the
-        // same flag - the slot enum (mFWXh}~) includes Bike and BikeType as
-        // customization slots, so this is one flag for both asks, not two separate
-        // systems. Confirmed directly in the decompile, 2026-08-03.
         public static bool UnlockAllEnabled
         {
             get
@@ -780,8 +693,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Explicit on/off - simpler UI than a single toggle button with a
-        // confirm-arm dance. If already in the requested state, no-ops.
         public static void UnlockAllOn()
         {
             if (!UnlockAllEnabled) ToggleUnlockAll();
@@ -807,9 +718,6 @@ namespace DescendersModMenu.Mods
                 bool newVal = !cm.mZVyMyX;
                 cm.mZVyMyX = newVal;
 
-                // The property setter writes straight to PrefsManager but doesn't call
-                // Save() itself - do that explicitly here so the flag survives an app
-                // restart, matching every other PrefsManager write in this file.
                 object prefsInstance = FindSingletonInstance(typeof(PrefsManager));
                 PrefsManager prefs = prefsInstance as PrefsManager;
                 if ((object)prefs != null)
@@ -831,13 +739,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Diagnostic: Dump Bike Unlock Status ─────────────────────────
-        // Asks the game's own IsItemUnlocked(CustomizationItem) directly for every
-        // Bike/BikeType-slot item, instead of guessing from the (unreliable - this
-        // build's string literals are shuffled/decoy) decompiled source. Definitive
-        // ground truth for whether the UnlockAll flag is actually reaching these
-        // specific items or whether something else is gating them (team/sponsor
-        // ownership, DLC, a separate cached check, etc).
         public static string DumpBikeUnlockStatus()
         {
             try
@@ -890,22 +791,6 @@ namespace DescendersModMenu.Mods
         }
 
         // ── Switch Sponsor ────────────────────────────────────────────────
-        // Confirmed directly in the decompile, 2026-08-04: there's a whole dedicated
-        // game state for this (State_TeamSelect.cs) that writes the exact same field
-        // this drives. The actual "which sponsor am I currently signed to" value is
-        // DescendersBackEnd.lno]zMq (an ObscuredInt on an abstract backend singleton -
-        // read everywhere the sponsor office / bike selection / team branding needs to
-        // know the active team, e.g. State_SponsorOffice.cs, UI_BikeSelection.cs).
-        // GameData.GetTeam(int) looks this value up against TeamInfo.teamID in
-        // GameData's team list (D]nWNgg) to find the matching TeamInfo.
-        //
-        // DevCommandsBackEnd (a real dev-console class already in this build) exposes
-        // a clean, plain "static int" wrapper property over the same field - no manual
-        // ObscuredInt encode/decode needed, just reflection to get at the property
-        // itself (its name still carries an obfuscated control character).
-        //
-        // TeamInfo itself is a clean, directly-referenceable type - teamID/name/tier
-        // are all plain fields, no reflection needed for those.
         private static PropertyInfo _currentTeamProp;
         private static bool _currentTeamPropSearched;
 
@@ -1014,8 +899,6 @@ namespace DescendersModMenu.Mods
         }
 
         // ══════════════════════════════════════════════════════════════
-        //  Reflection helpers - discover by TYPE, never by hardcoded
-        //  obfuscated name, so this keeps working across re-obfuscation.
         // ══════════════════════════════════════════════════════════════
 
         private static FieldInfo _groupsField;
@@ -1152,3 +1035,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

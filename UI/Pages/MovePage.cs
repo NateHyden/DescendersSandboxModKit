@@ -1,4 +1,4 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -15,14 +15,12 @@ namespace DescendersModMenu.UI
         private static Image spinTrack, hopTrack, wheelieTrack, leanTrack;
         private static RectTransform spinKnob, hopKnob, wheelieKnob, leanKnob;
 
-        // ── Balance & Physics row fields ──────────────────────────────
         private static Text wbVal, iacVal, psVal;
         private static Image wbBar, iacBar, psBar;
         private static Text _wbTogVal, _iacTogVal;
         private static Image _wbTrack, _iacTrack;
         private static RectTransform _wbKnob, _iacKnob;
 
-        // ── Wheelie Balance / Tweak Speed (GameModifiers) ─────────────
         private static Text _gmWbVal, _gmTsVal;
         private static Image _gmWbBar, _gmTsBar;
 
@@ -87,7 +85,6 @@ namespace DescendersModMenu.UI
                 vlg.childAlignment = TextAnchor.UpperCenter;
                 vlg.childForceExpandWidth = true; vlg.childForceExpandHeight = false;
 
-                // All rows go into scrollable content
                 var pg6 = content.transform;
 
                 // ── RESET TAB ─────────────────────────────────────────
@@ -95,7 +92,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.ActionBtnOrange(rstRow.transform, "↺  Reset Tab to Defaults", () => { ResetMoveTab(); RefreshAll(); }, 186);
                 UIHelpers.SectionHeader("MOVEMENT", pg6);
 
-                // Rotation Speed
                 var sr = UIHelpers.StatRow("Rotation Speed", pg6);
                 spinTogVal = UIHelpers.Txt("SpTV", sr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 spinTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
@@ -106,7 +102,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(sr.transform, "-", () => { Movement.SpinDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(sr.transform, "+", () => { Movement.SpinIncrease(); RefreshAll(); });
 
-                // Hop Force
                 var hr = UIHelpers.StatRow("Hop Force", pg6);
                 hopTogVal = UIHelpers.Txt("HpTV", hr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 hopTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
@@ -117,7 +112,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(hr.transform, "-", () => { Movement.HopDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(hr.transform, "+", () => { Movement.HopIncrease(); RefreshAll(); });
 
-                // Wheelie Force
                 var wr = UIHelpers.StatRow("Wheelie Force", pg6);
                 wheelieTogVal = UIHelpers.Txt("WlTV", wr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 wheelieTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
@@ -128,7 +122,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(wr.transform, "-", () => { Movement.WheelieDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(wr.transform, "+", () => { Movement.WheelieIncrease(); RefreshAll(); });
 
-                // Lean Strength
                 var lr = UIHelpers.StatRow("Lean Strength", pg6);
                 leanTogVal = UIHelpers.Txt("LnTV", lr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 leanTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
@@ -144,7 +137,6 @@ namespace DescendersModMenu.UI
                 // ── BALANCE & PHYSICS ─────────────────────────────────
                 UIHelpers.SectionHeader("BALANCE & PHYSICS", pg6);
 
-                // Wheelie Angle Limit
                 var wbr = UIHelpers.StatRow("Wheelie Angle Limit", pg6);
                 wbBar = UIHelpers.MakeBar("WbB", wbr.transform, (WheelieAngleLimit.Level - 1) / 9f);
                 wbVal = UIHelpers.Txt("WbV", wbr.transform, WheelieAngleLimit.DisplayValue, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
@@ -158,7 +150,6 @@ namespace DescendersModMenu.UI
                 _wbTrack = wbTrack; _wbKnob = wbKnob;
                 UIHelpers.InfoBox(pg6, "Caps pitch angle in a wheelie. Lower = tighter cap.");
 
-                // Wheelie HUD (toggle-only — shows live pitch + arc gauge top-right)
                 var whr = UIHelpers.StatRow("Wheelie HUD", pg6);
                 _whRow = whr;
                 _whTogVal = UIHelpers.Txt("WhV", whr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -168,7 +159,6 @@ namespace DescendersModMenu.UI
                 _whTrack = whTrack; _whKnob = whKnob;
                 UIHelpers.InfoBox(pg6, "Top-right HUD showing a live bike pitch gauge — green to red as you approach your wheelie limit. Stacks below Brake Fade if both are on.");
 
-                // Air Control
                 var iacr = UIHelpers.StatRow("Air Control", pg6);
                 iacBar = UIHelpers.MakeBar("IaB", iacr.transform, (AirControl.Level - 1) / 9f);
                 iacVal = UIHelpers.Txt("IaV", iacr.transform, AirControl.DisplayValue, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
@@ -182,7 +172,6 @@ namespace DescendersModMenu.UI
                 _iacTrack = iacTrack; _iacKnob = iacKnob;
                 UIHelpers.InfoBox(pg6, "Damps rotation while airborne. Higher = more stable.");
 
-                // Pump Strength
                 var fbr = UIHelpers.StatRow("Pump Strength", pg6);
                 psBar = UIHelpers.MakeBar("PsB", fbr.transform, (GameModifierMods.PumpStrengthLevel - 1) / 9f);
                 psVal = UIHelpers.Txt("PsV", fbr.transform, GameModifierMods.PumpStrengthLevel.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
@@ -190,7 +179,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(fbr.transform, "-", () => { GameModifierMods.PumpStrengthDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(fbr.transform, "+", () => { GameModifierMods.PumpStrengthIncrease(); RefreshAll(); });
 
-                // Wheelie Balance
                 var gmWbR = UIHelpers.StatRow("Wheelie Balance", pg6);
                 _gmWbBar = UIHelpers.MakeBar("GmWbB", gmWbR.transform, (GameModifierMods.WheelieBalanceLevel - 1) / 9f);
                 _gmWbVal = UIHelpers.Txt("GmWbV", gmWbR.transform, GameModifierMods.DeltaDisplay(GameModifierMods.WheelieBalanceLevel), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
@@ -199,7 +187,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(gmWbR.transform, "+", () => { GameModifierMods.WheelieBalanceIncrease(); RefreshAll(); });
                 UIHelpers.InfoBox(pg6, "How forgiving wheelie balance is. Shown as a % offset — near 0% is vanilla. Lower = twitchier, higher = more assisted.");
 
-                // Tweak Speed
                 var gmTsR = UIHelpers.StatRow("Tweak Speed", pg6);
                 _gmTsBar = UIHelpers.MakeBar("GmTsB", gmTsR.transform, (GameModifierMods.TweakSpeedLevel - 1) / 9f);
                 _gmTsVal = UIHelpers.Txt("GmTsV", gmTsR.transform, GameModifierMods.DeltaDisplay(GameModifierMods.TweakSpeedLevel), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
@@ -208,7 +195,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(gmTsR.transform, "+", () => { GameModifierMods.TweakSpeedIncrease(); RefreshAll(); });
                 UIHelpers.InfoBox(pg6, "How fast you can tweak/adjust your bike pose mid-trick. Shown as a % offset — near 0% is vanilla.");
 
-                // Near Miss Sensitivity
                 var nmr = UIHelpers.StatRow("Near Miss Sensitivity", pg6);
                 _nmBar = UIHelpers.MakeBar("NmB", nmr.transform, (NearMissSensitivity.Level - 1) / 9f);
                 _nmVal = UIHelpers.Txt("NmV", nmr.transform, NearMissSensitivity.DisplayValue, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
@@ -227,7 +213,6 @@ namespace DescendersModMenu.UI
                 // ── CENTER OF MASS ─────────────────────────────────────
                 UIHelpers.SectionHeader("CENTER OF MASS", pg6);
 
-                // Left / Right (X axis)
                 var comLRr = UIHelpers.StatRow("Left / Right", pg6);
                 _comLRBar = UIHelpers.MakeBar("CLrB", comLRr.transform, CenterOfMass.BarLR);
                 _comLRVal = UIHelpers.Txt("CLrV", comLRr.transform, CenterOfMass.DisplayLR, 12,
@@ -237,7 +222,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(comLRr.transform, "-", () => { CenterOfMass.DecreaseLR(); RefreshAll(); });
                 UIHelpers.SmallBtn(comLRr.transform, "+", () => { CenterOfMass.IncreaseLR(); RefreshAll(); });
 
-                // Forward / Back (Z axis)
                 var comFBr = UIHelpers.StatRow("Forward / Back", pg6);
                 _comFBBar = UIHelpers.MakeBar("CFbB", comFBr.transform, CenterOfMass.BarFB);
                 _comFBVal = UIHelpers.Txt("CFbV", comFBr.transform, CenterOfMass.DisplayFB, 12,
@@ -247,7 +231,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(comFBr.transform, "-", () => { CenterOfMass.DecreaseFB(); RefreshAll(); });
                 UIHelpers.SmallBtn(comFBr.transform, "+", () => { CenterOfMass.IncreaseFB(); RefreshAll(); });
 
-                // Up / Down (Y axis)
                 var comUDr = UIHelpers.StatRow("Up / Down", pg6);
                 _comUDBar = UIHelpers.MakeBar("CUdB", comUDr.transform, CenterOfMass.BarUD);
                 _comUDVal = UIHelpers.Txt("CUdV", comUDr.transform, CenterOfMass.DisplayUD, 12,
@@ -259,7 +242,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.InfoBox(pg6, "Shifts the bike's balance point. All axes start at 0. + moves right / forward / up. Press 0 to reset that axis.");
 
-                // ── STAR BUTTONS (Favourites) ──────────────────────────
                 FavouritesManager.RegisterStarButton("Spin", UIHelpers.StarBtn(sr.transform, "Spin", () => FavouritesManager.Toggle("Spin")));
                 FavouritesManager.RegisterStarButton("Hop", UIHelpers.StarBtn(hr.transform, "Hop", () => FavouritesManager.Toggle("Hop")));
                 FavouritesManager.RegisterStarButton("Wheelie", UIHelpers.StarBtn(wr.transform, "Wheelie", () => FavouritesManager.Toggle("Wheelie")));
@@ -275,7 +257,6 @@ namespace DescendersModMenu.UI
                 if ((object)comHdr != null)
                     FavouritesManager.RegisterStarButton("CenterOfMass", UIHelpers.StarBtnAbs(comHdr, "CenterOfMass", () => FavouritesManager.Toggle("CenterOfMass")));
 
-                // ── FACTORY REGISTRATIONS (Move tab mods) ──────────────
                 FavouritesManager.Register(new ModFavEntry
                 {
                     Id = "Spin",
@@ -511,11 +492,9 @@ namespace DescendersModMenu.UI
             if (psVal) psVal.text = GameModifierMods.PumpStrengthLevel.ToString();
             UIHelpers.SetBar(psBar, (GameModifierMods.PumpStrengthLevel - 1) / 9f);
 
-            // ── Wheelie Balance (GameModifiers) ───────────────────────
             if (_gmWbVal) _gmWbVal.text = GameModifierMods.DeltaDisplay(GameModifierMods.WheelieBalanceLevel);
             UIHelpers.SetBar(_gmWbBar, (GameModifierMods.WheelieBalanceLevel - 1) / 9f);
 
-            // ── Tweak Speed (GameModifiers) ───────────────────────────
             if (_gmTsVal) _gmTsVal.text = GameModifierMods.DeltaDisplay(GameModifierMods.TweakSpeedLevel);
             UIHelpers.SetBar(_gmTsBar, (GameModifierMods.TweakSpeedLevel - 1) / 9f);
 
@@ -527,7 +506,6 @@ namespace DescendersModMenu.UI
             UIHelpers.SetBar(_comFBBar, CenterOfMass.BarFB);
             UIHelpers.SetBar(_comUDBar, CenterOfMass.BarUD);
 
-            // Near Miss Sensitivity
             bool nmOn = NearMissSensitivity.Enabled;
             if (_nmTogVal) { _nmTogVal.text = nmOn ? "ON" : "OFF"; _nmTogVal.color = nmOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_nmTrack, _nmKnob, nmOn);
@@ -536,3 +514,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

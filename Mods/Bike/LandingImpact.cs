@@ -1,30 +1,16 @@
-using System.Reflection;
+﻿using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Landing Impact — raises the minimum impact speed required to trigger a bail.
-    //
-    // Root cause of why the old approach did nothing:
-    //   PlayerInfoImpact.OnImpact  = health point loss (roguelite lives system).
-    //   Cyclist.aQkwp...()         = actual physical bail trigger.
-    //   These are two separate systems. We had patched the wrong one.
-    //
-    // The bail trigger in Cyclist checks:
-    //   if (impactForce > Jk\u0080l\u007Fg\u007D && speed * 2f > cxW\u005Em\u005Bm) Bail();
-    //   cxW\u005Em\u005Bm = 15f (default min bail speed)
-    //
-    // Raising cxW\u005Em\u005Bm means you need a much harder hit to fall off.
-    // At level 10 the threshold is so high that normal riding never triggers it.
 
     public static class LandingImpact
     {
         public static bool Enabled { get; private set; } = false;
         public static int Level { get; private set; } = 5;
 
-        // Level 1 = default (15f), Level 10 = 200f — effectively no bail
         private static float GetThreshold()
         {
             return Mathf.Lerp(15f, 200f, (Level - 1) / 9f);
@@ -87,8 +73,6 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
-        // Same silent-overwrite race as Acceleration/MaxSpeed - re-enforce every
-        // frame instead of applying once. Called from OnLateUpdate.
         public static void Tick()
         {
             if (!Enabled) return;
@@ -129,8 +113,6 @@ namespace DescendersModMenu.Mods
         {
             if ((object)_threshField != null) return _threshField;
 
-            // Strategy 1: known obfuscated name — confirmed from assembly decompile
-            // cxW\u005Em\u005Bm = public float, default 15f, under [Header("Bailing")]
             _threshField = typeof(Cyclist).GetField("cxW\u005Em\u005Bm",
                 BindingFlags.Public | BindingFlags.Instance);
             if ((object)_threshField != null)
@@ -139,8 +121,6 @@ namespace DescendersModMenu.Mods
                 return _threshField;
             }
 
-            // Strategy 2: scan for a public float whose current value is ~15f
-            // (the default — only works reliably on first call before any modification)
             FieldInfo[] fields = typeof(Cyclist).GetFields(
                 BindingFlags.Public | BindingFlags.Instance);
             for (int i = 0; i < fields.Length; i++)
@@ -164,3 +144,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

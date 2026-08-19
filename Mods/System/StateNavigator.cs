@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using MelonLoader;
 
@@ -61,7 +61,7 @@ namespace DescendersModMenu.Mods
                 }
                 ModLog.Debug("[StateNavigator] Found StateMachine type: " + stateMachineType.AssemblyQualifiedName);
 
-                Type baseType = stateMachineType.BaseType; // expected: Singleton<StateMachine>
+                Type baseType = stateMachineType.BaseType;
                 if ((object)baseType == null)
                 {
                     MelonLogger.Error("[StateNavigator] StateMachine.BaseType is null - can't reach Singleton<T>.");
@@ -72,8 +72,6 @@ namespace DescendersModMenu.Mods
                 MethodInfo getSP = baseType.GetMethod("get_SP", BindingFlags.Public | BindingFlags.Static);
                 if ((object)getSP == null)
                 {
-                    // Fallback: dump every static getter on the base type so the
-                    // right one can be identified by hand if "get_SP" ever changes.
                     MelonLogger.Error("[StateNavigator] get_SP not found on " + baseType.Name + ". Dumping static methods:");
                     foreach (var m in baseType.GetMethods(BindingFlags.Public | BindingFlags.Static))
                         ModLog.Debug("[StateNavigator]   candidate: " + m.ReturnType.Name + " " + m.Name + "()");

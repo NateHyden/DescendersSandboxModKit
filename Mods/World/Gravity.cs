@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
@@ -6,7 +6,6 @@ namespace DescendersModMenu.Mods
 {
     public static class Gravity
     {
-        // Level 1 = very light (-2), Level 5 = default (-17.5), Level 10 = heavy (-40)
         private static readonly float[] Levels = {
             -2f, -5f, -8f, -12f, -17.5f, -22f, -27f, -31f, -35f, -40f
         };

@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ namespace DescendersModMenu.Mods
 
         private static readonly float[]  IntensityValues = { 0.5f, 1.0f, 2.0f, 3.5f, 5.0f };
         private static readonly string[] IntensityLabels = { "Dim", "Low", "Medium", "High", "Max" };
-        public  static int IntensityIndex = 2; // default Medium
+        public  static int IntensityIndex = 2;
 
         public static string IntensityDisplay => IntensityLabels[IntensityIndex];
 
@@ -47,7 +47,6 @@ namespace DescendersModMenu.Mods
             DiscoEnabled = !DiscoEnabled;
             if (DiscoEnabled)
             {
-                // Disco torch needs the light on
                 if (!Enabled)
                 {
                     Enabled = true;
@@ -59,7 +58,7 @@ namespace DescendersModMenu.Mods
             }
             else
             {
-                Apply(); // restores white
+                Apply();
             }
             ModLog.Feedback("[BikeTorch] Disco -> " + (DiscoEnabled ? "ON" : "OFF"));
         }
@@ -123,7 +122,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Find or create spotlight ──────────────────────────────────
         private static void FindOrCreateTorch()
         {
             try
@@ -135,7 +133,6 @@ namespace DescendersModMenu.Mods
                     return;
                 }
 
-                // Try to find the game's existing headlight (a Spot light on the bike)
                 Light[] lights = player.GetComponentsInChildren<Light>(true);
                 for (int i = 0; i < lights.Length; i++)
                 {
@@ -148,15 +145,12 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // No spotlight found — create one on the bike rigidbody's GameObject
                 Rigidbody rb = player.GetComponentInChildren<Rigidbody>();
                 GameObject host = (object)rb != null ? rb.gameObject : player;
 
                 var torchGO = new GameObject("BikeTorchLight");
                 torchGO.transform.SetParent(host.transform, false);
-                // Position slightly forward and above the bike centre
                 torchGO.transform.localPosition = new Vector3(0f, 0.3f, 0.5f);
-                // Tilt down slightly so the beam hits the trail ahead
                 torchGO.transform.localRotation = Quaternion.Euler(10f, 0f, 0f);
 
                 _torchLight               = torchGO.AddComponent<Light>();
@@ -175,11 +169,8 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Reset (on scene unload) ───────────────────────────────────
         public static void Reset()
         {
-            // Light component will be destroyed by Unity on scene unload.
-            // Just clear the cache and state so next scene starts fresh.
             _torchLight = null;
             Enabled = false;
             DiscoEnabled = false;
@@ -188,3 +179,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

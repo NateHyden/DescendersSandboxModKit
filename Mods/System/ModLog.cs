@@ -1,12 +1,9 @@
-using System;
+﻿using System;
 using MelonLoader;
 using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
-    // Feedback = user-facing ON/OFF lines in Melon Logger.
-    // Debug = silent unless Verbose.
-    // Warn / Error always hit Melon Logger and Discord (when telemetry is on).
     public static class ModLog
     {
         public static bool Verbose;

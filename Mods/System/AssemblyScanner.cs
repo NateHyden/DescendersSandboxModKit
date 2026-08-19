@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -62,13 +62,11 @@ namespace DescendersModMenu.Mods
         {
             bool ok; string det;
 
-            // Vehicle type
             ok = false; det = "NOT FOUND";
             try { ok = (object)typeof(Vehicle) != null; det = ok ? "OK" : "NOT FOUND"; }
             catch (Exception ex) { det = ex.Message; }
             Add("Bike Physics", "Vehicle type", ok, det);
 
-            // Acceleration field on Vehicle
             ok = false; det = "NOT FOUND";
             try
             {
@@ -80,7 +78,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { det = ex.Message; }
             Add("Bike Physics", "Acceleration field (cPkCE^)", ok, det);
 
-            // VehicleController type
             ok = false; det = "NOT FOUND";
             try { ok = (object)typeof(VehicleController) != null; det = ok ? "OK" : "NOT FOUND"; }
             catch (Exception ex) { det = ex.Message; }
@@ -90,9 +87,6 @@ namespace DescendersModMenu.Mods
         // ── Movement ──────────────────────────────────────────────────
         private static void RunMovementChecks()
         {
-            // These fields live on a runtime subclass of VehicleController.
-            // Static check on typeof(VehicleController) always returns null.
-            // The mod resolves them via instance.GetType() at runtime — confirmed working.
             AddWarn("Movement", "Spin rotation field", "Live-verified only (runtime subclass)");
             AddWarn("Movement", "Hop force field", "Live-verified only (runtime subclass)");
             AddWarn("Movement", "Wheelie force field", "Live-verified only (runtime subclass)");
@@ -122,13 +116,11 @@ namespace DescendersModMenu.Mods
         {
             bool ok; string det;
 
-            // VehicleTricks type
             ok = false; det = "NOT FOUND";
             try { ok = (object)typeof(VehicleTricks) != null; det = ok ? "OK" : "NOT FOUND"; }
             catch (Exception ex) { det = ex.Message; }
             Add("Tricks", "VehicleTricks type", ok, det);
 
-            // Combo field (type name starts with "Combo")
             ok = false; det = "NOT FOUND";
             try
             {
@@ -145,7 +137,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { det = ex.Message; }
             Add("Tricks", "Combo field on VehicleTricks", ok, det);
 
-            // Combo.score field
             ok = false; det = "NOT FOUND";
             try
             {
@@ -170,7 +161,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { det = ex.Message; }
             Add("Tricks", "Combo.score field", ok, det);
 
-            // Multiplier property
             ok = false; det = "NOT FOUND";
             try
             {
@@ -182,7 +172,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { det = ex.Message; }
             Add("Tricks", "Multiplier property (FnHLcjK)", ok, det);
 
-            // Max multiplier — lives on runtime subclass, same as Movement fields
             AddWarn("Tricks", "Max multiplier field (uDh]dJt)",
                 "Live-verified only (runtime subclass)");
         }
@@ -230,7 +219,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { det = ex.Message; }
             Add("Session", "VehicleEvents type", ok, det);
 
-            // Checkpoint property — starts with ']' (0x5D)
             ok = false; det = "NOT FOUND";
             try
             {
@@ -250,7 +238,6 @@ namespace DescendersModMenu.Mods
         {
             bool ok; string det;
 
-            // TOD_Sky type
             ok = false; det = "NOT FOUND";
             Type todSky = null;
             try
@@ -266,7 +253,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { det = ex.Message; }
             Add("World", "TOD_Sky type", ok, det);
 
-            // TOD Cycle field
             ok = false; det = "NOT FOUND";
             try
             {
@@ -284,7 +270,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { det = ex.Message; }
             Add("World", "TOD_Sky.Cycle field", ok, det);
 
-            // Hour field on Cycle
             ok = false; det = "NOT FOUND";
             try
             {
@@ -366,7 +351,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { det = ex.Message; }
             Add("Navigation", "PermaGUI level field", ok, det);
 
-            // Level info type
             ok = false; det = "NOT FOUND";
             try
             {
@@ -382,7 +366,6 @@ namespace DescendersModMenu.Mods
             Add("Navigation", "Level info type", ok, det);
         }
 
-        // ── Shared check helpers (no lambdas) ─────────────────────────
         private static void CheckTypeField(string cat, string name, Type t, string fieldName)
         {
             bool ok = false; string det = "NOT FOUND";
@@ -411,14 +394,13 @@ namespace DescendersModMenu.Mods
             Add(cat, name, ok, det);
         }
 
-        // WARN = cannot verify statically but confirmed working at runtime
         private static void AddWarn(string cat, string name, string detail)
         {
             Results.Add(new ScanResult
             {
                 Category = cat,
                 Name = name,
-                OK = true,   // treat as OK — mod is confirmed working
+                OK = true,
                 Detail = "WARN: " + detail
             });
             OKCount++;
@@ -487,3 +469,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

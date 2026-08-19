@@ -1,8 +1,8 @@
-using System.Reflection;
+﻿using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -25,7 +25,6 @@ namespace DescendersModMenu.Mods
             Apply();
         }
 
-        // Called from OnUpdate � only does real work when toggled, not every frame
         public static void Apply()
         {
             try
@@ -45,7 +44,6 @@ namespace DescendersModMenu.Mods
 
         public static void ClearCache() { _cached = null; }
 
-        // Patches Vehicle.Reset(bool) — fires after every respawn (bail or manual)
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
         {
             try
@@ -86,7 +84,6 @@ namespace DescendersModMenu.Mods
                 if (!string.Equals(__instance.gameObject.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;
 
-                // Clear cache so Apply() re-finds PlayerInfoImpact fresh after respawn
                 NoBail.ClearCache();
                 NoBail.Apply();
             }
@@ -98,3 +95,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

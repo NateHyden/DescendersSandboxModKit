@@ -1,8 +1,8 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using System.Reflection;
 using HarmonyLib;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -46,20 +46,14 @@ namespace DescendersModMenu.Mods
     public static class WheelieAngleLimit_Patch
     {
         private static PropertyInfo _rbProp = null;
-        private static PropertyInfo _wheelGroundedProp = null; // TDEX{ib via reflection
+        private static PropertyInfo _wheelGroundedProp = null;
         private static Wheel _frontWheel = null;
         private static Wheel _rearWheel = null;
         private static bool _cached = false;
 
-        // Grace period — keeps the limiter active for a short window after the rear
-        // wheel leaves the ground (e.g. hitting a bump mid-wheelie). Without this,
-        // the limiter disengages the instant rear lifts and accumulated rotational
-        // momentum spins the player off.
         private static float _graceTimer = 0f;
         private const float GraceDuration = 0.6f;
 
-        // Live pitch in degrees (positive = nose up). Published every FixedUpdate
-        // by the Postfix below — read by WheelieHUD regardless of limiter Enabled state.
         public static float CurrentPitch = 0f;
 
         public static void ResetGrace() { _graceTimer = 0f; }
@@ -72,12 +66,9 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                // Always publish pitch so WheelieHUD can read it every frame,
-                // regardless of whether the angle-limiter itself is enabled.
                 CurrentPitch = Mathf.Asin(Mathf.Clamp(__instance.transform.forward.y, -1f, 1f))
                                * Mathf.Rad2Deg;
 
-                // Limiter logic only runs when the toggle is on
                 if (!WheelieAngleLimit.Enabled) return;
 
                 if (((object)_frontWheel != null && !UnityNull.Alive(_frontWheel))
@@ -94,28 +85,20 @@ namespace DescendersModMenu.Mods
                     rb = _rbProp.GetValue(__instance, null) as Rigidbody;
                 if (!UnityNull.Alive(rb)) return;
 
-                // Read grounded state via reflection (TDEX{ib has { in name — can't use directly)
                 bool frontGrounded = IsGrounded(_frontWheel);
                 bool rearGrounded = IsGrounded(_rearWheel);
 
-                // Wheelie state: rear down, front up
                 bool inWheelieState = rearGrounded && !frontGrounded;
 
-                // Refresh grace timer while actively wheelie-ing; otherwise tick down
                 if (inWheelieState)
                     _graceTimer = GraceDuration;
                 else if (_graceTimer > 0f)
                     _graceTimer -= Time.fixedDeltaTime;
 
-                // Limiter remains active during the grace window so a bump-launch
-                // mid-wheelie doesn't drop the clamp and let the bike over-rotate
                 if (!inWheelieState && _graceTimer <= 0f) return;
 
                 if (CurrentPitch > WheelieAngleLimit.AngleLimit)
                 {
-                    // In Unity, rotating around +right with NEGATIVE angular velocity = nose goes UP
-                    // (right-hand rule: +right rotation pushes nose DOWN)
-                    // So we strip the negative component to prevent further nose-up rotation
                     Vector3 rightAxis = __instance.transform.right;
                     float pitchSpin = Vector3.Dot(rb.angularVelocity, rightAxis);
                     if (pitchSpin < 0f)
@@ -141,7 +124,6 @@ namespace DescendersModMenu.Mods
             if (!UnityNull.Alive(v)) { _cached = false; return; }
             _cached = true;
 
-            // Rigidbody property on Vehicle
             PropertyInfo[] vProps = typeof(Vehicle).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             for (int i = 0; i < vProps.Length; i++)
             {
@@ -149,7 +131,6 @@ namespace DescendersModMenu.Mods
                 { _rbProp = vProps[i]; break; }
             }
 
-            // TDEX{ib on Wheel — find by name prefix "TDEX" with get+set
             PropertyInfo[] wProps = typeof(Wheel).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             for (int i = 0; i < wProps.Length; i++)
             {
@@ -162,7 +143,6 @@ namespace DescendersModMenu.Mods
             ModLog.Debug("[WheelieAngleLimit] RB=" + ((object)_rbProp != null ? _rbProp.Name : "NULL")
                 + " Grounded=" + ((object)_wheelGroundedProp != null ? _wheelGroundedProp.Name : "NULL"));
 
-            // Front wheel = higher local z
             Wheel[] wheels = v.GetComponentsInChildren<Wheel>();
             if ((object)wheels != null && wheels.Length >= 2)
             {
@@ -185,3 +165,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

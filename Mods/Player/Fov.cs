@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using System;
 using System.Reflection;
@@ -11,20 +11,13 @@ namespace DescendersModMenu.Mods
         public static bool Enabled { get; private set; } = false;
         public static int Level { get; private set; } = 5;
 
-        // Level 1=45, Level 5=85 (game default), Level 10=130
         private static float GetFOV() { return 45f + (Level - 1) * 9.4f; }
         public static string DisplayValue { get { return ((int)GetFOV()).ToString(); } }
 
-        // Only cache BikeCamera[] and FieldInfo — both persist across camera switches.
-        // CameraAngle instances are NOT cached: CameraManager.SetCameraAngle() calls
-        // Object.Instantiate<CameraAngle>() on every mode switch, invalidating any
-        // cached reference. We fetch the live instance fresh every Apply() call.
         private static BikeCamera[] _cameras = null;
-        private static FieldInfo _caField = null;   // BikeCamera field of type CameraAngle
+        private static FieldInfo _caField = null;
         private static bool _fieldScan = false;
 
-        // Per-camera default targetFOV captured before first modification.
-        // Index matches _cameras[i]. Stays valid because BikeCamera objects persist.
         private static float[] _defaults = null;
 
         // ── Public API ────────────────────────────────────────────────
@@ -47,7 +40,6 @@ namespace DescendersModMenu.Mods
             if (Enabled) Apply();
         }
 
-        // Called from OnLateUpdate every frame
         public static void Apply()
         {
             if (!Enabled) return;
@@ -60,11 +52,9 @@ namespace DescendersModMenu.Mods
                 for (int i = 0; i < _cameras.Length; i++)
                 {
                     if (!UnityNull.Alive(_cameras[i])) continue;
-                    // Fresh fetch every call — survives camera mode switches
                     CameraAngle ca = _caField.GetValue(_cameras[i]) as CameraAngle;
                     if (!UnityNull.Alive(ca)) continue;
 
-                    // Capture default on first encounter (before we overwrite it)
                     if (_defaults[i] < 0f)
                     {
                         _defaults[i] = ca.targetFOV;
@@ -78,8 +68,6 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[FOV] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Fov"); }
         }
 
-        // Called when toggled OFF — restores each camera to its captured default.
-        // Fetches live CameraAngle fresh so it works even after a camera switch.
         private static void Restore()
         {
             try
@@ -91,7 +79,6 @@ namespace DescendersModMenu.Mods
                     if (!UnityNull.Alive(_cameras[i])) continue;
                     CameraAngle ca = _caField.GetValue(_cameras[i]) as CameraAngle;
                     if (!UnityNull.Alive(ca)) continue;
-                    // Use captured default; fall back to 85f if not yet captured
                     ca.targetFOV = (_defaults != null && _defaults[i] > 0f)
                         ? _defaults[i]
                         : 85f;
@@ -101,7 +88,6 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[FOV] Restore: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Fov"); }
         }
 
-        // Scene unload / reset
         public static void ClearCache()
         {
             _cameras = null;
@@ -138,10 +124,9 @@ namespace DescendersModMenu.Mods
                 _cameras = UnityEngine.Object.FindObjectsOfType<BikeCamera>();
                 _defaults = new float[_cameras.Length];
                 for (int i = 0; i < _defaults.Length; i++) _defaults[i] = -1f;
-                _fieldScan = false; // re-scan field on new camera set
+                _fieldScan = false;
             }
 
-            // Find the CameraAngle FieldInfo once per camera set
             if (!_fieldScan && _cameras.Length > 0)
             {
                 BikeCamera probe = null;
@@ -171,3 +156,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

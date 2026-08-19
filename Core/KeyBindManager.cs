@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using MelonLoader;
 using UnityEngine;
@@ -7,18 +7,16 @@ using DescendersModMenu.UI;
 
 namespace DescendersModMenu
 {
-    // ── Serialisation wrapper for JsonUtility ─────────────────────────────
     [Serializable]
     public class BindingsData
     {
         public string[] ModIds  = new string[0];
         public int[]    KeyCodes = new int[0];
-        public int      MenuOpenCode = -2; // KeyBindManager.CtrlDPadDown
+        public int      MenuOpenCode = -2;
     }
 
     public static class KeyBindManager
     {
-        // ── Mod registry — parallel arrays, index is the slot ─────────────
         public static readonly string[] ModIds = new string[]
         {
             // ── General ──────────────────────────────────────────────────
@@ -69,15 +67,8 @@ namespace DescendersModMenu
 
         public static int Count { get { return ModIds.Length; } }
 
-        // ── Live binding state (sized in SetDefaults) ─────────────────────
         private static int[] _keyCodes = new int[0];
 
-        // ── Controller-button binding for opening the menu ─────────────────
-        // Negative sentinels — KeyCode values are never negative, so this
-        // shares the same "int code" concept without any collision risk.
-        // Only covers digital buttons InControl exposes as discrete WasPressed
-        // controls — D-Pad and both triggers are NOT real Unity KeyCodes on
-        // Xinput controllers, which is why menu-open couldn't be rebound before.
         public const int CtrlDPadUp = -1, CtrlDPadDown = -2, CtrlDPadLeft = -3, CtrlDPadRight = -4;
         public const int CtrlA = -5, CtrlB = -6, CtrlX = -7, CtrlY = -8;
         public const int CtrlLB = -9, CtrlRB = -10, CtrlLT = -11, CtrlRT = -12;
@@ -158,10 +149,6 @@ namespace DescendersModMenu
         public static void SetMenuOpenCode(int code)  { _menuOpenCode = code; }
         public static void SkipMenuOpenCheck()        { _skipMenuOpenCheck = true; }
 
-        // Deliberately NOT routed through CheckAll()/FireMod() — menu-open must
-        // keep working even while OutfitPage/ChatPage/MapPage/etc. have input
-        // focus (those guard CheckAll()), otherwise controller-only players
-        // could get stuck unable to close the menu from a focused text field.
         public static bool CheckMenuOpenPressed()
         {
             if (_skipMenuOpenCheck) { _skipMenuOpenCheck = false; return false; }
@@ -261,8 +248,6 @@ namespace DescendersModMenu
             catch (Exception ex) { MelonLogger.Error("[KeyBindManager] LoadBindings: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "KeyBindManager"); }
         }
 
-        // Set by BindsPage.OnGUI when a key is committed, to suppress firing that
-        // key in the same/next OnUpdate tick (execution order is not guaranteed).
         private static bool _skipNextCheck = false;
         public static void SkipNextCheck() { _skipNextCheck = true; }
 
@@ -360,3 +345,4 @@ namespace DescendersModMenu
         }
     }
 }
+

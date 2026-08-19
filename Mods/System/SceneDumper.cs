@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +15,6 @@ namespace DescendersModMenu.Mods
     {
         private static bool isDumping = false;
 
-        // Capture everything - instance AND static, public AND private
         private const BindingFlags AllInstance =
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
@@ -29,30 +28,15 @@ namespace DescendersModMenu.Mods
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
             BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-        // How many array/list items to show before truncating (0 = unlimited)
-        // NOTE: was 0 (unlimited) - this was a major contributor to the OOM crash.
-        // Capped because printing doesn't stop the underlying array from being fully
-        // materialized in memory first - this only bounds output size, see RiskyMemberNames
-        // below for the fix that actually stops the dangerous allocations.
         private const int MaxCollectionItems = 12;
 
-        // Safety valve: hard cap on characters written per dump file. If a scene is
-        // pathological (huge counts, deep hierarchies) we truncate cleanly instead of
-        // growing memory unbounded until the process dies.
-        private const long MaxCharsPerFile = 150L * 1024 * 1024; // 150 MB text per file
+        private const long MaxCharsPerFile = 150L * 1024 * 1024;
 
-        // Field/property names known to allocate, instantiate, or deep-copy native data
-        // when accessed via reflection. Skipping these is the actual OOM fix - the old
-        // MaxCollectionItems=0 cap only limited *printed* items, but arr = p.GetValue(...)
-        // had already fully materialized the array/instance in memory before printing
-        // ever started. Renderer.material/.materials and MeshFilter.mesh are especially
-        // bad: each access instantiates a brand new unique object that then leaks for the
-        // rest of the session (no domain reload to clean it up).
         private static readonly HashSet<string> RiskyMemberNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "material", "materials",   // Renderer.material/materials instantiate a unique copy
-            "mesh",                    // MeshFilter.mesh instantiates a copy (sharedMesh is safe)
-            "positions",                // LineRenderer/TrailRenderer.positions copies full point buffer
+            "material", "materials",
+            "mesh",
+            "positions",
             "vertices", "normals", "tangents", "uv", "uv2", "uv3", "uv4",
             "colors", "colors32", "triangles", "boneWeights", "bindposes",
             "pixels", "pixels32",
@@ -63,10 +47,6 @@ namespace DescendersModMenu.Mods
             return RiskyMemberNames.Contains(name);
         }
 
-        // Lightweight streaming writer used instead of a monolithic StringBuilder.
-        // Writes straight to disk so peak memory stays bounded no matter how large the
-        // scene is, and stops writing (with a clear marker) once MaxCharsPerFile is hit
-        // instead of growing forever.
         private sealed class DumpWriter : IDisposable
         {
             private readonly StreamWriter writer;
@@ -137,14 +117,9 @@ namespace DescendersModMenu.Mods
 
                 ModLog.Debug("SceneDumper: Starting full dump...");
 
-                // ── FILE 1: Full scene hierarchy ──────────────────────────────────────
                 {
                     GameObject[] sceneRoots = scene.GetRootGameObjects();
 
-                    // Persistent UI (Sponsor Office, overworld menus, etc.) lives under
-                    // DontDestroyOnLoad, which GetActiveScene() never sees. Standard trick:
-                    // a temp DDOL object's .scene handle IS the DDOL pseudo-scene, so grab
-                    // its roots the same way, then drop the temp object.
                     GameObject[] ddolRoots;
                     {
                         GameObject temp = new GameObject("SceneDumper_DDOLProbe");
@@ -206,7 +181,6 @@ namespace DescendersModMenu.Mods
                     ModLog.Feedback("SceneDumper: FILE 2 done -> " + path);
                 }
 
-                // ── FILE 3: Player forensics (PlayerInfoImpact + VehicleController) ──
                 {
                     string path3 = Path.Combine(desktop, "DescendersPlayerForensics_" + timestamp + ".txt");
                     ModLog.Debug("SceneDumper: FILE 3 (player forensics) starting...");
@@ -258,7 +232,6 @@ namespace DescendersModMenu.Mods
                     ModLog.Feedback("SceneDumper: FILE 3 done -> " + path3);
                 }
 
-                // ── FILE 4: All unique component types found in scene ─────────────────
                 {
                     string path4 = Path.Combine(desktop, "DescendersComponentIndex_" + timestamp + ".txt");
                     ModLog.Debug("SceneDumper: FILE 4 (component type index) starting...");
@@ -282,7 +255,6 @@ namespace DescendersModMenu.Mods
                             typeCounts[tn] = 1;
                     }
 
-                    // Sort alphabetically
                     List<string> typeNames = new List<string>(typeCounts.Keys);
                     typeNames.Sort();
 
@@ -311,7 +283,6 @@ namespace DescendersModMenu.Mods
         }
 
         // ─── Full Component Dump ──────────────────────────────────────────────────────
-        // Dumps fields, properties, methods, events — optionally walking the inheritance chain
 
         private static void DumpComponentFull(Component comp, DumpWriter sb,
             string label, bool includeInheritance)
@@ -332,7 +303,6 @@ namespace DescendersModMenu.Mods
             sb.AppendLine("  Rotation:          " + FormatVector3(comp.transform.rotation.eulerAngles));
             sb.AppendLine();
 
-            // Rigidbody info if present
             Rigidbody rb = null;
             try { rb = comp.GetComponent<Rigidbody>(); } catch { }
             if ((object)rb != null)
@@ -351,7 +321,6 @@ namespace DescendersModMenu.Mods
                 sb.AppendLine();
             }
 
-            // Walk the type hierarchy
             List<Type> typeChain = new List<Type>();
             Type current = type;
             while ((object)current != null && (object)current != (object)typeof(object))
@@ -486,7 +455,6 @@ namespace DescendersModMenu.Mods
                     sb.AppendLine("    event " + SafeTypeName(ev.EventHandlerType) + " " + ev.Name);
                 }
 
-                // Also catch delegate fields (events not exposed via EventInfo)
                 FieldInfo[] delegateFields = t.GetFields(AllInstanceAndStatic | BindingFlags.DeclaredOnly);
                 foreach (FieldInfo f in delegateFields)
                 {
@@ -555,8 +523,6 @@ namespace DescendersModMenu.Mods
 
         // ─── Scene Hierarchy Dump ─────────────────────────────────────────────────────
 
-        // Full-scene walk can be arbitrarily deep in pathological hierarchies; bail out
-        // rather than risk a stack overflow or runaway recursion.
         private const int MaxDumpDepth = 60;
 
         private static void DumpGameObjectRecursive(Transform t, DumpWriter sb, int depth, ref int processed)
@@ -614,20 +580,12 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Used inside the scene hierarchy — dumps fields + methods per component.
-        // Properties are deliberately skipped here (unlike DumpComponentFull below):
-        // property getters on Unity types can instantiate/allocate on every access
-        // (Renderer.material, MeshFilter.mesh, LineRenderer.positions, etc.) and at
-        // full-scene scale (thousands of components) that's what caused the OOM.
-        // Use the targeted Vehicle/Player forensic dumps (files 2 & 3) when you need
-        // full property data - those only touch a handful of known components.
         private static void DumpComponentInScene(Component c, DumpWriter sb, string indent)
         {
             Type type = c.GetType();
 
             sb.AppendLine(indent + "▸ " + SafeTypeName(type));
 
-            // ── Fields (walk full inheritance chain) ──────────────────────────────────
             List<Type> chain = GetTypeChain(type);
 
             HashSet<string> seenF = new HashSet<string>();
@@ -903,3 +861,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

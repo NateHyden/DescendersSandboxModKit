@@ -1,14 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Randomly flips one mod from a curated "safe but silly" pool on/off
-    // every few seconds. Snapshots each pool mod's state the moment Chaos
-    // Mode is enabled, and restores exactly that snapshot on disable —
-    // no delegate/Func fields (project convention: switch-dispatch instead,
-    // matches AssemblyScanner's "no lambdas" pattern).
     public static class ChaosMode
     {
         public static bool Enabled { get; private set; } = false;
@@ -104,3 +99,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

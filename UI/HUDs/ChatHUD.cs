@@ -1,11 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using DescendersModMenu.Mods;
 
 namespace DescendersModMenu.UI
 {
-    // On-screen toast for ModChat messages. Each toast lasts DisplaySeconds,
-    // stacks from the top-centre. Toggle from the Chat page (default ON).
     public static class ChatHUD
     {
         public static bool Enabled { get; private set; } = true;
@@ -56,11 +54,9 @@ namespace DescendersModMenu.UI
 
         public static void Reset()
         {
-            // Keep Enabled across scenes — only drop in-flight toasts.
             _toasts.Clear();
         }
 
-        // Called from ModChat whenever a message is added (send or receive).
         public static void Notify(ModChat.ChatMessage msg)
         {
             if ((object)msg == null || !Enabled) return;
@@ -124,7 +120,6 @@ namespace DescendersModMenu.UI
                 DrawRect(x + panelW - b, y, b, rowH, border);
                 DrawRect(x, y, Mathf.Max(2f, 3f * s), rowH, accent);
 
-                // Message symbol (envelope) — left of the name.
                 var iconStyle = new GUIStyle(GUI.skin.label)
                 {
                     fontSize = iconFs,
@@ -170,3 +165,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

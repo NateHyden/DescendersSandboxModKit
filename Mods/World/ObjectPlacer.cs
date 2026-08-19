@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -8,11 +8,6 @@ using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Live placement: freeze the bike, fly a ghost around, confirm to drop a copy.
-    // Prefers cloned in-scene Bike Park meshes (textures intact). Primitive blocks
-    // remain as fallback when the current map has nothing harvestable.
-    // Favourited map objects are detached + written under UserData so they survive
-    // map changes and restarts (scene meshes otherwise unload with the park).
     public static class ObjectPlacer
     {
         public static bool Enabled { get; private set; } = false;
@@ -149,7 +144,6 @@ namespace DescendersModMenu.Mods
         private static readonly float[] MoveSpeeds = { 3f, 5f, 7f, 8.5f, 10f, 13f, 16f, 20f, 26f, 34f };
         private static readonly float[] RotateSpeeds = { 30f, 45f, 60f, 75f, 90f, 115f, 140f, 175f, 220f, 280f };
         private static readonly float[] LiftSpeeds = { 1f, 1.5f, 2f, 2.5f, 3f, 4f, 5.5f, 7f, 9f, 12f };
-        // Back-distance (metres) — level 5 matches the old fixed CamOffset z=-9.
         private static readonly float[] CamDistances = { 5f, 7f, 9f, 12f, 16f, 22f, 30f, 42f, 58f, 80f };
 
         public static int MoveSpeedLevel { get; private set; } = 5;
@@ -443,7 +437,6 @@ namespace DescendersModMenu.Mods
 
                 if (confirm) ConfirmPlacement();
 
-                // Zoom out/in for big pieces without opening the menu (autoclose).
                 float scroll = Input.GetAxis("Mouse ScrollWheel");
                 if (scroll > 0.01f
                     || Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.KeypadPlus))
@@ -675,7 +668,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Harvest live map meshes ──────────────────────────────────
         public static void ScanMap()
         {
             EnsureCatalog();
@@ -702,8 +694,6 @@ namespace DescendersModMenu.Mods
                     string key = HarvestKey(mesh);
                     if (_harvestKeys.Contains(key))
                     {
-                        // Restored favs may be mesh-only (white). If this live
-                        // object matches, replace the placeholder with a textured copy.
                         if (!IsBlockedName(go.name) && !IsBlockedName(mesh.name)
                             && (LooksLikeRamp(go.name) || LooksLikeRamp(mesh.name)
                                 || AncestorLooksLikeRamp(go.transform)))
@@ -750,8 +740,6 @@ namespace DescendersModMenu.Mods
                     int insertAt = HarvestedCount + added;
                     _catalog.Insert(insertAt, p);
                     added++;
-                    // Re-favourite match from a previous session: detach + disk-save now
-                    // that the live mesh is in hand again.
                     if (_favIds.Contains(p.Id))
                         PersistFavAt(insertAt);
                 }
@@ -987,7 +975,6 @@ namespace DescendersModMenu.Mods
             for (int i = _catalog.Count - 1; i >= 0; i--)
             {
                 if (_catalog[i].IsPrimitive) continue;
-                // Keep favourited map objects — they are meant to travel with you.
                 if (_favIds.Contains(_catalog[i].Id ?? "")) continue;
                 if (IsUnityAlive(_catalog[i].Template))
                     UnityEngine.Object.Destroy(_catalog[i].Template);
@@ -1043,8 +1030,6 @@ namespace DescendersModMenu.Mods
 
         public static void Reset()
         {
-            // Snapshot favourites before the old map's shared meshes can unload,
-            // then keep the library (DDOL + disk). Only stop placing / drop instances.
             try { PersistAllLiveFavs(); } catch (Exception ex)
             {
                 ModLog.Warn("[ObjectPlacer] PersistAllLiveFavs: " + ex.Message);
@@ -1087,7 +1072,6 @@ namespace DescendersModMenu.Mods
 
         private static bool IsUnityAlive(UnityEngine.Object obj)
         {
-            // Unity fake-null: destroyed assets still fail (object)==null.
             return (object)obj != null && obj;
         }
 
@@ -1119,7 +1103,6 @@ namespace DescendersModMenu.Mods
 
         private static string FavFolderName(string id)
         {
-            // Filesystem-safe key derived from harvest id.
             var sb = new System.Text.StringBuilder(id.Length);
             for (int i = 0; i < id.Length; i++)
             {
@@ -1183,8 +1166,6 @@ namespace DescendersModMenu.Mods
             {
                 Renderer r = rends[i];
                 if (!IsUnityAlive(r)) continue;
-                // materials getter creates instances — then steal albedo into owned copies
-                // so map unload can't wipe the texture reference.
                 Material[] mats = r.materials;
                 if (mats == null) continue;
                 for (int m = 0; m < mats.Length; m++)
@@ -1228,7 +1209,6 @@ namespace DescendersModMenu.Mods
                 if (w > 2048) w = 2048;
                 if (h > 2048) h = 2048;
 
-                // Prefer direct read when the asset is already readable.
                 Texture2D as2d = src as Texture2D;
                 if (IsUnityAlive(as2d))
                 {
@@ -1245,7 +1225,6 @@ namespace DescendersModMenu.Mods
                     }
                     catch
                     {
-                        // Not readable — fall through to Blit.
                     }
                 }
 
@@ -1388,7 +1367,7 @@ namespace DescendersModMenu.Mods
             using (var fs = File.Create(path))
             using (var bw = new BinaryWriter(fs))
             {
-                bw.Write(0x4F504D31); // OPM1
+                bw.Write(0x4F504D31);
                 bw.Write(partName ?? "");
                 bw.Write(lp.x); bw.Write(lp.y); bw.Write(lp.z);
                 bw.Write(lr.x); bw.Write(lr.y); bw.Write(lr.z); bw.Write(lr.w);
@@ -1835,3 +1814,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

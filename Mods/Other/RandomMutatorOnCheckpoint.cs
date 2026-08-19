@@ -1,16 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Picks a random GameModifierMods slider and a random level every time
-    // a checkpoint is crossed. Hooked from SessionTrackers.CheckpointTick's
-    // existing crossing-detection (CheckpointCount increment) via
-    // RandomMutatorOnCheckpoint.OnCheckpoint() — reuses the game's own
-    // modifier system (GameModifierMods.ApplyMod / SetXLevel), no new
-    // reflection needed. Snapshots the five levels on enable and restores
-    // them exactly via the same SetXLevel setters on disable.
     public static class RandomMutatorOnCheckpoint
     {
         public static bool Enabled { get; private set; } = false;
@@ -41,14 +34,13 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Called from SessionTrackers.CheckpointTick when CheckpointCount increments.
         public static void OnCheckpoint()
         {
             if (!Enabled) return;
             try
             {
                 int idx = Random.Range(0, ModNames.Length);
-                int level = Random.Range(1, 11); // 1-10 inclusive
+                int level = Random.Range(1, 11);
                 switch (idx)
                 {
                     case 0: GameModifierMods.SetWheelieBalanceLevel(level); break;
@@ -86,3 +78,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

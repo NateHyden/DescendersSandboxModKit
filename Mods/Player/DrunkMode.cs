@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using HarmonyLib;
 using DescendersModMenu;
@@ -19,21 +19,10 @@ namespace DescendersModMenu.Mods
         private static float _lastRoll = 0f;
         private static float _smoothRoll = 0f;
         private static Quaternion _cleanRot = Quaternion.identity;
-        private static CameraAngle _cachedAngle = null; // cached once on enable
+        private static CameraAngle _cachedAngle = null;
 
-        // Reflection for zsEdyM} (body lean) — brace in name breaks direct access
         private static System.Reflection.PropertyInfo _bodyLeanProp = null;
 
-        // Camera.onPreRender is a static Unity event guaranteed to fire
-        // AFTER every LateUpdate() in the scene for that frame, right
-        // before the camera actually renders. LateTick below used to run
-        // from MelonLoader's OnLateUpdate hook on the assumption that ran
-        // after the game's own BikeCamera.LateUpdate() — that ordering
-        // between a mod hook and a native Unity component's own LateUpdate
-        // was never actually guaranteed, so some frames this code won the
-        // race and some frames BikeCamera won, alternating winners frame
-        // to frame — that's exactly what the reported jitter was.
-        // onPreRender removes the race: nothing can run after it.
         private static bool _subscribed = false;
         private static void EnsureSubscribed()
         {
@@ -54,7 +43,6 @@ namespace DescendersModMenu.Mods
                 _camRollTime = 0f;
                 _cam = Camera.main;
                 if (UnityNull.Alive(_cam)) _baseFOV = _cam.fieldOfView;
-                // Cache CameraAngle once on enable — reused every LateTick
                 _cachedAngle = null;
                 BikeCamera[] cams = GameObject.FindObjectsOfType<BikeCamera>();
                 for (int i = 0; i < cams.Length; i++)
@@ -74,14 +62,12 @@ namespace DescendersModMenu.Mods
             }
             else
             {
-                // Restore FOV
                 if (UnityNull.Alive(_cam)) _cam.fieldOfView = _baseFOV;
                 _cachedAngle = null;
                 ModLog.Feedback("[DrunkMode] OFF");
             }
         }
 
-        // Called from OnUpdate — steering wobble only
         public static void Tick()
         {
             if (!Enabled) return;
@@ -89,8 +75,6 @@ namespace DescendersModMenu.Mods
             _steerTime += Time.deltaTime * 0.7f;
         }
 
-        // Called from OnLateUpdate — accumulates timers only now. Actual
-        // camera writes moved to OnPreRenderCamera (see EnsureSubscribed).
         public static void LateTick()
         {
             if (!Enabled) return;
@@ -108,13 +92,6 @@ namespace DescendersModMenu.Mods
             // ── FOV breathing ──────────────────────────────────────────────
             float fovWobble = Mathf.Sin(_fovTime * Mathf.PI * 2f) * 10f
                             + Mathf.Sin(_fovTime * Mathf.PI * 3.3f) * 5f;
-            // Write BOTH: targetFOV in case anything else legitimately reads
-            // it, but fieldOfView directly too — writing only targetFOV left
-            // the actual visible zoom entirely dependent on whatever/whenever
-            // BikeCamera itself chooses to consume that field, which we don't
-            // control or know the timing of. Direct write makes us the
-            // final, guaranteed authority on the rendered value, exactly
-            // like the camera roll write below already was.
             if (UnityNull.Alive(_cachedAngle))
                 _cachedAngle.targetFOV = _baseFOV + fovWobble;
             _cam.fieldOfView = _baseFOV + fovWobble;
@@ -122,14 +99,12 @@ namespace DescendersModMenu.Mods
             // ── Camera roll ───────────────────────────────────────────────
             float roll = Mathf.Sin(_camRollTime * Mathf.PI * 2f) * 14f
                        + Mathf.Sin(_camRollTime * Mathf.PI * 1.7f) * 6f;
-            // Lerp toward target roll for smooth transitions — no more snapping
             _smoothRoll = Mathf.Lerp(_smoothRoll, roll, Time.deltaTime * 3f);
             _cleanRot = _cam.transform.rotation * Quaternion.Inverse(Quaternion.Euler(0f, 0f, _lastRoll));
             _cam.transform.rotation = _cleanRot * Quaternion.Euler(0f, 0f, _smoothRoll);
             _lastRoll = _smoothRoll;
         }
 
-        // Called from Harmony postfix on Vehicle.FixedUpdate — adds steering wobble
         public static void ApplySteeringWobble(Vehicle vehicle)
         {
             if (!Enabled || !UnityNull.Alive(vehicle)) return;
@@ -183,3 +158,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

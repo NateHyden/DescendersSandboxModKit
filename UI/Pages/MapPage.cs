@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
@@ -69,25 +69,21 @@ namespace DescendersModMenu.UI
 
         public static void RebuildList()
         {
-            // Unity fake-null: (object)_listRoot == null misses destroyed menu after scene change.
             if (!_listRoot) { _listRoot = null; return; }
             try
             {
-                // Clear everything
                 while (_listRoot.childCount > 0)
                     GameObject.DestroyImmediate(_listRoot.GetChild(0).gameObject);
 
                 // ── LOAD FROM SEED ──────────────────────────────
                 UIHelpers.SectionHeader("LOAD FROM SEED", _listRoot);
 
-                // Current seed display
                 var curSeedRow = UIHelpers.StatRow("Current Map Seed", _listRoot);
                 _currentSeedText = UIHelpers.Txt("CurSeed", curSeedRow.transform, "—",
                     11, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.TextMid);
                 _currentSeedText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
                 RefreshCurrentSeed();
 
-                // Seed input row
                 var seedInputRow = UIHelpers.Obj("SeedInputRow", _listRoot);
                 seedInputRow.AddComponent<Image>().color = UIHelpers.RowBg;
                 var sirLe = seedInputRow.AddComponent<LayoutElement>();
@@ -112,7 +108,6 @@ namespace DescendersModMenu.UI
                 _seedInputText.verticalOverflow = VerticalWrapMode.Truncate;
                 _seedInputText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
-                // Flashing cursor
                 _seedCursor = UIHelpers.Txt("SdCur", seedBg.transform, "●",
                     10, FontStyle.Normal, TextAnchor.MiddleCenter, UIHelpers.OnColor);
                 _seedCursor.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
@@ -123,7 +118,6 @@ namespace DescendersModMenu.UI
                 scRT.anchoredPosition = new Vector2(-6, 0);
                 _seedCursor.gameObject.SetActive(false);
 
-                // Click to focus
                 _seedBoxRect = UIHelpers.RT(seedBg);
                 var seedFocusBtn = seedBg.AddComponent<UnityEngine.UI.Button>();
                 seedFocusBtn.targetGraphic = seedBg.GetComponent<Image>();
@@ -148,7 +142,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.SectionHeader("MAP CHANGER", _listRoot);
 
-                // Status row
                 var statusRow = UIHelpers.StatRow("Maps", _listRoot);
                 _statusText = UIHelpers.Txt("Status", statusRow.transform,
                     MapChanger.HasBikeParks
@@ -160,7 +153,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(_listRoot);
 
-                // Hint if bike parks not yet scanned
                 if (!MapChanger.HasBikeParks)
                 {
                     var hintRow = UIHelpers.Obj("HintRow", _listRoot);
@@ -173,7 +165,6 @@ namespace DescendersModMenu.UI
                     UIHelpers.Divider(_listRoot);
                 }
 
-                // Base worlds section
                 UIHelpers.SectionHeader("BASE GAME MAPS", _listRoot);
                 for (int i = 0; i < MapChanger.Count; i++)
                 {
@@ -189,7 +180,6 @@ namespace DescendersModMenu.UI
                     }
                 }
 
-                // Bike parks section — only if found
                 if (MapChanger.HasBikeParks)
                 {
                     UIHelpers.Divider(_listRoot);
@@ -213,7 +203,6 @@ namespace DescendersModMenu.UI
             }
             catch (System.Exception ex)
             {
-                // Stale menu after scene unload — drop refs quietly; next CreatePage rebuilds.
                 if (ex is MissingReferenceException || ex is System.NullReferenceException)
                 {
                     ClearUiRefs();
@@ -223,12 +212,6 @@ namespace DescendersModMenu.UI
             }
         }
 
-        // ex.Message has come back completely empty for at least one exception type in
-        // this build (confirmed 2026-08-04 - a bare "[ERROR] MapPage.RebuildList: " with
-        // nothing after the colon, no stack trace either in the visible log). Type name
-        // and stack trace are logged separately here since they're often populated even
-        // when Message isn't, and TargetInvocationException/reflection-wrapped exceptions
-        // hide the real cause in .InnerException, which the old one-line log never showed.
         private static void LogFullException(string context, System.Exception ex)
         {
             string msg = string.IsNullOrEmpty(ex.Message) ? "(empty)" : ex.Message;
@@ -293,7 +276,6 @@ namespace DescendersModMenu.UI
         {
             if (!_seedInputText) return;
 
-            // Click-away to unfocus
             if (_seedFocused && Input.GetMouseButtonDown(0))
             {
                 if (_seedBoxRect
@@ -301,7 +283,6 @@ namespace DescendersModMenu.UI
                     _seedFocused = false;
             }
 
-            // Cursor pulse
             if (_seedCursor)
             {
                 _seedCursor.gameObject.SetActive(_seedFocused);
@@ -314,7 +295,6 @@ namespace DescendersModMenu.UI
                 }
             }
 
-            // Update current seed display each frame
             RefreshCurrentSeed();
 
             if (!_seedFocused) return;
@@ -367,8 +347,6 @@ namespace DescendersModMenu.UI
         {
             if (!_currentSeedText) return;
 
-            // Try to read the live session seed first — works regardless of how
-            // the map was loaded (normal session, friend's world, or mod load)
             string liveSeed = MapChanger.GetCurrentLevelSeed();
             if (!string.IsNullOrEmpty(liveSeed))
             {
@@ -389,3 +367,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

@@ -46,7 +46,6 @@ namespace DescendersModMenu.Mods
             return player.GetComponent<PlayerCustomization>();
         }
 
-        // ── Skin Colour ──────────────────────────────────────────────
         public static void IncreaseSkinColor() { SkinColorLevel = Mathf.Min(MaxLevel, SkinColorLevel + 1); ApplySkinColor(); }
         public static void DecreaseSkinColor() { SkinColorLevel = Mathf.Max(MinLevel, SkinColorLevel - 1); ApplySkinColor(); }
         public static void ApplySkinColor()
@@ -57,7 +56,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetSkinColor: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
 
-        // ── Hair Colour ──────────────────────────────────────────────
         public static void IncreaseHairColor() { HairColorLevel = Mathf.Min(MaxLevel, HairColorLevel + 1); ApplyHairColor(); }
         public static void DecreaseHairColor() { HairColorLevel = Mathf.Max(MinLevel, HairColorLevel - 1); ApplyHairColor(); }
         public static void ApplyHairColor()
@@ -68,7 +66,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetHairColor: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
 
-        // ── Hair Type ────────────────────────────────────────────────
         public static void IncreaseHairType() { HairTypeLevel = Mathf.Min(MaxLevel, HairTypeLevel + 1); ApplyHairType(); }
         public static void DecreaseHairType() { HairTypeLevel = Mathf.Max(MinLevel, HairTypeLevel - 1); ApplyHairType(); }
         public static void ApplyHairType()
@@ -79,7 +76,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetHairType: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
 
-        // ── Beard Colour ─────────────────────────────────────────────
         public static void IncreaseBeardColor() { BeardColorLevel = Mathf.Min(MaxLevel, BeardColorLevel + 1); ApplyBeardColor(); }
         public static void DecreaseBeardColor() { BeardColorLevel = Mathf.Max(MinLevel, BeardColorLevel - 1); ApplyBeardColor(); }
         public static void ApplyBeardColor()
@@ -90,7 +86,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetBeardColor: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
 
-        // ── Beard Type ───────────────────────────────────────────────
         public static void IncreaseBeardType() { BeardTypeLevel = Mathf.Min(MaxLevel, BeardTypeLevel + 1); ApplyBeardType(); }
         public static void DecreaseBeardType() { BeardTypeLevel = Mathf.Max(MinLevel, BeardTypeLevel - 1); ApplyBeardType(); }
         public static void ApplyBeardType()
@@ -101,7 +96,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetBeardType: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
 
-        // ── Body Type ────────────────────────────────────────────────
         public static void IncreaseBodyType() { BodyTypeLevel = Mathf.Min(MaxLevel, BodyTypeLevel + 1); ApplyBodyType(); }
         public static void DecreaseBodyType() { BodyTypeLevel = Mathf.Max(MinLevel, BodyTypeLevel - 1); ApplyBodyType(); }
         public static void ApplyBodyType()
@@ -112,7 +106,6 @@ namespace DescendersModMenu.Mods
             catch (Exception ex) { MelonLogger.Error("[RiderCustomiser] SetBodyType: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "RiderCustomiser"); }
         }
 
-        // ── Reset all to default (0) ────────────────────────────────
         public static void ResetAll()
         {
             SkinColorLevel = HairColorLevel = HairTypeLevel = BeardColorLevel = BeardTypeLevel = BodyTypeLevel = 0;
@@ -125,3 +118,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

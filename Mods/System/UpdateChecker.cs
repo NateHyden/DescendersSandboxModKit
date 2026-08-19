@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading;
 using MelonLoader;
@@ -18,7 +18,6 @@ namespace DescendersModMenu.Mods
         public static string DownloadUrl { get; private set; } = "";
         public static string CurrentVersion => BuildInfo.Version;
 
-        // Call once from OnLateInitializeMelon — runs on a background thread
         public static void CheckAsync()
         {
             try
@@ -39,8 +38,6 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // Unity 2017 Mono has no TLS 1.2 support — GitHub requires it.
-                // Shell out to PowerShell which handles modern TLS natively.
                 string psCmd = "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; "
                     + "(Invoke-WebRequest -Uri '" + ReleasesApiUrl + "' -UseBasicParsing "
                     + "-Headers @{'User-Agent'='DescendersToolKit'}).Content";
@@ -55,7 +52,7 @@ namespace DescendersModMenu.Mods
 
                 Process proc = Process.Start(psi);
                 string output = proc.StandardOutput.ReadToEnd();
-                proc.WaitForExit(10000); // 10 second timeout
+                proc.WaitForExit(10000);
 
                 if (string.IsNullOrEmpty(output))
                 {
@@ -74,7 +71,6 @@ namespace DescendersModMenu.Mods
                     return;
                 }
 
-                // Strip leading 'v' for comparison
                 string remoteClean = tag.TrimStart('v', 'V');
                 string localClean = CurrentVersion.TrimStart('v', 'V');
 
@@ -98,7 +94,6 @@ namespace DescendersModMenu.Mods
             CheckComplete = true;
         }
 
-        // Compare semantic versions: "3.6.2" vs "3.6.1"
         private static bool IsNewer(string remote, string local)
         {
             try
@@ -132,7 +127,6 @@ namespace DescendersModMenu.Mods
             return result;
         }
 
-        // Minimal JSON value extractor — finds "key":"value" pairs
         private static string ExtractJsonValue(string json, string key)
         {
             string search = "\"" + key + "\"";
@@ -152,3 +146,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

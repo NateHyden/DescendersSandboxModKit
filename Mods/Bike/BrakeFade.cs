@@ -1,27 +1,12 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
     // ══════════════════════════════════════════════════════════════════════
-    //  BrakeFade — simulates disc brake heat / fade
-    //
-    //  Heat model (per FixedUpdate):
-    //    Heat added   = brakeInput × speedKmh × heatRate
-    //    Heat removed = baseCoolRate × (1 + speedKmh × airflowFactor)
-    //    Front disc heats at 55% / rear at 45% → always diverge
-    //    Front and rear have slightly different cooldown multipliers
-    //
-    //  Fade effect applied by multiplying vehicle.NYsPlot:
-    //    0–80°C   → no effect (1.0×)
-    //    80–200°C → progressive fade down to 0.45×
-    //    200–300°C→ heavy fade down to 0.20×
-    //
-    //  OnGUI HUD renders two colour-coded temperature readings
-    //  bottom-left, to the right of the SuspensionHUD bars.
     // ══════════════════════════════════════════════════════════════════════
     public static class BrakeFade
     {
@@ -33,32 +18,24 @@ namespace DescendersModMenu.Mods
 
         // ── Constants ─────────────────────────────────────────────────
         private const float MaxTemp = 300f;
-        private const float FailureTemp = 300f;   // complete failure here
-        private const float FailureLockSecs = 3f;     // seconds showing FAILED, then clears immediately
+        private const float FailureTemp = 300f;
+        private const float FailureLockSecs = 3f;
 
-        // Two-segment fade:
-        //   0–150°C: gentle ramp 0%→20% reduction (present but not alarming)
-        //   150–300°C: aggressive power curve 20%→100% (rapidly worsens toward failure)
-        private const float FadePivotTemp = 150f;   // segment boundary
-        private const float FadePivotMult = 0.80f;  // multiplier at pivot (20% reduction)
-        private const float FadeUpperPower = 1.5f;   // curve steepness above pivot
+        private const float FadePivotTemp = 150f;
+        private const float FadePivotMult = 0.80f;
+        private const float FadeUpperPower = 1.5f;
 
-        // Front disc contributes 60% of braking, rear 40% — defaults, adjustable via BrakeBalance
-        // 0% front = all rear, 100% front = all front, default 60/40
         private static float _frontBrakeShare = 0.60f;
         private static float _rearBrakeShare = 0.40f;
         public static float FrontBrakeShare => _frontBrakeShare;
         public static float RearBrakeShare => _rearBrakeShare;
 
-        // BrakeBalance: level 1–11, level 6 = default 60/40
-        // Level 1  = 10/90 (all rear), Level 6 = 60/40 (default), Level 11 = 100/0 (all front)
         private static int _balanceLevel = 6;
         public static int BalanceLevel => _balanceLevel;
 
         public static void SetBalanceLevel(int level)
         {
             _balanceLevel = Mathf.Clamp(level, 1, 11);
-            // Level maps: 1=10%, 2=20% ... 6=60% ... 11=100% front share
             _frontBrakeShare = _balanceLevel * 0.10f;
             _rearBrakeShare = 1f - _frontBrakeShare;
             ModLog.Debug("[BrakeBalance] Level=" + _balanceLevel
@@ -72,26 +49,18 @@ namespace DescendersModMenu.Mods
         public static string BalanceDisplay =>
             (_frontBrakeShare * 100f).ToString("F0") + "F / " + (_rearBrakeShare * 100f).ToString("F0") + "R";
 
-        // Heat: ~9 seconds of hard braking at 60km/h to reach failure
         private const float FrontHeatRate = 0.65f;
         private const float RearHeatRate = 0.52f;
 
-        // Cool: 3°C/s stationary, ~6°C/s at 60km/h, ~8°C/s at 100km/h
         private const float FrontBaseCool = 3.0f;
         private const float RearBaseCool = 3.4f;
         private const float AirflowFactor = 0.0167f;
 
-        // Failure state (latched per disc — independent front/rear)
         private static bool _frontFailed = false;
         private static bool _rearFailed = false;
-        private static float _frontFailTime = -999f; // Time.time when front latched
-        private static float _rearFailTime = -999f; // Time.time when rear latched
+        private static float _frontFailTime = -999f;
+        private static float _rearFailTime = -999f;
 
-        // ── Fade multiplier (exported for the Harmony patch) ──────────
-        // Front and rear discs are independent.
-        // Combined = FrontMult×FrontBrakeShare + RearMult×RearBrakeShare
-        // So front failure alone leaves 40% braking from the rear disc.
-        // Both failed = 0.
         public static float FadeMultiplier
         {
             get
@@ -102,16 +71,11 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // True only when both discs are in the lock phase (fully failed)
         public static bool IsInFailure => _frontFailed && _rearFailed;
 
-        // Lock phase = within the 3s FAILED window (brakes completely cut)
         public static bool FrontInLock => _frontFailed && (Time.time - _frontFailTime < FailureLockSecs);
         public static bool RearInLock => _rearFailed && (Time.time - _rearFailTime < FailureLockSecs);
 
-        // Two-segment fade curve:
-        //  0–150°C: linear 0%→20% reduction (present but manageable)
-        //  150–300°C: power curve 20%→100% (worsens rapidly — 250°C is ~63% reduction)
         private static float ComputeFade(float temp)
         {
             if (temp <= 0f) return 1.0f;
@@ -119,19 +83,16 @@ namespace DescendersModMenu.Mods
 
             if (temp <= FadePivotTemp)
             {
-                // Gentle linear ramp: full → FadePivotMult
                 float t = temp / FadePivotTemp;
                 return Mathf.Lerp(1.0f, FadePivotMult, t);
             }
             else
             {
-                // Aggressive power curve: FadePivotMult → 0
                 float t = (temp - FadePivotTemp) / (FailureTemp - FadePivotTemp);
                 return FadePivotMult * (1.0f - Mathf.Pow(t, FadeUpperPower));
             }
         }
 
-        // ── Vehicle cache (speed + ground detection via wheel suspension) ──
         private static Rigidbody _rigidbody = null;
         private static Wheel _frontWheel = null;
         private static Wheel _rearWheel = null;
@@ -193,10 +154,6 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[BrakeFade] ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "BrakeFade"); }
         }
 
-        // ── AddHeat — called from BrakeFade_Patch with real brake value ──
-        // brakeInput: vehicle.NYsPlot read directly (compiled access)
-        // speedKmh:   rigidbody velocity converted to km/h
-        // speedKmh:   rigidbody velocity — also used by IsGrounded raycast
         public static void AddHeat(float brakeInput, float speedKmh)
         {
             if (!Enabled) return;
@@ -205,20 +162,16 @@ namespace DescendersModMenu.Mods
                 float dt = Time.fixedDeltaTime;
                 float now = Time.time;
 
-                // Only generate heat when grounded — Physics.Raycast ground check
                 bool grounded = IsGrounded();
                 float effectiveBrake = grounded ? brakeInput : 0f;
 
                 float coolFactor = 1f + speedKmh * AirflowFactor;
 
                 // ── Front disc ───────────────────────────────────────
-                // Lock: 3s FAILED window — brakes cut, temp frozen, no heating/cooling
-                // After lock: failed flag clears immediately — normal physics resumes
                 if (_frontFailed)
                 {
                     if ((now - _frontFailTime) >= FailureLockSecs)
-                        _frontFailed = false; // clear — fall through to normal logic next frame
-                    // else: still in lock, temp stays frozen
+                        _frontFailed = false;
                 }
                 if (!_frontFailed)
                 {
@@ -247,7 +200,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── GetSpeed — reads rigidbody velocity for the patch ─────────
         public static float GetSpeedKmh()
         {
             EnsureRigidbody();
@@ -255,14 +207,11 @@ namespace DescendersModMenu.Mods
             return _rigidbody.velocity.magnitude * 3.6f;
         }
 
-        // ── IsGrounded — suspension compression check ────────────────
-        // If either wheel has compression > 0, at least one wheel is touching ground.
-        // Both at 0 = fully extended = airborne. Same method SuspensionHUD uses.
         private static int _groundCheckLogCount = 0;
         public static bool IsGrounded()
         {
             EnsureRigidbody();
-            if ((object)_suspField == null) return true; // safe default if field not found
+            if ((object)_suspField == null) return true;
 
             try
             {
@@ -284,7 +233,6 @@ namespace DescendersModMenu.Mods
             catch { return true; }
         }
 
-        // ── EnsureRigidbody — caches rigidbody + wheels for speed and ground detection ──
         private static void EnsureRigidbody()
         {
             if (_searched)
@@ -313,7 +261,6 @@ namespace DescendersModMenu.Mods
                 else
                     ModLog.Debug("[BrakeFade] Rigidbody cached OK.");
 
-                // Cache wheels for suspension-based ground detection
                 Transform ft = player.transform.Find("wheel_front");
                 Transform rt = player.transform.Find("wheel_back");
                 if (UnityNull.Alive(ft)) _frontWheel = ft.GetComponent<Wheel>();
@@ -339,7 +286,6 @@ namespace DescendersModMenu.Mods
         }
 
         // ── OnGUI HUD ─────────────────────────────────────────────────
-        // Top-right corner, resolution-scaled.
 
         private static Texture2D _tex = null;
         private static GUIStyle _hdrStyle = null;
@@ -424,7 +370,6 @@ namespace DescendersModMenu.Mods
 
             if (discFailed && discInLock)
             {
-                // Lock phase: flash FAILED white/red at 2Hz
                 bool flashOn = (Time.time % 0.5f) < 0.25f;
                 tempCol = flashOn
                     ? new Color(1f, 1f, 1f, 1f)
@@ -433,7 +378,6 @@ namespace DescendersModMenu.Mods
             }
             else if (discFailed)
             {
-                // Cooling phase: show actual temp in red so player sees it dropping
                 tempCol = new Color(1f, 0.13f, 0.13f, 1f);
                 valText = Mathf.RoundToInt(temp) + "°C";
             }
@@ -461,7 +405,6 @@ namespace DescendersModMenu.Mods
 
         private static Color GetTempColor(float temp)
         {
-            // Cold → grey, warm → yellow, hot → orange, critical → red
             if (temp <= 0f) return new Color(0.67f, 0.67f, 0.67f, 1f);
             if (temp <= 80f)
             {
@@ -481,7 +424,7 @@ namespace DescendersModMenu.Mods
                 return Color.Lerp(new Color(1.00f, 0.40f, 0.00f, 1f),
                                   new Color(1.00f, 0.13f, 0.13f, 1f), t);
             }
-            return new Color(1.00f, 0.13f, 0.13f, 1f); // full red
+            return new Color(1.00f, 0.13f, 0.13f, 1f);
         }
 
         private static void DrawRect(float rx, float ry, float rw, float rh, Color c)
@@ -493,8 +436,6 @@ namespace DescendersModMenu.Mods
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    //  Harmony patch — multiplies brake input by fade factor post-FixedUpdate
-    //  Runs AFTER CutBrakes_Patch (harmony applies postfixes in patch order)
     // ══════════════════════════════════════════════════════════════════════
     public static class BrakeFade_Patch
     {
@@ -508,7 +449,6 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                // Get Vehicle from VehicleController (same approach as CutBrakes)
                 if ((object)_vehicleField == null)
                 {
                     FieldInfo[] fields = __instance.GetType().GetFields(
@@ -532,15 +472,10 @@ namespace DescendersModMenu.Mods
                 if (!string.Equals(vehicle.gameObject.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;
 
-                // Read brake input via DIRECT compiled access (guaranteed correct)
-                // Feed into heat model BEFORE applying fade
                 float brakeInput = Mathf.Clamp01(vehicle.NYsPlot);
                 float speedKmh = BrakeFade.GetSpeedKmh();
                 BrakeFade.AddHeat(brakeInput, speedKmh);
 
-                // Apply fade — FadeMultiplier handles all cases:
-                // partial front/rear failure, combined failure, and smooth fade.
-                // Returns 0 when both discs fail, 0.4 when only front fails, etc.
                 float mult = BrakeFade.FadeMultiplier;
                 if (mult < 1.0f)
                     vehicle.NYsPlot = vehicle.NYsPlot * mult;
@@ -559,3 +494,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

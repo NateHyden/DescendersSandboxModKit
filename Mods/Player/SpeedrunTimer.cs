@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using System.Reflection;
 using UnityEngine;
@@ -11,10 +11,8 @@ namespace DescendersModMenu.Mods
 
         private static UI_SpeedrunTimer _timer = null;
 
-        // Session data field refs for reset
-        // Singleton<SessionManager>.[\u007EqsVD|.\u0083ESVMoz.skY\u0080uhC = the elapsed time (double)
-        private static FieldInfo _sessionDataField = null;  // \u0083ESVMoz on SessionManager
-        private static FieldInfo _timeField = null;  // skY\u0080uhC on session data
+        private static FieldInfo _sessionDataField = null;
+        private static FieldInfo _timeField = null;
 
         public static void Toggle()
         {
@@ -74,18 +72,15 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // Get SessionManager instance via FindObjectOfType
                 SessionManager sm = Object.FindObjectOfType<SessionManager>();
                 if ((object)sm == null) { ModLog.Warn("[SpeedrunTimer] SessionManager not found."); return; }
 
-                // Cache \u0083ESVMoz field (session data object on SessionManager)
                 if ((object)_sessionDataField == null)
                 {
                     FieldInfo[] fields = typeof(SessionManager).GetFields(
                         BindingFlags.Public | BindingFlags.Instance);
                     for (int i = 0; i < fields.Length; i++)
                     {
-                        // \u0083ESVMoz — look for the field whose type has a public double skY\u0080uhC
                         FieldInfo[] innerFields = fields[i].FieldType.GetFields(
                             BindingFlags.Public | BindingFlags.Instance);
                         for (int j = 0; j < innerFields.Length; j++)
@@ -133,3 +128,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

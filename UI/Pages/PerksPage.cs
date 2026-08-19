@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using MelonLoader;
@@ -9,9 +9,6 @@ using DescendersModMenu.Mods;
 
 namespace DescendersModMenu.UI
 {
-    // PerksPage — lists every crew member (GameModifier asset) the game itself
-    // draws from, with a one-click Grant button that calls the real
-    // PlayerInfoImpact.AddGameModifier() the game's own pick screen uses.
     public static class PerksPage
     {
         public static bool IsAnyActive { get { return false; } }
@@ -69,11 +66,6 @@ namespace DescendersModMenu.UI
             if ((object)_contentRoot == null) return;
             try
             {
-                // First-ever build must force top - reading verticalNormalizedPosition
-                // from a ScrollRect with zero real content yet is undefined and was
-                // observed coming back as "bottom", which then got faithfully
-                // "preserved" by every subsequent rebuild forever. Only trust the
-                // read-back once real content has actually existed at least once.
                 float savedScroll = 1f;
                 if (_everBuilt && (object)_scrollRect != null) savedScroll = _scrollRect.verticalNormalizedPosition;
                 _everBuilt = true;
@@ -113,7 +105,6 @@ namespace DescendersModMenu.UI
                 }
                 else
                 {
-                    // ── Active perks summary ────────────────────────────
                     UIHelpers.SectionHeader("ACTIVE PERKS", _contentRoot);
                     int activeCount = 0;
                     for (int i = 0; i < perks.Length; i++)
@@ -141,10 +132,6 @@ namespace DescendersModMenu.UI
                 var crtRT = UIHelpers.RT(_contentRoot.gameObject);
                 LayoutRebuilder.ForceRebuildLayoutImmediate(crtRT);
                 Canvas.ForceUpdateCanvases();
-                // verticalNormalizedPosition alone doesn't reliably stick right after a
-                // layout rebuild - ScrollRect recalculates content bounds on its own
-                // next pass and can silently override it. Setting content.anchoredPosition
-                // directly (top-pivoted content, so y=0 == scrolled to top) is more robust.
                 if ((object)_scrollRect != null)
                 {
                     _scrollRect.verticalNormalizedPosition = savedScroll;
@@ -160,8 +147,6 @@ namespace DescendersModMenu.UI
             catch (Exception ex) { MelonLogger.Error("[PerksPage] Rebuild: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "PerksPage"); }
         }
 
-        // Compact reference row for something already active - name + small icon
-        // + a quick Remove, no description clutter.
         private static void BuildActiveSummaryRow(GameModifier perk)
         {
             string label = PerkMenu.DisplayName(perk);
@@ -186,9 +171,6 @@ namespace DescendersModMenu.UI
             }, 60);
         }
 
-        // Grid of large clickable badge tiles. GridLayoutGroup dictates cell size
-        // directly, overriding each cell's own LayoutElement, so tiles don't need
-        // one - only the icon/badge sub-elements inside each tile do.
         private const float CellW = 96f, CellH = 128f, BadgeH = 84f;
 
         private static void BuildPerkGrid(GameModifier[] perks)
@@ -200,8 +182,6 @@ namespace DescendersModMenu.UI
             glg.padding = new RectOffset(4, 4, 4, 4);
             glg.childAlignment = TextAnchor.UpperCenter;
             var gridLe = gridObj.AddComponent<LayoutElement>();
-            // Rough height estimate so the outer VerticalLayoutGroup sizes correctly -
-            // ContentSizeFitter on the page root recalculates the true value anyway.
             int perRow = 4;
             int rows = Mathf.CeilToInt(perks.Length / (float)perRow);
             gridLe.preferredHeight = rows * (CellH + glg.spacing.y);
@@ -231,8 +211,6 @@ namespace DescendersModMenu.UI
             Sprite badgeSprite = PerkMenu.GetBadgeSprite(perk);
             if ((object)badgeSprite != null) { badgeImg.sprite = badgeSprite; badgeImg.type = Image.Type.Simple; }
             else badgeImg.color = new Color(0, 0, 0, 0);
-            // Dim when inactive so the grid reads at a glance which perks are on -
-            // full original colour (no tint) once active.
             badgeImg.color = active
                 ? Color.white
                 : new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -248,9 +226,6 @@ namespace DescendersModMenu.UI
 
             if ((object)perk.icon != null)
             {
-                // Small colored medallion behind the icon, bottom-right of the
-                // portrait - matches the in-game badge look. Higher-res circle
-                // texture for smoother edges when scaled up.
                 var medallion = UIHelpers.Obj("PkMedallion", badge.transform);
                 var medRT = UIHelpers.RT(medallion);
                 medRT.anchorMin = new Vector2(0.50f, 0.03f); medRT.anchorMax = new Vector2(0.98f, 0.51f);
@@ -292,12 +267,6 @@ namespace DescendersModMenu.UI
             labelLe.flexibleHeight = 1; labelLe.flexibleWidth = 0;
         }
 
-        // Builds a "ModifierType +X%, ModifierType +X%" summary from the perk's own
-        // Modifier[] array - same data the game reads, just rendered as text instead
-        // of relying on GameModifier's own display methods (that ScriptableObject is
-        // wrapped in a very large number of decoy methods per the project's usual
-        // obfuscation pattern - reading the public "modifiers" field directly avoids
-        // all of that).
         private static string DescribePerk(GameModifier perk)
         {
             try
@@ -323,20 +292,17 @@ namespace DescendersModMenu.UI
             }
         }
 
-        // modClass's own type name is obfuscated, so this matches on the enum's
-        // ToString() (works for any enum without needing to reference the type),
-        // rather than trying to type the obfuscated identifier directly.
         private static Color CategoryColor(GameModifier perk)
         {
             try
             {
                 string cls = perk.modClass.ToString();
-                if (string.Equals(cls, "PlayerPhysics")) return new Color(0.20f, 0.95f, 0.20f); // Green
-                if (string.Equals(cls, "LevelGeneration")) return new Color(1.00f, 0.85f, 0.00f); // Yellow
-                if (string.Equals(cls, "Utility")) return new Color(0.15f, 0.55f, 1.00f); // Blue
+                if (string.Equals(cls, "PlayerPhysics")) return new Color(0.20f, 0.95f, 0.20f);
+                if (string.Equals(cls, "LevelGeneration")) return new Color(1.00f, 0.85f, 0.00f);
+                if (string.Equals(cls, "Utility")) return new Color(0.15f, 0.55f, 1.00f);
             }
             catch { }
-            return new Color(0.75f, 0.75f, 0.75f); // fallback grey
+            return new Color(0.75f, 0.75f, 0.75f);
         }
 
         private static void RefreshResult()
@@ -345,3 +311,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

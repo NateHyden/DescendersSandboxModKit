@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -19,13 +19,20 @@ namespace DescendersModMenu.Mods
 
         private static readonly List<ESPTarget> _targets = new List<ESPTarget>();
         private static readonly List<WorldTarget> _worldTargets = new List<WorldTarget>();
-        private static float _lastRefreshTime = -999f;
-        private const float RefreshInterval = 1.0f;
+
+        private static float _lastPlayerRefreshTime = -999f;
+        private const float PlayerRefreshInterval = 3f;
+        private static Vector3 _cachedLocalPos;
+        private static GameObject _cachedLocalPlayer;
+
+        private const int WorldScanStepCount = 21;
+        private static int _worldScanStep;
+        private static bool _worldScanRunning;
+        private static bool _pendingWorldScan;
+
         private const float HeadHeightOffset = 1.8f;
 
-        // \u0080ioTpiS - the leading byte is U+0080 (confirmed from raw dump bytes)
         private static readonly string IoTpiSFieldName = "\u0080ioTpiS";
-        // laxjiuc - clean readable field name, holds a Photon Player whose ToString() = player name
         private static readonly string PlayerNameFieldName = "laxjiuc";
 
         private static FieldInfo _ioTpiSField = null;
@@ -68,16 +75,54 @@ namespace DescendersModMenu.Mods
         {
             ShowWorldObjects = !ShowWorldObjects;
             ModLog.Feedback("ESP World Objects -> " + (ShowWorldObjects ? "ON" : "OFF"));
-            if (ShowWorldObjects) RefreshWorldTargets();
+            if (ShowWorldObjects) StartWorldScan();
+            else StopWorldScan();
         }
 
         public static void RefreshNow()
         {
             RefreshTargets();
-            RefreshWorldTargets();
-            _lastRefreshTime = Time.unscaledTime;
+            StartWorldScan();
+            _lastPlayerRefreshTime = Time.unscaledTime;
             ModLog.Debug("ESP targets refreshed: " + _targets.Count + " player(s), "
-                + _worldTargets.Count + " world object(s).");
+                + _worldTargets.Count + " world object(s) (world scan in progress="
+                + _worldScanRunning + ").");
+        }
+
+        public static void Tick()
+        {
+            if (!Enabled && !ShowWorldObjects && !_worldScanRunning && !_pendingWorldScan)
+                return;
+
+            if (!UnityNull.Alive(_cachedLocalPlayer) || !_cachedLocalPlayer.activeInHierarchy)
+                _cachedLocalPlayer = GameObject.Find("Player_Human");
+            if (UnityNull.Alive(_cachedLocalPlayer))
+                _cachedLocalPos = _cachedLocalPlayer.transform.position;
+
+            if (_pendingWorldScan && UnityNull.Alive(_cachedLocalPlayer))
+            {
+                _pendingWorldScan = false;
+                if (ShowWorldObjects) StartWorldScan();
+            }
+
+            if (_worldScanRunning)
+                StepWorldScan();
+
+            if (Enabled && Time.unscaledTime - _lastPlayerRefreshTime >= PlayerRefreshInterval)
+            {
+                RefreshTargets();
+                _lastPlayerRefreshTime = Time.unscaledTime;
+            }
+        }
+
+        public static void ClearCache()
+        {
+            _targets.Clear();
+            _worldTargets.Clear();
+            StopWorldScan();
+            _cachedLocalPlayer = null;
+            _lastPlayerRefreshTime = -999f;
+            if (ShowWorldObjects) _pendingWorldScan = true;
         }
 
         // ── Rendering ─────────────────────────────────────────────────────────
@@ -114,17 +159,7 @@ namespace DescendersModMenu.Mods
                 catch { }
             }
 
-            if (Time.unscaledTime - _lastRefreshTime >= RefreshInterval)
-            {
-                if (Enabled) RefreshTargets();
-                if (ShowWorldObjects) RefreshWorldTargets();
-                _lastRefreshTime = Time.unscaledTime;
-            }
-
-            GameObject localPlayer = GameObject.Find("Player_Human");
-            Vector3 localPos = (object)localPlayer != null
-                ? localPlayer.transform.position
-                : Vector3.zero;
+            Vector3 localPos = _cachedLocalPos;
 
             for (int i = 0; Enabled && i < _targets.Count; i++)
             {
@@ -257,50 +292,76 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // All type names verified directly against the decompile before use - a wrong one
-        // here is a compile error, not a soft failure. Curated to genuinely useful things to
-        // find (collectibles, shortcuts, hazards, checkpoints, boost/launch pads, physics
-        // zones) - deliberately excludes decorative/structural clutter (bird flocks, spline
-        // guide rails, cranes) that would just spam the screen with dozens of markers.
-        private static void RefreshWorldTargets()
+        private static void StartWorldScan()
         {
             _worldTargets.Clear();
-            try
-            {
-                Color gold = new Color(1f, 0.85f, 0.2f);
-                Color cyan = new Color(0.3f, 0.9f, 1f);
-                Color orange = new Color(1f, 0.4f, 0.1f);
-                Color purple = new Color(0.6f, 0.4f, 1f);
-                Color green = new Color(0.3f, 1f, 0.4f);
-                Color red = new Color(1f, 0.15f, 0.15f);
-                Color lightBlue = new Color(0.6f, 0.9f, 1f);
+            _worldScanStep = 0;
+            _worldScanRunning = true;
+        }
 
-                AddWorldObjects<ScavengerHuntItem>("Scavenger Item", gold);
-                AddWorldObjects<Collectible>("Collectible", gold);
-                AddWorldObjects<PickupItem>("Pickup", gold);
-                AddWorldObjects<ShortcutTrigger>("Shortcut", cyan);
-                AddWorldObjects<Boost>("Boost Pad", orange);
-                AddWorldObjects<Catapult>("Catapult", orange);
-                AddWorldObjects<SpecialJumpTrigger>("Special Jump", orange);
-                AddWorldObjects<ForceVolume>("Force Volume", purple);
-                AddWorldObjects<BounceVolume>("Bounce Volume", purple);
-                AddWorldObjects<WheelieVolume>("Wheelie Zone", purple);
-                AddWorldObjects<Nobailvolume>("No-Bail Zone", green);
-                AddWorldObjects<Checkpoint>("Checkpoint", green);
-                AddWorldObjects<RouteCheckpoint>("Route Checkpoint", green);
-                AddWorldObjects<StartLine>("Start Line", green);
-                AddWorldObjects<FinishLine>("Finish Line", green);
-                AddWorldObjects<AirBagVolume>("Air Bag", green);
-                AddWorldObjects<Gap>("Gap", green);
-                AddWorldObjects<Portal>("Portal", cyan);
-                AddWorldObjects<DeathVolume>("Death Volume", red);
-                AddWorldObjects<IceVolume>("Ice Patch", lightBlue);
-                AddWorldObjects<HighFrictionVolume>("Sticky Ground", lightBlue);
-            }
-            catch (Exception ex)
+        private static void StopWorldScan()
+        {
+            _worldScanRunning = false;
+            _worldScanStep = 0;
+            _pendingWorldScan = false;
+        }
+
+        private static void StepWorldScan()
+        {
+            if (!_worldScanRunning) return;
+            if (_worldScanStep >= WorldScanStepCount)
             {
-                ModLog.Warn("ESP.RefreshWorldTargets failed: " + ex.Message);
+                _worldScanRunning = false;
+                return;
             }
+
+            try { RunWorldScanStep(_worldScanStep); }
+            catch (Exception ex) { ModLog.Warn("[ESP] World scan step " + _worldScanStep + ": " + ex.Message); }
+
+            _worldScanStep++;
+            if (_worldScanStep >= WorldScanStepCount)
+                _worldScanRunning = false;
+        }
+
+        private static void RunWorldScanStep(int step)
+        {
+            Color gold = new Color(1f, 0.85f, 0.2f);
+            Color cyan = new Color(0.3f, 0.9f, 1f);
+            Color orange = new Color(1f, 0.4f, 0.1f);
+            Color purple = new Color(0.6f, 0.4f, 1f);
+            Color green = new Color(0.3f, 1f, 0.4f);
+            Color red = new Color(1f, 0.15f, 0.15f);
+            Color lightBlue = new Color(0.6f, 0.9f, 1f);
+
+            switch (step)
+            {
+                case 0: AddWorldObjects<ScavengerHuntItem>("Scavenger Item", gold); break;
+                case 1: AddWorldObjects<Collectible>("Collectible", gold); break;
+                case 2: AddWorldObjects<PickupItem>("Pickup", gold); break;
+                case 3: AddWorldObjects<ShortcutTrigger>("Shortcut", cyan); break;
+                case 4: AddWorldObjects<Boost>("Boost Pad", orange); break;
+                case 5: AddWorldObjects<Catapult>("Catapult", orange); break;
+                case 6: AddWorldObjects<SpecialJumpTrigger>("Special Jump", orange); break;
+                case 7: AddWorldObjects<ForceVolume>("Force Volume", purple); break;
+                case 8: AddWorldObjects<BounceVolume>("Bounce Volume", purple); break;
+                case 9: AddWorldObjects<WheelieVolume>("Wheelie Zone", purple); break;
+                case 10: AddWorldObjects<Nobailvolume>("No-Bail Zone", green); break;
+                case 11: AddWorldObjects<Checkpoint>("Checkpoint", green); break;
+                case 12: AddWorldObjects<RouteCheckpoint>("Route Checkpoint", green); break;
+                case 13: AddWorldObjects<StartLine>("Start Line", green); break;
+                case 14: AddWorldObjects<FinishLine>("Finish Line", green); break;
+                case 15: AddWorldObjects<AirBagVolume>("Air Bag", green); break;
+                case 16: AddWorldObjects<Gap>("Gap", green); break;
+                case 17: AddWorldObjects<Portal>("Portal", cyan); break;
+                case 18: AddWorldObjects<DeathVolume>("Death Volume", red); break;
+                case 19: AddWorldObjects<IceVolume>("Ice Patch", lightBlue); break;
+                case 20: AddWorldObjects<HighFrictionVolume>("Sticky Ground", lightBlue); break;
+            }
+        }
+
+        private static void RefreshWorldTargets()
+        {
+            StartWorldScan();
         }
 
         private static void AddWorldObjects<T>(string label, Color color) where T : Component
@@ -328,14 +389,10 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Chain: Vehicle --(ioTpiS field, has U+0080 prefix)--> PlayerInfoImpact
-        //        PlayerInfoImpact --(laxjiuc field)--> Photon Player object
-        //        Photon Player .ToString() --> "PlayerName"
         private static string GetPlayerName(Vehicle vehicle, int fallbackIndex)
         {
             try
             {
-                // Find and cache the \u0080ioTpiS field on Vehicle
                 if ((object)_ioTpiSField == null)
                 {
                     FieldInfo[] fields = vehicle.GetType().GetFields(
@@ -359,7 +416,6 @@ namespace DescendersModMenu.Mods
                 object playerInfoImpact = _ioTpiSField.GetValue(vehicle);
                 if ((object)playerInfoImpact == null) return "Player " + (fallbackIndex + 1);
 
-                // Find and cache laxjiuc on PlayerInfoImpact (or its base classes)
                 if ((object)_playerNameField == null)
                 {
                     System.Type t = playerInfoImpact.GetType();
@@ -392,7 +448,6 @@ namespace DescendersModMenu.Mods
                 object photonPlayer = _playerNameField.GetValue(playerInfoImpact);
                 if ((object)photonPlayer == null) return "Player " + (fallbackIndex + 1);
 
-                // Photon Player.ToString() returns the NickName directly
                 string name = photonPlayer.ToString();
                 if (!string.IsNullOrEmpty(name)) return name;
             }
@@ -427,3 +482,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

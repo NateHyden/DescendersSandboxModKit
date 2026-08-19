@@ -1,22 +1,18 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
-    // Centre of mass offset applied to the player Rigidbody every FixedUpdate.
-    // UI labels: Left/Right (X), Forward/Back (Z), Up/Down (Y) — player-friendly names.
-    // Range: -5.0 to +5.0 on each axis.  Step: 0.1 per press.
     public static class CenterOfMass
     {
         public const float Step = 0.1f;
         public const float Min = -5.0f;
         public const float Max = 5.0f;
 
-        // Offset on each axis — exposed so StatsManager can save/load them
-        public static float OffsetLR { get; private set; } = 0f; // Left / Right  → X
-        public static float OffsetFB { get; private set; } = 0f; // Forward / Back → Z
-        public static float OffsetUD { get; private set; } = 0f; // Up / Down      → Y
+        public static float OffsetLR { get; private set; } = 0f;
+        public static float OffsetFB { get; private set; } = 0f;
+        public static float OffsetUD { get; private set; } = 0f;
 
         private static Rigidbody _rb = null;
 
@@ -31,7 +27,6 @@ namespace DescendersModMenu.Mods
             return v > 0f ? "+" + s : s;
         }
 
-        // Bar fill: 0 = -5.0, 0.5 = centre (0.0), 1 = +5.0
         public static float BarLR { get { return (OffsetLR - Min) / (Max - Min); } }
         public static float BarFB { get { return (OffsetFB - Min) / (Max - Min); } }
         public static float BarUD { get { return (OffsetUD - Min) / (Max - Min); } }
@@ -54,8 +49,6 @@ namespace DescendersModMenu.Mods
             _rb.centerOfMass = new Vector3(OffsetLR, OffsetUD, OffsetFB);
         }
 
-        // Called from OnFixedUpdate — keeps the override applied every physics step
-        // (Unity resets centerOfMass to computed value on some physics events)
         public static void FixedTick()
         {
             if (OffsetLR == 0f && OffsetUD == 0f && OffsetFB == 0f) return;
@@ -81,7 +74,6 @@ namespace DescendersModMenu.Mods
             Apply();
         }
 
-        // ── Increase / Decrease helpers ──────────────────────────────
         public static void IncreaseLR() { SetLR(OffsetLR + Step); }
         public static void DecreaseLR() { SetLR(OffsetLR - Step); }
         public static void IncreaseFB() { SetFB(OffsetFB + Step); }
@@ -94,7 +86,6 @@ namespace DescendersModMenu.Mods
         public static void ResetFB() { SetFB(0f); }
         public static void ResetUD() { SetUD(0f); }
 
-        // ── Full reset (on scene unload) ─────────────────────────────
         public static void Reset()
         {
             OffsetLR = 0f;
@@ -105,3 +96,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

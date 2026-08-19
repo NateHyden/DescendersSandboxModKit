@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using DescendersModMenu.Mods;
 
 namespace DescendersModMenu.UI
@@ -22,21 +22,18 @@ namespace DescendersModMenu.UI
             if (_stylesBuilt) return;
             _stylesBuilt = true;
 
-            // Background pill
             _bgTex = new Texture2D(1, 1);
             _bgTex.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.55f));
             _bgTex.Apply();
 
-            // State text — large, centred, bold
             _stateStyle = new GUIStyle();
-            _stateStyle.fontSize  = Mathf.RoundToInt(Screen.height * 0.026f); // ~2.6% of height
+            _stateStyle.fontSize  = Mathf.RoundToInt(Screen.height * 0.026f);
             _stateStyle.fontStyle = FontStyle.Bold;
             _stateStyle.alignment = TextAnchor.MiddleCenter;
             _stateStyle.normal.textColor = Color.white;
             _stateStyle.normal.background = _bgTex;
             _stateStyle.padding = new RectOffset(14, 14, 6, 6);
 
-            // Info text — smaller, centred
             _infoStyle = new GUIStyle();
             _infoStyle.fontSize  = Mathf.RoundToInt(Screen.height * 0.018f);
             _infoStyle.fontStyle = FontStyle.Normal;
@@ -45,7 +42,6 @@ namespace DescendersModMenu.UI
             _infoStyle.normal.background = _bgTex;
             _infoStyle.padding = new RectOffset(14, 14, 4, 4);
 
-            // Hint text — small, left-aligned, top-left instructions
             _hintStyle = new GUIStyle();
             _hintStyle.fontSize  = Mathf.RoundToInt(Screen.height * 0.015f);
             _hintStyle.fontStyle = FontStyle.Normal;
@@ -65,14 +61,12 @@ namespace DescendersModMenu.UI
             float sw = Screen.width;
             float sh = Screen.height;
 
-            // ── TOP CENTRE — current state ────────────────────────────
             string stateText;
             Color  stateColor;
             GetStateDisplay(out stateText, out stateColor);
 
             _stateStyle.normal.textColor = stateColor;
 
-            // Measure text width so pill is exactly the right size
             GUIContent stateContent = new GUIContent(stateText);
             Vector2 stateSize = _stateStyle.CalcSize(stateContent);
 
@@ -84,7 +78,6 @@ namespace DescendersModMenu.UI
             Rect stateRect = new Rect(centreX - stateW * 0.5f, stateY, stateW, stateH);
             GUI.Label(stateRect, stateText, _stateStyle);
 
-            // ── BELOW STATE — sub-info line ───────────────────────────
             string subText = GetSubInfo();
             if (!string.IsNullOrEmpty(subText))
             {
@@ -96,7 +89,6 @@ namespace DescendersModMenu.UI
                 GUI.Label(subRect, subText, _infoStyle);
             }
 
-            // ── TOP LEFT — contextual instructions ────────────────────
             string hintText = GetHintText();
             if (!string.IsNullOrEmpty(hintText))
             {
@@ -179,3 +171,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

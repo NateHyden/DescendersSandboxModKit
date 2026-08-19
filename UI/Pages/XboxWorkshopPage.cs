@@ -1,14 +1,10 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace DescendersModMenu.UI
 {
-    // Dedicated tab for the Xbox/PC Game Pass Workshop unlock (see
-    // StateNavigator.cs for the full story). Kept as its own tab, right
-    // under General, rather than buried in Info/Customise, since this is
-    // now a real everyday feature for Xbox players, not a diagnostic.
     public static class XboxWorkshopPage
     {
         public static GameObject CreatePage(Transform parent)

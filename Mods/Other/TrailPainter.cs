@@ -1,12 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Adds a coloured TrailRenderer behind the bike. Purely cosmetic —
-    // the renderer is added on enable and fully removed on disable, so
-    // there's nothing left behind when the mod is off.
     public static class TrailPainter
     {
         public static bool Enabled { get; private set; } = false;
@@ -14,11 +11,11 @@ namespace DescendersModMenu.Mods
 
         private static readonly Color[] Palette = new Color[]
         {
-            new Color(1.00f, 0.20f, 0.80f), // pink
-            new Color(0.20f, 1.00f, 0.40f), // green
-            new Color(0.25f, 0.65f, 1.00f), // blue
-            new Color(1.00f, 0.80f, 0.10f), // gold
-            new Color(1.00f, 0.30f, 0.10f), // orange
+            new Color(1.00f, 0.20f, 0.80f),
+            new Color(0.20f, 1.00f, 0.40f),
+            new Color(0.25f, 0.65f, 1.00f),
+            new Color(1.00f, 0.80f, 0.10f),
+            new Color(1.00f, 0.30f, 0.10f),
         };
         public static readonly string[] ColourNames = { "Pink", "Green", "Blue", "Gold", "Orange" };
 
@@ -44,9 +41,6 @@ namespace DescendersModMenu.Mods
             if (Enabled) ApplyColour();
         }
 
-        // Scene load destroys the trail with the old scene — self-heal by
-        // recreating it if still enabled, rather than wiring into the big
-        // snapshot/reapply block in ModEntry. Called every LateUpdate.
         public static void Tick()
         {
             if (!Enabled) return;
@@ -69,14 +63,10 @@ namespace DescendersModMenu.Mods
 
                 if (on)
                 {
-                    if (UnityNull.Alive(_trail)) return; // already applied
+                    if (UnityNull.Alive(_trail)) return;
                     _trail = null;
                     GameObject trailObj = new GameObject("SandboxTrail");
                     trailObj.transform.SetParent(anchor, false);
-                    // Anchor's local origin sits near wheel-contact height on
-                    // both BikeModel and the player root, so the trail was
-                    // rendering half-buried in the terrain — lift it to
-                    // roughly frame height.
                     trailObj.transform.localPosition = new Vector3(0f, 0.55f, 0f);
                     _trail = trailObj.AddComponent<TrailRenderer>();
                     _trail.time = 1.2f;
@@ -106,9 +96,6 @@ namespace DescendersModMenu.Mods
             _trail.endColor = end;
         }
 
-        // Scene unload destroys the trail object with the scene — just
-        // clear the reference so a fresh one gets built next scene if
-        // still enabled. Called from the deferred-reapply system.
         public static void ClearCache() { _trail = null; }
 
         public static void Reset()
@@ -120,3 +107,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

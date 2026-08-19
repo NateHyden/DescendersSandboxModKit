@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using MelonLoader;
 using DescendersModMenu;
 using System.Reflection;
@@ -6,13 +6,6 @@ using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Scales tyre grip by simulating inflation pressure.
-    // Level 1  = flat tyre  -> less grip (1.6x rollFriction)
-    // Level 5  = stock      -> no change (1.0x) -- zero allocation, early exit
-    // Level 10 = rock hard  -> low grip  (0.2x)
-    //
-    // GC optimised: default rollFriction captured once per session (single GetValue).
-    // CachedMultiplier pre-computed on level change. Early exit at Level 5 (1.0x = no work).
     public static class TyrePressure
     {
         public static bool Enabled { get; private set; } = false;
@@ -20,7 +13,6 @@ namespace DescendersModMenu.Mods
         private static int _level = 5;
         public static int Level => _level;
 
-        // Pre-computed multiplier updated by SetLevel/Toggle -- not recomputed per frame
         private static float _cachedMultiplier = 1.0f;
         public static float CachedMultiplier => _cachedMultiplier;
 
@@ -33,7 +25,6 @@ namespace DescendersModMenu.Mods
         public static string PressureLabel =>
             (_level >= 1 && _level <= 10) ? PressureLabels[_level - 1] : "Stock";
 
-        // Not called per-frame -- only on level change or log output
         public static float GripMultiplier
         {
             get
@@ -111,7 +102,6 @@ namespace DescendersModMenu.Mods
         private static PropertyInfo _rollFrictionProp = null;
         private static bool _searched = false;
 
-        // Default rollFriction captured once per session -- replaces recurring GetValue
         private static float _defaultFriction = -1f;
 
         public static void InvalidateDefault() { _defaultFriction = -1f; }
@@ -120,7 +110,6 @@ namespace DescendersModMenu.Mods
         {
             if (!TyrePressure.Enabled) return;
 
-            // Level 5 = 1.0x multiplier = no change -- early exit, zero allocations
             float mult = TyrePressure.CachedMultiplier;
             if (mult == 1.0f) return;
 
@@ -133,7 +122,6 @@ namespace DescendersModMenu.Mods
                 if (!string.Equals(t.parent.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;
 
-                // Find property -- runs once per session
                 if ((object)_rollFrictionProp == null && !_searched)
                 {
                     _searched = true;
@@ -157,7 +145,6 @@ namespace DescendersModMenu.Mods
 
                 if ((object)_rollFrictionProp == null) return;
 
-                // Capture default rollFriction once -- single GetValue call per session
                 if (_defaultFriction < 0f)
                 {
                     _defaultFriction = (float)_rollFrictionProp.GetValue(__instance, null);

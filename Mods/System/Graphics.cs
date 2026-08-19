@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
@@ -13,15 +13,13 @@ namespace DescendersModMenu.Mods
         public static bool DepthOfFieldEnabled { get; private set; } = false;
         public static bool ChromaticAbEnabled { get; private set; } = true;
 
-        // Extra Unity QualitySettings knobs (no PP profile needed)
         public static bool ShadowsEnabled { get; private set; } = true;
         public static bool SoftParticlesEnabled { get; private set; } = true;
-        public static int AntiAliasingLevel { get; private set; } = -1; // -1 = untouched; 0/2/4/8
+        public static int AntiAliasingLevel { get; private set; } = -1;
         public static readonly string[] AaLabels = { "Off", "2x", "4x", "8x" };
 
         public static string[] QualityNames = { "Low", "Medium", "High", "Ultra" };
 
-        // Quality level recorded on first scene init — before any mod touches it
         private static int _defaultQuality = -1;
 
         public static void CaptureDefaultQuality()
@@ -39,14 +37,12 @@ namespace DescendersModMenu.Mods
         private static MonoBehaviour _ppb = null;
         private static object _profile = null;
 
-        // Cached field refs on profile — all public fields
         private static FieldInfo _bloomField = null;
         private static FieldInfo _aoField = null;
         private static FieldInfo _vigField = null;
         private static FieldInfo _dofField = null;
         private static FieldInfo _cabField = null;
 
-        // enabled property on PostProcessingModel base
         private static PropertyInfo _enabledProp = null;
 
         private static bool EnsureRefs()
@@ -66,7 +62,6 @@ namespace DescendersModMenu.Mods
 
             if ((object)_profile == null)
             {
-                // Profile is public field RzjbfkQ on PostProcessingBehaviour
                 FieldInfo f = _ppb.GetType().GetField("RzjbfkQ",
                     BindingFlags.Public | BindingFlags.Instance);
                 if ((object)f != null)
@@ -75,7 +70,6 @@ namespace DescendersModMenu.Mods
                 if ((object)_profile == null)
                 { ModLog.Warn("[Graphics] PostProcessingProfile (RzjbfkQ) not found."); return false; }
 
-                // All models are public fields on the profile
                 System.Type pt = _profile.GetType();
                 _bloomField = pt.GetField("bloom", BindingFlags.Public | BindingFlags.Instance);
                 _aoField = pt.GetField("ambientOcclusion", BindingFlags.Public | BindingFlags.Instance);
@@ -102,7 +96,6 @@ namespace DescendersModMenu.Mods
                 if ((object)_enabledProp == null)
                     _enabledProp = model.GetType().GetProperty("enabled",
                         BindingFlags.Public | BindingFlags.Instance);
-                // Walk up base types to find enabled if not found directly
                 if ((object)_enabledProp == null)
                 {
                     System.Type t = model.GetType().BaseType;
@@ -184,7 +177,6 @@ namespace DescendersModMenu.Mods
 
         public static void CycleAntiAliasing()
         {
-            // Cycle Off -> 2x -> 4x -> 8x -> Off
             int cur = AntiAliasingLevel < 0 ? QualitySettings.antiAliasing : AntiAliasingLevel;
             int next;
             if (cur <= 0) next = 2;
@@ -223,11 +215,9 @@ namespace DescendersModMenu.Mods
             {
                 QualitySettings.SetQualityLevel(level, true);
 
-                // Force visible quality changes since SetQualityLevel alone
-                // often has no effect mid-game in Unity 2017
                 switch (level)
                 {
-                    case 0: // Low
+                    case 0:
                         QualitySettings.shadowDistance = 40f;
                         QualitySettings.shadowCascades = 0;
                         QualitySettings.masterTextureLimit = 2;
@@ -235,7 +225,7 @@ namespace DescendersModMenu.Mods
                         QualitySettings.maximumLODLevel = 2;
                         QualitySettings.pixelLightCount = 0;
                         break;
-                    case 1: // Medium
+                    case 1:
                         QualitySettings.shadowDistance = 80f;
                         QualitySettings.shadowCascades = 2;
                         QualitySettings.masterTextureLimit = 1;
@@ -243,7 +233,7 @@ namespace DescendersModMenu.Mods
                         QualitySettings.maximumLODLevel = 1;
                         QualitySettings.pixelLightCount = 2;
                         break;
-                    case 2: // High
+                    case 2:
                         QualitySettings.shadowDistance = 150f;
                         QualitySettings.shadowCascades = 4;
                         QualitySettings.masterTextureLimit = 0;
@@ -251,7 +241,7 @@ namespace DescendersModMenu.Mods
                         QualitySettings.maximumLODLevel = 0;
                         QualitySettings.pixelLightCount = 4;
                         break;
-                    case 3: // Ultra
+                    case 3:
                         QualitySettings.shadowDistance = 300f;
                         QualitySettings.shadowCascades = 4;
                         QualitySettings.masterTextureLimit = 0;
@@ -291,3 +281,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

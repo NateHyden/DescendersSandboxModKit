@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
@@ -12,8 +12,6 @@ namespace DescendersModMenu.Mods
         private const int MaxLevel = 10;
         private const float DefaultDistance = 1.2f;
 
-        // Exponential scaling: level 5 = 1.2f (stock, exact), level 10 = 12.0f (exact)
-        // distance = 1.2f * 10^((level-5)/5f)
         public static float Distance => DefaultDistance * UnityEngine.Mathf.Pow(10f, (Level - 5) / 5f);
         public static string DisplayValue => Level.ToString();
 
@@ -43,9 +41,6 @@ namespace DescendersModMenu.Mods
             if (Enabled) Apply(Distance);
         }
 
-        // Reset state only — no Apply() because scene objects are destroyed
-        // during unload. ResetStats handles restoration via Toggle() which
-        // calls Apply() when scene objects exist.
         public static void Reset()
         {
             Enabled = false;
@@ -56,9 +51,6 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // NearMissTrick instances live in VehicleTricks.ZduHweT (TrickInfo[] assigned
-                // in the editor) — FindObjectsOfTypeAll won't reach them.
-                // Find all VehicleTricks in scene and set directly.
                 int count = 0;
                 VehicleTricks[] allVT = UnityEngine.Object.FindObjectsOfType<VehicleTricks>();
                 if (allVT == null || allVT.Length == 0)
@@ -81,3 +73,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

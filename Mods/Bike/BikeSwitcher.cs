@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
@@ -30,16 +30,12 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // If TrickSetSwap is on, restore the current bike's original gestures
-                // BEFORE switching — otherwise the modified array would stay applied to
-                // the bike type we're leaving and re-appear next time we switch back to it.
                 try { if (TrickSetSwap.Enabled) TrickSetSwap.Disable(); }
                 catch (Exception tssEx) { ModLog.Warn("BikeSwitcher: TrickSetSwap.Disable failed: " + tssEx.Message); }
 
                 GameData gameData = UnityEngine.Object.FindObjectOfType<GameData>();
                 if (object.ReferenceEquals(gameData, null))
                 {
-                    // Expected in menus / lobby — not a real failure.
                     ModLog.Debug("BikeSwitcher: GameData not found.");
                     return;
                 }
@@ -53,14 +49,12 @@ namespace DescendersModMenu.Mods
 
                 GameObject playerObject = null;
 
-                // First try the actual field used by PlayerInfoImpact
                 FieldInfo playerObjectField = player.GetType().GetField("W\u0082oQHKm", Flags);
                 if (!object.ReferenceEquals(playerObjectField, null))
                 {
                     playerObject = playerObjectField.GetValue(player) as GameObject;
                 }
 
-                // Fallback: find the live player object by name
                 if (object.ReferenceEquals(playerObject, null))
                 {
                     playerObject = GameObject.Find("Player_Human");
@@ -127,7 +121,6 @@ namespace DescendersModMenu.Mods
                     return;
                 }
 
-                // Change actual bike type through the game method
                 MethodInfo setBikeTypeMethod = player.GetType().GetMethod(
                     "SetBikeTypeFromNum",
                     Flags
@@ -142,7 +135,6 @@ namespace DescendersModMenu.Mods
                     ModLog.Warn("BikeSwitcher: SetBikeTypeFromNum method not found.");
                 }
 
-                // Force-write the BikeType field too, just in case
                 FieldInfo[] playerFields = player.GetType().GetFields(Flags);
                 for (int i = 0; i < playerFields.Length; i++)
                 {
@@ -160,10 +152,8 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // Persist only the preferred bike index for future loads
                 SetPreferredBikeIndex(index);
 
-                // LIVE refresh only - do NOT load or save outfit here
                 MethodInfo refreshBikeMeshMethod = customization.GetType().GetMethod(
                     "RefreshBikeMesh",
                     Flags
@@ -179,7 +169,6 @@ namespace DescendersModMenu.Mods
                     ModLog.Warn("BikeSwitcher: RefreshBikeMesh method not found.");
                 }
 
-                // Debug: check whether a Bike slot item actually exists
                 MethodInfo getItemInstanceInSlotMethod = customization.GetType().GetMethod(
                     "GetItemInstanceInSlot",
                     Flags
@@ -348,3 +337,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

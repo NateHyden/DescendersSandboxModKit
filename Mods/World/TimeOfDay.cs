@@ -19,7 +19,6 @@ namespace DescendersModMenu.Mods
         private static int _sceneDefaultLevel = 4;
         private static bool _sceneDefaultCaptured = false;
 
-        // Cached TOD_Sky + Cycle.Hour accessors — cleared on scene unload
         private static MonoBehaviour _sky;
         private static FieldInfo _cycleField;
         private static FieldInfo _hourField;
@@ -77,12 +76,11 @@ namespace DescendersModMenu.Mods
                 _sceneDefaultLevel = best;
                 _sceneDefaultCaptured = true;
                 Level = best;
-                ModLog.Debug("[TimeOfDay] Scene default: " + hour + "h → Level " + best + " (" + Labels[best - 1] + ")");
+                ModLog.Debug("[TimeOfDay] Scene default: " + hour + "h â†’ Level " + best + " (" + Labels[best - 1] + ")");
             }
             catch (System.Exception ex) { MelonLogger.Error("[TimeOfDay] CaptureSceneDefault: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
         }
 
-        // Used by Save/Load — stores the level without touching the game world
         public static void SetLevelSilent(int level)
         {
             if (level < 1) level = 1;
@@ -168,3 +166,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

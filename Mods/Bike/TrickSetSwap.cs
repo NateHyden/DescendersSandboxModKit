@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using MelonLoader;
 using DescendersModMenu;
 using System;
@@ -30,16 +30,11 @@ namespace DescendersModMenu.Mods
         public static bool Enabled { get; private set; } = false;
         public static int SourceIndex { get; private set; } = 0;
 
-        // ── Snapshot of the modified BikeType's original array ───────
-        // We hold the BikeType we mutated so we can restore it even if
-        // the player switches away before disabling.
         private static BikeType _patchedBike = null;
         private static Gesture[] _originalGestures = null;
 
-        // ── Cached reflection to read PlayerInfoImpact.BikeType ──────
         private static FieldInfo _bikeTypeField = null;
 
-        // ── Available bike types (lazy refresh) ──────────────────────
         private static List<BikeType> _availableBikes = null;
         public static List<BikeType> AvailableBikes
         {
@@ -99,10 +94,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Find the player's current BikeType via reflection ────────
-        // PlayerInfoImpact is NOT a component on Player_Human — it lives on
-        // PlayerManager and is retrieved via GetPlayerImpact(). Same pattern
-        // BikeSwitcher uses.
         private static MethodInfo _getPlayerImpactMethod;
         private static PlayerInfoImpact GetPlayerImpact()
         {
@@ -181,7 +172,6 @@ namespace DescendersModMenu.Mods
         {
             if (Enabled) { Disable(); return; }
 
-            // Enabling — find what bike we're currently on
             if (_availableBikes == null) RefreshAvailableBikes();
             if (_availableBikes == null || _availableBikes.Count == 0)
             {
@@ -205,7 +195,6 @@ namespace DescendersModMenu.Mods
                 return;
             }
 
-            // Snapshot the target's current array so we can restore exactly
             _patchedBike = target;
             _originalGestures = target.overrideGestures;
             target.overrideGestures = source.overrideGestures;
@@ -247,18 +236,12 @@ namespace DescendersModMenu.Mods
                 Enabled = false;
             }
 
-            // Refresh the menu so the toggle knob/text update immediately,
-            // even when this fires from the bike-switch postfix mid-gameplay.
             try { MenuWindow.RefreshAll(); } catch { }
         }
 
         public static void Reset() { Disable(); }
 
         // ─────────────────────────────────────────────────────────────
-        // Source bike picker — does NOT re-apply automatically while enabled.
-        // The user must toggle off and back on for a new source to take effect.
-        // (Avoids surprise behaviour where browsing the picker silently changes
-        // their tricks mid-run.)
         public static void NextSource()
         {
             var list = AvailableBikes;
@@ -289,14 +272,10 @@ namespace DescendersModMenu.Mods
         }
 
         // ─────────────────────────────────────────────────────────────
-        // Auto-disable is handled by an explicit call from BikeSwitcher.SetBike
-        // (see BikeSwitcher.cs). The postfix-on-SetBikeTypeFromNum approach was
-        // unreliable because the game has multiple call paths (init,
-        // SetCasualModeBikeOverride, etc.) that fire the same method, making
-        // BikeType-reference tracking go out of sync.
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
         {
             ModLog.Debug("[TrickSetSwap] Auto-disable hooked via BikeSwitcher.SetBike (no Harmony patch needed)");
         }
     }
 }
+

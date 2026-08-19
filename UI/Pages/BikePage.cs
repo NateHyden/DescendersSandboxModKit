@@ -1,4 +1,4 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -24,10 +24,8 @@ namespace DescendersModMenu.UI
         private static Text _wheelSizeLvlVal;
         private static UnityEngine.UI.Button _wheelSizeMinus2, _wheelSizePlus2;
 
-        // ── Individual front/rear wheel size ─────────────────────────
         private static Text _frontWheelLvlVal;
         private static Text _rearWheelLvlVal;
-        // Note: front/rear stepper buttons not stored — no interactable control needed
         private static GameObject _frontWheelRow, _rearWheelRow;
         private static Image _invisBikeTrack; private static RectTransform _invisBikeKnob;
         private static Text _invisBikeVal;
@@ -73,7 +71,6 @@ namespace DescendersModMenu.UI
         private static Image _rubberTrack; private static RectTransform _rubberKnob;
         private static Text _rubberVal, _rubberLvlVal;
 
-        // ── Bike switcher / Trick Set Swap ────────────────────────────
         private static Text _bikeVal;
         private static Text _tssSrcVal, _tssTogVal;
         private static Image _tssTrack;
@@ -88,11 +85,9 @@ namespace DescendersModMenu.UI
         private static Image _torchTrack, _torchDiscoTrack;
         private static RectTransform _torchKnob, _torchDiscoKnob;
 
-        // ── Row GO refs for highlight ─────────────────────────────────
         private static GameObject _invisBikeRow, _wheelSizeRow, _wideTyresRow, _stickyRow;
         private static GameObject _revSteerRow, _cutBrakesRow, _torchRow, _torchDiscoRow;
 
-        // ── Suspension HUD (Telemetry) ────────────────────────────────
         private static GameObject _shRow;
         private static Text _shVal;
         private static Image _shTrack; private static RectTransform _shKnob;
@@ -270,7 +265,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(pg8);
 
-                // Add info box for bike size
                 UIHelpers.InfoBox(pg8, "10 = default size. Lower numbers shrink the bike, higher numbers grow it.");
 
                 UIHelpers.Divider(pg8);
@@ -278,7 +272,6 @@ namespace DescendersModMenu.UI
                 // ── BIKE PARTS ────────────────────────────────────────
                 UIHelpers.SectionHeader("BIKE PARTS", pg8);
 
-                // Invisible Bike
                 _invisBikeRow = UIHelpers.StatRow("Invisible Bike", pg8);
                 var ibr = _invisBikeRow;
                 _invisBikeVal = UIHelpers.Txt("IbV", ibr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -289,7 +282,6 @@ namespace DescendersModMenu.UI
                     RefreshAll();
                 }, out _invisBikeTrack, out _invisBikeKnob);
 
-                // Wheel Size
                 _wheelSizeRow = UIHelpers.StatRow("Wheel Size", pg8);
                 var gwr = _wheelSizeRow;
                 _wheelSizeTogVal = UIHelpers.Txt("WsTV", gwr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -313,7 +305,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.InfoBox(pg8, "10 = default size. Enable the toggle first, then use ◀ ▶ to adjust. Or set front/rear individually below.");
 
-                // Front Wheel Size
                 _frontWheelRow = UIHelpers.StatRow("Front Wheel Size", pg8);
                 UIHelpers.SmallBtn(_frontWheelRow.transform, "◀", () =>
                 {
@@ -341,7 +332,6 @@ namespace DescendersModMenu.UI
                     }
                 });
 
-                // Rear Wheel Size
                 _rearWheelRow = UIHelpers.StatRow("Rear Wheel Size", pg8);
                 UIHelpers.SmallBtn(_rearWheelRow.transform, "◀", () =>
                 {
@@ -369,7 +359,6 @@ namespace DescendersModMenu.UI
                     }
                 });
 
-                // Wide Tyres
                 _wideTyresRow = UIHelpers.StatRow("Wide Tyres", pg8);
                 var wtr = _wideTyresRow;
                 _wideTyresVal = UIHelpers.Txt("WtV", wtr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -381,7 +370,6 @@ namespace DescendersModMenu.UI
                 _wideTyresMinus = UIHelpers.SmallBtn(wtr.transform, "-", () => { WideTyres.Decrease(); RefreshAll(); });
                 _wideTyresPlus = UIHelpers.SmallBtn(wtr.transform, "+", () => { WideTyres.Increase(); RefreshAll(); });
 
-                // Sticky Tyres
                 _stickyRow = UIHelpers.StatRow("Sticky Tyres", pg8);
                 var str2 = _stickyRow;
                 _stickyVal = UIHelpers.Txt("StV", str2.transform, StickyTyres.Enabled ? "ON" : "OFF", 11,
@@ -389,7 +377,6 @@ namespace DescendersModMenu.UI
                 _stickyVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(str2.transform, "StT", () => { StickyTyres.Toggle(); RefreshAll(); }, out _stickyTrack, out _stickyKnob);
 
-                // Tyre Pressure
                 _tyrePressureRow = UIHelpers.StatRow("Tyre Pressure", pg8);
                 var tpr = _tyrePressureRow;
                 _tyrePressureVal = UIHelpers.Txt("TpV", tpr.transform, "OFF", 11,
@@ -517,7 +504,6 @@ namespace DescendersModMenu.UI
                 _bbPlus = UIHelpers.SmallBtn(bbr.transform, "\u25B6", () => { BrakeFade.IncreaseBalance(); RefreshAll(); });
                 UIHelpers.InfoBox(pg8, "Your brake discs overheat from hard braking. Brakes weaken above 150°C and fail completely at 300°C. Let go to cool down — going fast cools them quicker. Watch the top-right HUD.");
 
-                // ── STAR BUTTONS (Favourites) ──────────────────────────
                 Transform suspHdr = pg8.Find("SUSPENSIONH");
                 if ((object)suspHdr != null)
                     FavouritesManager.RegisterStarButton("Suspension", UIHelpers.StarBtnAbs(suspHdr, "Suspension", () => FavouritesManager.Toggle("Suspension")));
@@ -542,7 +528,6 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("BrakeFade", UIHelpers.StarBtn(_bfRow.transform, "BrakeFade", () => FavouritesManager.Toggle("BrakeFade")));
                 FavouritesManager.RegisterStarButton("BrakeBalance", UIHelpers.StarBtn(_bbRow.transform, "BrakeBalance", () => FavouritesManager.Toggle("BrakeBalance")));
 
-                // ── FACTORY REGISTRATIONS (Bike tab mods) ──────────────
                 FavouritesManager.Register(new ModFavEntry
                 {
                     Id = "SpiderBike",
@@ -863,10 +848,8 @@ namespace DescendersModMenu.UI
         // ── RefreshAll ────────────────────────────────────────────────
         public static void RefreshAll()
         {
-            // Scene unload clears UI refs; skip until CreatePage runs again
             if (!UnityNull.Alive(_travelVal) && !UnityNull.Alive(_spiderVal)) return;
 
-            // Suspension
             if (_travelVal) _travelVal.text = Suspension.TravelLevel.ToString();
             if (_stiffVal) _stiffVal.text = Suspension.StiffnessLevel.ToString();
             if (_dampVal) _dampVal.text = Suspension.DampingLevel.ToString();
@@ -874,12 +857,10 @@ namespace DescendersModMenu.UI
             UIHelpers.SetBar(_stiffBar, (Suspension.StiffnessLevel - 1) / 9f);
             UIHelpers.SetBar(_dampBar, (Suspension.DampingLevel - 1) / 9f);
 
-            // Spider Bike
             bool spOn = SpiderBike.Enabled;
             if (_spiderVal) { _spiderVal.text = spOn ? "ON" : "OFF"; _spiderVal.color = spOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_spiderTrack, _spiderKnob, spOn);
 
-            // Bouncy Bike
             bool bbOn = BouncyBike.Enabled;
             if (_bbVal) { _bbVal.text = bbOn ? "ON" : "OFF"; _bbVal.color = bbOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_bbTrack, _bbKnob, bbOn);
@@ -887,32 +868,26 @@ namespace DescendersModMenu.UI
             UIHelpers.SetInteractable(_bbMinus2, BouncyBike.BouncinessLevel > 1);
             UIHelpers.SetInteractable(_bbPlus2, BouncyBike.BouncinessLevel < 10);
 
-            // Bike Size level
             if (_bikeSizeLvlVal) _bikeSizeLvlVal.text = BikeSize.Level.ToString();
             UIHelpers.SetInteractable(_bikeSizeMinus, BikeSize.Level > 1);
             UIHelpers.SetInteractable(_bikeSizePlus, BikeSize.Level < 20);
 
-            // Wheel Size level — both-wheels disabled while individual mode is active
             if (_wheelSizeLvlVal) _wheelSizeLvlVal.text = WheelSize.Level.ToString();
             bool bothActive = WheelSize.IsEnabled && !WheelSize.IsIndividualMode;
             UIHelpers.SetInteractable(_wheelSizeMinus2, bothActive && WheelSize.Level > 1);
             UIHelpers.SetInteractable(_wheelSizePlus2, bothActive && WheelSize.Level < 20);
 
-            // Individual wheel levels — hide the extra rows unless they're actually off default
             if (_frontWheelLvlVal) _frontWheelLvlVal.text = WheelSize.FrontLevel.ToString();
             if (_rearWheelLvlVal) _rearWheelLvlVal.text = WheelSize.RearLevel.ToString();
             UIHelpers.SetRowActive(_frontWheelRow, WheelSize.IsIndividualMode && WheelSize.FrontLevel != 10);
             UIHelpers.SetRowActive(_rearWheelRow, WheelSize.IsIndividualMode && WheelSize.RearLevel != 10);
 
-            // Invisible Bike
             if (_invisBikeVal) { _invisBikeVal.text = InvisibleBike.Enabled ? "ON" : "OFF"; _invisBikeVal.color = InvisibleBike.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_invisBikeTrack, _invisBikeKnob, InvisibleBike.Enabled);
 
-            // Wheel Size
             if (_wheelSizeTogVal) { _wheelSizeTogVal.text = WheelSize.IsEnabled ? "ON" : "OFF"; _wheelSizeTogVal.color = WheelSize.IsEnabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_wheelSizeTrack, _wheelSizeKnob, WheelSize.IsEnabled);
 
-            // Wide Tyres
             bool wtOn = WideTyres.Enabled;
             if (_wideTyresVal) { _wideTyresVal.text = wtOn ? "ON" : "OFF"; _wideTyresVal.color = wtOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_wideTyresTrack, _wideTyresKnob, wtOn);
@@ -921,12 +896,10 @@ namespace DescendersModMenu.UI
             UIHelpers.SetInteractable(_wideTyresMinus, wtOn);
             UIHelpers.SetInteractable(_wideTyresPlus, wtOn);
 
-            // Sticky Tyres
             bool stOn = StickyTyres.Enabled;
             if (_stickyVal) { _stickyVal.text = stOn ? "ON" : "OFF"; _stickyVal.color = stOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_stickyTrack, _stickyKnob, stOn);
 
-            // Tyre Pressure — keep the extra Pressure row hidden until the toggle is on
             bool tpOn = TyrePressure.Enabled;
             if (_tyrePressureVal) { _tyrePressureVal.text = tpOn ? "ON" : "OFF"; _tyrePressureVal.color = tpOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_tyrePressureTrack, _tyrePressureKnob, tpOn);
@@ -936,12 +909,10 @@ namespace DescendersModMenu.UI
             UIHelpers.SetInteractable(_tyrePressureMinus, tpOn && TyrePressure.Level > 1);
             UIHelpers.SetInteractable(_tyrePressurePlus, tpOn && TyrePressure.Level < 10);
 
-            // Bike Damage
             bool bdOn = BikeDamage.Enabled;
             if (_bikeDamageVal) { _bikeDamageVal.text = bdOn ? "ON" : "OFF"; _bikeDamageVal.color = bdOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_bikeDamageTrack, _bikeDamageKnob, bdOn);
 
-            // Reverse Steering
             bool revOn = ReverseSteering.Enabled;
             if (_revSteerVal) { _revSteerVal.text = revOn ? "ON" : "OFF"; _revSteerVal.color = revOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_revSteerTrack, _revSteerKnob, revOn);
@@ -951,12 +922,10 @@ namespace DescendersModMenu.UI
             UIHelpers.SetToggle(_rubberTrack, _rubberKnob, rubOn);
             if (_rubberLvlVal) _rubberLvlVal.text = RubberBandSteering.LevelDisplay;
 
-            // Cut Brakes
             bool cbOn = CutBrakes.Enabled;
             if (_cutBrakesVal) { _cutBrakesVal.text = cbOn ? "ON" : "OFF"; _cutBrakesVal.color = cbOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_cutBrakesTrack, _cutBrakesKnob, cbOn);
 
-            // Torch
             bool torch = BikeTorch.Enabled;
             if (_torchVal) { _torchVal.text = torch ? "ON" : "OFF"; _torchVal.color = torch ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_torchTrack, _torchKnob, torch);
@@ -966,17 +935,14 @@ namespace DescendersModMenu.UI
             if (_torchDiscoVal) { _torchDiscoVal.text = discoTorch ? "ON" : "OFF"; _torchDiscoVal.color = discoTorch ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_torchDiscoTrack, _torchDiscoKnob, discoTorch);
 
-            // Suspension HUD
             bool shOn = SuspensionHUD.Enabled;
             if (_shVal) { _shVal.text = shOn ? "ON" : "OFF"; _shVal.color = shOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_shTrack, _shKnob, shOn);
 
-            // Brake Fade
             bool bfOn = BrakeFade.Enabled;
             if (_bfVal) { _bfVal.text = bfOn ? "ON" : "OFF"; _bfVal.color = bfOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_bfTrack, _bfKnob, bfOn);
 
-            // Brake Balance
             if (_bbLabelVal) _bbLabelVal.text = BrakeFade.BalanceDisplay;
             UIHelpers.SetInteractable(_bbMinus, BrakeFade.BalanceLevel > 1);
             UIHelpers.SetInteractable(_bbPlus, BrakeFade.BalanceLevel < 11);
@@ -1034,3 +1000,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

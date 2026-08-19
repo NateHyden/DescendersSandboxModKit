@@ -1,4 +1,4 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using UnityEngine;
 
 namespace DescendersModMenu.UI
@@ -29,7 +29,7 @@ namespace DescendersModMenu.UI
         }
 
         // ── Colours ───────────────────────────────────────────────────
-        private static readonly Color AccentCol = new Color(0.678f, 1.000f, 0.184f, 1.000f); // neon lime
+        private static readonly Color AccentCol = new Color(0.678f, 1.000f, 0.184f, 1.000f);
         private static readonly Color BgCol = new Color(0.055f, 0.063f, 0.055f, 0.850f);
         private static readonly Color BorderCol = new Color(0.678f, 1.000f, 0.184f, 0.220f);
         private static readonly Color LabelCol = new Color(1.000f, 1.000f, 1.000f, 0.420f);
@@ -37,7 +37,6 @@ namespace DescendersModMenu.UI
         private static readonly Color ValueWhite = new Color(1.000f, 1.000f, 1.000f, 0.870f);
         private static readonly Color DividerCol = new Color(1.000f, 1.000f, 1.000f, 0.060f);
 
-        // ── Layout — all values are at 1080p base, scaled at runtime ──
         private const float BasePanelW = 220f;
         private const float BasePad = 12f;
         private const float BaseRowH = 22f;
@@ -54,7 +53,7 @@ namespace DescendersModMenu.UI
 
             float sh = Screen.height;
             float sw = Screen.width;
-            float s = sh / BaseRes;   // scale factor
+            float s = sh / BaseRes;
 
             float panelW = BasePanelW * s;
             float pad = BasePad * s;
@@ -70,15 +69,15 @@ namespace DescendersModMenu.UI
             int titleFs = Mathf.RoundToInt(10f * s);
 
             float totalH = titleH + pad * 0.5f
-                + rowH          // Time
-                + rowH          // Top Speed
+                + rowH
+                + rowH
                 + divGap + divH + divGap
-                + rowH          // Bails
-                + rowH          // Checkpoints
+                + rowH
+                + rowH
                 + divGap + divH + divGap
-                + rowH          // Airtime
-                + rowH          // G-Force
-                + rowH          // Peak G
+                + rowH
+                + rowH
+                + rowH
                 + pad * 0.5f;
 
             float x = sw - panelW - marginX;
@@ -163,3 +162,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

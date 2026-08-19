@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using System;
 using System.Collections.Generic;
@@ -34,7 +34,7 @@ namespace DescendersModMenu.UI
     /// </summary>
     public class GamepadCursor : MonoBehaviour
     {
-        private const float CursorSpeed = 950f; // canvas units/sec at full stick deflection
+        private const float CursorSpeed = 950f;
         private const float Deadzone = 0.2f;
 
         private RectTransform _cursorRT;
@@ -57,9 +57,6 @@ namespace DescendersModMenu.UI
                 _raycaster = raycaster;
                 _canvas = canvas;
 
-                // Own overlay canvas with a higher sortingOrder, so the cursor draws on top
-                // of the entire menu regardless of sibling order - it's created before the
-                // menu's "root" panel and everything inside it.
                 var cursorCanvasGO = new GameObject("GamepadCursorCanvas");
                 cursorCanvasGO.transform.SetParent(canvas.transform, false);
                 var cursorCanvas = cursorCanvasGO.AddComponent<Canvas>();
@@ -69,7 +66,7 @@ namespace DescendersModMenu.UI
 
                 var go = UIHelpers.Panel("GamepadCursor", cursorCanvasGO.transform, new Color(1f, 0.92f, 0f, 1f), UIHelpers.BtnSp);
                 _cursorImg = go.GetComponent<Image>();
-                _cursorImg.raycastTarget = false; // never blocks its own raycast
+                _cursorImg.raycastTarget = false;
 
                 _cursorRT = UIHelpers.RT(go);
                 _cursorRT.sizeDelta = new Vector2(18, 18);
@@ -108,9 +105,6 @@ namespace DescendersModMenu.UI
 
                 if (!_gamepadActive) return;
 
-                // Belt-and-suspenders: keep Unity's own EventSystem selection empty every
-                // frame this is active, so its native Submit/navigate handling never has a
-                // target to act on independently of this cursor.
                 if ((object)EventSystem.current != null && (object)EventSystem.current.currentSelectedGameObject != null)
                     EventSystem.current.SetSelectedGameObject(null);
 
@@ -141,9 +135,6 @@ namespace DescendersModMenu.UI
         {
             Camera cam = (_canvas.renderMode == RenderMode.ScreenSpaceOverlay) ? null : _canvas.worldCamera;
             Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(cam, _cursorRT.position);
-            // pressEventCamera is read-only on this Unity UI version (set internally by the
-            // real EventSystem, not via object initializer) and defaults to null, which is
-            // the correct value for a ScreenSpaceOverlay canvas anyway - matches this menu.
             return new PointerEventData(EventSystem.current) { position = screenPos };
         }
 
@@ -163,11 +154,6 @@ namespace DescendersModMenu.UI
         private void UpdateHover()
         {
             GameObject rawHit = RaycastTopHit();
-            // Walk up from whatever graphic was actually hit to find the ancestor that
-            // handles pointer-enter - same thing Unity's own EventSystem does internally.
-            // Some rows (the tab sidebar in particular) put the clickable component on a
-            // parent object while the raycastable image is a child, so hitting the child
-            // directly and firing straight on it finds nothing.
             GameObject hit = ((object)rawHit != null)
                 ? ExecuteEvents.GetEventHandler<IPointerEnterHandler>(rawHit)
                 : null;
@@ -181,9 +167,6 @@ namespace DescendersModMenu.UI
             _lastHover = hit;
         }
 
-        // Runs every frame regardless of button state, so an in-progress drag keeps getting
-        // OnDrag calls even if the cursor is no longer over the original hit target (matches
-        // how a real mouse drag works - you don't lose the scrollbar handle by drifting off it).
         private void HandleActionButton(InControl.InputDevice dev)
         {
             if (_dragging)
@@ -210,27 +193,16 @@ namespace DescendersModMenu.UI
             GameObject rawHit = RaycastTopHit();
             if ((object)rawHit == null) return;
 
-            // Click takes priority. Most things (buttons, toggles, steppers) implement
-            // IPointerClickHandler directly on themselves - closer in the hierarchy than any
-            // wrapping ScrollRect, which ALSO implements IBeginDragHandler for its own "drag
-            // the content to scroll" behavior and wraps literally every row in the menu.
-            // Checking drag first meant walking up from ANY button found that ScrollRect
-            // before ever reaching the button's own click handler - every click became a
-            // scroll-drag attempt instead. Click first, drag only as a fallback, fixes that.
             GameObject clickTarget = ExecuteEvents.GetEventHandler<IPointerClickHandler>(rawHit);
             if ((object)clickTarget != null)
             {
                 ExecuteEvents.Execute(clickTarget, BuildPointerData(), ExecuteEvents.pointerClickHandler);
 
-                // In case Unity's own Selectable machinery selected something anyway, clear
-                // it immediately rather than waiting for next frame's sweep.
                 if ((object)EventSystem.current != null)
                     EventSystem.current.SetSelectedGameObject(null);
                 return;
             }
 
-            // Falls back to drag only for things with no click handler at all -
-            // ManualScrollbar (implements Begin/Drag/End only, no click) is the main case.
             GameObject dragTarget = ExecuteEvents.GetEventHandler<IBeginDragHandler>(rawHit);
             if ((object)dragTarget != null)
             {

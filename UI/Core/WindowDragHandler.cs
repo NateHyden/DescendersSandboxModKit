@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -74,10 +74,10 @@ namespace DescendersModMenu.UI
         {
             if ((object)_parent == null || (object)_canvas == null) return;
             if (_target.anchorMin == TopLeft && _target.anchorMax == TopLeft && _target.pivot == TopLeft)
-                return; // already in Custom mode from an earlier drag this session
+                return;
 
             Vector3[] corners = new Vector3[4];
-            _target.GetWorldCorners(corners); // [1] = top-left corner in world space
+            _target.GetWorldCorners(corners);
 
             Camera cam = (_canvas.renderMode == RenderMode.ScreenSpaceOverlay) ? null : _canvas.worldCamera;
             Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(cam, corners[1]);
@@ -91,10 +91,6 @@ namespace DescendersModMenu.UI
             _target.anchoredPosition = localPoint;
         }
 
-        // Keeps at least a grabbable sliver of the header on-screen at all times.
-        // anchorMin=anchorMax=pivot=(0,1): anchoredPosition.x=0 aligns the window's left edge
-        // with the parent's left edge (+x moves right); anchoredPosition.y=0 aligns the window's
-        // top edge with the parent's top edge (+y moves further up/off-screen, -y moves down).
         private Vector2 ClampToScreen(Vector2 pos)
         {
             if ((object)_parent == null) return pos;

@@ -1,23 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // HeadlightsOnly — makes the world pitch black except for the bike torch.
-    //
-    // On enable:
-    //   - Saves RenderSettings ambient colour + intensity, sets both to zero
-    //   - Finds all Directional lights (the sun) and disables them
-    //   - Auto-enables BikeTorch at max intensity if not already on
-    //
-    // On disable:
-    //   - Restores ambient settings
-    //   - Re-enables saved directional lights
-    //   - Turns BikeTorch off if it wasn't on before
-    //
-    // Lights are re-cached and re-disabled each scene load (ClearCache).
-    // Does not touch Point or Spot lights — preserves any scene decoration lights.
     public static class HeadlightsOnly
     {
         public static bool Enabled { get; private set; } = false;
@@ -31,7 +17,6 @@ namespace DescendersModMenu.Mods
         private static float _savedReflectionIntensity = 1f;
         private static bool _ambientSaved = false;
 
-        // ── Directional light cache ───────────────────────────────────
         private static Light[] _dirLights = null;
         private static bool[] _dirLightWasEnabled = null;
         private static bool _lightsCached = false;
@@ -57,7 +42,6 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // Save + zero all ambient channels
                 if (!_ambientSaved)
                 {
                     _savedAmbientColor = RenderSettings.ambientLight;
@@ -77,11 +61,9 @@ namespace DescendersModMenu.Mods
                 RenderSettings.ambientIntensity = 0f;
                 RenderSettings.reflectionIntensity = 0f;
 
-                // Force time of day to Twilight (darkest) — level 9 = 20.5h
                 _savedTodLevel = TimeOfDay.Level;
                 TimeOfDay.SetLevel(9);
 
-                // Find and disable all directional lights (sun)
                 if (!_lightsCached)
                     CacheLights();
 
@@ -95,17 +77,14 @@ namespace DescendersModMenu.Mods
                     ModLog.Debug("[HeadlightsOnly] Disabled " + _dirLights.Length + " directional light(s).");
                 }
 
-                // Auto-enable BikeTorch at max intensity
                 _torchWasEnabled = BikeTorch.Enabled;
                 if (!BikeTorch.Enabled)
                 {
-                    // Set to max intensity before enabling
                     BikeTorch.IntensityIndex = 4;
                     BikeTorch.Toggle();
                 }
                 else
                 {
-                    // Already on — boost to max
                     BikeTorch.IntensityIndex = 4;
                     BikeTorch.Apply();
                 }
@@ -117,7 +96,6 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // Restore all ambient channels
                 if (_ambientSaved)
                 {
                     RenderSettings.ambientLight = _savedAmbientColor;
@@ -130,10 +108,8 @@ namespace DescendersModMenu.Mods
                     ModLog.Debug("[HeadlightsOnly] Ambient restored.");
                 }
 
-                // Restore time of day
                 TimeOfDay.SetLevel(_savedTodLevel);
 
-                // Re-enable directional lights
                 if (_dirLights != null && _dirLightWasEnabled != null)
                 {
                     for (int i = 0; i < _dirLights.Length; i++)
@@ -144,7 +120,6 @@ namespace DescendersModMenu.Mods
                     ModLog.Debug("[HeadlightsOnly] Directional lights restored.");
                 }
 
-                // Turn torch off if we auto-enabled it
                 if (!_torchWasEnabled && BikeTorch.Enabled)
                     BikeTorch.Toggle();
             }
@@ -178,7 +153,6 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[HeadlightsOnly] CacheLights: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "HeadlightsOnly"); }
         }
 
-        // Called on scene unload — restore and clear caches
         public static void ClearCache()
         {
             if (Enabled) Restore();
@@ -196,3 +170,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

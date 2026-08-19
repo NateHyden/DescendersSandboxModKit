@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using DescendersModMenu.Mods;
 
 namespace DescendersModMenu.UI
@@ -83,13 +83,11 @@ namespace DescendersModMenu.UI
             _hudFlash -= dt;
             if (_hudFlash <= 0f) { _hudFlash = 0.35f; _hudIsRed = !_hudIsRed; }
 
-            // ── Police light panels — alternate ON/OFF, one at a time ──
             float panelW = sw * 0.13f;
             float panelH = sh * 0.11f;
             float margin = sw * 0.015f;
             float panelY = sh * 0.02f;
 
-            // Only one panel visible at a time — they alternate
             if (_hudIsRed)
             {
                 _lightStyle.fontSize = Mathf.RoundToInt(sh * 0.022f);
@@ -105,7 +103,6 @@ namespace DescendersModMenu.UI
                     "POLICE\nCHASE", _lightStyle);
             }
 
-            // ── Info strip — distance + caught count ───────────────────
             float dist = PoliceChaseMode.PursuerDistance;
             string distTxt = dist >= 0f ? dist.ToString("F0") + "m" : "?m";
             string stateTxt = PoliceChaseMode.IsBursting ? "  ⚡ BURSTING" : "";
@@ -120,7 +117,6 @@ namespace DescendersModMenu.UI
             GUI.Label(new Rect(sw * 0.5f - infoSize.x * 0.5f, infoY,
                 infoSize.x, infoSize.y), infoTxt, _infoStyle);
 
-            // ── Countdown before chase starts ──────────────────────────
             if (PoliceChaseMode.IsCountingDown)
             {
                 int secs = Mathf.CeilToInt(PoliceChaseMode.CountdownRemaining);
@@ -137,7 +133,7 @@ namespace DescendersModMenu.UI
                 Vector2 rs = _infoStyle.CalcSize(rc);
                 GUI.Label(new Rect(sw * 0.5f - rs.x * 0.5f, sh * 0.35f + sh * 0.15f,
                     rs.x, rs.y), readyTxt, _infoStyle);
-                return; // don't draw other HUD elements during countdown
+                return;
             }
 
             // ── CAUGHT flash ───────────────────────────────────────────
@@ -157,19 +153,16 @@ namespace DescendersModMenu.UI
                 _caughtPulse = 0f;
             }
 
-            // ── F5 reset prompt — shown when waiting for manual reset ──
             if (PoliceChaseMode.WaitingForReset)
             {
                 _promptStyle.fontSize = Mathf.RoundToInt(sh * 0.022f);
                 string promptTxt = "Press F5 to reset pursuer";
                 GUIContent pc = new GUIContent(promptTxt);
                 Vector2 ps = _promptStyle.CalcSize(pc);
-                // Sits just below the CAUGHT text / centre screen
                 float pY = sh * 0.6f;
                 GUI.Label(new Rect(sw * 0.5f - ps.x * 0.5f, pY, ps.x, ps.y),
                     promptTxt, _promptStyle);
             }
-            // ── Epilepsy warning — bottom of screen ────────────────────
             if ((object)_infoStyle != null)
             {
                 _infoStyle.fontSize = Mathf.RoundToInt(sh * 0.013f);
@@ -183,3 +176,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

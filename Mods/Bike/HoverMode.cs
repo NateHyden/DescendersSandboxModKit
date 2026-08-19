@@ -1,26 +1,13 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // HoverMode — floats the bike a selectable height above (or below) the
-    // terrain surface, following ground contour via a fresh raycast every
-    // physics tick, reached through a spring-damper force rather than a hard
-    // position snap - that's what gives the soft, lagging "magic carpet" feel
-    // instead of a rigid float.
-    //
-    // A pure visual-offset version (leave physics on real ground, just render
-    // the bike/rider/camera floating above it) was tried and reverted - moving
-    // BikeModel's transform directly caused a launch even with the camera
-    // offset removed, meaning that transform isn't safely decoupled from
-    // physics in this game's implementation. This spring+direct-drive version
-    // is the one confirmed stable in testing.
     public static class HoverMode
     {
         public static bool Enabled { get; private set; } = false;
 
-        // ── Height (meters from raycast-detected ground, signed) ─────────
         public const float MinHeight = -5f;
         public const float MaxHeight = 20f;
         public const float HeightStep = 0.5f;
@@ -35,13 +22,8 @@ namespace DescendersModMenu.Mods
         public static float Stiffness = 40f;
         public static float Damping = 12f;
 
-        // ── Horizontal drive (hovercraft-style) ───────────────────────
-        // The game's own forward/steer physics is wheel-traction based - it
-        // only pushes the bike when wheels have real ground contact to grip
-        // against. With wheels floating in mid-air that traction never exists,
-        // so this drives translation/turning directly instead.
         public static float MoveSpeed = 25f;
-        public static float TurnSpeed = 110f; // degrees/sec
+        public static float TurnSpeed = 110f;
         private static float _yaw;
 
         private static Transform _playerTrans;
@@ -188,3 +170,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

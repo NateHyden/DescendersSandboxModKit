@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using DescendersModMenu.UI;
 using MelonLoader;
@@ -31,7 +31,6 @@ namespace DescendersModMenu.Mods
             Path.Combine(SaveFolder, "MenuLayout.json");
 
         // ── State ─────────────────────────────────────────────────────
-        // 0 = Centre, 1 = Top Left, 2 = Top Right, 3 = Custom (dragged)
         public static int PositionPreset = 0;
         public static float CustomX = 0f;
         public static float CustomY = 0f;
@@ -40,11 +39,11 @@ namespace DescendersModMenu.Mods
 
         private static readonly float[] ScaleValues = { 0.7f, 0.8f, 0.9f, 1.0f, 1.1f, 1.2f };
         private static readonly string[] ScaleLabels = { "70%", "80%", "90%", "100%", "110%", "120%" };
-        public static int ScaleLevel = 3; // default 100%
+        public static int ScaleLevel = 3;
 
         private static readonly float[] OpacityValues = { 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
         private static readonly string[] OpacityLabels = { "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%" };
-        public static int OpacityLevel = 8; // default 100%
+        public static int OpacityLevel = 8;
 
         // ── Display ───────────────────────────────────────────────────
         public static string ScaleDisplay => ScaleLabels[ScaleLevel];
@@ -54,7 +53,6 @@ namespace DescendersModMenu.Mods
 
         private static float _savedTime = -999f;
 
-        // ── Setters (auto-save on every change) ───────────────────────
         public static void SetPosition(int preset)
         {
             PositionPreset = preset;
@@ -112,25 +110,25 @@ namespace DescendersModMenu.Mods
 
             switch (PositionPreset)
             {
-                case 0: // Centre
+                case 0:
                     rt.anchorMin = new Vector2(0.5f, 0.5f);
                     rt.anchorMax = new Vector2(0.5f, 0.5f);
                     rt.pivot = new Vector2(0.5f, 0.5f);
                     rt.anchoredPosition = Vector2.zero;
                     break;
-                case 1: // Top Left
+                case 1:
                     rt.anchorMin = new Vector2(0f, 1f);
                     rt.anchorMax = new Vector2(0f, 1f);
                     rt.pivot = new Vector2(0f, 1f);
                     rt.anchoredPosition = new Vector2(10f, -10f);
                     break;
-                case 2: // Top Right
+                case 2:
                     rt.anchorMin = new Vector2(1f, 1f);
                     rt.anchorMax = new Vector2(1f, 1f);
                     rt.pivot = new Vector2(1f, 1f);
                     rt.anchoredPosition = new Vector2(-10f, -10f);
                     break;
-                case 3: // Custom (dragged) - same top-left pivot convention the drag handler uses
+                case 3:
                     rt.anchorMin = new Vector2(0f, 1f);
                     rt.anchorMax = new Vector2(0f, 1f);
                     rt.pivot = new Vector2(0f, 1f);
@@ -213,3 +211,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -7,7 +7,6 @@ namespace DescendersModMenu.Mods
     {
         public static bool Enabled { get; private set; } = false;
 
-        // ── Layout constants (base 1080p) ─────────────────────────────
         private const float PanelW = 160f;
         private const float PanelH = 160f;
         private const float MarginRight = 30f;
@@ -16,20 +15,14 @@ namespace DescendersModMenu.Mods
         private const float HeaderH = 14f;
         private const float ReadoutH = 16f;
 
-        // BrakeFade conflict: if BrakeFade HUD is enabled, sit below it.
-        // BrakeFade panel is 76px tall + we want a 12px gap.
         private const float BrakeFadeStackH = 76f + 12f;
 
-        // ── ViewBox (matches the v9 mockup) ───────────────────────────
         private const float VB_W = 200f;
         private const float VB_H = 160f;
 
-        // Bike pivot (rear wheel centre)
         private const float PivotVBx = 95f;
         private const float PivotVBy = 115f;
 
-        // Arc parameters — quarter circle, centre at pivot, radius 85
-        // Spans 0° (right horizontal) → 90° (straight up) measured CCW
         private const float ArcRadius = 85f;
         private const int ArcSegments = 24;
 
@@ -65,7 +58,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Anti-aliased ring (outlined circle) used for the wheels
         private static Texture2D RingTex
         {
             get
@@ -116,21 +108,18 @@ namespace DescendersModMenu.Mods
 
             float s = Screen.height / 1080f;
 
-            // Read pitch from WheelieAngleLimit_Patch (always populated by the Harmony postfix)
             float currentPitch = WheelieAngleLimit_Patch.CurrentPitch;
-            if (currentPitch < 0f) currentPitch = 0f;     // only show nose-up
+            if (currentPitch < 0f) currentPitch = 0f;
 
             float limit = WheelieAngleLimit.AngleLimit;
             float fillRatio = limit > 0f ? Mathf.Clamp01(currentPitch / limit) : 0f;
 
-            // Zone colour
             Color zoneColor;
             if (fillRatio < 0.6f) zoneColor = GreenZone;
             else if (fillRatio < 0.9f) zoneColor = YellowZone;
             else zoneColor = RedZone;
             bool critical = fillRatio >= 0.9f;
 
-            // Pulsing alpha for critical border
             float pulse = 1f;
             if (critical) pulse = 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 8f);
 
@@ -139,10 +128,8 @@ namespace DescendersModMenu.Mods
             float ph = PanelH * s;
             float px = Screen.width - pw - MarginRight * s;
             float py = MarginTop * s;
-            // Stack below BrakeFade HUD if it's also visible (BrakeFade owns the top slot)
             if (BrakeFade.Enabled) py += BrakeFadeStackH * s;
 
-            // ── Panel background + border ─────────────────────────────
             DrawRect(px, py, pw, ph, PanelBg);
             float b = Mathf.Max(1f, s);
             Color borderC = critical
@@ -158,20 +145,17 @@ namespace DescendersModMenu.Mods
             _headerStyle.normal.textColor = critical ? HeaderRed : HeaderLime;
             GUI.Label(new Rect(px, py + Padding * s, pw, HeaderH * s), "WHEELIE", _headerStyle);
 
-            // ── Drawing area for arc + bike ───────────────────────────
             float drawX = px + Padding * s;
             float drawY = py + (Padding + HeaderH + 2f) * s;
             float drawW = pw - 2f * Padding * s;
             float drawH = ph - (2f * Padding + HeaderH + ReadoutH + 4f) * s;
 
-            // Uniform scale to fit the viewbox without distortion
             float scl = Mathf.Min(drawW / VB_W, drawH / VB_H);
             float effW = VB_W * scl;
             float effH = VB_H * scl;
             float offX = drawX + (drawW - effW) * 0.5f;
             float offY = drawY + (drawH - effH) * 0.5f;
 
-            // ── Pre-compute arc points in viewbox space (lazy, once) ──
             if (_arcPointsVB == null)
             {
                 _arcPointsVB = new Vector2[ArcSegments + 1];
@@ -185,7 +169,6 @@ namespace DescendersModMenu.Mods
                 }
             }
 
-            // Convert to screen space for this frame
             Vector2[] arcScreen = new Vector2[ArcSegments + 1];
             for (int i = 0; i <= ArcSegments; i++)
                 arcScreen[i] = VBToScreen(_arcPointsVB[i].x, _arcPointsVB[i].y, offX, offY, scl);
@@ -195,14 +178,11 @@ namespace DescendersModMenu.Mods
             for (int i = 1; i <= ArcSegments; i++)
                 DrawLine(arcScreen[i - 1], arcScreen[i], arcThick, ArcTrackC);
 
-            // ── Arc fill (proportional to currentPitch / limit) ───────
             int fillSegs = Mathf.RoundToInt(ArcSegments * fillRatio);
             for (int i = 1; i <= fillSegs; i++)
                 DrawLine(arcScreen[i - 1], arcScreen[i], arcThick, zoneColor);
 
-            // ── Bike (manually rotate each point to avoid nested GUI.matrix issues) ─
             Vector2 pivot = VBToScreen(PivotVBx, PivotVBy, offX, offY, scl);
-            // SVG/OnGUI both use Y-down, so a CCW visual rotation = negative angle
             float rad = -currentPitch * Mathf.Deg2Rad;
             float cosA = Mathf.Cos(rad);
             float sinA = Mathf.Sin(rad);
@@ -211,7 +191,6 @@ namespace DescendersModMenu.Mods
             float t2 = Mathf.Max(1f, 2f * s);
             float t3 = Mathf.Max(1f, 1.5f * s);
 
-            // Pre-rotate every bike vertex once so all lines stay connected
             Vector2 pRearAxle = RotateAround(95, 115, pivot, cosA, sinA, offX, offY, scl);
             Vector2 pBB = RotateAround(114, 115, pivot, cosA, sinA, offX, offY, scl);
             Vector2 pSeatTop = RotateAround(109, 92, pivot, cosA, sinA, offX, offY, scl);
@@ -224,20 +203,16 @@ namespace DescendersModMenu.Mods
             Vector2 pGripL = RotateAround(129, 84, pivot, cosA, sinA, offX, offY, scl);
             Vector2 pGripR = RotateAround(141, 84, pivot, cosA, sinA, offX, offY, scl);
 
-            // Frame tubes
-            DrawLine(pRearAxle, pBB, t1, zoneColor); // chainstay
-            DrawLine(pBB, pSeatTop, t1, zoneColor); // seat tube
-            DrawLine(pBB, pHeadTop, t1, zoneColor); // down tube
-            DrawLine(pSeatTop, pHeadTop, t1, zoneColor); // top tube
-            DrawLine(pSeatTop, pRearAxle, t1, zoneColor); // seat stay
-            DrawLine(pHeadTop, pFrontAxle, t1, zoneColor); // fork
-            // Saddle
-            DrawLine(pSadL, pSadR, t1, zoneColor); // saddle bar
-            DrawLine(pPostTop, pSeatTop, t3, zoneColor); // seat post
-            // Handlebar
-            DrawLine(pHeadTop, pStemTop, t2, zoneColor); // stem
-            DrawLine(pGripL, pGripR, t1, zoneColor); // grips
-            // Wheels (circles — orientation-invariant, just need rotated centres)
+            DrawLine(pRearAxle, pBB, t1, zoneColor);
+            DrawLine(pBB, pSeatTop, t1, zoneColor);
+            DrawLine(pBB, pHeadTop, t1, zoneColor);
+            DrawLine(pSeatTop, pHeadTop, t1, zoneColor);
+            DrawLine(pSeatTop, pRearAxle, t1, zoneColor);
+            DrawLine(pHeadTop, pFrontAxle, t1, zoneColor);
+            DrawLine(pSadL, pSadR, t1, zoneColor);
+            DrawLine(pPostTop, pSeatTop, t3, zoneColor);
+            DrawLine(pHeadTop, pStemTop, t2, zoneColor);
+            DrawLine(pGripL, pGripR, t1, zoneColor);
             DrawCircle(pRearAxle, 11f * scl, zoneColor);
             DrawCircle(pFrontAxle, 11f * scl, zoneColor);
 
@@ -259,9 +234,6 @@ namespace DescendersModMenu.Mods
             return new Vector2(offX + vbx * scl, offY + vby * scl);
         }
 
-        // Rotate a viewbox-space point around the bike pivot (in screen space) and return
-        // the resulting screen coordinate. Used to pre-compute every bike vertex per frame
-        // so all the line segments stay connected when the bike pitches up.
         private static Vector2 RotateAround(float vbx, float vby, Vector2 pivot,
             float cosA, float sinA, float offX, float offY, float scl)
         {
@@ -312,3 +284,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

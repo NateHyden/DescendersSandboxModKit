@@ -74,7 +74,6 @@ namespace DescendersModMenu.UI
                 while (_listRoot.childCount > 0)
                     GameObject.DestroyImmediate(_listRoot.GetChild(0).gameObject);
 
-                // ── Search input row (same pattern as Map tab's seed box) ──
                 var searchRow = UIHelpers.Obj("SearchInputRow", _listRoot);
                 searchRow.AddComponent<Image>().color = UIHelpers.RowBg;
                 var srLe = searchRow.AddComponent<LayoutElement>();
@@ -172,7 +171,6 @@ namespace DescendersModMenu.UI
                     if (!first) UIHelpers.Divider(_listRoot);
                     first = false;
 
-                    // ── Header: tab badge + mod name + favourite star ──
                     var hdr = UIHelpers.Obj("SH_" + entry.Id, _listRoot);
                     var hle = hdr.AddComponent<LayoutElement>();
                     hle.preferredHeight = 24; hle.minHeight = 24;
@@ -198,7 +196,6 @@ namespace DescendersModMenu.UI
                         () => { FavouritesManager.Toggle(capturedId); FavouritesManager.RefreshAllStars(); });
                     FavouritesManager.RegisterStarButton(capturedId, star);
 
-                    // ── The mod's real controls - same function Favourites uses ──
                     try { entry.BuildControls(_listRoot); }
                     catch (Exception ex)
                     {
@@ -259,3 +256,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

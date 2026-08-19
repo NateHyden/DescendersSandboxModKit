@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -10,8 +10,6 @@ namespace DescendersModMenu.Mods
         public static bool Enabled { get; private set; } = false;
         public static int Level { get; private set; } = 1;
 
-        // ei[frnu = drag coefficient, default 0.06
-        // Lower drag = higher top speed
         private static readonly float DefaultDrag = 0.06f;
         private static FieldInfo _field = null;
         private static bool _fieldCached = false;
@@ -48,7 +46,6 @@ namespace DescendersModMenu.Mods
                 object val = fields[i].GetValue(vehicle);
                 if ((object)val == null) continue;
                 float f = (float)val;
-                // Drag field is ~0.06 — scan range 0.001 to 0.12
                 if (f >= 0.001f && f <= 0.12f)
                 {
                     _field = fields[i];
@@ -71,7 +68,6 @@ namespace DescendersModMenu.Mods
                 if ((object)vehicle == null) return;
                 FieldInfo field = FindField(vehicle);
                 if ((object)field == null) return;
-                // Higher level = lower drag = higher top speed
                 float multiplier = 1f + (Level - 1) * 0.5f;
                 float newDrag = DefaultDrag / multiplier;
                 field.SetValue(vehicle, newDrag);
@@ -80,9 +76,6 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[MaxSpeed] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "MaxSpeedMultiplier"); }
         }
 
-        // Same silent-overwrite race as Acceleration - the game's own bike-stat
-        // init runs after a one-time apply and can clobber it. Re-enforce every
-        // frame instead. Called from OnLateUpdate.
         public static void Tick()
         {
             if (!Enabled) return;
@@ -128,3 +121,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

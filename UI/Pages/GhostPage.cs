@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,7 +52,6 @@ namespace DescendersModMenu.UI
                 // ── HEADER ────────────────────────────────────────────
                 UIHelpers.SectionHeader("GHOST REPLAY", c);
 
-                // Enable toggle
                 var enableRow = UIHelpers.StatRow("Enable  (F3)", c);
                 UIHelpers.Toggle(enableRow.transform, "GhostEnable",
                     () => { GhostReplay.Toggle(); RefreshAll(); },
@@ -86,7 +85,6 @@ namespace DescendersModMenu.UI
                     "0:00", 11, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
                 _recTimeText.gameObject.AddComponent<LayoutElement>().preferredWidth = 60;
 
-                // Saved run panel — shows when a run is saved
                 _savedPanel = UIHelpers.Obj("SavedPanel", c);
                 var spVlg = _savedPanel.AddComponent<VerticalLayoutGroup>();
                 spVlg.spacing = UIHelpers.RowGap;
@@ -112,7 +110,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
-                // Clear button
                 var clearRow = UIHelpers.StatRow("", c);
                 var clearBtn = UIHelpers.Btn("ClrBtn", clearRow.transform, "CLEAR SAVED RUN",
                     new Vector2(160, 32), 12,
@@ -122,7 +119,6 @@ namespace DescendersModMenu.UI
                 clrLe.preferredWidth = 160; clrLe.minWidth = 160;
                 clrLe.preferredHeight = 32; clrLe.minHeight = 32;
 
-                // ── STAR BUTTON (Favourites) ──────────────────────────
                 FavouritesManager.RegisterStarButton("GhostReplay", UIHelpers.StarBtn(enableRow.transform, "GhostReplay", () => FavouritesManager.Toggle("GhostReplay")));
                 FavouritesManager.Register(new ModFavEntry {
                     Id = "GhostReplay", DisplayName = "Ghost Replay", TabBadge = "TOOLS",
@@ -167,8 +163,6 @@ namespace DescendersModMenu.UI
 
         public static void Tick()
         {
-            // Menu is destroyed on scene unload — (object)==null misses Unity fake-null,
-            // and Text.set_text then NREs on Behaviour.isActiveAndEnabled (Jamie Discord).
             if (!UnityNull.Alive(_statusText))
             {
                 ClearUiRefs();
@@ -222,3 +216,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

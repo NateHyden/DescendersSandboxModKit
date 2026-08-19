@@ -1,9 +1,7 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Shared Player_Human lookup — GameObject.Find is a full scene walk and gets
-    // expensive on large open maps when many Tick() paths call it every frame.
     internal static class PlayerCache
     {
         private static GameObject _player;
@@ -15,7 +13,6 @@ namespace DescendersModMenu.Mods
             get
             {
                 float now = Time.unscaledTime;
-                // Unity fake-null: destroyed objects must be re-found.
                 if ((object)_player != null && _player != null && now < _nextRefresh)
                     return _player;
 
@@ -32,3 +29,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

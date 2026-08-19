@@ -1,12 +1,10 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading;
 using MelonLoader;
 
 namespace DescendersModMenu.Mods
 {
-    // Fetches the current Descenders player count from the Steam API.
-    // No API key required. Runs on a background thread, same pattern as UpdateChecker.
     public static class SteamPlayerCount
     {
         private const string Url =
@@ -63,13 +61,12 @@ namespace DescendersModMenu.Mods
                     return;
                 }
 
-                // Response: {"response":{"player_count":1234,"result":1}}
                 string raw = ExtractJsonInt(output, "player_count");
                 int count;
                 if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out count))
                 {
                     PlayerCount   = count;
-                    DisplayValue  = count.ToString("N0"); // e.g. "1,234"
+                    DisplayValue  = count.ToString("N0");
                     ModLog.Debug("[SteamPlayerCount] " + DisplayValue + " players online.");
                 }
                 else
@@ -88,7 +85,6 @@ namespace DescendersModMenu.Mods
             FetchComplete = true;
         }
 
-        // Extracts the value of an integer JSON field by key name
         private static string ExtractJsonInt(string json, string key)
         {
             string search = "\"" + key + "\"";
@@ -96,10 +92,8 @@ namespace DescendersModMenu.Mods
             if (keyIdx < 0) return null;
             int colonIdx = json.IndexOf(':', keyIdx + search.Length);
             if (colonIdx < 0) return null;
-            // Skip whitespace after colon
             int start = colonIdx + 1;
             while (start < json.Length && (json[start] == ' ' || json[start] == '\t')) start++;
-            // Read digits
             int end = start;
             while (end < json.Length && json[end] >= '0' && json[end] <= '9') end++;
             if (end == start) return null;

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using DescendersModMenu.Mods;
 
 namespace DescendersModMenu.UI
@@ -71,13 +71,11 @@ namespace DescendersModMenu.UI
                 ? FormatTime(TrickAttackMode.TimeRemaining)
                 : "—:——";
 
-            // Timer turns red in last 10 seconds
             bool urgent = state == TrickAttackMode.State.Running && secs <= 10;
             _timerStyle.normal.textColor = urgent ? new Color(1f, 0.25f, 0.1f) : Color.white;
             _timerStyle.fontSize = Mathf.RoundToInt(sh * 0.028f);
             GUI.Label(new Rect(sw * 0.015f, panelY, panelW, panelH), timerTxt, _timerStyle);
 
-            // ── Top-centre: score gained ──────────────────────────────
             string scoreTxt = TrickAttackMode.ScoreGained.ToString("N0");
             _scoreStyle.fontSize = Mathf.RoundToInt(sh * 0.028f);
             float scoreW = sw * 0.18f;
@@ -85,7 +83,6 @@ namespace DescendersModMenu.UI
             GUI.Label(new Rect(sw * 0.5f - scoreW * 0.5f, panelY, scoreW, panelH),
                 scoreTxt, _scoreStyle);
 
-            // ── Top-right: target score ───────────────────────────────
             string targetTxt = TrickAttackMode.TargetScore.ToString("N0");
             _targetStyle.fontSize = Mathf.RoundToInt(sh * 0.022f);
             _targetStyle.normal.textColor = new Color(0.75f, 0.75f, 0.75f, 1f);
@@ -137,3 +134,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

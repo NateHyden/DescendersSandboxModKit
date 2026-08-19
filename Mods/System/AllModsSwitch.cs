@@ -1,9 +1,8 @@
-using System;
+﻿using System;
 using DescendersModMenu.UI;
 
 namespace DescendersModMenu.Mods
 {
-    // Header master switch: turn every live mod off, then restore the same set.
     public static class AllModsSwitch
     {
         public static bool Enabled { get; private set; } = true;

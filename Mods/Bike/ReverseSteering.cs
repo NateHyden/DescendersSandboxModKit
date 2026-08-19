@@ -1,8 +1,8 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -53,13 +53,10 @@ namespace DescendersModMenu.Mods
 
     public static class ReverseSteering_Patch
     {
-        // CDVkgio = Vehicle field on VehicleController
         private static FieldInfo _vehicleField = null;
 
-        // swebLyg = steering input (public property on Vehicle)
         private static PropertyInfo _steerProp = null;
 
-        // c{v}lhG = lean input (public property on Vehicle)
         private static PropertyInfo _leanProp = null;
 
         private static readonly string SteerPropName = "swebLyg";
@@ -72,7 +69,6 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                // Cache the Vehicle field on VehicleController
                 if ((object)_vehicleField == null)
                 {
                     FieldInfo[] fields = typeof(VehicleController).GetFields(
@@ -99,11 +95,9 @@ namespace DescendersModMenu.Mods
                 Vehicle vehicle = _vehicleField.GetValue(__instance) as Vehicle;
                 if (!UnityNull.Alive(vehicle)) return;
 
-                // Only affect local player
                 if (!string.Equals(vehicle.gameObject.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;
 
-                // Cache steer property (swebLyg) - it's a public property, not a field
                 if ((object)_steerProp == null)
                 {
                     _steerProp = typeof(Vehicle).GetProperty(
@@ -116,7 +110,6 @@ namespace DescendersModMenu.Mods
                         ModLog.Warn("[ReverseSteering] Could not find steer property: " + SteerPropName);
                 }
 
-                // Cache lean property (c{v}lhG) - also a public property
                 if ((object)_leanProp == null)
                 {
                     _leanProp = typeof(Vehicle).GetProperty(
@@ -129,14 +122,12 @@ namespace DescendersModMenu.Mods
                         ModLog.Warn("[ReverseSteering] Could not find lean property: " + LeanPropName);
                 }
 
-                // Negate steer input
                 if ((object)_steerProp != null)
                 {
                     float steer = (float)_steerProp.GetValue(vehicle, null);
                     _steerProp.SetValue(vehicle, -steer, null);
                 }
 
-                // Negate lean input
                 if ((object)_leanProp != null)
                 {
                     float lean = (float)_leanProp.GetValue(vehicle, null);

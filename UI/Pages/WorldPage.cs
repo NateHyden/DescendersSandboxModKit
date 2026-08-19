@@ -1,4 +1,4 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -39,16 +39,13 @@ namespace DescendersModMenu.UI
 
 
 
-        // Turbo Wind UI refs
         private static Image _windTrack; private static RectTransform _windKnob;
         private static Text _windVal;
         private static Text _windPowerVal;
 
-        // Exploding Props UI refs
         private static Image _explodeTrack; private static RectTransform _explodeKnob;
         private static Text _explodeVal;
 
-        // Headlights Only
         private static GameObject _hlRow;
         private static Text _hlVal;
         private static Image _hlTrack;
@@ -75,7 +72,6 @@ namespace DescendersModMenu.UI
                 pg = UIHelpers.Obj("P7R", parent);
                 UIHelpers.Fill(UIHelpers.RT(pg));
 
-                // ScrollRect wrapper — same pattern as FunPage
                 var scrollObj = UIHelpers.Obj("Scroll", pg.transform);
                 UIHelpers.Fill(UIHelpers.RT(scrollObj));
                 var scrollRect = scrollObj.AddComponent<ScrollRect>();
@@ -108,7 +104,6 @@ namespace DescendersModMenu.UI
                 vlg.childForceExpandWidth = true;
                 vlg.childForceExpandHeight = false;
 
-                // All rows go into scrollable content
                 var pg7 = content.transform;
 
                 // ── RESET TAB ─────────────────────────────────────────
@@ -145,7 +140,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(pg7);
 
-                // ── WEATHER (Blizzard Dial) ────────────────────────────
                 UIHelpers.SectionHeader("WEATHER", pg7);
 
                 _bzRow = UIHelpers.StatRow("Blizzard Dial", pg7);
@@ -284,7 +278,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(pg7);
 
-                // ── STAR BUTTONS (Favourites) ──────────────────────────
                 FavouritesManager.RegisterStarButton("Gravity", UIHelpers.StarBtn(gr.transform, "Gravity", () => FavouritesManager.Toggle("Gravity")));
                 FavouritesManager.RegisterStarButton("TimeOfDay", UIHelpers.StarBtn(tr.transform, "TimeOfDay", () => FavouritesManager.Toggle("TimeOfDay")));
                 FavouritesManager.RegisterStarButton("TurboWind", UIHelpers.StarBtn(wr.transform, "TurboWind", () => FavouritesManager.Toggle("TurboWind")));
@@ -300,7 +293,6 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("IceGrip", UIHelpers.StarBtn(imr.transform, "IceGrip", () => FavouritesManager.Toggle("IceGrip")));
                 FavouritesManager.RegisterStarButton("RandomWeatherRoulette", UIHelpers.StarBtn(wthR.transform, "RandomWeatherRoulette", () => FavouritesManager.Toggle("RandomWeatherRoulette")));
 
-                // ── FACTORY REGISTRATIONS (World tab mods) ─────────────
                 FavouritesManager.Register(new ModFavEntry
                 {
                     Id = "Gravity",
@@ -526,7 +518,6 @@ namespace DescendersModMenu.UI
             UIHelpers.SetToggle(_discoTrack, _discoKnob, disco);
             if (_discoSpeedVal) _discoSpeedVal.text = DiscoMode.SpeedDisplay;
 
-            // Blizzard Dial
             bool bzOn = BlizzardDial.Enabled;
             if (_bzVal) { _bzVal.text = bzOn ? "ON" : "OFF"; _bzVal.color = bzOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_bzTrack, _bzKnob, bzOn);
@@ -546,3 +537,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

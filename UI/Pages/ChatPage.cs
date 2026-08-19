@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
@@ -43,9 +43,6 @@ namespace DescendersModMenu.UI
                 root.childForceExpandWidth = true;
                 root.childForceExpandHeight = false;
 
-                // ── Header: MOD CHAT title + EXPERIMENTAL badge ───────
-                // Custom header row instead of UIHelpers.SectionHeader so the
-                // badge can sit on the same line as the title.
                 var hdrRow = UIHelpers.Obj("ChatHdrRow", pg.transform);
                 hdrRow.AddComponent<LayoutElement>().preferredHeight = 28;
                 var hdrHlg = hdrRow.AddComponent<HorizontalLayoutGroup>();
@@ -55,7 +52,6 @@ namespace DescendersModMenu.UI
                 hdrHlg.childForceExpandHeight = false;
                 hdrHlg.padding = new RectOffset(8, 0, 0, 0);
 
-                // Accent bar — matches UIHelpers.SectionHeader style
                 var accentBar = UIHelpers.Panel("ABar", hdrRow.transform, UIHelpers.Accent);
                 var abRT = UIHelpers.RT(accentBar);
                 abRT.anchorMin = new Vector2(0, 0.5f); abRT.anchorMax = new Vector2(0, 0.5f);
@@ -64,13 +60,11 @@ namespace DescendersModMenu.UI
                 abRT.anchoredPosition = Vector2.zero;
                 accentBar.AddComponent<LayoutElement>().ignoreLayout = true;
 
-                // Title
                 var titleTxt = UIHelpers.Txt("ChatTitle", hdrRow.transform, "MOD CHAT", 11,
                     FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.Accent);
                 var tle = titleTxt.gameObject.AddComponent<LayoutElement>();
                 tle.preferredWidth = 76; tle.preferredHeight = 28;
 
-                // EXPERIMENTAL badge
                 var badge = UIHelpers.Panel("ExpBadge", hdrRow.transform,
                     new Color(0.15f, 0.08f, 0.02f, 1f), UIHelpers.BtnSp);
                 var ble = badge.AddComponent<LayoutElement>();
@@ -84,7 +78,6 @@ namespace DescendersModMenu.UI
                     FontStyle.Bold, TextAnchor.MiddleCenter, new Color(1f, 0.55f, 0.1f, 1f));
                 UIHelpers.Fill(UIHelpers.RT(badgeTxt.gameObject));
 
-                // Spacer pushes the on-screen overlay toggle to the right
                 var hdrSpacer = UIHelpers.Obj("HdrSp", hdrRow.transform);
                 hdrSpacer.AddComponent<LayoutElement>().flexibleWidth = 1;
 
@@ -123,7 +116,6 @@ namespace DescendersModMenu.UI
                 var olLe = _onlineText.gameObject.AddComponent<LayoutElement>();
                 olLe.flexibleWidth = 1; olLe.minHeight = 14; olLe.preferredHeight = 14;
 
-                // ── Chat box (fills remaining space so input stays at bottom) ──
                 var chatBox = UIHelpers.Obj("ChatBox", pg.transform);
                 chatBox.AddComponent<Image>().color = UIHelpers.WinPanel;
                 var cbLe = chatBox.AddComponent<LayoutElement>();
@@ -155,7 +147,6 @@ namespace DescendersModMenu.UI
                 _chatContent = content.transform;
                 UIHelpers.AddScrollbar(_chatScroll);
 
-                // ── Input row (pinned under chat by flexible chat height) ──
                 var inputRow = UIHelpers.Obj("InputRow", pg.transform);
                 inputRow.AddComponent<Image>().color = UIHelpers.RowBg;
                 _inputRowLe = inputRow.AddComponent<LayoutElement>();
@@ -184,7 +175,6 @@ namespace DescendersModMenu.UI
                 var itLe = _inputText.gameObject.AddComponent<LayoutElement>();
                 itLe.flexibleWidth = 1; itLe.minWidth = 0; itLe.minHeight = InputLineH;
 
-                // Flashing cursor dot
                 _chatCursor = UIHelpers.Txt("ChCur", inputBg.transform, "●",
                     10, FontStyle.Normal, TextAnchor.UpperRight, UIHelpers.OnColor);
                 _chatCursor.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
@@ -195,7 +185,6 @@ namespace DescendersModMenu.UI
                 ccRT.anchoredPosition = new Vector2(-4, -2);
                 _chatCursor.gameObject.SetActive(false);
 
-                // Click to focus
                 _chatBoxRect = UIHelpers.RT(inputBg);
                 var chatFocusBtn = inputBg.AddComponent<UnityEngine.UI.Button>();
                 chatFocusBtn.targetGraphic = inputBg.GetComponent<UnityEngine.UI.Image>();
@@ -230,12 +219,9 @@ namespace DescendersModMenu.UI
             catch (System.Exception ex) { MelonLogger.Error("ChatPage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ChatPage"); }
         }
 
-        // ── Everything below this line is UNCHANGED from the original ─
 
         public static void Tick()
         {
-            // Menu is destroyed on scene unload — Unity fake-null must use Unity ==,
-            // not (object)x == null, or every Tick throws MissingReferenceException.
             if (!_inputText) return;
 
             if (ModChat.HasNewMessages)
@@ -246,7 +232,6 @@ namespace DescendersModMenu.UI
                     ModChat.MarkAsRead();
             }
 
-            // Click-away to unfocus
             if (_chatFocused && Input.GetMouseButtonDown(0))
             {
                 if (_chatBoxRect
@@ -254,7 +239,6 @@ namespace DescendersModMenu.UI
                     _chatFocused = false;
             }
 
-            // Cursor pulse
             if (_chatCursor)
             {
                 _chatCursor.gameObject.SetActive(_chatFocused);
@@ -312,7 +296,6 @@ namespace DescendersModMenu.UI
             ResizeInputBox();
         }
 
-        // Menu GameObject is destroyed on scene change — drop stale Unity refs.
         public static void ClearUiRefs()
         {
             _chatScroll = null;
@@ -354,7 +337,6 @@ namespace DescendersModMenu.UI
                 GameObject.Destroy(_chatContent.GetChild(i).gameObject);
             foreach (var msg in ModChat.Messages)
             {
-                // Phone-style bubble: meta row + wrapping body (grows with text).
                 var row = UIHelpers.Obj("MR", _chatContent);
                 row.AddComponent<Image>().color = msg.IsSelf
                     ? new Color(0f, 0.16f, 0.32f, 0.35f)
@@ -407,7 +389,6 @@ namespace DescendersModMenu.UI
 
         public static void RefreshAll() => RebuildMessages();
 
-        // Unity Text only wraps on whitespace — break long runs so "hhhh…" wraps.
         private static string SoftWrapForDisplay(string text)
         {
             if (string.IsNullOrEmpty(text)) return text;
@@ -440,12 +421,10 @@ namespace DescendersModMenu.UI
             float textH = InputLineH;
             if (_inputBuffer.Length > 0)
             {
-                // Measure wrapped height against current box width.
                 float w = UIHelpers.RT(_inputText.gameObject).rect.width;
                 if (w < 40f && _chatBoxRect) w = _chatBoxRect.rect.width - 28f;
                 if (w < 40f) w = 400f;
                 textH = Mathf.Max(InputLineH, _inputText.preferredHeight);
-                // Cap to max lines
                 float maxH = InputLineH * InputMaxLines;
                 if (textH > maxH) textH = maxH;
             }
@@ -494,3 +473,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

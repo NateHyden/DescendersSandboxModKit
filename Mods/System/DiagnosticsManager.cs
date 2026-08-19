@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using MelonLoader;
@@ -32,8 +32,6 @@ namespace DescendersModMenu.Mods
         public static void Report(string name, bool ok, string error = "")
         {
             _statuses.Add(new ModStatus(name, ok, error));
-            // Successes are batched into LogStartupSummary — only failures
-            // hit the MelonLoader console so startup isn't a wall of OK lines.
             if (!ok)
             {
                 ModLog.Warn("[Diagnostics] " + name + ": FAILED - " + error);
@@ -43,7 +41,6 @@ namespace DescendersModMenu.Mods
 
         public static void LogStartupSummary()
         {
-            // Quiet success path — only surface startup failures in MelonLoader.
             if (FailCount > 0)
             {
                 ModLog.Warn("[Diagnostics] Startup: " + FailCount + " failed, "
@@ -146,3 +143,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

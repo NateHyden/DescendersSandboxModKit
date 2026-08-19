@@ -1,8 +1,8 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using System.Reflection;
 using HarmonyLib;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -53,8 +53,6 @@ namespace DescendersModMenu.Mods
         public static int CurrentPreset { get; private set; } = 0;
         public static bool StormEnabled { get; private set; } = false;
 
-        // Rain intensity � scales particle emission rate on active storm EffectInstances
-        // Level 1 = 0.5x (light), Level 5 = 1x (default), Level 10 = 3x (heavy)
         public static int RainIntensityLevel { get; private set; } = 5;
         private static readonly float[] RainMultipliers = { 0.5f, 0.65f, 0.8f, 0.9f, 1f, 1.3f, 1.7f, 2.0f, 2.5f, 3.0f };
 
@@ -63,7 +61,6 @@ namespace DescendersModMenu.Mods
             return RainMultipliers[System.Math.Max(0, System.Math.Min(RainMultipliers.Length - 1, RainIntensityLevel - 1))];
         }
 
-        // Cached reflection for EffectList.LateUpdate postfix (hot path — called every frame per EffectList)
         private static FieldInfo _elEnvFlagsField = null;
         private static FieldInfo _elLtpField = null;
         private static FieldInfo _eiPsField = null;
@@ -112,8 +109,6 @@ namespace DescendersModMenu.Mods
         }
 
         // ═══════════════════════════════════════════════════════════════
-        //  CUSTOM RAIN — the game's EffectList system doesn't contain
-        //  falling rain. We create our own ParticleSystem on the camera.
         // ═══════════════════════════════════════════════════════════════
         private static GameObject _rainObj = null;
         private static ParticleSystem _rainPS = null;
@@ -128,14 +123,12 @@ namespace DescendersModMenu.Mods
 
             _rainObj = new GameObject("ModRain");
             _rainObj.transform.SetParent(cam.transform, false);
-            // Centered above and slightly forward — large box ensures rain is visible in all directions
             _rainObj.transform.localPosition = new Vector3(0f, 12f, 8f);
             _rainObj.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
 
             _rainPS = _rainObj.AddComponent<ParticleSystem>();
             _rainPS.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
-            // Main module
             var main = _rainPS.main;
             main.loop = true;
             main.startLifetime = 1.5f;
@@ -147,24 +140,20 @@ namespace DescendersModMenu.Mods
             main.gravityModifier = 0.3f;
             main.playOnAwake = false;
 
-            // Emission
             var emission = _rainPS.emission;
             emission.enabled = true;
             emission.rateOverTime = GetRainEmissionRate();
 
-            // Shape — box above camera
             var shape = _rainPS.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Box;
             shape.scale = new Vector3(150f, 1f, 150f);
 
-            // Renderer — stretched billboard for rain streaks
             var renderer = _rainObj.GetComponent<ParticleSystemRenderer>();
             renderer.renderMode = ParticleSystemRenderMode.Stretch;
             renderer.lengthScale = 5f;
             renderer.velocityScale = 0.05f;
             renderer.material = new Material(Shader.Find("Particles/Alpha Blended"));
-            // Create a small white texture for rain drops
             Texture2D tex = new Texture2D(4, 4);
             Color[] pixels = new Color[16];
             for (int p = 0; p < 16; p++) pixels[p] = Color.white;
@@ -196,7 +185,6 @@ namespace DescendersModMenu.Mods
 
         private static float GetRainEmissionRate()
         {
-            // Level 1=200, 5=1000, 10=3000
             return RainMultipliers[System.Math.Max(0, System.Math.Min(RainMultipliers.Length - 1, RainIntensityLevel - 1))] * 2000f;
         }
 
@@ -227,7 +215,6 @@ namespace DescendersModMenu.Mods
             {
                 float mult = RainMultipliers[RainIntensityLevel - 1];
 
-                // Collect particle systems from EffectInstances only
                 EffectInstance[] instances = Object.FindObjectsOfType<EffectInstance>();
                 if ((object)instances == null || instances.Length == 0)
                 { ModLog.Warn("[SkyColours] No EffectInstances found."); return; }
@@ -249,12 +236,11 @@ namespace DescendersModMenu.Mods
 
                 if (psList.Count == 0) { ModLog.Warn("[SkyColours] No PS in EffectInstances."); return; }
 
-                // Cache default rates on first call (only reset by storm toggle, not slider)
                 if ((object)_cachedRainPS == null)
                 {
                     var validPS = new System.Collections.Generic.List<ParticleSystem>();
                     var validRates = new System.Collections.Generic.List<float>();
-                    float defaultStormRate = 100f; // default for storm particles that spawn disabled
+                    float defaultStormRate = 100f;
 
                     for (int i = 0; i < psList.Count; i++)
                     {
@@ -264,8 +250,6 @@ namespace DescendersModMenu.Mods
                         float rod = em.rateOverDistance.mode == ParticleSystemCurveMode.Constant
                             ? em.rateOverDistance.constant : em.rateOverDistance.curveMultiplier;
 
-                        // Use actual rate if > 0, otherwise use default storm rate
-                        // Storm particles spawn disabled (rate=0) — we still need to cache them
                         float baseRate;
                         if (rot > 0f)
                             baseRate = rot;
@@ -277,13 +261,11 @@ namespace DescendersModMenu.Mods
                         validPS.Add(psList[i]);
                         validRates.Add(baseRate);
 
-                        // Convert rateOverDistance emitters to rateOverTime
                         if (rod > 0f && rot <= 0f)
                         {
                             em.rateOverDistance = 0f;
                             em.rateOverTime = baseRate;
                         }
-                        // Enable emission and set rate for particles that spawned disabled
                         if (rot <= 0f && rod <= 0f)
                         {
                             em.enabled = true;
@@ -302,7 +284,6 @@ namespace DescendersModMenu.Mods
                 if (_cachedRainPS.Length == 0)
                 { ModLog.Warn("[SkyColours] No emitters found on world EffectInstances."); return; }
 
-                // Apply multiplier via rateOverTime
                 int applied = 0;
                 for (int i = 0; i < _cachedRainPS.Length; i++)
                 {
@@ -330,7 +311,6 @@ namespace DescendersModMenu.Mods
         private static FieldInfo _cycleField = null;
         private static FieldInfo _hourField = null;
 
-        // Captured scene defaults — set once on scene init before any mod touches them
         private static float _defaultHour = 12f;
         private static bool _defaultsCaptured = false;
 
@@ -360,7 +340,6 @@ namespace DescendersModMenu.Mods
                 }
                 if (!_defaultsCaptured)
                 {
-                    // TOD_Sky only exists in gameplay scenes, not the menu — skip silently
                     _defaultHour = 12f;
                 }
             }
@@ -371,21 +350,17 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Restore sky to exactly what it was when the scene loaded
         public static void RestoreDefault()
         {
             CurrentPreset = 0;
-            // Only capture if we haven't already — re-capturing after a preset
-            // would read the preset's hour, not the original scene hour
             if (!_defaultsCaptured)
                 CaptureSceneDefaults();
             if (_defaultsCaptured)
                 SetTODHour(_defaultHour);
-            _skyComp = null; // clear cache so next SetTODHour re-finds the component
+            _skyComp = null;
             ModLog.Debug("[SkyColours] Restored default (preset=0, hour=" + (_defaultsCaptured ? _defaultHour : -1f) + ")");
         }
 
-        // Used by Save/Load — stores the preset index without touching the game world
         public static void SetPresetSilent(int preset)
         {
             CurrentPreset = preset;
@@ -394,7 +369,6 @@ namespace DescendersModMenu.Mods
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
         {
             int patchCount = 0;
-            // ── 1. TOD_Sky.LateUpdate (existing) ──────────────────────────
             try
             {
                 System.Type todSkyType = null;
@@ -432,7 +406,6 @@ namespace DescendersModMenu.Mods
                 Telemetry.ReportErrorAsync(ex, "SkyColours");
             }
 
-            // ── 2. EffectList.TLJ (prefix+postfix) ───────────────────────
             try
             {
                 MethodInfo tljMethod = typeof(EffectList).GetMethod("TLJ\u0081Hrt",
@@ -459,7 +432,6 @@ namespace DescendersModMenu.Mods
                 Telemetry.ReportErrorAsync(ex, "SkyColours");
             }
 
-            // ── 3. EffectList.LateUpdate (storm enforcement) ─────────────
             try
             {
                 MethodInfo elLateUpdate = typeof(EffectList).GetMethod("LateUpdate",
@@ -481,7 +453,6 @@ namespace DescendersModMenu.Mods
                 Telemetry.ReportErrorAsync(ex, "SkyColours");
             }
 
-            // ── 4. EffectList.UpdateEnvironmentStates ─────────────────────
             try
             {
                 MethodInfo uesMethod = typeof(EffectList).GetMethod("UpdateEnvironmentStates",
@@ -534,8 +505,6 @@ namespace DescendersModMenu.Mods
         public static void ApplyPreset(int index)
         {
             if (index < 0 || index >= PresetNames.Length) return;
-            // Capture the original hour BEFORE we change it — this is the last safe moment
-            // (OnSceneWasInitialized may have been too early if TOD_Sky wasn't ready yet)
             if (!_defaultsCaptured)
                 CaptureSceneDefaults();
             CurrentPreset = index;
@@ -620,12 +589,6 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // Post-update rename: old obfuscated name "S\u0083wckiX" no longer exists.
-                // Renamed to "RemoveActiveEffects" (confirmed via decompile cross-check on
-                // 03/08/2026 — identical body: destroys GetComponent<TOD_Camera>().sky.gameObject).
-                // A second obfuscated candidate with an identical body also exists
-                // ("c\u007F\u0083k\u0083PV") but RemoveActiveEffects is the public, legibly-named
-                // one and matches the original's public accessibility, so it's the safer bet.
                 MethodInfo destroySky = typeof(CameraEffects).GetMethod("RemoveActiveEffects",
                     BindingFlags.Public | BindingFlags.Instance);
                 if ((object)destroySky != null)
@@ -675,7 +638,7 @@ namespace DescendersModMenu.Mods
 
                 if (StormEnabled)
                 {
-                    _cachedRainPS = null; // force recache since particles just respawned
+                    _cachedRainPS = null;
                     ApplyRainIntensity();
                 }
             }
@@ -721,7 +684,6 @@ namespace DescendersModMenu.Mods
         {
             TickStorm(ref _tickEfhType, ref _tickSetEnvFlag);
 
-            // Create rain if storm is on but rain doesn't exist yet (deferred from ToggleStorm)
             if (StormEnabled && !UnityNull.Alive(_rainObj))
             {
                 _rainObj = null;
@@ -746,9 +708,6 @@ namespace DescendersModMenu.Mods
                         BindingFlags.Public | BindingFlags.Instance);
                 if ((object)setEnvFlag == null) return;
 
-                // Big open maps have hundreds of EffectLists — forcing flags every
-                // LateUpdate with fresh allocations was a major FPS hit. Refresh
-                // the list occasionally; re-apply env flags at a low rate.
                 if ((object)_cachedEffectLists == null || Time.time - _effectListCacheTime > 5f)
                 {
                     _cachedEffectLists = Object.FindObjectsOfType<EffectList>();
@@ -757,7 +716,6 @@ namespace DescendersModMenu.Mods
 
                 if (Time.time - _lastStormForceTime < StormForceInterval)
                 {
-                    // Still keep rain emission in sync cheaply every frame.
                     ApplyCachedRainEmission();
                     return;
                 }
@@ -834,16 +792,14 @@ namespace DescendersModMenu.Mods
             _tickSetEnvFlag = null;
         }
 
-        // Called by TLJ patch immediately after fresh EffectInstances are spawned
         public static void ApplyIntensityToEffectList(EffectList effectList)
         {
             if (!StormEnabled) return;
             try
             {
                 float mult = RainMultipliers[RainIntensityLevel - 1];
-                if (System.Math.Abs(mult - 1f) < 0.001f) return; // default � no change needed
+                if (System.Math.Abs(mult - 1f) < 0.001f) return;
 
-                // Read ltpCVSt � the list of active particle EffectInstances just populated
                 System.Reflection.FieldInfo ltpField = typeof(EffectList).GetField("ltpCVSt",
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 if ((object)ltpField == null) return;
@@ -875,7 +831,6 @@ namespace DescendersModMenu.Mods
 
                             if (rod > 0f)
                             {
-                                // Convert to rateOverTime and apply intensity
                                 em.rateOverDistance = 0f;
                                 em.rateOverTime = rod * 10f * mult;
                             }
@@ -922,8 +877,8 @@ namespace DescendersModMenu.Mods
                 if ((object)_envField == null) return;
                 bool[] flags = _envField.GetValue(__instance) as bool[];
                 if ((object)flags == null || flags.Length <= 7) return;
-                flags[7] = true;  // Visuals_Storm
-                flags[4] = false; // Visuals_Normal
+                flags[7] = true;
+                flags[4] = false;
             }
             catch { }
         }
@@ -976,8 +931,8 @@ namespace DescendersModMenu.Mods
                 if ((object)_envField == null) return;
                 bool[] flags = _envField.GetValue(__instance) as bool[];
                 if ((object)flags == null || flags.Length <= 7) return;
-                flags[7] = true;  // Visuals_Storm
-                flags[4] = false; // Visuals_Normal
+                flags[7] = true;
+                flags[4] = false;
             }
             catch { }
         }
@@ -998,3 +953,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -14,13 +14,11 @@ namespace DescendersModMenu.UI
         private static readonly List<Text> _tabTxts = new List<Text>();
         private static readonly List<Image> _tabBgs = new List<Image>();
 
-        // Earthquake UI refs
         private static Text _eqIntVal, _eqFreqVal, _eqDurVal, _eqTogVal, _eqModeLbl;
         private static Image _eqIntBar, _eqFreqBar, _eqDurBar, _eqTrack;
         private static RectTransform _eqKnob;
         private static GameObject _eqFreqRow;
 
-        // Trick Attack UI refs
         private static Text _taTogVal, _taTargetInput, _taTimeLbl;
         private static Image _taTrack;
         private static RectTransform _taKnob;
@@ -84,7 +82,6 @@ namespace DescendersModMenu.UI
                 AddSubTab(tabBar.transform, contentArea.transform, "Survival",
                     t => BuildSurvivalPage(t));
 
-                // ── "EXPERIMENTAL" badge — pushed to the right ────────
                 var spacer = UIHelpers.Obj("TabSpacer", tabBar.transform);
                 spacer.AddComponent<LayoutElement>().flexibleWidth = 1;
 
@@ -149,7 +146,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.SectionHeader("EARTHQUAKE MODE", c);
 
-                // Description
                 UIHelpers.InfoBox(c,
                     "Simulates an earthquake while you ride. Quake events strike at intervals " +
                     "and last for the chosen duration. During each event rapid random physics " +
@@ -162,7 +158,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("CONTROLS", c);
 
-                // Enable toggle
                 var enRow = UIHelpers.StatRow("Enable", c);
                 _eqTogVal = UIHelpers.Txt("EqTV", enRow.transform, "OFF", 11,
                     FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -171,7 +166,6 @@ namespace DescendersModMenu.UI
                     () => { EarthquakeMode.Toggle(); RefreshEarthquake(); },
                     out _eqTrack, out _eqKnob);
 
-                // Intensity
                 var intRow = UIHelpers.StatRow("Intensity", c);
                 _eqIntBar = UIHelpers.MakeBar("EqIB", intRow.transform,
                     (EarthquakeMode.IntensityLevel - 1) / 9f);
@@ -184,7 +178,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(intRow.transform, "+",
                     () => { EarthquakeMode.IncreaseIntensity(); RefreshEarthquake(); });
 
-                // Frequency Mode buttons
                 UIHelpers.SectionHeader("FREQUENCY MODE", c);
                 var modeRow = UIHelpers.StatRow("Mode", c);
                 _eqModeLbl = UIHelpers.Txt("EqML", modeRow.transform,
@@ -195,7 +188,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.ActionBtn(modeRow.transform, "Random", () => { EarthquakeMode.SetFrequencyMode(1); RefreshEarthquake(); }, 52);
                 UIHelpers.ActionBtn(modeRow.transform, "Constant", () => { EarthquakeMode.SetFrequencyMode(2); RefreshEarthquake(); }, 64);
 
-                // Frequency slider — only relevant in Timed mode
                 _eqFreqRow = UIHelpers.StatRow("Frequency", c);
                 _eqFreqBar = UIHelpers.MakeBar("EqFB", _eqFreqRow.transform,
                     (EarthquakeMode.FrequencyLevel - 1) / 9f);
@@ -213,7 +205,6 @@ namespace DescendersModMenu.UI
                     "Random = surprise quakes, up to 30 seconds apart. " +
                     "Constant = never stops shaking.");
 
-                // Duration
                 var durRow = UIHelpers.StatRow("Quake Duration", c);
                 _eqDurBar = UIHelpers.MakeBar("EqDB", durRow.transform,
                     (EarthquakeMode.DurationLevel - 1) / 9f);
@@ -250,8 +241,6 @@ namespace DescendersModMenu.UI
             UIHelpers.SetBar(_eqIntBar, (EarthquakeMode.IntensityLevel - 1) / 9f);
             UIHelpers.SetBar(_eqFreqBar, (EarthquakeMode.FrequencyLevel - 1) / 9f);
             UIHelpers.SetBar(_eqDurBar, (EarthquakeMode.DurationLevel - 1) / 9f);
-            // Only show frequency slider in Timed mode.
-            // Unity fake-null: (object)x != null is true for destroyed UI after a map change.
             if (UnityNull.Alive(_eqFreqRow))
                 _eqFreqRow.SetActive(EarthquakeMode.FrequencyMode == 0);
         }
@@ -332,7 +321,6 @@ namespace DescendersModMenu.UI
                     () => { PoliceChaseMode.Toggle(); RefreshPoliceChase(); },
                     out _pcTrack, out _pcKnob);
 
-                // Countdown / status row
                 var statusRow = UIHelpers.StatRow("Status", c);
                 _pcStatusTxt = UIHelpers.Txt("PcSt", statusRow.transform, "—", 11,
                     FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextDim);
@@ -410,7 +398,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("SETUP", c);
 
-                // ── Score target input — exact MapPage seed input pattern ──
                 var inputRow = UIHelpers.Obj("TaInputRow", c);
                 inputRow.AddComponent<Image>().color = UIHelpers.RowBg;
                 var irLE = inputRow.AddComponent<LayoutElement>();
@@ -437,7 +424,6 @@ namespace DescendersModMenu.UI
                     FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextLight);
                 _taTargetInput.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
-                // Button on the background panel so clicking it focuses the input
                 _taInputRect = UIHelpers.RT(inputBg);
                 var focusBtn = inputBg.AddComponent<Button>();
                 focusBtn.targetGraphic = inputBg.GetComponent<Image>();
@@ -457,7 +443,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.InfoBox(c, "Click the box, type your target score, press Set or Enter.");
 
-                // Time limit selector — same style as BikeSwitcher ◀ label ▶
                 var timeRow = UIHelpers.StatRow("Time Limit", c);
                 UIHelpers.SmallBtn(timeRow.transform, "\u25C0",
                     () => { TrickAttackMode.PrevTimeLimit(); RefreshTrickAttack(); });
@@ -493,12 +478,10 @@ namespace DescendersModMenu.UI
         public static bool IsTAInputFocused => _taFocused;
         private static RectTransform _taInputRect = null;
 
-        // Boulder Dodge UI refs
         private static Text _bdTogVal, _bdIntervalLbl, _bdSizeLbl, _bdForwardLbl, _bdCountLbl;
         private static Image _bdTrack;
         private static RectTransform _bdKnob;
 
-        // Survival UI refs
         private static Text _svTogVal, _svBailLbl, _svBleedLbl, _svHealLbl, _svHPLbl;
         private static Image _svTrack;
         private static RectTransform _svKnob;
@@ -507,7 +490,6 @@ namespace DescendersModMenu.UI
         {
             if (_taTargetInput == null) return;
 
-            // Click away to unfocus
             if (_taFocused && Input.GetMouseButtonDown(0))
             {
                 Vector2 mp = Input.mousePosition;
@@ -685,14 +667,12 @@ namespace DescendersModMenu.UI
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("SETTINGS", c);
 
-                // Bail penalty
                 var bailRow = UIHelpers.StatRow("Bail Penalty", c);
                 UIHelpers.SmallBtn(bailRow.transform, "\u25C0", () => { SurvivalMode.PrevBailPenalty(); RefreshSurvival(); });
                 _svBailLbl = UIHelpers.Txt("SvBailV", bailRow.transform, SurvivalMode.BailPenaltyDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _svBailLbl.gameObject.AddComponent<LayoutElement>().preferredWidth = 52;
                 UIHelpers.SmallBtn(bailRow.transform, "\u25B6", () => { SurvivalMode.NextBailPenalty(); RefreshSurvival(); });
 
-                // Bleed rate
                 var bleedRow = UIHelpers.StatRow("Speed Bleed", c);
                 UIHelpers.SmallBtn(bleedRow.transform, "\u25C0", () => { SurvivalMode.PrevBleed(); RefreshSurvival(); });
                 _svBleedLbl = UIHelpers.Txt("SvBleedV", bleedRow.transform, SurvivalMode.BleedDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
@@ -700,7 +680,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(bleedRow.transform, "\u25B6", () => { SurvivalMode.NextBleed(); RefreshSurvival(); });
                 UIHelpers.InfoBox(c, "HP lost per second when you're nearly stationary. Set to None to disable.");
 
-                // Trick heal
                 var healRow = UIHelpers.StatRow("Trick Heal", c);
                 UIHelpers.SmallBtn(healRow.transform, "\u25C0", () => { SurvivalMode.PrevHeal(); RefreshSurvival(); });
                 _svHealLbl = UIHelpers.Txt("SvHealV", healRow.transform, SurvivalMode.HealDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
@@ -716,7 +695,6 @@ namespace DescendersModMenu.UI
                 _svTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(enRow.transform, "SvT", () => { SurvivalMode.Toggle(); RefreshSurvival(); }, out _svTrack, out _svKnob);
 
-                // Live HP display
                 var hpRow = UIHelpers.StatRow("Health", c);
                 _svHPLbl = UIHelpers.Txt("SvHP", hpRow.transform, "—", 12, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextDim);
                 _svHPLbl.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
@@ -886,3 +864,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

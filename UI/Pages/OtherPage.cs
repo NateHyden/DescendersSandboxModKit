@@ -1,4 +1,4 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -8,20 +8,14 @@ namespace DescendersModMenu.UI
 {
     public static class OtherPage
     {
-        // Trail Painter
         private static Text _trailVal; private static Image _trailTrack; private static RectTransform _trailKnob;
         private static Text _trailColourVal;
-        // Confetti
         private static Text _confettiVal; private static Image _confettiTrack; private static RectTransform _confettiKnob;
-        // Big Head Mode
         private static Text _headVal; private static Image _headTrack; private static RectTransform _headKnob;
         private static Text _headLvlVal;
-        // Chaos Mode
         private static Text _chaosVal; private static Image _chaosTrack; private static RectTransform _chaosKnob;
         private static Text _chaosLastVal;
-        // Random Bike Switch
         private static Text _rbsVal; private static Image _rbsTrack; private static RectTransform _rbsKnob;
-        // Random Mutator
         private static Text _mutatorVal; private static Image _mutatorTrack; private static RectTransform _mutatorKnob;
         private static Text _mutatorLastVal;
 
@@ -141,12 +135,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
-                // ── Favourites/Search registry ──────────────────────────
-                // RegisterStarButton (above) only wires the star icon on
-                // THIS page's own rows. Register(ModFavEntry) is the
-                // separate full registry the Favourites tab AND the Search
-                // tab both actually read from — missing this is why these
-                // mods weren't showing up in search.
                 FavouritesManager.Register(new ModFavEntry
                 {
                     Id = "TrailPainter",
@@ -175,7 +163,7 @@ namespace DescendersModMenu.UI
                         var row = FavsPage.CompactStatRow("Airhorn", p);
                         UIHelpers.ActionBtn(row.transform, "HONK", () => { Airhorn.Honk(); }, 72);
                     },
-                    IsActive = () => false // one-shot action, no persistent state
+                    IsActive = () => false
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
@@ -227,8 +215,6 @@ namespace DescendersModMenu.UI
         {
             TrailPainter.Reset();
             ConfettiOnTrick.Reset();
-            // Airhorn has no persistent state to reset — it's a one-shot
-            // action (like SuperLaunch/TeleportCheckpoint), not a toggle.
             BigHeadMode.Reset();
             ChaosMode.Reset();
             RandomBikeSwitch.Reset();
@@ -267,3 +253,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

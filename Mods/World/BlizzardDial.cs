@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
@@ -8,9 +8,6 @@ using UnityEngine.Rendering;
 
 namespace DescendersModMenu.Mods
 {
-    // Mesh-overlay snow with wheel ruts. Snow Line is player-relative with a
-    // soft curve so mid dial values don't wipe valley snow (old linear map
-    // hit minY≈11 at line 7 while the rider sat at y≈1).
     public static class BlizzardDial
     {
         public static bool Enabled = false;
@@ -20,12 +17,11 @@ namespace DescendersModMenu.Mods
 
         public static readonly string[] SeasonNames = { "Spring", "Summer", "Autumn", "Winter" };
 
-        // Season tints must be strong — old 15–35% lerps looked identical in-game.
         private static readonly Color BaseSnowColor = new Color(0.93f, 0.96f, 1f, 1f);
-        private static readonly Color WinterTint = new Color(0.78f, 0.88f, 1f, 1f);   // cold blue-white
-        private static readonly Color SpringTint = new Color(0.72f, 0.95f, 0.70f, 1f); // green melt
-        private static readonly Color SummerTint = new Color(1f, 0.82f, 0.55f, 1f);    // dirty / warm
-        private static readonly Color AutumnTint = new Color(0.95f, 0.70f, 0.45f, 1f); // orange mud
+        private static readonly Color WinterTint = new Color(0.78f, 0.88f, 1f, 1f);
+        private static readonly Color SpringTint = new Color(0.72f, 0.95f, 0.70f, 1f);
+        private static readonly Color SummerTint = new Color(1f, 0.82f, 0.55f, 1f);
+        private static readonly Color AutumnTint = new Color(0.95f, 0.70f, 0.45f, 1f);
         private static readonly Color RutColor = new Color(0.45f, 0.50f, 0.58f, 1f);
 
         private const float SurfaceLift = 0.18f;
@@ -35,8 +31,8 @@ namespace DescendersModMenu.Mods
         private const int GridResMax = 96;
         private const string RootName = "Sandbox_SnowOverlay";
         private const float CarveRadius = 0.55f;
-        private const float CarveDepthFrac = 0.72f; // how much of thickness to punch down
-        private const float CarveInterval = 0.08f; // min distance between stamps
+        private const float CarveDepthFrac = 0.72f;
+        private const float CarveInterval = 0.08f;
 
         private static GameObject _root;
         private static Material _mat;
@@ -59,7 +55,7 @@ namespace DescendersModMenu.Mods
             public float StepZ;
             public float SizeX;
             public float SizeZ;
-            public int[] GridToTop; // stride*stride → top vert index or -1
+            public int[] GridToTop;
             public float Thickness;
             public bool Dirty;
         }
@@ -101,7 +97,6 @@ namespace DescendersModMenu.Mods
 
         private static Color SeasonSnowColor()
         {
-            // Heavy blend so Spring/Summer/Autumn/Winter are obvious once Blizzard is ON.
             if (SeasonIndex == 1) return Color.Lerp(BaseSnowColor, SummerTint, 0.85f);
             if (SeasonIndex == 2) return Color.Lerp(BaseSnowColor, AutumnTint, 0.85f);
             if (SeasonIndex == 3) return Color.Lerp(BaseSnowColor, WinterTint, 0.75f);
@@ -202,7 +197,6 @@ namespace DescendersModMenu.Mods
                         float drop = punch * falloff;
 
                         Vector3 v = sheet.Verts[top];
-                        // Don't push below the bottom lid (topCount offset).
                         int bot = top + sheet.TopCount;
                         float floorY = sheet.Verts[bot].y + 0.02f;
                         float newY = Mathf.Max(floorY, v.y - drop);
@@ -274,7 +268,6 @@ namespace DescendersModMenu.Mods
                 _matOwned = false;
             }
 
-            // Sprites/Default multiplies vertex color — needed for dark ruts.
             Shader sh = Shader.Find("Sprites/Default");
             if ((object)sh == null) sh = Shader.Find("Unlit/Color");
             if ((object)sh == null) sh = Shader.Find("Legacy Shaders/Diffuse");
@@ -293,7 +286,6 @@ namespace DescendersModMenu.Mods
 
         private static void ApplySeasonToMaterial()
         {
-            // Season lives in vertex colors now (base tint); keep mat white.
             if ((object)_mat == null || _mat == null) return;
             if (_mat.HasProperty("_Color")) _mat.SetColor("_Color", Color.white);
         }
@@ -703,3 +695,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

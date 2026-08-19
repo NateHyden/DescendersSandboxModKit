@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,13 +8,11 @@ namespace DescendersModMenu.UI
 {
     public static class AvalanchePage
     {
-        // Toggle refs
         private static Image _enableTrack; private static RectTransform _enableKnob;
         private static Image _failTrack; private static RectTransform _failKnob;
         private static Image _diffTrack; private static RectTransform _diffKnob;
         private static Image _timerTrack; private static RectTransform _timerKnob;
 
-        // Live labels
         private static Text _timerText = null;
         private static Text _activeText = null;
 
@@ -25,7 +23,6 @@ namespace DescendersModMenu.UI
                 var pg = UIHelpers.Obj("P13R", parent);
                 UIHelpers.Fill(UIHelpers.RT(pg));
 
-                // ScrollRect
                 var scrollObj = UIHelpers.Obj("Scroll", pg.transform);
                 UIHelpers.Fill(UIHelpers.RT(scrollObj));
                 var sr = scrollObj.AddComponent<ScrollRect>();
@@ -57,13 +54,11 @@ namespace DescendersModMenu.UI
                 // ── HEADER ────────────────────────────────────────────
                 UIHelpers.SectionHeader("AVALANCHE MODE", c);
 
-                // Enable toggle
                 var enableRow = UIHelpers.StatRow("Enable", c);
                 UIHelpers.Toggle(enableRow.transform, "AvalEnable",
                     () => { AvalancheMode.Toggle(); RefreshAll(); },
                     out _enableTrack, out _enableKnob);
 
-                // Survival + active count rows
                 var timerRow = UIHelpers.StatRow("Survival Time", c);
                 _timerText = UIHelpers.Txt("ATm", timerRow.transform,
                     "0:00", 12, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
@@ -124,7 +119,6 @@ namespace DescendersModMenu.UI
                     new float[] { 0f, 6f, 10f, 16f }, 2,
                     v => AvalancheMode.ForwardImpulse = v);
 
-                // Shape toggle row
                 var shapeRow = UIHelpers.StatRow("Shape", c);
                 var shapeLbl = UIHelpers.Txt("ShpLbl", shapeRow.transform,
                     "SPHERE", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
@@ -162,7 +156,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
-                // Clear button
                 var clearRow = UIHelpers.StatRow("", c);
                 var clearBtn = UIHelpers.Btn("ClrBtn", clearRow.transform, "CLEAR ALL HAZARDS",
                     new Vector2(180, 32), 12,
@@ -178,7 +171,6 @@ namespace DescendersModMenu.UI
             catch (System.Exception ex) { MelonLogger.Error("AvalanchePage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "AvalanchePage"); }
         }
 
-        // ── Cycle row: Label  [<]  Value  [>] ─────────────────────────
         private static void MakeCycleRow(Transform parent, string label,
             string[] opts, float[] vals, int defIdx, System.Action<float> onChange)
         {
@@ -188,7 +180,6 @@ namespace DescendersModMenu.UI
             hlg.spacing = 4;
             hlg.childForceExpandWidth = false;
 
-            // < button
             var prev = UIHelpers.Btn("Prev", row.transform, "<",
                 new Vector2(28, 28), 14, () => { },
                 UIHelpers.BtnBg, UIHelpers.TextLight);
@@ -196,13 +187,11 @@ namespace DescendersModMenu.UI
             prevLe.preferredWidth = 28; prevLe.minWidth = 28;
             prevLe.preferredHeight = 28; prevLe.minHeight = 28;
 
-            // Value label
             var val = UIHelpers.Txt("Val", row.transform, opts[defIdx],
                 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
             var valLe = val.gameObject.AddComponent<LayoutElement>();
             valLe.preferredWidth = 100; valLe.minWidth = 80;
 
-            // > button
             var next = UIHelpers.Btn("Next", row.transform, ">",
                 new Vector2(28, 28), 14, () => { },
                 UIHelpers.BtnBg, UIHelpers.TextLight);
@@ -210,7 +199,6 @@ namespace DescendersModMenu.UI
             nextLe.preferredWidth = 28; nextLe.minWidth = 28;
             nextLe.preferredHeight = 28; nextLe.minHeight = 28;
 
-            // Wire up after all refs are captured
             prev.onClick.AddListener(() => {
                 idx[0] = (idx[0] - 1 + opts.Length) % opts.Length;
                 val.text = opts[idx[0]];
@@ -263,3 +251,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

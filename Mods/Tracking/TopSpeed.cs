@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using MelonLoader;
 using UnityEngine;
@@ -11,12 +11,8 @@ namespace DescendersModMenu.Mods
         public static float SessionTopSpeed { get; private set; } = 0f;
         private static bool _tracking = false;
 
-        // Throttle saves — never write to disk more than once every 3 seconds.
-        // Without this, File.WriteAllText fires every frame while accelerating,
-        // causing 200-2000ms main-thread stalls (Windows Defender / disk flush).
         private static float _lastSaveTime = -999f;
 
-        // Cached refs � avoid GameObject.Find every frame
         private static GameObject _cachedPlayer = null;
         private static Rigidbody _cachedRb = null;
 
@@ -33,7 +29,6 @@ namespace DescendersModMenu.Mods
         public static void StartTracking() { _tracking = true; }
         public static void StopTracking() { _tracking = false; }
 
-        // Clears the on-screen session stat only — does not touch TopSpeed.txt.
         public static void ResetSession()
         {
             SessionTopSpeed = 0f;
@@ -41,7 +36,6 @@ namespace DescendersModMenu.Mods
             _cachedRb = null;
         }
 
-        // Clears session stat and wipes the persisted all-time record file.
         public static void Reset()
         {
             ResetSession();
@@ -54,13 +48,11 @@ namespace DescendersModMenu.Mods
             _cachedRb = null;
         }
 
-        // Call from OnUpdate every frame
         public static void Tick()
         {
             if (!_tracking) return;
             try
             {
-                // Re-find player if cache is stale (Unity fake-null after map change)
                 if (!UnityNull.Alive(_cachedPlayer) || !_cachedPlayer.activeInHierarchy)
                 {
                     _cachedPlayer = GameObject.Find("Player_Human");
@@ -72,11 +64,8 @@ namespace DescendersModMenu.Mods
                     _cachedRb = _cachedPlayer.GetComponent<Rigidbody>();
                 if (!UnityNull.Alive(_cachedRb)) return;
 
-                // Match the game's speedo formula exactly:
-                // velocity.magnitude * 3.6 / gravity.magnitude * 9.81
-                // At default gravity (-17.5) this equals roughly magnitude * 2.018
                 float gravMag = Physics.gravity.magnitude;
-                if (gravMag < 0.01f) gravMag = 17.5f; // safety
+                if (gravMag < 0.01f) gravMag = 17.5f;
                 float speed = _cachedRb.velocity.magnitude * 3.6f / gravMag * 9.81f;
 
                 if (speed > SessionTopSpeed)
@@ -108,7 +97,7 @@ namespace DescendersModMenu.Mods
         private static void Save()
         {
             float now = Time.realtimeSinceStartup;
-            if (now - _lastSaveTime < 3f) return;   // throttle: max one write per 3 seconds
+            if (now - _lastSaveTime < 3f) return;
             _lastSaveTime = now;
             try
             {
@@ -121,3 +110,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -6,25 +6,18 @@ using MelonLoader;
 
 namespace DescendersModMenu.Mods
 {
-    // Tags the local Photon player with custom property DescMM=<version>, then
-    // scans the room for anyone else carrying that key (other Sandbox users).
-    //
-    // PhotonNetwork (upVWa…) exposes LocalPlayer / playerList as PROPERTIES,
-    // not fields — older FieldInfo lookups silently failed and left the lobby
-    // count at 0 forever.
     internal static class ModDetection
     {
         public const string PropKey = "DescMM";
 
-        // Keep in sync with the shipped menu version so UI labels match.
         public static string ModVersion => BuildInfo.Version;
 
         private static Type _photonNetType;
-        private static PropertyInfo _localPlayerProp; // gQ`tus
-        private static PropertyInfo _allPlayersProp;  // CoH|~Dq
-        private static MethodInfo _setProps;          // KxvEguU
-        private static PropertyInfo _propsProp;       // ttXJk{h on player
-        private static PropertyInfo _nickProp;        // DiQND€L on player
+        private static PropertyInfo _localPlayerProp;
+        private static PropertyInfo _allPlayersProp;
+        private static MethodInfo _setProps;
+        private static PropertyInfo _propsProp;
+        private static PropertyInfo _nickProp;
         private static bool _resolved;
         private static bool _tagged;
         private static float _nextScanTime;
@@ -85,7 +78,7 @@ namespace DescendersModMenu.Mods
                 }
 
                 object localP = _localPlayerProp.GetValue(null, null);
-                if ((object)localP == null) return false; // not in a room yet
+                if ((object)localP == null) return false;
 
                 if ((object)_setProps == null)
                 {
@@ -110,7 +103,6 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // Custom props + RaiseEvent only matter inside a Photon room.
                 if (!ModChat.InRoom)
                 {
                     _tagged = false;
@@ -143,7 +135,6 @@ namespace DescendersModMenu.Mods
                         item.SetValue(ht, ModVersion, new object[] { PropKey });
                 }
 
-                // KxvEguU(Hashtable, Hashtable = null, bool = false)
                 _setProps.Invoke(localP, new object[] { ht, null, false });
                 _tagged = true;
             }
@@ -154,7 +145,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Call on scene unload so the next lobby re-tags.
         public static void ResetTag()
         {
             _tagged = false;
@@ -217,7 +207,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Periodic refresh for Chat / Teleport count without needing a button mash.
         public static void Tick()
         {
             TagLocalPlayer();
@@ -248,3 +237,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

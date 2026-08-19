@@ -1,8 +1,8 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -44,7 +44,6 @@ namespace DescendersModMenu.Mods
 
     public static class CutBrakes_Patch
     {
-        // Cached field: NYsPlot on Vehicle is the brake input
         private static FieldInfo _vehicleField = null;
 
         public static void Postfix(VehicleController __instance)
@@ -54,7 +53,6 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                // Get the Vehicle reference (CDVkgio field on VehicleController)
                 if ((object)_vehicleField == null)
                 {
                     FieldInfo[] fields = __instance.GetType().GetFields(
@@ -72,11 +70,9 @@ namespace DescendersModMenu.Mods
                 Vehicle vehicle = _vehicleField.GetValue(__instance) as Vehicle;
                 if (!UnityNull.Alive(vehicle)) return;
 
-                // Only affect local player
                 if (!string.Equals(vehicle.gameObject.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;
 
-                // NYsPlot is public property on Vehicle - set directly
                 vehicle.NYsPlot = 0f;
             }
             catch (System.Exception ex) { MelonLogger.Error("[CutBrakes] Postfix: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CutBrakes"); }

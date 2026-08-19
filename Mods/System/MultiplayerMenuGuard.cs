@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
@@ -7,9 +7,6 @@ using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Locks the Sandbox menu while MultiManager reports Multiplayer Race Mode.
-    // Detected via game API (InMPRaceMode / GetMultiPlayerSessionType) — no mod
-    // needed on other players. Lobby / freeride / career multiplayer stay unlocked.
     public static class MultiplayerMenuGuard
     {
         public static bool InRaceMode { get; private set; }
@@ -77,14 +74,12 @@ namespace DescendersModMenu.Mods
                     if ((object)_mm == null) return false;
                 }
 
-                // Prefer InMPRaceMode when present
                 if ((object)_inMpRaceMode != null)
                 {
                     object r = _inMpRaceMode.Invoke(_mm, null);
                     if (r is bool && (bool)r) return true;
                 }
 
-                // Fallback: session type name contains RaceMode
                 if ((object)_getSessionType != null)
                 {
                     object session = _getSessionType.Invoke(_mm, null);
@@ -122,7 +117,6 @@ namespace DescendersModMenu.Mods
                 if ((object)_getSessionType == null)
                     _getSessionType = t.GetMethod("GetMultiPlayerSessionType", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-                // Property fallback for InMPRaceMode
                 if ((object)_inMpRaceMode == null)
                 {
                     PropertyInfo p = t.GetProperty("InMPRaceMode", BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
@@ -153,3 +147,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

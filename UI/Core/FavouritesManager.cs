@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using MelonLoader;
@@ -8,7 +8,6 @@ using DescendersModMenu.Mods;
 
 namespace DescendersModMenu.UI
 {
-    // ── Custom delegates — Func<T> and Action (no params) are in System.Core which Unity 2017 Mono doesn't load ──
     public delegate bool FavBoolGetter();
     public delegate int FavIntGetter();
     public delegate float FavFloatGetter();
@@ -26,19 +25,15 @@ namespace DescendersModMenu.UI
 
     public static class FavouritesManager
     {
-        // ── Registry — populated during page CreatePage() ─────────────
         private static readonly Dictionary<string, ModFavEntry> _registry =
             new Dictionary<string, ModFavEntry>();
 
-        // ── Favourites list — persisted to JSON ───────────────────────
         private static readonly Dictionary<string, byte> _favourites = new Dictionary<string, byte>();
         private static readonly List<string> _orderedFavs = new List<string>();
 
-        // ── Star button refs (cleared on menu rebuild) ────────────────
         private static readonly Dictionary<string, Button> _starButtons =
             new Dictionary<string, Button>();
 
-        // ── Refresh callbacks — populated during Rebuild ──────────────
         private static readonly Dictionary<string, FavAction> _refreshCallbacks =
             new Dictionary<string, FavAction>();
 
@@ -87,27 +82,15 @@ namespace DescendersModMenu.UI
             foreach (var kv in _refreshCallbacks)
             {
                 try { kv.Value(); }
-                catch { } // Silently ignore — callbacks may reference destroyed UI during scene transitions
+                catch { }
             }
         }
 
-        // ── Star button colour sync ───────────────────────────────────
         public static void RefreshAllStars()
         {
-            // Wrapped per-entry: SearchPage destroys/rebuilds its rows (and
-            // their star buttons) on every keystroke without unregistering
-            // them here, so a stale/destroyed button can end up sitting in
-            // this dictionary. Without this try/catch, SetStarActive throws
-            // on that one dead reference and aborts the WHOLE loop — which
-            // silently skipped every call site after this one in Toggle(),
-            // including MarkDirty() right below it. That's why favouriting
-            // would sometimes stop updating the Favourites tab entirely
-            // after using Search, confirmed via log 2026-08-05.
             List<string> stale = null;
             foreach (var kv in _starButtons)
             {
-                // Unity fake-null: destroyed buttons still fail (object)==null after
-                // scene unload / Search rebuild. Drop them quietly — not a real fault.
                 if (!kv.Value)
                 {
                     if (stale == null) stale = new List<string>();
@@ -256,7 +239,6 @@ namespace DescendersModMenu.UI
         private static List<string> ParseJsonArray(string json)
         {
             var result = new List<string>();
-            // Find "favourites" array
             int arrStart = json.IndexOf('[');
             int arrEnd = json.LastIndexOf(']');
             if (arrStart < 0 || arrEnd < 0 || arrEnd <= arrStart) return result;
@@ -281,3 +263,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

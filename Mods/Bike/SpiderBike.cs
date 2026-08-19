@@ -1,11 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
-    // Magnet tyres: gravity and bike-up follow the surface so you can ride
-    // walls, roofs and ceilings. Hop turns the magnet off for one jump.
     public static class SpiderBike
     {
         public static bool Enabled { get; private set; } = false;
@@ -95,8 +93,6 @@ namespace DescendersModMenu.Mods
                     away = Vector3.Dot(_rb.velocity, desiredUp);
                 }
 
-                // Only kill the bounce OFF the surface. Never kill speed INTO it —
-                // that is the magnet, and wiping it is why walls started slipping.
                 if (!_hopping && contacting && !_wasPlanted && away > 0.4f)
                     _rb.velocity -= desiredUp * away;
                 if (_hopping && contacting && away <= 0f)
@@ -159,8 +155,6 @@ namespace DescendersModMenu.Mods
             float best = ProbeDistance;
             bool found = false;
 
-            // Prefer the surface under the tyres. Extra rays only win if
-            // they're clearly closer — averaging walls+floor made you slip.
             TryHit(origin, -t.up, ref bestN, ref best, ref found);
             TryHit(origin + t.forward * 0.8f, -t.up, ref bestN, ref best, ref found);
             if (!_hopping)
@@ -222,3 +216,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

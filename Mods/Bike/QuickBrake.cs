@@ -1,8 +1,8 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -11,12 +11,6 @@ namespace DescendersModMenu.Mods
         public static bool Enabled { get; private set; } = false;
         public static int Level { get; private set; } = 5;
 
-        // Old L3 values (1.3x multiplier, 6f drag) are now the L10 ceiling.
-        // L1 is very gentle (1.03x, 0 drag), scaling smoothly up to L9.
-        // L10 = instant (zero velocity).
-        //
-        // Multiplier: L1=1.03, L9=1.27, L10=instant
-        // Extra drag: L1=0, L9=5.3f, L10=instant
         public static float GetMultiplier() { return Level < 10 ? 1.03f + (Level - 1) * 0.027f : 1.3f; }
         public static float GetDrag() { return Level < 10 ? (Level - 1) * 0.67f : 200f; }
 
@@ -65,7 +59,6 @@ namespace DescendersModMenu.Mods
             if ((object)__instance == null) return;
             try
             {
-                // Resolve Vehicle field once
                 if ((object)_vehicleField == null)
                 {
                     FieldInfo[] fields = __instance.GetType().GetFields(
@@ -85,14 +78,12 @@ namespace DescendersModMenu.Mods
                 if (!string.Equals(vehicle.gameObject.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;
 
-                // Not braking — restore drag and do nothing
                 if (vehicle.NYsPlot <= 0f)
                 {
                     if (UnityNull.Alive(_rb)) _rb.drag = _origDrag;
                     return;
                 }
 
-                // Resolve Rigidbody once (re-find after map change / Unity fake-null)
                 if (!UnityNull.Alive(_rb))
                 {
                     _rb = null;
@@ -107,21 +98,18 @@ namespace DescendersModMenu.Mods
                     if (UnityNull.Alive(_rb)) _origDrag = _rb.drag;
                 }
 
-                // Scale brake force by level — L1 barely touches it, L9 maxes it
                 vehicle.NYsPlot = Mathf.Clamp(vehicle.NYsPlot * QuickBrake.GetMultiplier(), 0f, 1f);
 
                 if (!UnityNull.Alive(_rb)) return;
 
                 if (QuickBrake.Level >= 10)
                 {
-                    // Instant — zero everything
                     _rb.velocity = Vector3.zero;
                     _rb.angularVelocity = Vector3.zero;
                     _rb.drag = 200f;
                 }
                 else
                 {
-                    // Extra drag scales with level — 0 at L1, 27f at L9
                     _rb.drag = _origDrag + QuickBrake.GetDrag();
                 }
             }
@@ -142,3 +130,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

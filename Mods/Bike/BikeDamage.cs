@@ -1,42 +1,26 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
-    // BikeDamage — progressive damage from crashes.
-    //
-    // STEERING OFFSET: adds a constant bias to swebLyg (Vehicle steering input property)
-    //   every VehicleController.FixedUpdate — same property ReverseSteering uses.
-    //   This is true fake steering input: the bike pulls in one direction,
-    //   player must counter-steer to go straight. Does NOT affect air physics.
-    //   Only active when Vehicle.IsGrounded (via the onGround bool property).
-    //   Accumulates in one direction — each crash makes it worse.
-    //
-    // REAR WHEEL GONE: hard bail impact (>= 12 m/s) shrinks rear wheel.
-    //   Bone scale → 0.01 (visual) AND HqsqNkJ physics radius → 0.01 (lowers rear).
-    //   Both reapplied every frame to fight physics/animation resets.
-    //
-    // Hard landings also increase steering offset (detected via velocity drop).
     public static class BikeDamage
     {
         public static bool Enabled { get; private set; } = false;
 
         // ── Steering offset ───────────────────────────────────────────
-        // Added to swebLyg each FixedUpdate when grounded.
-        // Positive = pulls right, negative = pulls left. Fixed direction per session.
         private static float _steerOffset = 0f;
-        private static float _offsetDir = 1f;   // set once, never flips
+        private static float _offsetDir = 1f;
 
         // ── Wheel state ───────────────────────────────────────────────
         private static bool _rearWheelGone = false;
-        private static int _hardBailCount = 0;  // bails with impact >= threshold
-        private static int _hardLandingCount = 0;  // hard landings from FixedTick
-        private const int HardBailsToRemove = 3;  // wheel gone after 3 hard bails
-        private const int HardLandsToRemove = 5;  // OR 5 hard landings
-        private const float WheelRemoveThreshold = 12f; // m/s impact = counts as hard bail
+        private static int _hardBailCount = 0;
+        private static int _hardLandingCount = 0;
+        private const int HardBailsToRemove = 3;
+        private const int HardLandsToRemove = 5;
+        private const float WheelRemoveThreshold = 12f;
 
         // ── Hard landing detection ────────────────────────────────────
         private static float _lastSpeed = 0f;
@@ -53,12 +37,10 @@ namespace DescendersModMenu.Mods
         // ── Visual bones ──────────────────────────────────────────────
         private static Transform _rearWheelBone = null;
         private static Transform _steerBone = null;
-        // Captured BEFORE any offset — restoring this keeps bars visually straight
         private static Quaternion _steerBoneNeutral = Quaternion.identity;
         private static bool _steerNeutralCaptured = false;
         private static bool _boneCacheSearched = false;
 
-        // ── Rear wheel roll friction (slippery when gone) ─────────────
         private static PropertyInfo _rollFrictionProp = null;
 
         // ── Rigidbody ─────────────────────────────────────────────────
@@ -75,17 +57,14 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[BikeDamage] -> " + (Enabled ? "ON dir=" + _offsetDir : "OFF"));
         }
 
-        // Called by SessionTrackers.OnBailDetected()
         public static void OnBail(int bailCount, float impactSpeed)
         {
             if (!Enabled) return;
 
-            // Accumulate offset in fixed direction
             float add = Mathf.Lerp(0.02f, 0.08f, Mathf.Clamp01(impactSpeed / 25f));
             _steerOffset += add * _offsetDir;
             _steerOffset = Mathf.Clamp(_steerOffset, -1f, 1f);
 
-            // Count hard bails toward wheel removal
             if (impactSpeed >= WheelRemoveThreshold && !_rearWheelGone)
             {
                 _hardBailCount++;
@@ -103,7 +82,6 @@ namespace DescendersModMenu.Mods
                 + " rearGone=" + _rearWheelGone);
         }
 
-        // Called from OnFixedUpdate — speed tracking + wheel physics reapply
         public static void FixedTick()
         {
             if (!Enabled) return;
@@ -120,7 +98,6 @@ namespace DescendersModMenu.Mods
 
                 float currentSpeed = _cachedRb.velocity.magnitude;
 
-                // Capture steer bone neutral rotation BEFORE any offset accumulates
                 if (!_steerNeutralCaptured && _steerOffset == 0f)
                 {
                     try
@@ -146,7 +123,6 @@ namespace DescendersModMenu.Mods
                     catch { }
                 }
 
-                // Hard landing detection
                 if (_impactCooldown > 0f) _impactCooldown -= Time.fixedDeltaTime;
                 float drop = _lastSpeed - currentSpeed;
                 if (drop >= HardLandingDrop && _impactCooldown <= 0f)
@@ -156,7 +132,6 @@ namespace DescendersModMenu.Mods
                     _steerOffset = Mathf.Clamp(_steerOffset, -1f, 1f);
                     _impactCooldown = ImpactCooldownSecs;
 
-                    // Count hard landings toward wheel removal
                     if (!_rearWheelGone)
                     {
                         _hardLandingCount++;
@@ -173,7 +148,6 @@ namespace DescendersModMenu.Mods
                 }
                 _lastSpeed = currentSpeed;
 
-                // Reapply wheel physics radius + kill friction (fights physics reset)
                 if (_rearWheelGone)
                 {
                     if ((object)_rearWheel != null && !UnityNull.Alive(_rearWheel))
@@ -185,7 +159,6 @@ namespace DescendersModMenu.Mods
                     if (UnityNull.Alive(_rearWheel) && (object)_radiusField != null && _defaultRearRadius > 0f)
                         _radiusField.SetValue(_rearWheel, _defaultRearRadius * 0.01f);
 
-                    // Make rear wheel slippery — near-zero roll friction
                     if (UnityNull.Alive(_rearWheel))
                     {
                         if ((object)_rollFrictionProp == null)
@@ -199,7 +172,6 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
-        // Called from OnLateUpdate
         public static void Tick()
         {
             if (!Enabled) return;
@@ -208,12 +180,9 @@ namespace DescendersModMenu.Mods
             if (!needsSteer && !needsWheel) return;
             try
             {
-                // Restore handlebar visual to neutral rotation (bars appear straight)
-                // steer_Jnt was cached in FixedTick before any offset was applied
                 if (needsSteer && UnityNull.Alive(_steerBone))
                     _steerBone.localRotation = _steerBoneNeutral;
 
-                // Rear wheel bone scale — shrink visually (fights Animation reset)
                 if (needsWheel)
                 {
                     if ((object)_rearWheelBone != null && !UnityNull.Alive(_rearWheelBone))
@@ -261,7 +230,6 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
-        // Exposed to BikeDamage_SteerPatch — the steering offset to apply this frame
         public static float SteerOffset => _steerOffset;
 
         private static void FindRearWheel()
@@ -299,7 +267,6 @@ namespace DescendersModMenu.Mods
             {
                 if (UnityNull.Alive(_rearWheel) && (object)_radiusField != null && _defaultRearRadius > 0f)
                     _radiusField.SetValue(_rearWheel, _defaultRearRadius);
-                // Restore roll friction (default ~1.0)
                 if (UnityNull.Alive(_rearWheel) && (object)_rollFrictionProp != null)
                     _rollFrictionProp.SetValue(_rearWheel, 1.0f, null);
                 if (UnityNull.Alive(_rearWheelBone))
@@ -324,7 +291,7 @@ namespace DescendersModMenu.Mods
         {
             Enabled = false;
             ResetDamage();
-            _offsetDir = 1f; // reset direction on full mod reset
+            _offsetDir = 1f;
             ClearBoneCache();
         }
 
@@ -362,9 +329,6 @@ namespace DescendersModMenu.Mods
         }
     }
 
-    // Harmony postfix — runs after VehicleController.FixedUpdate each physics frame.
-    // Adds a small steering offset to swebLyg (steering input on Vehicle).
-    // Only fires when grounded so airtime tricks are unaffected.
     public static class BikeDamage_SteerPatch
     {
         private static FieldInfo _vehicleField = null;
@@ -380,7 +344,6 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                // Cache Vehicle field on VehicleController
                 if ((object)_vehicleField == null)
                 {
                     FieldInfo[] fields = typeof(VehicleController).GetFields(
@@ -399,13 +362,11 @@ namespace DescendersModMenu.Mods
                 if (!string.Equals(vehicle.gameObject.name, "Player_Human",
                     System.StringComparison.Ordinal)) return;
 
-                // Cache steer property (swebLyg)
                 if ((object)_steerProp == null)
                     _steerProp = typeof(Vehicle).GetProperty(
                         "swebLyg", BindingFlags.Public | BindingFlags.Instance);
                 if ((object)_steerProp == null) return;
 
-                // Cache ground bool property (starts with 'T' — same as SessionTrackers)
                 if (!_groundPropSearched)
                 {
                     _groundPropSearched = true;
@@ -421,14 +382,12 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // Only apply when grounded
                 if ((object)_groundProp != null)
                 {
                     object grounded = _groundProp.GetValue(vehicle, null);
                     if (grounded is bool && !(bool)grounded) return;
                 }
 
-                // Add steering offset — player must steer against it to go straight
                 float current = (float)_steerProp.GetValue(vehicle, null);
                 float modified = Mathf.Clamp(current + BikeDamage.SteerOffset, -1f, 1f);
                 _steerProp.SetValue(vehicle, modified, null);
@@ -437,3 +396,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

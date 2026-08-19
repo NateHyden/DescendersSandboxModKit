@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,7 +17,6 @@ namespace DescendersModMenu.UI
         private static string _renameBuffer = "";
         private static Text _renameHint = null;
 
-        // Capture state before going to shed so we can return to it
         private static object _stateBeforeShed = null;
 
         public static void CreatePage(Transform parent)
@@ -27,7 +26,6 @@ namespace DescendersModMenu.UI
                 var pg = UIHelpers.Obj("P11R", parent);
                 UIHelpers.Fill(UIHelpers.RT(pg));
 
-                // ScrollRect
                 var scrollObj = UIHelpers.Obj("Scroll", pg.transform);
                 UIHelpers.Fill(UIHelpers.RT(scrollObj));
                 var sr = scrollObj.AddComponent<ScrollRect>();
@@ -63,10 +61,9 @@ namespace DescendersModMenu.UI
 
                     var row = UIHelpers.StatRow("", c);
 
-                    // Name button — Panel with Image so it can be clicked
                     var nmObj = UIHelpers.Obj("NmBtn" + i, row.transform);
                     var nmImg = nmObj.AddComponent<Image>();
-                    nmImg.color = new Color(0, 0, 0, 0); // transparent — just for raycast
+                    nmImg.color = new Color(0, 0, 0, 0);
                     var nmLe = nmObj.AddComponent<LayoutElement>();
                     nmLe.flexibleWidth = 1; nmLe.preferredHeight = UIHelpers.RowH;
                     var nmBtn = nmObj.AddComponent<Button>();
@@ -76,19 +73,16 @@ namespace DescendersModMenu.UI
                     nmBtn.colors = nmCb;
                     nmBtn.onClick.AddListener(() => { StartRename(idx); });
 
-                    // Text inside the name button
                     _nameTexts[i] = UIHelpers.Txt("NmTxt" + i, nmObj.transform,
                         OutfitPresets.GetName(i), 12, FontStyle.Bold,
                         TextAnchor.MiddleLeft, UIHelpers.TextLight);
                     UIHelpers.Fill(UIHelpers.RT(_nameTexts[i].gameObject));
                     _nameTexts[i].raycastTarget = false;
 
-                    // Status
                     _statusTexts[i] = UIHelpers.Txt("St" + i, row.transform,
                         "EMPTY", 10, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                     _statusTexts[i].gameObject.AddComponent<LayoutElement>().preferredWidth = 48;
 
-                    // Save
                     var svBtn = UIHelpers.Btn("SvB" + i, row.transform, "SAVE",
                         new Vector2(60, 30), 12,
                         () => { OutfitPresets.Save(idx); RefreshAll(); },
@@ -96,7 +90,6 @@ namespace DescendersModMenu.UI
                     var svLe = svBtn.gameObject.AddComponent<LayoutElement>();
                     svLe.preferredWidth = 60; svLe.preferredHeight = 30;
 
-                    // Load
                     _loadBtns[i] = UIHelpers.Btn("LdB" + i, row.transform, "LOAD",
                         new Vector2(60, 30), 12,
                         () => { OutfitPresets.Load(idx); RefreshAll(); },
@@ -104,7 +97,6 @@ namespace DescendersModMenu.UI
                     var ldLe = _loadBtns[i].gameObject.AddComponent<LayoutElement>();
                     ldLe.preferredWidth = 60; ldLe.preferredHeight = 30;
 
-                    // Delete
                     _deleteBtns[i] = UIHelpers.Btn("DlB" + i, row.transform, "DEL",
                         new Vector2(46, 30), 12,
                         () => { OutfitPresets.Delete(idx); RefreshAll(); },
@@ -115,7 +107,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
-                // Rename hint
                 var hintRow = UIHelpers.StatRow("", c);
                 _renameHint = UIHelpers.Txt("RenHint", hintRow.transform,
                     "Click a preset name to rename, then type + Enter",
@@ -124,14 +115,12 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
-                // Quick Actions
                 UIHelpers.SectionHeader("QUICK ACTIONS", c);
 
                 var actRow = UIHelpers.StatRow("", c);
                 actRow.GetComponent<LayoutElement>().preferredHeight = 52;
                 actRow.GetComponent<LayoutElement>().minHeight = 52;
 
-                // GO TO SHED
                 var shedBtn = UIHelpers.Btn("ShedBtn", actRow.transform, "GO TO SHED",
                     new Vector2(140, 44), 13,
                     () => { GoToShed(); },
@@ -139,7 +128,6 @@ namespace DescendersModMenu.UI
                 var shedLe = shedBtn.gameObject.AddComponent<LayoutElement>();
                 shedLe.preferredWidth = 140; shedLe.preferredHeight = 44; shedLe.minHeight = 44;
 
-                // LEAVE SHED
                 var leaveBtn = UIHelpers.Btn("LeaveBtn", actRow.transform, "LEAVE SHED",
                     new Vector2(140, 44), 13,
                     () => { LeaveShed(); },
@@ -149,7 +137,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
-                // Rider Customisation
                 UIHelpers.SectionHeader("RIDER CUSTOMISATION", c);
                 UIHelpers.InfoBox(c, "The game doesn't expose a way to read your current look back, so these track their own value rather than showing what's actually equipped - cycle to find the one you want.");
 
@@ -187,7 +174,6 @@ namespace DescendersModMenu.UI
                     if (bodyTypeVal) bodyTypeVal.text = RiderCustomiser.BodyTypeLevel.ToString();
                 }, 100);
 
-                // ── STAR BUTTONS (Favourites) ──────────────────────────
                 Transform opHdr = c.Find("OUTFIT PRESETSH");
                 if ((object)opHdr != null)
                     FavouritesManager.RegisterStarButton("OutfitPresets", UIHelpers.StarBtnAbs(opHdr, "OutfitPresets", () => FavouritesManager.Toggle("OutfitPresets")));
@@ -263,14 +249,6 @@ namespace DescendersModMenu.UI
             catch (System.Exception ex) { MelonLogger.Error("OutfitPage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "OutfitPage"); }
         }
 
-        // Deliberately UnityAction, not System.Action - the real root cause turned out to be
-        // one level deeper than first thought. It's not "lambdas" or "Func<>" specifically:
-        // this game's shipped mscorlib is stripped, and bare System.Action itself (the actual
-        // BCL delegate type) isn't fully present - confirmed directly by the runtime error
-        // ("Missing method .ctor ... type System.Action"). Not one other place in this whole
-        // project declares a parameter as System.Action; every other callback already uses
-        // UnityAction (UnityEngine.Events), which is proven to load since it's used
-        // everywhere. Matching that removes the problem instead of working around it.
         private static Text BuildRiderStepper(Transform parent, string label,
             int currentLevel, UnityEngine.Events.UnityAction onMinus, UnityEngine.Events.UnityAction onPlus)
         {
@@ -290,7 +268,6 @@ namespace DescendersModMenu.UI
                 StateMachine sm = GameObject.FindObjectOfType<StateMachine>();
                 if ((object)sm == null) { ModLog.Warn("[Page11] StateMachine not found."); return; }
 
-                // Capture current state before going to shed
                 var curStateProp = typeof(StateMachine).GetProperty("\u005EtrLeIp",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                 if ((object)curStateProp != null)
@@ -315,7 +292,6 @@ namespace DescendersModMenu.UI
 
                 if (_stateBeforeShed != null)
                 {
-                    // Return to the state we were in before going to the shed
                     var popBackTo = typeof(StateMachine).GetMethod("PopStateBackTo",
                         System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                     if ((object)popBackTo != null)
@@ -327,7 +303,6 @@ namespace DescendersModMenu.UI
                     }
                 }
 
-                // Fallback — just pop current state
                 var popState = typeof(StateMachine).GetMethod("PopState",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
                     null, new System.Type[0], null);
@@ -349,7 +324,6 @@ namespace DescendersModMenu.UI
 
         private static void StartRename(int slot)
         {
-            // Reset previous slot colour before switching
             if (_renamingSlot >= 0 && _renamingSlot != slot)
                 if (_nameTexts[_renamingSlot] != null)
                     _nameTexts[_renamingSlot].color = UIHelpers.TextLight;
@@ -418,3 +392,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

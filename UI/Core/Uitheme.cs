@@ -3,13 +3,6 @@
 namespace DescendersModMenu.UI
 {
     // ════════════════════════════════════════════════════════════════════
-    //  UITheme — single file that owns every visual decision in the UI.
-    //
-    //  To retheme the entire menu, change values here only.
-    //  UIHelpers references these tokens. Pages reference UIHelpers.
-    //  Nothing else needs touching.
-    //
-    //  Colour notation: new Color(R, G, B, A) — all values 0.0–1.0
     // ════════════════════════════════════════════════════════════════════
     public static class UITheme
     {
@@ -23,78 +16,61 @@ namespace DescendersModMenu.UI
         public const float RowPad = 12f;
         public const float ContentPad = 4f;
 
-        // Sprite corner radii (pixels on 64×64 source texture)
-        public const int RadiusRow = 8;    // stat rows
-        public const int RadiusBtn = 8;    // buttons
-        public const int RadiusWin = 12;   // window corners
-        public const int RadiusNav = 12;   // nav pill
+        public const int RadiusRow = 8;
+        public const int RadiusBtn = 8;
+        public const int RadiusWin = 12;
+        public const int RadiusNav = 12;
 
         // ── Window backgrounds ───────────────────────────────────────
-        // NOTE: mutable (not readonly) — ColorSchemeManager reassigns these at runtime.
-        // The window outer rim (seen through transparency at edges)
         public static Color BgOuter = new Color(0.047f, 0.040f, 0.068f, 0.98f);
-        // Main content area background
         public static Color BgContent = new Color(0.075f, 0.062f, 0.108f, 1.00f);
-        // Header strip background (slightly darker than content)
         public static Color BgHeader = new Color(0.052f, 0.040f, 0.080f, 1.00f);
-        // Left sidebar background
         public static Color BgSidebar = new Color(0.052f, 0.040f, 0.080f, 1.00f);
-        // Individual stat rows
         public static Color BgRow = new Color(0.108f, 0.090f, 0.145f, 1.00f);
 
         // ── Borders ──────────────────────────────────────────────────
         public static Color BorderWin = new Color(0.155f, 0.130f, 0.200f, 1.00f);
         public static Color BorderRow = new Color(0.145f, 0.120f, 0.195f, 1.00f);
 
-        // ── Accent colour (primary brand / active state) ─────────────
-        // Change Accent + AccentDim + AccentBorder to re-colour everything at once.
-        // NOTE: mutable (not readonly) — ColorSchemeManager reassigns these at runtime.
-        public static Color Accent = new Color(0.749f, 0.373f, 1.000f, 1.00f); // #BF5FFF purple
-        public static Color AccentDim = new Color(0.135f, 0.095f, 0.175f, 1.00f); // pre-blended on BgContent
-        public static Color AccentBorder = new Color(0.228f, 0.135f, 0.295f, 1.00f); // pre-blended border
+        public static Color Accent = new Color(0.749f, 0.373f, 1.000f, 1.00f);
+        public static Color AccentDim = new Color(0.135f, 0.095f, 0.175f, 1.00f);
+        public static Color AccentBorder = new Color(0.228f, 0.135f, 0.295f, 1.00f);
 
-        // ── Secondary colour (Moon button, link text, chat self-msgs) ─
-        // Kept separate so it can differ from Accent if desired.
         public static Color Secondary = new Color(0.749f, 0.373f, 1.000f, 1.00f);
         public static Color SecondaryDim = new Color(0.135f, 0.095f, 0.175f, 1.00f);
         public static Color SecondaryBorder = new Color(0.228f, 0.135f, 0.295f, 1.00f);
 
         // ── Nav sidebar ──────────────────────────────────────────────
-        public static Color NavActiveBg = new Color(0.120f, 0.078f, 0.178f, 1.00f); // pill fill
-        public static Color NavActiveText = new Color(0.749f, 0.373f, 1.000f, 1.00f); // same as Accent
+        public static Color NavActiveBg = new Color(0.120f, 0.078f, 0.178f, 1.00f);
+        public static Color NavActiveText = new Color(0.749f, 0.373f, 1.000f, 1.00f);
         public static readonly Color NavInactiveText = new Color(1.000f, 1.000f, 1.000f, 1.00f);
-        public static Color NavGlow = new Color(0.065f, 0.040f, 0.100f, 1.00f); // bar glow panel
+        public static Color NavGlow = new Color(0.065f, 0.040f, 0.100f, 1.00f);
 
-        // ── Buttons — ACTION (-, +, ◀, ▶, small icon buttons) ───────
-        // NOTE: mutable — ColorSchemeManager tints these per scheme now too.
-        public static Color BtnActionBg = new Color(0.240f, 0.195f, 0.320f, 1.00f);  // clearly lighter than BgRow
-        public static readonly Color BtnActionText = new Color(0.900f, 0.880f, 0.960f, 1.00f);  // bright on dark btn
-        public static Color BtnActionBorder = new Color(0.340f, 0.280f, 0.440f, 1.00f);  // visible border
+        public static Color BtnActionBg = new Color(0.240f, 0.195f, 0.320f, 1.00f);
+        public static readonly Color BtnActionText = new Color(0.900f, 0.880f, 0.960f, 1.00f);
+        public static Color BtnActionBorder = new Color(0.340f, 0.280f, 0.440f, 1.00f);
 
-        // ── Buttons — PRIMARY (Save/Load/Reset style) ────────────────
-        // Larger labelled buttons. Slightly more prominent than action.
         public static Color BtnPrimaryBg = new Color(0.240f, 0.195f, 0.320f, 1.00f);
         public static readonly Color BtnPrimaryText = new Color(0.900f, 0.880f, 0.960f, 1.00f);
         public static Color BtnPrimaryBorder = new Color(0.340f, 0.280f, 0.440f, 1.00f);
 
-        // ── Buttons — DESTRUCTIVE / WARNING (orange accent buttons) ──
         public static readonly Color BtnWarnBg = new Color(0.140f, 0.080f, 0.048f, 1.00f);
         public static readonly Color BtnWarnText = new Color(1.000f, 0.267f, 0.000f, 1.00f);
         public static readonly Color BtnWarnBorder = new Color(0.280f, 0.110f, 0.050f, 1.00f);
 
         // ── Text ─────────────────────────────────────────────────────
-        public static readonly Color TextHeading = new Color(0.900f, 0.880f, 0.950f, 1.00f); // row labels, bold text
-        public static readonly Color TextBody = new Color(0.530f, 0.510f, 0.580f, 1.00f); // secondary labels
-        public static readonly Color TextDim = new Color(0.320f, 0.305f, 0.360f, 1.00f); // hints, placeholders
-        public static readonly Color TextOnBtn = new Color(0.000f, 0.000f, 0.000f, 1.00f); // text on accent-coloured surface
+        public static readonly Color TextHeading = new Color(0.900f, 0.880f, 0.950f, 1.00f);
+        public static readonly Color TextBody = new Color(0.530f, 0.510f, 0.580f, 1.00f);
+        public static readonly Color TextDim = new Color(0.320f, 0.305f, 0.360f, 1.00f);
+        public static readonly Color TextOnBtn = new Color(0.000f, 0.000f, 0.000f, 1.00f);
 
         // ── State indicators ─────────────────────────────────────────
-        public static readonly Color StateOn = new Color(0.000f, 1.000f, 0.533f, 1.00f); // green ON
-        public static readonly Color StateOnBg = new Color(0.063f, 0.145f, 0.098f, 1.00f); // green ON bg (row tint)
-        public static readonly Color StateOnBdr = new Color(0.055f, 0.310f, 0.192f, 1.00f); // green ON border
-        public static readonly Color StateOff = new Color(1.000f, 0.133f, 0.267f, 1.00f); // red OFF
-        public static readonly Color StateOffBg = new Color(0.130f, 0.063f, 0.067f, 1.00f); // red OFF bg (unused but available)
-        public static readonly Color StateOffBdr = new Color(0.255f, 0.075f, 0.098f, 1.00f); // red OFF border
+        public static readonly Color StateOn = new Color(0.000f, 1.000f, 0.533f, 1.00f);
+        public static readonly Color StateOnBg = new Color(0.063f, 0.145f, 0.098f, 1.00f);
+        public static readonly Color StateOnBdr = new Color(0.055f, 0.310f, 0.192f, 1.00f);
+        public static readonly Color StateOff = new Color(1.000f, 0.133f, 0.267f, 1.00f);
+        public static readonly Color StateOffBg = new Color(0.130f, 0.063f, 0.067f, 1.00f);
+        public static readonly Color StateOffBdr = new Color(0.255f, 0.075f, 0.098f, 1.00f);
 
         // ── Warning / orange ─────────────────────────────────────────
         public static readonly Color Warning = new Color(1.000f, 0.267f, 0.000f, 1.00f);
@@ -104,11 +80,12 @@ namespace DescendersModMenu.UI
         // ── Toggle switch ─────────────────────────────────────────────
         public static readonly Color ToggleTrackOn = new Color(0.152f, 0.102f, 0.215f, 1.00f);
         public static readonly Color ToggleTrackOff = new Color(0.135f, 0.110f, 0.178f, 1.00f);
-        public static Color ToggleKnobOn = new Color(0.749f, 0.373f, 1.000f, 1.00f); // matches Accent
+        public static Color ToggleKnobOn = new Color(0.749f, 0.373f, 1.000f, 1.00f);
         public static readonly Color ToggleKnobOff = new Color(0.310f, 0.295f, 0.360f, 1.00f);
 
         // ── Slider / bar ─────────────────────────────────────────────
-        public static Color SliderFill = new Color(0.749f, 0.373f, 1.000f, 1.00f); // matches Accent
+        public static Color SliderFill = new Color(0.749f, 0.373f, 1.000f, 1.00f);
         public static readonly Color SliderBg = new Color(0.135f, 0.110f, 0.178f, 1.00f);
     }
 }
+

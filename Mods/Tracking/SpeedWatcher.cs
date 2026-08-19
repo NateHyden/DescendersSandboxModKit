@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -9,8 +9,6 @@ using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Hold F10 while riding to record all changing Vehicle float fields to desktop
-    // The fields that STOP changing when you hit the speed wall are the cap candidates
     public static class SpeedWatcher
     {
         private static readonly Dictionary<string, float> _prevValues
@@ -22,7 +20,6 @@ namespace DescendersModMenu.Mods
         private static bool _wasHeld = false;
         private static float _sessionStart = 0f;
 
-        // Call this from OnUpdate every frame
         public static void CheckHotkey()
         {
             bool held = Input.GetKey(KeyCode.F10);
@@ -31,20 +28,17 @@ namespace DescendersModMenu.Mods
             {
                 if (!_wasHeld)
                 {
-                    // Just started holding - begin session
                     _prevValues.Clear();
                     _changeLog.Clear();
                     _sessionStart = Time.unscaledTime;
                     ModLog.Debug("[SpeedWatcher] Recording started - release F10 to save.");
                 }
 
-                // Record this frame
                 RecordFrame();
                 _wasHeld = true;
             }
             else if (_wasHeld)
             {
-                // Just released - write to file
                 _wasHeld = false;
                 SaveToFile();
             }
@@ -60,9 +54,8 @@ namespace DescendersModMenu.Mods
 
             float elapsed = Time.unscaledTime - _sessionStart;
 
-            // Get current speed for context
             Rigidbody rb = vehicle.GetComponent<Rigidbody>();
-            float speed = (object)rb != null ? rb.velocity.magnitude * 3.6f : 0f; // m/s to km/h
+            float speed = (object)rb != null ? rb.velocity.magnitude * 3.6f : 0f;
 
             FieldInfo[] fields = vehicle.GetType().GetFields(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
@@ -136,7 +129,6 @@ namespace DescendersModMenu.Mods
                     {
                         List<string> entries = _changeLog[key];
                         sb.AppendLine("── " + key + " (" + entries.Count + " changes) ──");
-                        // Show last 10 changes per field so we can see what happens at top speed
                         int start = Mathf.Max(0, entries.Count - 10);
                         for (int i = start; i < entries.Count; i++)
                             sb.AppendLine("  " + entries[i]);

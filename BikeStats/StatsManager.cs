@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using MelonLoader;
 using DescendersModMenu;
@@ -20,8 +20,6 @@ namespace DescendersModMenu.BikeStats
             Path.Combine(SaveFolder, "BikeStats.json");
 
         // ══════════════════════════════════════════════════════════════
-        //  SAVE — captures everything EXCEPT:
-        //    Graphics tab, Sky section, Modes, Ghost Replay, ESP
         // ══════════════════════════════════════════════════════════════
         public static void SaveStats()
         {
@@ -31,25 +29,21 @@ namespace DescendersModMenu.BikeStats
 
                 var data = new BikeStatsData
                 {
-                    // Bike / Stats
                     AccelerationLevel = Acceleration.Level,
                     MaxSpeedLevel = MaxSpeedMultiplier.Level,
                     LandingImpactLevel = LandingImpact.Level,
                     NoBailEnabled = NoBail.Enabled,
                     BikeIndex = BikeSwitcher.CurrentBikeIndex,
 
-                    // Movement
                     SpinLevel = Movement.SpinLevel,
                     HopLevel = Movement.HopLevel,
                     WheelieLevel = Movement.WheelieLevel,
                     LeanLevel = Movement.LeanLevel,
 
-                    // Suspension
                     SuspTravelLevel = Suspension.TravelLevel,
                     SuspStiffnessLevel = Suspension.StiffnessLevel,
                     SuspDampingLevel = Suspension.DampingLevel,
 
-                    // Game Modifiers
                     WheelieBalanceLevel = GameModifierMods.WheelieBalanceLevel,
                     InAirCorrLevel = GameModifierMods.InAirCorrLevel,
                     FakieBalanceLevel = GameModifierMods.FakieBalanceLevel,
@@ -57,18 +51,15 @@ namespace DescendersModMenu.BikeStats
                     TweakSpeedLevel = GameModifierMods.TweakSpeedLevel,
                     IcePhysicsLevel = GameModifierMods.IcePhysicsLevel,
 
-                    // World (NOT sky, NOT time of day — gravity only)
                     FovLevel = FOV.Level,
                     GravityLevel = Gravity.Level,
 
-                    // Tyres
                     WideTyresEnabled = WideTyres.Enabled,
                     WideTyresLevel = WideTyres.Level,
                     StickyTyresEnabled = StickyTyres.Enabled,
                     StickyForce = StickyTyres.SuctionForce,
                     SpiderBikeEnabled = SpiderBike.Enabled,
 
-                    // Toggles
                     SlowMotionEnabled = SlowMotion.Enabled,
                     SlowMotionLevel = SlowMotion.Level,
                     CutBrakesEnabled = CutBrakes.Enabled,
@@ -91,7 +82,6 @@ namespace DescendersModMenu.BikeStats
                     AirControlEnabled = AirControl.Enabled,
                     AirControlLevel = AirControl.Level,
 
-                    // General toggles
                     AccelerationEnabled = Acceleration.Enabled,
                     MaxSpeedEnabled = MaxSpeedMultiplier.Enabled,
                     LandingImpactEnabled = LandingImpact.Enabled,
@@ -102,46 +92,36 @@ namespace DescendersModMenu.BikeStats
                     BouncyBikeLevel = BouncyBike.BouncinessLevel,
                     NoSpeedWobblesEnabled = GameModifierMods.NoSpeedWobblesEnabled,
 
-                    // Movement toggles
                     SpinEnabled = Movement.SpinEnabled,
                     HopEnabled = Movement.HopEnabled,
                     WheelieEnabled = Movement.WheelieEnabled,
                     LeanEnabled = Movement.LeanEnabled,
 
-                    // Quick Brake
                     QuickBrakeEnabled = QuickBrake.Enabled,
                     QuickBrakeLevel = QuickBrake.Level,
 
-                    // Floats
                     FlyMoveSpeed = FlyMode.MoveSpeed,
                     FlyClimbSpeed = FlyMode.ClimbSpeed,
 
-                    // Menu Customiser
                     MenuPositionPreset = MenuCustomiser.PositionPreset,
                     MenuScaleLevel = MenuCustomiser.ScaleLevel,
                     MenuOpacityLevel = MenuCustomiser.OpacityLevel,
 
-                    // Bike Torch
                     BikeTorchEnabled = BikeTorch.Enabled,
                     BikeTorchIntensityIndex = BikeTorch.IntensityIndex,
 
-                    // Camera Shake
                     CameraShakeEnabled = CameraShake.Enabled,
                     CameraShakeLevel = CameraShake.Level,
 
-                    // Center of Mass
                     CenterOfMassLR = CenterOfMass.OffsetLR,
                     CenterOfMassFB = CenterOfMass.OffsetFB,
                     CenterOfMassUD = CenterOfMass.OffsetUD,
 
-                    // Exploding Props
                     ExplodingPropsEnabled = ExplodingProps.Enabled,
 
-                    // Near Miss Sensitivity
                     NearMissEnabled = NearMissSensitivity.Enabled,
                     NearMissLevel = NearMissSensitivity.Level,
 
-                    // Bike / Player Scale
                     BikeScale = BikeSize.CurrentScale,
                     PlayerScale = PlayerSize.CurrentScale,
                     BikeSizeLevel = BikeSize.Level,
@@ -155,29 +135,22 @@ namespace DescendersModMenu.BikeStats
                     RearWheelSizeLevel = WheelSize.RearLevel,
                     IndividualWheelMode = WheelSize.IsIndividualMode,
 
-                    // Suspension HUD
                     SuspensionHUDEnabled = SuspensionHUD.Enabled,
 
-                    // Brake Fade
                     BrakeFadeEnabled = BrakeFade.Enabled,
                     BrakeBalanceLevel = BrakeFade.BalanceLevel,
 
-                    // Tyre Pressure
                     TyrePressureEnabled = TyrePressure.Enabled,
                     TyrePressureLevel = TyrePressure.Level,
 
-                    // Instant Respawn
                     InstantRespawnEnabled = InstantRespawn.Enabled,
 
-                    // Bike Damage
                     BikeDamageEnabled = BikeDamage.Enabled,
                     HeadlightsOnlyEnabled = HeadlightsOnly.Enabled,
                     UIRemoverEnabled = UIRemover.Enabled,
 
-                    // Wheelie HUD
                     WheelieHUDEnabled = WheelieHUD.Enabled,
 
-                    // Trick Set Swap
                     TrickSetSwapEnabled = TrickSetSwap.Enabled,
                     TrickSetSwapSourceName = TrickSetSwap.CurrentSourceName,
 
@@ -199,12 +172,9 @@ namespace DescendersModMenu.BikeStats
         }
 
         // ══════════════════════════════════════════════════════════════
-        //  LOAD — restores everything that was saved (same exclusions)
         // ══════════════════════════════════════════════════════════════
         public static void LoadStats()
         {
-            // Reset to clean defaults first — ensures mods that are currently ON
-            // but saved as OFF get properly turned off
             try { ResetStats(); }
             catch (System.Exception ex) { ModLog.Warn("[StatsManager] Pre-load reset: " + ex.Message); }
 
@@ -218,20 +188,17 @@ namespace DescendersModMenu.BikeStats
                 if (data == null)
                 { ModLog.Warn("[StatsManager] JSON returned null."); return; }
 
-                // Bike / Stats
                 Acceleration.SetLevel(data.AccelerationLevel);
                 MaxSpeedMultiplier.SetLevel(data.MaxSpeedLevel);
                 LandingImpact.SetLevel(data.LandingImpactLevel);
                 NoBail.SetEnabled(data.NoBailEnabled);
                 BikeSwitcher.SetBike(data.BikeIndex);
 
-                // Floats first
                 FlyMode.MoveSpeed = data.FlyMoveSpeed;
                 FlyMode.ClimbSpeed = data.FlyClimbSpeed;
                 StickyTyres.SuctionForce = data.StickyForce;
                 SlowMotion.SetLevel(data.SlowMotionLevel);
 
-                // Levels
                 Movement.SetSpinLevel(data.SpinLevel);
                 Movement.SetHopLevel(data.HopLevel);
                 Movement.SetWheelieLevel(data.WheelieLevel);
@@ -249,7 +216,6 @@ namespace DescendersModMenu.BikeStats
                 Gravity.SetLevel(data.GravityLevel);
                 WideTyres.SetLevel(data.WideTyresLevel);
 
-                // Toggles — only enable if saved true, don't double-toggle
                 if (data.WideTyresEnabled && !WideTyres.Enabled) WideTyres.Toggle();
                 if (data.StickyTyresEnabled && !StickyTyres.Enabled) StickyTyres.Toggle();
                 if (data.SpiderBikeEnabled && !SpiderBike.Enabled) SpiderBike.Toggle();
@@ -292,37 +258,28 @@ namespace DescendersModMenu.BikeStats
                 QuickBrake.SetLevel(data.QuickBrakeLevel);
                 if (data.QuickBrakeEnabled && !QuickBrake.Enabled) QuickBrake.Toggle();
 
-                // Menu Customiser
                 MenuCustomiser.PositionPreset = data.MenuPositionPreset;
                 MenuCustomiser.ScaleLevel = data.MenuScaleLevel;
                 MenuCustomiser.OpacityLevel = data.MenuOpacityLevel;
                 MenuCustomiser.Apply();
 
-                // Bike Torch
                 BikeTorch.IntensityIndex = data.BikeTorchIntensityIndex;
                 if (data.BikeTorchEnabled && !BikeTorch.Enabled) BikeTorch.Toggle();
 
-                // Camera Shake
                 CameraShake.SetLevel(data.CameraShakeLevel);
                 if (data.CameraShakeEnabled && !CameraShake.Enabled) CameraShake.Toggle();
 
-                // Center of Mass
                 CenterOfMass.SetLR(data.CenterOfMassLR);
                 CenterOfMass.SetFB(data.CenterOfMassFB);
                 CenterOfMass.SetUD(data.CenterOfMassUD);
 
-                // Exploding Props
                 if (data.ExplodingPropsEnabled && !ExplodingProps.Enabled) ExplodingProps.Toggle();
 
-                // Near Miss
                 NearMissSensitivity.SetLevel(data.NearMissLevel);
                 if (data.NearMissEnabled && !NearMissSensitivity.Enabled) NearMissSensitivity.Toggle();
 
-                // Bike / Player Scale (deferred — may not have player yet)
                 BikeSize.CurrentScale = data.BikeScale;
                 PlayerSize.CurrentScale = data.PlayerScale;
-                // These will be applied by the scene reapply system when Player_Human exists
-                // Direct apply attempted here in case player already exists:
                 if (data.BikeSizeLevel != 10) try { BikeSize.ApplyLevel(data.BikeSizeLevel); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats BikeSize: " + ex.Message); }
                 else if (data.BikeScale != 1f) try { BikeSize.Apply(data.BikeScale); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats BikeScale(legacy): " + ex.Message); }
                 if (data.PlayerSizeLevel != 10) try { PlayerSize.ApplyLevel(data.PlayerSizeLevel); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats PlayerSize: " + ex.Message); }
@@ -338,29 +295,22 @@ namespace DescendersModMenu.BikeStats
                     try { WheelSize.ApplyFromSave(true, data.WheelSizeLevel, data.WheelSizeMode); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats WheelSize: " + ex.Message); }
                 }
 
-                // Suspension HUD
                 if (data.SuspensionHUDEnabled && !SuspensionHUD.Enabled) SuspensionHUD.Toggle();
 
-                // Brake Fade
                 BrakeFade.SetBalanceLevel(data.BrakeBalanceLevel);
                 if (data.BrakeFadeEnabled && !BrakeFade.Enabled) BrakeFade.Toggle();
 
-                // Tyre Pressure
                 TyrePressure.SetLevel(data.TyrePressureLevel);
                 if (data.TyrePressureEnabled && !TyrePressure.Enabled) TyrePressure.Toggle();
 
-                // Instant Respawn
                 if (data.InstantRespawnEnabled && !InstantRespawn.Enabled) InstantRespawn.Toggle();
 
-                // Bike Damage
                 if (data.BikeDamageEnabled && !BikeDamage.Enabled) BikeDamage.Toggle();
                 if (data.HeadlightsOnlyEnabled && !HeadlightsOnly.Enabled) HeadlightsOnly.Toggle();
                 if (data.UIRemoverEnabled && !UIRemover.Enabled) UIRemover.Toggle();
 
-                // Wheelie HUD
                 if (data.WheelieHUDEnabled && !WheelieHUD.Enabled) WheelieHUD.Toggle();
 
-                // Trick Set Swap (set source by name BEFORE toggling so the right gestures load)
                 if (!string.IsNullOrEmpty(data.TrickSetSwapSourceName))
                     TrickSetSwap.SetSourceByName(data.TrickSetSwapSourceName);
                 if (data.TrickSetSwapEnabled && !TrickSetSwap.Enabled) TrickSetSwap.Toggle();
@@ -383,7 +333,6 @@ namespace DescendersModMenu.BikeStats
             }
             catch (Exception ex) { MelonLogger.Error("[StatsManager] LoadStats: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "StatsManager"); }
 
-            // Refresh all pages
             try { MovePage.RefreshAll(); } catch { }
             try { WorldPage.RefreshAll(); } catch { }
             try { BikePage.RefreshAll(); } catch { }
@@ -396,8 +345,6 @@ namespace DescendersModMenu.BikeStats
         }
 
         // ══════════════════════════════════════════════════════════════
-        //  RESET — resets EVERYTHING to defaults (including graphics,
-        //  sky, modes, ghost, ESP — those aren't saved but still reset)
         // ══════════════════════════════════════════════════════════════
         public static void ResetStats()
         {
@@ -497,7 +444,6 @@ namespace DescendersModMenu.BikeStats
                 if (NearMissSensitivity.Enabled) NearMissSensitivity.Toggle();
                 NearMissSensitivity.SetLevel(5);
 
-                // Bike / Player Scale
                 BikeSize.CurrentScale = 1f;
                 PlayerSize.CurrentScale = 1f;
                 try { BikeSize.ApplyLevel(10); } catch { }
@@ -506,7 +452,6 @@ namespace DescendersModMenu.BikeStats
                 if (InvisiblePlayer.Enabled) try { InvisiblePlayer.SetEnabled(false); } catch { }
                 try { WheelSize.Reset(); } catch { }
 
-                // Graphics — always reset to defaults (not saved)
                 if (!GraphicsSettings.BloomEnabled) GraphicsSettings.ToggleBloom();
                 if (!GraphicsSettings.AmbientOccEnabled) GraphicsSettings.ToggleAO();
                 if (!GraphicsSettings.VignetteEnabled) GraphicsSettings.ToggleVignette();
@@ -519,7 +464,6 @@ namespace DescendersModMenu.BikeStats
                 if (AirControl.Enabled) AirControl.Toggle();
                 AirControl.SetLevel(5);
 
-                // Sky — always reset (not saved)
                 if (SkyColours.StormEnabled) SkyColours.ToggleStorm();
                 SkyColours.SetRainIntensityLevel(5);
                 DiscoMode.Reset();
@@ -537,7 +481,6 @@ namespace DescendersModMenu.BikeStats
                 if (WheelieHUD.Enabled) WheelieHUD.Toggle();
                 if (TrickSetSwap.Enabled) TrickSetSwap.Disable();
 
-                // Modes — always reset (not saved)
                 if (AvalancheMode.Enabled) AvalancheMode.Reset();
                 if (EarthquakeMode.Enabled) EarthquakeMode.Reset();
                 if (PoliceChaseMode.Enabled) PoliceChaseMode.Reset();
@@ -570,7 +513,6 @@ namespace DescendersModMenu.BikeStats
                 Directory.CreateDirectory(SaveFolder);
         }
 
-        // Keep BikeStats.json in sync when RESET clears lava records in memory.
         private static void PersistClearedLavaRecords()
         {
             try
@@ -587,3 +529,4 @@ namespace DescendersModMenu.BikeStats
         }
     }
 }
+

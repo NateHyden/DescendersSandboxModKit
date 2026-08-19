@@ -1,20 +1,13 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Scales the player's head bone. Bone confirmed from forensics dump:
-    // Player_Human/Cyclist/character_clothed_ragdoll/bicycleDude_Rig_V02_Slave_Root/
-    //   .../C_Spine_6/C_Neck1/C_Neck2/C_Head1
-    // Found by exact-name search first, falling back to a "contains" search
-    // so a future rig rename doesn't silently break this — if neither hits,
-    // logs every candidate bone name so the right one can be picked in one
-    // test cycle rather than guessing blind.
     public static class BigHeadMode
     {
         public static bool Enabled { get; private set; } = false;
-        public static int Level { get; private set; } = 15; // index into Scales, default a goofy-but-not-absurd size
+        public static int Level { get; private set; } = 15;
 
         private static readonly float[] Scales =
         {
@@ -87,10 +80,6 @@ namespace DescendersModMenu.Mods
             _headBone.localScale = _defaultScale * Scales[Level - 1];
         }
 
-        // Character rig animation resets bone scale every frame (same
-        // issue documented for WideTyres/BikeSize) — re-enforce in
-        // OnLateUpdate rather than applying once, or the head snaps back
-        // to normal size almost immediately.
         public static void Tick()
         {
             if (!Enabled) return;
@@ -104,8 +93,6 @@ namespace DescendersModMenu.Mods
         }
 
 
-        // Scene unload destroys the rig with it — clear refs so the next
-        // scene re-resolves cleanly. Called from the deferred-reapply system.
         public static void ClearCache() { _headBone = null; _captured = false; }
 
         public static void Reset()
@@ -118,3 +105,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

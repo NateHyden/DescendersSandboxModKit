@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
@@ -9,11 +9,8 @@ namespace DescendersModMenu.Mods
         public static bool Enabled { get; private set; } = false;
 
         // ── Difficulty ────────────────────────────────────────────────
-        // 0=Easy  1=Medium  2=Hard
         public static int Difficulty { get; private set; } = 1;
 
-        // Speed ratio relative to player speed per difficulty
-        // Easy = manageable, Medium = faster than player, Hard = relentless
         private static readonly float[] SpeedRatio = { 0.85f, 1.25f, 1.60f };
         private static readonly float[] CatchDist = { 4f, 5f, 6f };
         private static readonly float[] BurstMult = { 1.10f, 1.40f, 1.80f };
@@ -34,12 +31,10 @@ namespace DescendersModMenu.Mods
         public static bool WaitingForReset { get; private set; } = false;
         public static bool IsBursting { get; private set; } = false;
 
-        // Stuck detection
         private static float _stuckTimer = 0f;
         private static float _progressTimer = 0f;
         private static float _lastDistToPlayer = 999f;
 
-        // Countdown before chase starts
         public static bool IsCountingDown { get; private set; } = false;
         public static float CountdownRemaining { get; private set; } = 0f;
         private const float CountdownDuration = 5f;
@@ -52,7 +47,6 @@ namespace DescendersModMenu.Mods
         private static float _burstCooldown = 0f;
 
         // ── Crash system ──────────────────────────────────────────────
-        // If pursuer speed drops below this fraction of target, it "crashed"
 
         // ── Pursuer ball ──────────────────────────────────────────────
         private static GameObject _ball = null;
@@ -156,11 +150,9 @@ namespace DescendersModMenu.Mods
 
             float dt = Time.deltaTime;
 
-            // F5 reset
             if (WaitingForReset && Input.GetKeyDown(KeyCode.F5))
                 ManualReset();
 
-            // Find/cache player
             if (!UnityNull.Alive(_player))
             {
                 _player = GameObject.Find("Player_Human");
@@ -169,7 +161,6 @@ namespace DescendersModMenu.Mods
                 if (UnityNull.Alive(_player))
                 {
                     _playerRb = _player.GetComponentInChildren<Rigidbody>();
-                    // Find Cyclist on Player_Human reliably
                     Cyclist[] cyclists = UnityEngine.Object.FindObjectsOfType<Cyclist>();
                     for (int i = 0; i < cyclists.Length; i++)
                     {
@@ -184,7 +175,6 @@ namespace DescendersModMenu.Mods
             }
             if (!UnityNull.Alive(_player)) return;
 
-            // Respawn detection
             Vector3 pos = _player.transform.position;
             if (_hasLastPos && Vector3.Distance(pos, _lastPlayerPos) > 20f)
             {
@@ -196,7 +186,6 @@ namespace DescendersModMenu.Mods
 
             if (_bailCooldown > 0f) _bailCooldown -= dt;
 
-            // Countdown before chase starts
             if (IsCountingDown)
             {
                 CountdownRemaining -= dt;
@@ -205,10 +194,9 @@ namespace DescendersModMenu.Mods
                     IsCountingDown = false;
                     ModLog.Debug("[PoliceChase] GO!");
                 }
-                return; // ball doesn't move during countdown
+                return;
             }
 
-            // CAUGHT timer
             if (IsCaught)
             {
                 _caughtTimer -= dt;
@@ -223,7 +211,6 @@ namespace DescendersModMenu.Mods
                 return;
             }
 
-            // Flash ball
             _flashTimer -= dt;
             if (_flashTimer <= 0f)
             {
@@ -237,7 +224,6 @@ namespace DescendersModMenu.Mods
                 }
             }
 
-            // Catch check
             if (!WaitingForReset && _bailCooldown <= 0f
                 && Vector3.Distance(pos, _ball.transform.position) <= ActiveCatchDist)
             {
@@ -245,7 +231,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── FixedTick — physics drive ─────────────────────────────────
         public static void FixedTick()
         {
             if (!Enabled || WaitingForReset || IsCountingDown) return;
@@ -261,7 +246,7 @@ namespace DescendersModMenu.Mods
 
             // ── Burst timer ────────────────────────────────────────────
             float burstMultiplier = 1f;
-            if (Difficulty > 0) // Easy has no bursts
+            if (Difficulty > 0)
             {
                 if (IsBursting)
                 {
@@ -286,14 +271,12 @@ namespace DescendersModMenu.Mods
                 }
             }
 
-            // ── Target speed tied to player speed ─────────────────────
             float playerSpeed = UnityNull.Alive(_playerRb)
                 ? _playerRb.velocity.magnitude : 10f;
             float targetSpeed = Mathf.Clamp(
                 playerSpeed * ActiveSpeedRatio * burstMultiplier,
                 ActiveMinSpeed, ActiveMaxSpeed);
 
-            // ── Steer toward player with obstacle avoidance ───────────
             Vector3 toPlayer = _player.transform.position - _ball.transform.position;
             float dist = toPlayer.magnitude;
 
@@ -307,7 +290,6 @@ namespace DescendersModMenu.Mods
                     new Vector3(curVel.x, curVel.y, curVel.z),
                     desiredVel, accel * Time.fixedDeltaTime);
 
-                // Only push Y upward if the ball is in a hole (trapped flag set by radar)
                 float yVel = _ballRb.velocity.y;
                 if (_inHole)
                     yVel = Mathf.Max(yVel, targetSpeed * 0.5f);
@@ -315,7 +297,6 @@ namespace DescendersModMenu.Mods
                 _ballRb.velocity = new Vector3(newVel.x, yVel, newVel.z);
             }
 
-            // ── Progress-based stuck detection ─────────────────────────
             _progressTimer += Time.fixedDeltaTime;
             if (_progressTimer >= 1f)
             {
@@ -329,7 +310,6 @@ namespace DescendersModMenu.Mods
                 else
                     _stuckTimer = 0f;
 
-                // At 2s: fire a large escape jump toward the player before giving up
                 if (_stuckTimer >= 2f && _stuckTimer < 3f)
                 {
                     _ballRb.velocity = Vector3.zero;
@@ -338,7 +318,6 @@ namespace DescendersModMenu.Mods
                     ModLog.Debug("[PoliceChase] Escape jump fired.");
                 }
 
-                // At 3s: still stuck — respawn from above
                 if (_stuckTimer >= 3f)
                 {
                     _stuckTimer = 0f;
@@ -354,15 +333,13 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        private static bool _inHole = false; // set by radar when all horizontal paths blocked
+        private static bool _inHole = false;
 
-        // ── Predictive radar steering ─────────────────────────────────
         private static Vector3 GetSteeringDirection(Vector3 primaryDir)
         {
             Vector3 ballPos = _ball.transform.position + Vector3.up * 0.5f;
             float lookDist = 15f;
 
-            // Work entirely in the horizontal plane — no upBias on normal candidates
             Vector3 flat = new Vector3(primaryDir.x, 0f, primaryDir.z).normalized;
             Vector3 right = new Vector3(flat.z, 0f, -flat.x);
 
@@ -374,7 +351,6 @@ namespace DescendersModMenu.Mods
             for (int i = 0; i < angles.Length; i++)
             {
                 float rad = angles[i] * Mathf.Deg2Rad;
-                // Pure horizontal candidate — no upward bias
                 Vector3 candidate = (flat * Mathf.Cos(rad)
                                    + right * Mathf.Sin(rad)).normalized;
 
@@ -394,8 +370,6 @@ namespace DescendersModMenu.Mods
                 }
             }
 
-            // Hole detection: if most horizontal directions are blocked but above is clear,
-            // the ball is in a concave trap — set the _inHole flag so we push Y upward
             bool aboveClear = !Physics.Raycast(ballPos, Vector3.up, lookDist * 0.5f);
             _inHole = blocked >= 6 && aboveClear;
 
@@ -411,7 +385,6 @@ namespace DescendersModMenu.Mods
             _bailCooldown = BailCooldownDur;
             WaitingForReset = true;
 
-            // Force bail
             if (UnityNull.Alive(_cyclist))
             {
                 try { _cyclist.Bail(); }
@@ -419,7 +392,6 @@ namespace DescendersModMenu.Mods
                 { MelonLogger.Error("[PoliceChase] Bail failed: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PoliceChaseMod"); }
             }
 
-            // Zero out player rigidbody velocity for a hard stop feel
             if (UnityNull.Alive(_playerRb))
                 _playerRb.velocity = Vector3.zero;
 
@@ -437,13 +409,10 @@ namespace DescendersModMenu.Mods
             _ball.name = "PolicePursuer";
             _ball.transform.localScale = new Vector3(2f, 2f, 2f);
 
-            // Keep collider — makes it interact with terrain naturally
-            // Set layer to Default so it hits terrain but not the player bike
-            // (player bike is typically on a different layer)
             var col = _ball.GetComponent<SphereCollider>();
             if ((object)col != null)
             {
-                col.isTrigger = false; // real collision with terrain = natural slowdown
+                col.isTrigger = false;
                 col.material = new PhysicMaterial
                 {
                     dynamicFriction = 0.4f,
@@ -455,10 +424,10 @@ namespace DescendersModMenu.Mods
             }
 
             _ballRb = _ball.AddComponent<Rigidbody>();
-            _ballRb.useGravity = true;   // gravity ON — follows terrain slope
-            _ballRb.drag = 1.5f;   // natural deceleration
+            _ballRb.useGravity = true;
+            _ballRb.drag = 1.5f;
             _ballRb.angularDrag = 0.8f;
-            _ballRb.constraints = RigidbodyConstraints.None; // can roll freely
+            _ballRb.constraints = RigidbodyConstraints.None;
 
             _ballMat = new Material(Shader.Find("Standard"));
             _ballMat.color = ColRed;
@@ -482,11 +451,9 @@ namespace DescendersModMenu.Mods
                 _player = GameObject.Find("Player_Human");
             if (!UnityNull.Alive(_player)) return;
 
-            // Spawn ABOVE and BEHIND the player — gravity drops it onto terrain.
-            // Spawning directly behind using transform.forward risks embedding in slope.
             Vector3 spawnPos = _player.transform.position
-                + Vector3.up * 50f                                // drop from 50m above
-                - _player.transform.forward * SpawnDistance;      // behind the player
+                + Vector3.up * 50f
+                - _player.transform.forward * SpawnDistance;
             _ball.transform.position = spawnPos;
             if (UnityNull.Alive(_ballRb))
             {
@@ -531,3 +498,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

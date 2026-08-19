@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace DescendersModMenu.UI
 {
@@ -30,10 +30,8 @@ namespace DescendersModMenu.UI
             // ── Game Over overlay ─────────────────────────────────────
             if (Mods.SurvivalMode.IsGameOver)
             {
-                // Dark background
                 DrawRect(0, 0, sw, sh, new Color(0f, 0f, 0f, 0.75f));
 
-                // "LS Click to Reset" at the top — large and clear
                 var promptStyle = new GUIStyle(GUI.skin.label)
                 {
                     fontSize = 26,
@@ -43,7 +41,6 @@ namespace DescendersModMenu.UI
                 };
                 GUI.Label(new Rect(0, 24, sw, 48), "LS Click to Reset", promptStyle);
 
-                // "GAME OVER"
                 var goStyle = new GUIStyle(GUI.skin.label)
                 {
                     fontSize = 72,
@@ -53,7 +50,6 @@ namespace DescendersModMenu.UI
                 };
                 GUI.Label(new Rect(0, sh * 0.28f, sw, 100), "GAME OVER", goStyle);
 
-                // Stats
                 var statsStyle = new GUIStyle(GUI.skin.label)
                 {
                     fontSize = 24,
@@ -67,7 +63,7 @@ namespace DescendersModMenu.UI
                 GUI.Label(new Rect(0, statsY + 42, sw, 36), "Bails Taken:    " + Mods.SurvivalMode.BailsTaken, statsStyle);
                 GUI.Label(new Rect(0, statsY + 84, sw, 36), "Tricks Landed:  " + Mods.SurvivalMode.TricksLanded, statsStyle);
 
-                return; // don't draw the health bar when game over
+                return;
             }
 
             // ── Health bar ────────────────────────────────────────────
@@ -75,17 +71,14 @@ namespace DescendersModMenu.UI
             float barW = sw * 0.22f;
             float barH = 16f;
             float barX = 20f;
-            float barY = sh - barH - 20f; // bottom-left
+            float barY = sh - barH - 20f;
 
-            // Bar background
             DrawRect(barX - 2, barY - 2, barW + 4, barH + 4, new Color(0f, 0f, 0f, 0.7f));
 
-            // Bar fill — green → amber → red based on health
             Color barColor = pct > 0.6f
                 ? Color.Lerp(new Color(1f, 0.7f, 0f), new Color(0.1f, 0.9f, 0.1f), (pct - 0.6f) / 0.4f)
                 : Color.Lerp(new Color(0.9f, 0.1f, 0.1f), new Color(1f, 0.7f, 0f), pct / 0.6f);
 
-            // Pulse alpha when critical
             float alpha = 1f;
             if (pct < 0.2f)
                 alpha = 0.5f + 0.5f * Mathf.Abs(Mathf.Sin(Time.time * 5f));
@@ -93,7 +86,6 @@ namespace DescendersModMenu.UI
             barColor.a = alpha;
             DrawRect(barX, barY, barW * pct, barH, barColor);
 
-            // HP label
             var hpStyle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 13,
@@ -120,3 +112,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

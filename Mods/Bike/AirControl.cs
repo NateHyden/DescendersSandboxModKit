@@ -1,24 +1,19 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using System.Reflection;
 
 namespace DescendersModMenu.Mods
 {
-    // Air Control — damps angular velocity while both wheels are airborne.
-    // Makes the bike more stable and controllable in the air.
-    // Level 1 = very light damping, Level 10 = strong stabilisation.
     public static class AirControl
     {
         public static bool Enabled { get; private set; } = false;
         public static int Level { get; private set; } = 5;
 
-        // Lerp strength toward zero angular velocity per second
-        // Level 1 = 0.5, Level 10 = 5.0
         private static float DampStrength { get { return Mathf.Lerp(0.5f, 5f, (Level - 1) / 9f); } }
         public static string DisplayValue { get { return Level.ToString(); } }
 
         private static PropertyInfo _rbProp = null;
-        private static PropertyInfo _vehicleGroundedProp = null; // TDEX{ib on Vehicle
+        private static PropertyInfo _vehicleGroundedProp = null;
         private static bool _cached = false;
 
         public static void Toggle()
@@ -44,7 +39,6 @@ namespace DescendersModMenu.Mods
 
                 if (!_cached) CacheRefs(vehicle);
 
-                // Only act when vehicle is fully airborne
                 bool onGround = false;
                 if ((object)_vehicleGroundedProp != null)
                     onGround = (bool)_vehicleGroundedProp.GetValue(vehicle, null);
@@ -55,8 +49,6 @@ namespace DescendersModMenu.Mods
                     rb = _rbProp.GetValue(vehicle, null) as Rigidbody;
                 if ((object)rb == null) return;
 
-                // Smoothly damp angular velocity toward zero
-                // This slows rotation in the air making it controllable
                 rb.angularVelocity = Vector3.Lerp(
                     rb.angularVelocity,
                     Vector3.zero,
@@ -75,7 +67,6 @@ namespace DescendersModMenu.Mods
                 if (!props[i].CanRead) continue;
                 if (props[i].PropertyType.Equals(typeof(Rigidbody)) && (object)_rbProp == null)
                     _rbProp = props[i];
-                // TDEX{ib starts with T — vehicle-level on-ground bool
                 if (props[i].PropertyType.Equals(typeof(bool)) && props[i].Name.StartsWith("T") && (object)_vehicleGroundedProp == null)
                     _vehicleGroundedProp = props[i];
                 if ((object)_rbProp != null && (object)_vehicleGroundedProp != null) break;
@@ -91,3 +82,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -6,7 +6,6 @@ using UnityEngine.SceneManagement;
 
 namespace DescendersModMenu.Mods
 {
-    // Enabled = true means trees/foliage are HIDDEN
     public static class Trees
     {
         public static bool Enabled = false;
@@ -20,8 +19,6 @@ namespace DescendersModMenu.Mods
         private static Dictionary<int, System.Array> _savedTreeInstances = new Dictionary<int, System.Array>();
         private static Dictionary<int, float> _savedTreeDistances = new Dictionary<int, float>();
 
-        // Roots we deactivated — FindObjectsOfType misses inactive objects on
-        // Unity 2017, so restore must use this list rather than a fresh search.
         private static readonly List<GameObject> _hiddenRoots = new List<GameObject>();
 
         private static float _tickTimer = 0f;
@@ -30,7 +27,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            Apply(!Enabled); // pass true = show, false = hide
+            Apply(!Enabled);
             _tickTimer = 0f;
             ModLog.Feedback("[Trees] -> " + (Enabled ? "ON" : "OFF"));
         }
@@ -48,9 +45,6 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // MapMagic chunk apply resets drawTreesAndFoliage / treeInstances
-                // / treeDistance on Terrains after our one-shot Apply(). Keep
-                // fighting that, or terrain-tree capsules come back invisible.
                 ApplyTerrainVisibility(false, log: false);
 
                 int caughtRoots = HideTreeRoots(logNew: true);
@@ -76,8 +70,6 @@ namespace DescendersModMenu.Mods
                     _hiddenRoots.Clear();
                     rootCount = HideTreeRoots(logNew: false);
                     colCount = DisableCollisionObjects(logNew: false);
-                    // Force PhysX to drop any lingering broadphase entries from
-                    // the objects we just deactivated / collider-disabled.
                     try { Physics.SyncTransforms(); } catch { }
                 }
                 else
@@ -94,7 +86,6 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[Trees] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Trees"); }
         }
 
-        // ── Terrain (MapMagic TreesOutput / Unity treeInstances) ──────────
 
         private static void EnsureTerrainReflection()
         {
@@ -134,9 +125,6 @@ namespace DescendersModMenu.Mods
                 if ((object)_dtfProp != null)
                     _dtfProp.SetValue(terrain, showTrees, null);
 
-                // Same knob DevCommandsPerformance.ToggleTrees uses — render
-                // distance only, but keep it in sync so MapMagic chunk apply
-                // can't quietly turn drawing back on underneath us.
                 if ((object)_treeDistanceProp != null)
                 {
                     int key = terrain.GetInstanceID();
@@ -179,9 +167,6 @@ namespace DescendersModMenu.Mods
                     _treeInstancesProp.SetValue(terrainData, empty, null);
                     clearedCount++;
 
-                    // Unity caches tree capsules on TerrainCollider. Clearing
-                    // treeInstances alone doesn't always rebuild that cache in
-                    // 2017.4 — bounce the collider so PhysX drops them.
                     BounceTerrainCollider(terrain);
                 }
                 else if (_savedTreeInstances.TryGetValue(tdKey, out System.Array saved) && saved != null)
@@ -212,12 +197,10 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
-        // ── GameObject trees (ObjectOutput / curated props) ───────────────
 
         private static bool IsSceneObject(GameObject go)
         {
             if ((object)go == null || go == null) return false;
-            // Prefab assets / DontSave junk from FindObjectsOfTypeAll
             Scene s = go.scene;
             return s.IsValid() && !string.IsNullOrEmpty(s.name);
         }
@@ -228,13 +211,9 @@ namespace DescendersModMenu.Mods
             return (object)parent != null ? parent.gameObject : tree.gameObject;
         }
 
-        // Returns how many roots newly deactivated this pass.
         private static int HideTreeRoots(bool logNew)
         {
             int caught = 0;
-            // Include inactive — custom LOD systems leave Tree comps on
-            // deactivated LOD children; FindObjectsOfType would miss them
-            // and leave the still-active CollisionObject sibling alive.
             Tree[] trees = Resources.FindObjectsOfTypeAll<Tree>();
             HashSet<GameObject> seen = new HashSet<GameObject>();
 
@@ -246,8 +225,6 @@ namespace DescendersModMenu.Mods
                 if (!IsSceneObject(root)) continue;
                 if (!seen.Add(root)) continue;
 
-                // Also kill colliders under the root explicitly — belt and
-                // suspenders if something re-parents CollisionObject out.
                 DisableCollidersUnder(root.transform);
 
                 if (root.activeSelf)
@@ -298,8 +275,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Catch CollisionObject* that aren't under a UnityEngine.Tree hierarchy
-        // (or were reparented). Returns newly disabled collider count.
         private static int DisableCollisionObjects(bool logNew)
         {
             int caught = 0;
@@ -325,8 +300,6 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // If the CollisionObject itself is an orphaned active object
-                // (no inactive ancestor), deactivate it too.
                 if (tr.gameObject.activeInHierarchy)
                     tr.gameObject.SetActive(false);
             }
@@ -335,9 +308,6 @@ namespace DescendersModMenu.Mods
 
         private static int EnableCollisionObjects()
         {
-            // Restore path relies on re-enabled tree roots; CollisionObjects
-            // under those roots come back with the root. Orphans that we
-            // deactivated by name get a best-effort re-enable here.
             int n = 0;
             Transform[] all = Resources.FindObjectsOfTypeAll<Transform>();
             for (int i = 0; i < all.Length; i++)
@@ -375,3 +345,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

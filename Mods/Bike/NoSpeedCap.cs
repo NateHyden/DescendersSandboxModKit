@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
 using DescendersModMenu;
@@ -21,7 +21,6 @@ namespace DescendersModMenu.Mods
             Enabled = enabled;
         }
 
-        // Also patch VehicleController.FixedUpdate which zeros j[fCiJt when speed > 55
         public static void ApplyVCPatch(HarmonyLib.Harmony harmony)
         {
             try
@@ -52,13 +51,10 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Manual patch since E{Kza has unprintable chars in its name
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
         {
             try
             {
-                // Find E{Kza by scanning all private methods on Vehicle
-                // It's the one that takes no params and contains the speed cap logic
                 System.Type vehicleType = typeof(Vehicle);
                 MethodInfo[] methods = vehicleType.GetMethods(
                     BindingFlags.NonPublic | BindingFlags.Instance
@@ -68,17 +64,13 @@ namespace DescendersModMenu.Mods
                 for (int i = 0; i < methods.Length; i++)
                 {
                     MethodInfo m = methods[i];
-                    // E{Kza starts with 'E' and has no parameters
                     if (m.GetParameters().Length != 0) continue;
                     if (!m.ReturnType.Equals(typeof(void))) continue;
                     if (!m.Name.StartsWith("E")) continue;
-                    // It's not a Unity event method
                     if (m.Name == "enabled") continue;
-                    // Check it's not a property getter
                     if (m.IsSpecialName) continue;
 
 
-                    // The real E{Kza has 3 chars before 'Kza': E + 2 non-ascii
                     if (m.Name.Length == 7 && m.Name.EndsWith("Kza"))
                     {
                         target = m;
@@ -114,13 +106,11 @@ namespace DescendersModMenu.Mods
         }
     }
 
-    // Postfix on VehicleController.FixedUpdate
-    // Restores j[fCiJt (inputAcceleration) after the game zeros it at speed > 55
     public static class NoSpeedCap_VCPatch
     {
-        private static FieldInfo _vehicleField = null; // CDVkgio - the Vehicle ref
-        private static PropertyInfo _tiltProp = null; // dyEyUZ - raw tilt input
-        private static PropertyInfo _inputAccProp = null; // j[fCiJt - inputAcceleration
+        private static FieldInfo _vehicleField = null;
+        private static PropertyInfo _tiltProp = null;
+        private static PropertyInfo _inputAccProp = null;
         private static bool _vcFieldsCached = false;
 
         public static void Postfix(VehicleController __instance)
@@ -128,7 +118,6 @@ namespace DescendersModMenu.Mods
             if (!NoSpeedCap.Enabled) return;
             if (!UnityNull.Alive(__instance)) return;
 
-            // Cache fields
             if ((object)_vehicleField == null)
             {
                 FieldInfo[] fields = __instance.GetType().GetFields(
@@ -150,11 +139,9 @@ namespace DescendersModMenu.Mods
             Vehicle vehicle = _vehicleField.GetValue(__instance) as Vehicle;
             if (!UnityNull.Alive(vehicle)) return;
 
-            // Only for local player
             if (!string.Equals(vehicle.gameObject.name, "Player_Human",
                 System.StringComparison.Ordinal)) return;
 
-            // Cache tilt and inputAccel props once
             if (!_vcFieldsCached)
             {
                 _vcFieldsCached = true;
@@ -177,10 +164,8 @@ namespace DescendersModMenu.Mods
             float tiltInput = 0f;
             if ((object)_tiltProp != null)
                 tiltInput = (float)_tiltProp.GetValue(__instance, null);
-            if (tiltInput <= 0.01f) return; // not pedaling, leave j[fCiJt at 0
+            if (tiltInput <= 0.01f) return;
 
-            // Player is pedaling but game zeroed input because GetVelocity() > 55
-            // Find j[fCiJt and restore it to the tilt value so speed control works normally
             if ((object)_inputAccProp == null)
             {
                 PropertyInfo[] allProps = vehicle.GetType().GetProperties(
@@ -208,16 +193,12 @@ namespace DescendersModMenu.Mods
 
     public static class NoSpeedCap_EKzaPatch
     {
-        // Cache fields via reflection
-        private static FieldInfo _rbField = null; // Rigidbody
+        private static FieldInfo _rbField = null;
         private static bool _fieldsCached = false;
 
-        // State passed from Prefix to Postfix
         private static bool _active = false;
         private static Vector3 _savedVelocity;
 
-        // ── Prefix: zero the velocity so E{Kza's speed cap (num2) sees speed=0
-        //    and applies FULL acceleration. Then Postfix restores real velocity.
         public static void Prefix(Vehicle __instance)
         {
             _active = false;
@@ -233,15 +214,11 @@ namespace DescendersModMenu.Mods
                 rb = _rbField.GetValue(__instance) as Rigidbody;
             if (!UnityNull.Alive(rb)) return;
 
-            // Save real velocity and zero it so E{Kza thinks speed=0}
             _savedVelocity = rb.velocity;
             rb.velocity = Vector3.zero;
             _active = true;
         }
 
-        // ── Postfix: E{Kza ran with velocity=0, so it applied full uncapped
-        //    acceleration to "zero". Now velocity = just the acceleration delta.
-        //    Add that delta to the real velocity we saved.
         public static void Postfix(Vehicle __instance)
         {
             if (!_active) return;
@@ -252,8 +229,8 @@ namespace DescendersModMenu.Mods
                 rb = _rbField.GetValue(__instance) as Rigidbody;
             if (!UnityNull.Alive(rb)) return;
 
-            Vector3 accelDelta = rb.velocity; // what E{Kza added to "zero"
-            rb.velocity = _savedVelocity + accelDelta; // real velocity + uncapped accel
+            Vector3 accelDelta = rb.velocity;
+            rb.velocity = _savedVelocity + accelDelta;
         }
 
         private static void EnsureFields(Vehicle v)
@@ -279,3 +256,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

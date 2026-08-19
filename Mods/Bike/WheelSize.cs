@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
@@ -9,7 +9,7 @@ namespace DescendersModMenu.Mods
         // ── State ─────────────────────────────────────────────────────
         public static bool IsEnabled = false;
         public static int Level = 10;
-        public static int Mode = 0; // legacy 5-mode, kept for compat
+        public static int Mode = 0;
         public static bool IsIndividualMode = false;
         public static int FrontLevel = 10;
         public static int RearLevel = 10;
@@ -69,7 +69,6 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[WheelSize] -> " + (IsEnabled ? "ON" : "OFF"));
         }
 
-        // ── Apply level (both wheels) ─────────────────────────────────
         public static void ApplyLevel(int level)
         {
             Level = Mathf.Clamp(level, 1, 20);
@@ -77,7 +76,6 @@ namespace DescendersModMenu.Mods
             else ApplyScaleDirectly(ScaleLevels[Level - 1]);
         }
 
-        // ── Apply individual wheel levels ─────────────────────────────
         public static void ApplyIndividualLevels()
         {
             try
@@ -254,3 +252,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

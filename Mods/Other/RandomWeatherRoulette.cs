@@ -1,12 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Cycles Storm / Fog / Moon / Normal. Fog must set Linear distances —
-    // Descenders often uses FogMode.Linear where fogDensity alone does nothing
-    // (that made Fog look like a no-op while Moon was the only obvious flip).
     public static class RandomWeatherRoulette
     {
         public enum WeatherState { Normal, Storm, Fog, Moon }
@@ -23,7 +20,6 @@ namespace DescendersModMenu.Mods
         private static bool _snapMoon = false;
         private static bool _hasSnapshot = false;
 
-        // Fog override (Fog.cs only removes fog — we thicken it here).
         private static bool _fogOverrideActive = false;
         private static bool _savedFogEnabled = false;
         private static FogMode _savedFogMode = FogMode.ExponentialSquared;
@@ -47,8 +43,6 @@ namespace DescendersModMenu.Mods
                 if (MoonMode.IsActive) MoonMode.Toggle();
                 CurrentState = WeatherState.Normal;
                 LastFlipDisplay = "Normal";
-                // Flip immediately so the feature is obvious — old code waited
-                // 12–25s before the first change.
                 FlipNow(preferNonNormal: true);
                 ScheduleNext();
                 ModLog.Debug("[RandomWeatherRoulette] ON — snapshotted Storm=" + _snapStorm + " Moon=" + _snapMoon);
@@ -71,7 +65,6 @@ namespace DescendersModMenu.Mods
         {
             if (!Enabled) return;
 
-            // Game/scene code can overwrite RenderSettings — reassert fog.
             if (CurrentState == WeatherState.Fog)
                 ApplyFog(force: true);
 
@@ -204,3 +197,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

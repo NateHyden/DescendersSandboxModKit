@@ -1,23 +1,12 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
-    // CompassAlwaysOn — forces the game's own finish-line compass to stay
-    // visible every frame, regardless of whether the player has picked up
-    // the "Show Compass" Blue crew member perk this run (normally the only
-    // way it appears outside of NoPath maps).
-    //
-    // Patches UI_InGame.UpdateCompass() with a Postfix — clean method name,
-    // won't break on obfuscation. The original runs first and may hide the
-    // compass container if the player lacks the perk; our postfix then
-    // re-shows it and re-runs the same positioning math the game uses
-    // (sourced from the decompile), driven off FinishLine + Player_Human
-    // instead of the game's own private cached refs.
     public static class CompassAlwaysOn
     {
         public static bool Enabled { get; private set; } = false;
@@ -35,8 +24,6 @@ namespace DescendersModMenu.Mods
             Enabled = false;
         }
 
-        // FinishLine is scene-scoped — drop the cached ref on scene unload,
-        // Postfix re-finds it lazily next time it's needed.
         public static void ClearCache()
         {
             _finishLine = null;
@@ -44,13 +31,6 @@ namespace DescendersModMenu.Mods
 
         public static FinishLine GetFinishLine()
         {
-            // Unity's own == here, not (object) — same reasoning as the icon
-            // checks in the Postfix below. This is exactly the reference the
-            // Discord error report pointed at: Component:get_transform()
-            // throwing NullReferenceException from inside this method's
-            // caller, because a destroyed-but-not-truly-null FinishLine from
-            // the previous map was passing right through the old (object)
-            // cast check and getting cached as if it were still valid.
             if (_finishLine == null) _finishLine = Object.FindObjectOfType<FinishLine>();
             return _finishLine;
         }
@@ -77,11 +57,6 @@ namespace DescendersModMenu.Mods
 
     public static class CompassAlwaysOn_Patch
     {
-        // Icon field name on UI_InGame contains control-range chars (0x7F, 0x7C)
-        // — not a compilable literal identifier, so it's looked up by exact
-        // name via reflection, per project convention. Confirmed against the
-        // decompile 2026-08. If this update breaks, re-scan UI_InGame for the
-        // Image field referenced inside UpdateCompass() — see How_to_fix_after_update.md.
         private static readonly string IconFieldName = ((char)0x7F) + "cDpHh" + ((char)0x7C);
 
         private static FieldInfo _iconField;
@@ -105,13 +80,6 @@ namespace DescendersModMenu.Mods
                 if ((object)_iconField == null) return;
 
                 Image icon = _iconField.GetValue(__instance) as Image;
-                // Unity's own == here, deliberately NOT the (object) cast used
-                // everywhere else in this codebase. (object) checks only catch
-                // "never assigned" — they don't catch "destroyed" (Unity's fake-
-                // null pattern: the C# reference is non-null but the underlying
-                // native object is gone). Mid scene-transition, on "starting a
-                // new map", that's exactly the state this can be in, and only
-                // Unity's overloaded == correctly detects it.
                 if (icon == null) return;
                 if (icon.transform == null || icon.transform.parent == null) return;
 
@@ -146,10 +114,6 @@ namespace DescendersModMenu.Mods
             }
             catch (UnityEngine.MissingReferenceException)
             {
-                // Expected/benign: a reference from the scene we just left
-                // got destroyed a frame or two before ClearCache() ran.
-                // Transient — next frame re-fetches everything fresh. Not
-                // a real bug, so no log spam and no telemetry report.
             }
             catch (System.Exception ex)
             {
@@ -159,3 +123,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

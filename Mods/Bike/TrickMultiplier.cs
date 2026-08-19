@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -44,7 +44,6 @@ namespace DescendersModMenu.Mods
         private static PropertyInfo _multiplierProp;
         private static bool _multiplierPropSearched;
 
-        // All Mods Off / restore — remembers last non-zero level
         public static void Toggle()
         {
             if (Level > 0)
@@ -84,7 +83,7 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                if (Level == 0) return; // OFF - leave the game's own values alone entirely
+                if (Level == 0) return;
 
                 GameObject player = PlayerCache.PlayerHuman;
                 if ((object)player == null) return;
@@ -94,7 +93,6 @@ namespace DescendersModMenu.Mods
 
                 int target = CapValues[Level];
 
-                // Cap (runtime subclass field)
                 if ((object)_capField == null)
                 {
                     _capField = tricks.GetType().GetField("uDh\u005DdJt",
@@ -109,9 +107,6 @@ namespace DescendersModMenu.Mods
                         _capField.SetValue(tricks, target);
                 }
 
-                // Current live multiplier (property on the base type, force-set every
-                // frame so the chosen number is visibly active immediately, not just
-                // reachable through combos)
                 if (!_multiplierPropSearched)
                 {
                     _multiplierPropSearched = true;
@@ -130,7 +125,8 @@ namespace DescendersModMenu.Mods
 
         public static void Reset()
         {
-            Level = 0; // Tick() no-ops entirely at Level 0 - game's own values take back over
+            Level = 0;
         }
     }
 }
+

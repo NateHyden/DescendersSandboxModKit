@@ -1,26 +1,10 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using System.IO;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // ScreenshotMode
-    //
-    // Two captures in consecutive frames (not same frame — Unity drops duplicates):
-    //   Frame A: 2x supersampled main shot  -> Screenshots/screenshot_NNN.png
-    //   Frame B: 1x preview shot            -> DescendersModMenu/preview_last.png
-    //
-    // The 2x shot is saved to the numbered library. The 1x preview (native res)
-    // is polled and loaded as the tab preview — small file, no lag spike.
-    //
-    // State machine:
-    //   0 = idle
-    //   1 = hide all UI, wait 2 frames
-    //   2 = capture 2x main, advance to state 5, wait 1 frame
-    //   5 = capture 1x preview (separate frame), wait 15 frames
-    //   3 = restore all UI, begin poll for preview file
-    //   4 = poll every 6 frames until preview file exists (up to 30 polls)
     public static class ScreenshotMode
     {
         public static bool Enabled { get; private set; } = false;
@@ -41,16 +25,16 @@ namespace DescendersModMenu.Mods
                 "DescendersModMenu"), "preview_last.png");
 
         // ── Counter ───────────────────────────────────────────────────
-        private static int _shotCounter = 0; // 0-based, next shot = (counter%100)+1
+        private static int _shotCounter = 0;
 
         // ── State machine ─────────────────────────────────────────────
         private static int _state = 0;
         private static int _wait = 0;
-        private static string _pending = ""; // main shot path (for display)
+        private static string _pending = "";
         private static bool _menuWasOpen = false;
         private static bool _btnHeld = false;
         private static int _previewPolls = 0;
-        private static int _enableGrace = 0; // skip detection for N frames after enabling
+        private static int _enableGrace = 0;
 
         private static readonly System.Collections.Generic.List<Canvas> _hiddenCanvases
             = new System.Collections.Generic.List<Canvas>();
@@ -61,7 +45,6 @@ namespace DescendersModMenu.Mods
         private static System.Reflection.PropertyInfo _wasPressedProp = null;
         private static bool _incontrolSearched = false;
 
-        // ── ScreenCapture type cache ──────────────────────────────────
         private static System.Reflection.MethodInfo _captureMethod = null;
         private static bool _captureSearched = false;
 
@@ -69,7 +52,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            if (Enabled) _enableGrace = 10; // ignore input for 10 frames after enabling
+            if (Enabled) _enableGrace = 10;
             ModLog.Feedback("[ScreenshotMode] -> " + (Enabled ? "ON" : "OFF"));
         }
 
@@ -101,11 +84,9 @@ namespace DescendersModMenu.Mods
             switch (_state)
             {
                 case 1:
-                    // Hide mod menu
                     _menuWasOpen = UI.MenuUI.IsOpen;
                     if (_menuWasOpen) UI.MenuUI.ToggleMenu();
 
-                    // Hide all game canvases
                     _hiddenCanvases.Clear();
                     try
                     {
@@ -127,26 +108,22 @@ namespace DescendersModMenu.Mods
                     break;
 
                 case 2:
-                    // Frame A — capture 2x main shot
                     _shotCounter = (_shotCounter % 100) + 1;
                     _pending = Path.Combine(SaveFolder,
                         "screenshot_" + _shotCounter.ToString("D3") + ".png");
                     EnsureFolder();
-                    // Delete old preview so poll waits for new write
                     try { if (File.Exists(PreviewPath)) File.Delete(PreviewPath); } catch { }
                     Capture(_pending, 2);
-                    _state = 5; _wait = 1; // wait ONE frame before preview capture
+                    _state = 5; _wait = 1;
                     break;
 
                 case 5:
-                    // Frame B — capture 1x preview in a separate frame
                     Capture(PreviewPath, 1);
                     ModLog.Debug("[ScreenshotMode] Preview capture queued.");
-                    _state = 3; _wait = 15; // give both files time to start writing
+                    _state = 3; _wait = 15;
                     break;
 
                 case 3:
-                    // Restore all UI
                     for (int i = 0; i < _hiddenCanvases.Count; i++)
                         try { if (UnityNull.Alive(_hiddenCanvases[i])) _hiddenCanvases[i].gameObject.SetActive(true); } catch { }
                     _hiddenCanvases.Clear();
@@ -159,7 +136,6 @@ namespace DescendersModMenu.Mods
                     break;
 
                 case 4:
-                    // Poll for 1x preview file (small file, writes fast)
                     _previewPolls++;
                     if (File.Exists(PreviewPath))
                     {
@@ -292,3 +268,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

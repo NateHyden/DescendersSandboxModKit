@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -7,22 +7,18 @@ namespace DescendersModMenu.Mods
 {
     public static class Suspension
     {
-        // ── Suspension Travel (xL\u007BgJGT on Wheel, default 0.5) ─────────────
         public static int TravelLevel { get; private set; } = 5;
         private static FieldInfo _travelField = null;
         private static float _travelDefault = -1f;
 
-        // ── Spring Stiffness (p\u007EmkyX\u007B on Wheel, default 50) ──────────────
         public static int StiffnessLevel { get; private set; } = 5;
         private static FieldInfo _stiffField = null;
         private static float _stiffDefault = -1f;
 
-        // ── Spring Damping (YrKDSPL on Wheel, default 5) ─────────────────
         public static int DampingLevel { get; private set; } = 5;
         private static FieldInfo _dampField = null;
         private static float _dampDefault = -1f;
 
-        // Level 5 = default (1x), 1 = 0.2x, 10 = 2x
         private static float Mult(int level) { return level * 0.2f; }
 
         // ── Travel ────────────────────────────────────────────────────────
@@ -124,7 +120,6 @@ namespace DescendersModMenu.Mods
         private static Wheel[] GetWheels()
         {
             GameObject player = GameObject.Find("Player_Human");
-            // Expected during lobby / map load / before deferred reapply lands.
             if ((object)player == null) { ModLog.Debug("[Suspension] Player_Human not found."); return null; }
             Wheel[] wheels = player.GetComponentsInChildren<Wheel>();
             if (wheels == null || wheels.Length == 0) { ModLog.Debug("[Suspension] No Wheel components found."); return null; }
@@ -132,3 +127,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

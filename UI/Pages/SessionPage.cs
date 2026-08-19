@@ -83,7 +83,6 @@ namespace DescendersModMenu.UI
 
                 var c = content.transform;
 
-                // ── HUD TOGGLE ────────────────────────────────────────
                 UIHelpers.SectionHeader("ON-SCREEN HUD", c);
                 var hudr = UIHelpers.StatRow("Show HUD", c);
                 _hudTogVal = UIHelpers.Txt("HdV", hudr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -139,7 +138,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
-                // ── SPECTATE MODE ──────────────────────────────────────
                 UIHelpers.SectionHeader("SPECTATE MODE", c);
                 var specR = UIHelpers.StatRow("Spectate", c);
                 _specTogVal = UIHelpers.Txt("SpcTV", specR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -159,11 +157,10 @@ namespace DescendersModMenu.UI
                 _specDistVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
                 UIHelpers.SmallBtn(specDistR.transform, "-", () => { SpectateMode.DecreaseDistance(); RefreshAll(); });
                 UIHelpers.SmallBtn(specDistR.transform, "+", () => { SpectateMode.IncreaseDistance(); RefreshAll(); });
-                UIHelpers.InfoBox(c, "Chase-cams another connected player (transform follow — doesn't touch their physics). Multiplayer only. Locks your controls while active.");
+                UIHelpers.InfoBox(c, "Chase-cams another connected player (transform follow â€” doesn't touch their physics). Multiplayer only. Locks your controls while active.");
 
                 UIHelpers.Divider(c);
 
-                // ── SESSION header with Reset All ─────────────────────
                 var sessionHdr = UIHelpers.Obj("SessionHdr", c);
                 var shLE = sessionHdr.AddComponent<LayoutElement>();
                 shLE.preferredHeight = 28; shLE.minHeight = 28; shLE.flexibleHeight = 0;
@@ -188,7 +185,6 @@ namespace DescendersModMenu.UI
                     RefreshAll();
                 }, 68);
 
-                // ── Rows ──────────────────────────────────────────────
                 var str = UIHelpers.StatRow("Session Timer", c);
                 _sessionTimeVal = UIHelpers.Txt("StV", str.transform, SessionTrackers.SessionTimeDisplay,
                     12, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
@@ -287,7 +283,6 @@ namespace DescendersModMenu.UI
                 }, 60);
                 FavouritesManager.RegisterStarButton("SkipSong", UIHelpers.StarBtn(skipRow.transform, "SkipSong", () => FavouritesManager.Toggle("SkipSong")));
 
-                // ── STAR BUTTONS (Favourites) ──────────────────────────
                 FavouritesManager.RegisterStarButton("ShowHUD", UIHelpers.StarBtn(hudr.transform, "ShowHUD", () => FavouritesManager.Toggle("ShowHUD")));
                 FavouritesManager.RegisterStarButton("SpeedrunTimer", UIHelpers.StarBtn(srtr.transform, "SpeedrunTimer", () => FavouritesManager.Toggle("SpeedrunTimer")));
                 FavouritesManager.RegisterStarButton("SpectateMode", UIHelpers.StarBtn(specR.transform, "SpectateMode", () => FavouritesManager.Toggle("SpectateMode")));
@@ -512,3 +507,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

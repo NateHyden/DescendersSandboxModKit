@@ -1,4 +1,4 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -58,7 +58,6 @@ namespace DescendersModMenu.UI
 
                 var c = content.transform;
 
-                // ENABLE
                 UIHelpers.SectionHeader("SCREENSHOT MODE", c);
                 var toggleRow = UIHelpers.StatRow("Enabled", c);
                 _toggleVal = UIHelpers.Txt("SsV", toggleRow.transform, "OFF", 11,
@@ -80,7 +79,6 @@ namespace DescendersModMenu.UI
                     TextAnchor.MiddleRight, Color.white);
                 pauseNote.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
-                // HOW TO USE
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("HOW TO USE", c);
                 UIHelpers.InfoBox(c,
@@ -94,7 +92,6 @@ namespace DescendersModMenu.UI
                     "\nFilenames: screenshot_001.png to screenshot_100.png." +
                     "\nSlot 101 overwrites slot 001 and so on.");
 
-                // LAST SCREENSHOT
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("LAST SCREENSHOT", c);
 
@@ -105,7 +102,6 @@ namespace DescendersModMenu.UI
                 _filenameVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
                 _filenameVal.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                // Preview image panel
                 _previewObj = UIHelpers.Obj("PreviewFrame", c);
                 var previewLE = _previewObj.AddComponent<LayoutElement>();
                 previewLE.preferredHeight = 120; previewLE.flexibleWidth = 1;
@@ -116,12 +112,12 @@ namespace DescendersModMenu.UI
                 rawRT.anchorMin = new Vector2(0.5f, 0.5f);
                 rawRT.anchorMax = new Vector2(0.5f, 0.5f);
                 rawRT.pivot = new Vector2(0.5f, 0.5f);
-                rawRT.sizeDelta = new Vector2(0, 112); // initial height, fitter controls width
+                rawRT.sizeDelta = new Vector2(0, 112);
                 _preview = rawGO.AddComponent<RawImage>();
                 _preview.color = new Color(1, 1, 1, 0.08f);
                 _previewFitter = rawGO.AddComponent<UnityEngine.UI.AspectRatioFitter>();
                 _previewFitter.aspectMode = UnityEngine.UI.AspectRatioFitter.AspectMode.HeightControlsWidth;
-                _previewFitter.aspectRatio = 16f / 9f; // default until real texture loads
+                _previewFitter.aspectRatio = 16f / 9f;
 
                 var reloadRow = UIHelpers.StatRow("", c);
                 UIHelpers.ActionBtn(reloadRow.transform, "Reload Preview", () => {
@@ -164,7 +160,6 @@ namespace DescendersModMenu.UI
                 {
                     _preview.texture = tex;
                     _preview.color = Color.white;
-                    // Update aspect ratio to match actual screenshot dimensions
                     if ((object)_previewFitter != null && tex.height > 0)
                         _previewFitter.aspectRatio = (float)tex.width / tex.height;
                 }

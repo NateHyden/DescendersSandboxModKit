@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace DescendersModMenu.BikeStats
 {
@@ -69,7 +69,6 @@ namespace DescendersModMenu.BikeStats
         public float StickyForce = 150f;
         public bool SpiderBikeEnabled = false;
 
-        // ── Wheelie Angle Limit / Air Control ──────────────────────────
         public bool WheelieAngleLimitEnabled = false;
         public int WheelieAngleLimitLevel = 5;
         public bool AirControlEnabled = false;
@@ -101,9 +100,9 @@ namespace DescendersModMenu.BikeStats
         public float GhostAlpha = 0.45f;
 
         // ── Menu Customiser ────────────────────────────────────────────
-        public int MenuPositionPreset = 0;  // 0=Center 1=TopLeft 2=TopRight
-        public int MenuScaleLevel = 3;      // index into scale array (3 = 100%)
-        public int MenuOpacityLevel = 8;    // index into opacity array (8 = 100%)
+        public int MenuPositionPreset = 0;
+        public int MenuScaleLevel = 3;
+        public int MenuOpacityLevel = 8;
 
         // ── Bike Torch ─────────────────────────────────────────────────
         public bool BikeTorchEnabled = false;
@@ -126,14 +125,14 @@ namespace DescendersModMenu.BikeStats
         public int NearMissLevel = 5;
 
         // ── Bike / Player Scale ──────────────────────────────────────
-        public float BikeScale = 1f;  // legacy — kept for old save compat
-        public float PlayerScale = 1f;  // legacy — kept for old save compat
+        public float BikeScale = 1f;
+        public float PlayerScale = 1f;
         public int BikeSizeLevel = 10;
         public int PlayerSizeLevel = 10;
         public bool InvisibleBikeEnabled = false;
         public bool InvisiblePlayerEnabled = false;
         public bool WheelSizeEnabled = false;
-        public int WheelSizeMode = 0;   // legacy
+        public int WheelSizeMode = 0;
         public int WheelSizeLevel = 10;
         public int FrontWheelSizeLevel = 10;
         public int RearWheelSizeLevel = 10;
@@ -143,7 +142,7 @@ namespace DescendersModMenu.BikeStats
         public bool GraphicsBloomEnabled = true;
         public bool GraphicsAmbientOccEnabled = true;
         public bool GraphicsVignetteEnabled = true;
-        public bool GraphicsDepthOfFieldEnabled = false;  // v3.6.2: DOF defaults OFF (matches ResetStats)
+        public bool GraphicsDepthOfFieldEnabled = false;
         public bool GraphicsChromaticAbEnabled = true;
 
         // ── Sky Storm / Rain ───────────────────────────────────────────
@@ -155,20 +154,18 @@ namespace DescendersModMenu.BikeStats
 
         // ── Brake Fade ─────────────────────────────────────────────────
         public bool BrakeFadeEnabled = false;
-        public int BrakeBalanceLevel = 6;  // 1=10F/90R … 6=60F/40R (default) … 11=100F/0R
+        public int BrakeBalanceLevel = 6;
 
         // ── Wheelie HUD ────────────────────────────────────────────────
         public bool WheelieHUDEnabled = false;
 
         // ── Trick Set Swap ─────────────────────────────────────────────
-        // Saved by source bike NAME (not index) so save files survive any
-        // future change to the bike-type discovery order.
         public bool TrickSetSwapEnabled = false;
         public string TrickSetSwapSourceName = "";
 
         // ── Tyre Pressure ──────────────────────────────────────────────
         public bool TyrePressureEnabled = false;
-        public int TyrePressureLevel = 5;  // 1=Flat … 5=Stock … 10=Hard
+        public int TyrePressureLevel = 5;
 
         // ── Instant Respawn ────────────────────────────────────────────
         public bool InstantRespawnEnabled = false;
@@ -182,8 +179,7 @@ namespace DescendersModMenu.BikeStats
         // ── UI Remover ─────────────────────────────────────────────────
         public bool UIRemoverEnabled = false;
 
-        // ── Lava Rising (difficulty + height records — Enabled is never persisted) ─
-        public int LavaDifficultyLevel = 2; // 1=Easy 2=Normal 3=Hard 4=Insane
+        public int LavaDifficultyLevel = 2;
         public string LavaHeightRecords = "";
 
         // ── Session extras ─────────────────────────────────────────────
@@ -194,3 +190,4 @@ namespace DescendersModMenu.BikeStats
         public int RubberBandSteeringLevel = 5;
     }
 }
+

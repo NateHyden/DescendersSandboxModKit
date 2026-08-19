@@ -1,6 +1,6 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -8,15 +8,15 @@ namespace DescendersModMenu.Mods
     {
         public static bool Enabled { get; private set; } = false;
 
-        private const float SlowScale = 0.25f;    // 25% speed during bail
-        private const float Duration = 3.0f;      // real-time seconds of slow-mo
-        private const float RampDuration = 1.0f;   // real-time seconds to ramp back to normal
+        private const float SlowScale = 0.25f;
+        private const float Duration = 3.0f;
+        private const float RampDuration = 1.0f;
 
-        private static bool _active = false;       // in slow-mo from a bail
-        private static float _endTime = -1f;       // when slow-mo phase ends → ramp begins
-        private static bool _ramping = false;       // ramping back to normal speed
-        private static float _rampStart = -1f;     // real-time when ramp began
-        private static float _rampFromScale = SlowScale; // scale at ramp start
+        private static bool _active = false;
+        private static float _endTime = -1f;
+        private static bool _ramping = false;
+        private static float _rampStart = -1f;
+        private static float _rampFromScale = SlowScale;
 
         public static void Toggle()
         {
@@ -25,7 +25,6 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[SlowMoOnBail] -> " + (Enabled ? "ON" : "OFF"));
         }
 
-        // Called by SessionTrackers.OnBailDetected()
         public static void OnBail()
         {
             if (!Enabled) return;
@@ -36,7 +35,6 @@ namespace DescendersModMenu.Mods
             ModLog.Debug("[SlowMoOnBail] Bail detected — slow-mo for " + Duration + "s");
         }
 
-        // Called when the player resets/respawns — begin smooth ramp to normal
         public static void OnRespawn()
         {
             if (!_active && !_ramping) return;
@@ -44,15 +42,12 @@ namespace DescendersModMenu.Mods
             ModLog.Debug("[SlowMoOnBail] Respawn — ramping to normal over " + RampDuration + "s");
         }
 
-        // Called every frame from OnUpdate
         public static void Tick()
         {
-            // ── Ramp phase: smoothly lerp back to 1.0 ─────────────────
             if (_ramping)
             {
                 float elapsed = Time.realtimeSinceStartup - _rampStart;
                 float t = Mathf.Clamp01(elapsed / RampDuration);
-                // Ease-out curve for a natural feel
                 float eased = 1f - (1f - t) * (1f - t);
                 float scale = Mathf.Lerp(_rampFromScale, 1f, eased);
                 SetScale(scale);
@@ -65,7 +60,6 @@ namespace DescendersModMenu.Mods
                 return;
             }
 
-            // ── Slow-mo phase: wait for timer to expire ───────────────
             if (!_active) return;
             if (Time.realtimeSinceStartup >= _endTime)
             {
@@ -83,7 +77,6 @@ namespace DescendersModMenu.Mods
             _rampFromScale = Time.timeScale > 0.01f ? Time.timeScale : SlowScale;
         }
 
-        // Hard cancel — used when toggling OFF or resetting
         private static void CancelImmediate()
         {
             _active = false;
@@ -115,7 +108,6 @@ namespace DescendersModMenu.Mods
             CancelImmediate();
         }
 
-        // ── Harmony patch — hooks into player respawn to cancel slow-mo ──
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
         {
             try
@@ -148,3 +140,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

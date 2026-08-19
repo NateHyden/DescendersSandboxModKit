@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -9,19 +9,11 @@ using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
-    // Modes mini-game: teleport to the lowest sampled ground, countdown,
-    // then race a rising lava plane to the map's highest sampled point.
-    //
-    // Kill check is height-based (player Y vs lava Y) — no collider.
-    // Rise rate is derived from this map's measured height range so
-    // Easy/Normal/Hard/Insane feel similar on short parks and long worlds.
-    // Countdown + rise use unscaled time so Slow Motion doesn't stall lava.
     public static class LavaRising
     {
         public static bool Enabled { get; private set; }
         public static bool PausedByAllMods { get; private set; }
 
-        // 1=Easy 2=Normal 3=Hard 4=Insane. 0 from old JSON → treated as Normal.
         public static int DifficultyLevel { get; private set; } = 2;
 
         public static readonly string[] DifficultyNames = { "Easy", "Normal", "Hard", "Insane" };
@@ -77,17 +69,12 @@ namespace DescendersModMenu.Mods
         private const float SpawnLift = 1.5f;
         private const float KillMargin = 0.75f;
         private const float WinMargin = 3.0f;
-        // Lava sits this far under the lowest scanned ground so it starts
-        // in the void, not in the valley you're standing in.
         private const float LavaBelowMap = 120f;
-        // Climb this many metres above spawn before lava starts moving.
         private const float MinArmClimb = 10f;
-        // When lava arms, snap the plane up to this far below the player so
-        // you see it within seconds (not a minute from the void floor).
         private const float LavaArmBelowPlayer = 22f;
         private const float KillGraceSeconds = 1.5f;
         private const int TerrainGrid = 48;
-        private const int TerrainInset = 8; // skip outer ~17% — that's the map rim / void
+        private const int TerrainInset = 8;
         private const int RaycastGrid = 16;
         private const float LavaThickness = 0.45f;
 
@@ -149,7 +136,6 @@ namespace DescendersModMenu.Mods
             else Start();
         }
 
-        // All Mods OFF — freeze the run without tearing down map scan / progress.
         public static void PauseForAllMods()
         {
             if (!Enabled || PausedByAllMods) return;
@@ -157,7 +143,6 @@ namespace DescendersModMenu.Mods
             if (UnityNull.Alive(_lavaGo)) _lavaGo.SetActive(false);
         }
 
-        // All Mods ON — resume the same attempt from where it was paused.
         public static void ResumeFromAllMods()
         {
             if (!Enabled || !PausedByAllMods) return;
@@ -277,7 +262,6 @@ namespace DescendersModMenu.Mods
             _lavaArmed = false;
         }
 
-        // ── Tick (unscaled: countdown, lava rise, UV) ─────────────────
         public static void Tick()
         {
             if (!Enabled || PausedByAllMods) return;
@@ -357,7 +341,6 @@ namespace DescendersModMenu.Mods
             ScrollLava(dt);
         }
 
-        // ── FixedTick: kill / win against physics-timed player pose ───
         public static void FixedTick()
         {
             if (!Enabled || PausedByAllMods) return;
@@ -611,7 +594,6 @@ namespace DescendersModMenu.Mods
             return true;
         }
 
-        // Vertical metres still to climb before the win height (counts down as you go up).
         public static bool TryGetSummitRemaining(out float metersRemaining)
         {
             metersRemaining = 0f;
@@ -814,7 +796,6 @@ namespace DescendersModMenu.Mods
             return y;
         }
 
-        // ── Teleport (same sequence as TeleportToCheckpoint.TeleportByIndex) ──
         private static bool TeleportToSpawn()
         {
             try
@@ -980,7 +961,6 @@ namespace DescendersModMenu.Mods
             return m + ":" + s.ToString("D2") + "." + cs;
         }
 
-        // ── Height records (per map) ──────────────────────────────────
         private static void NoteHeight(float py)
         {
             float m = py - _spawnPos.y;
@@ -1130,3 +1110,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

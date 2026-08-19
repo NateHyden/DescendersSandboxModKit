@@ -1,10 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Enabled = true means fog is REMOVED
     public static class Fog
     {
         public static bool Enabled = false;
@@ -14,7 +13,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            Apply(!Enabled); // true = fog on, false = fog off
+            Apply(!Enabled);
             ModLog.Feedback("[Fog] -> " + (Enabled ? "ON" : "OFF"));
         }
 

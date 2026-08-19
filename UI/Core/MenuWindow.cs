@@ -1,37 +1,31 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
 using DescendersModMenu.BikeStats;
 using DescendersModMenu.Mods;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.UI
 {
     public static class MenuWindow
     {
         // ── Page 1 fields ─────────────────────────────────────────────
-        // Acceleration
         private static Text accelVal, accelTogVal;
         private static Image accelBar, accelTrack;
         private static RectTransform accelKnob;
-        // Max Speed
         private static Text msVal, msTogVal;
         private static Image msBar, msTrack;
         private static RectTransform msKnob;
-        // Landing Impact
         private static Text landTogVal;
         private static Image landTrack;
         private static RectTransform landKnob;
         private static Text landVal;
         private static Image landBar;
-        // No Bail
         private static Text bailVal;
         private static Image bailTrack;
         private static RectTransform bailKnob;
-        // Auto Balance
         private static Text autoBalVal, autoBalStrVal; private static Image autoBalBar;
         private static Image autoBalTrack; private static RectTransform autoBalKnob;
-        // Quick Brake UI fields
         private static Text _brakeTogVal = null;
         private static Image _brakeTrack = null;
         private static RectTransform _brakeKnob = null;
@@ -40,17 +34,13 @@ namespace DescendersModMenu.UI
         private static Text nswVal;
         private static Image nswTrack;
         private static RectTransform nswKnob;
-        // No Speed Cap
         private static Image capBg, capBdr; private static Text capTxt;
         // ── Pages ─────────────────────────────────────────────────────
         private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22, pg23, pg24, pg25, pg26;
         private static int cur = 1;
 
-        // Set before RebuildMenu() to reopen on a specific page id (e.g. 25 = Customise)
-        // instead of the default first tab. Consumed (reset to -1) on use.
         public static int PendingPage = -1;
 
-        // Favourites … Key Binds, Info, Customise | General … Perks, Career (bottom)
         private static readonly int[] PageOrder = { 17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22, 26 };
         private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info", "Customise", "General", "Object Placer", "Xbox Workshop", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "Ghost Replay", "Maps", "Find", "Screenshot", "Other", "Perks", "Career" };
         private static readonly string[] GroupLabels = { null, null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
@@ -110,9 +100,6 @@ namespace DescendersModMenu.UI
                 RootCanvasGroup = root.AddComponent<CanvasGroup>();
                 RootRT = UIHelpers.RT(root);
 
-                // Border frame — sits behind win, extends 3px beyond so it peeks around edges.
-                // Tracks Accent (not BorderWin) so it stays a bright glow ring like the
-                // original hardcoded purple did, instead of the subtle hairline tone.
                 var frame = UIHelpers.Panel("Frame", root.transform, UIHelpers.Accent, UIHelpers.WinSp);
                 frame.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
                 var fRT = UIHelpers.RT(frame);
@@ -123,8 +110,6 @@ namespace DescendersModMenu.UI
                 var win = UIHelpers.Panel("Win", root.transform, UIHelpers.WinPanel, UIHelpers.WinSp);
                 UIHelpers.Fill(UIHelpers.RT(win));
                 win.AddComponent<Mask>().showMaskGraphic = true;
-                // Header
-                // Header panel transparent — win provides uniform background, text/buttons define the header
                 var hdr = UIHelpers.Panel("Hdr", win.transform, UIHelpers.HeaderBg);
                 var hrt = UIHelpers.RT(hdr);
                 hrt.anchorMin = new Vector2(0, 1); hrt.anchorMax = new Vector2(1, 1);
@@ -134,8 +119,6 @@ namespace DescendersModMenu.UI
                 hdr.AddComponent<WindowDragHandler>();
 
 
-                // Title row near top of header — small pad under the border
-                // (was centred = too much gap; then titleTop=-3 = too tight).
                 const float titleTop = -16f;
                 const float titleRowH = 22f;
 
@@ -191,7 +174,6 @@ namespace DescendersModMenu.UI
                     out _allModsTrack, out _allModsKnob);
                 RefreshAllModsSwitch();
 
-                // "Created by NateHyden" — pinned to top-right corner
                 var byTxt = UIHelpers.Txt("By", hdr.transform, "Created by NateHyden", 9, FontStyle.Normal, TextAnchor.UpperRight, UIHelpers.TextMid);
                 var byrt = UIHelpers.RT(byTxt.gameObject);
                 byrt.anchorMin = new Vector2(1, 1); byrt.anchorMax = new Vector2(1, 1);
@@ -200,7 +182,6 @@ namespace DescendersModMenu.UI
                 byrt.anchoredPosition = new Vector2(-8, -3);
                 byrt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
-                // ── Update status — pinned top-right, always visible ────
                 var usTxt = UIHelpers.Txt("UST", hdr.transform,
                     "checking...", 10, FontStyle.Bold, TextAnchor.UpperRight, UIHelpers.TextDim);
                 _updateStatusText = usTxt;
@@ -211,7 +192,6 @@ namespace DescendersModMenu.UI
                 usrt.anchoredPosition = new Vector2(-8, -17);
                 usTxt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
-                // ── Telemetry: label + ON/OFF state + real toggle switch ──
                 var telLbl = UIHelpers.Txt("TelLbl", hdr.transform, "Telemetry", 9, FontStyle.Bold, TextAnchor.UpperRight, UIHelpers.TextMid);
                 var telLblRt = UIHelpers.RT(telLbl.gameObject);
                 telLblRt.anchorMin = new Vector2(1, 1); telLblRt.anchorMax = new Vector2(1, 1);
@@ -233,19 +213,6 @@ namespace DescendersModMenu.UI
                     out _telSwitchTrack, out _telSwitchKnob);
                 RefreshTelemetryLabel();
 
-                // ── Telemetry explanation — dismissible. Skipped entirely
-                // once dismissed (nothing created, nothing to hide later).
-                //
-                // Button + text live as siblings inside a HorizontalLayoutGroup
-                // with a ContentSizeFitter, instead of manually computed pixel
-                // offsets between two independently-positioned elements. Two
-                // rounds of hand-measured/text-measured offsets both still
-                // left a gap — Unity's own layout system is what actually
-                // solves "size a container to fit its content and keep two
-                // elements adjacent" reliably, and it's already used
-                // successfully everywhere else in this codebase (feedback
-                // buttons, sidebar rows, etc.), so this delegates to that
-                // instead of guessing again.
                 if (!Telemetry.HeaderHintDismissed)
                 {
                     var telRow = UIHelpers.Obj("TelExplRow", hdr.transform);
@@ -263,7 +230,6 @@ namespace DescendersModMenu.UI
                     var telRowFitter = telRow.AddComponent<ContentSizeFitter>();
                     telRowFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                    // Dismiss button — first child, so it lands leftmost.
                     var telDismissGo = UIHelpers.Obj("TelDismiss", telRow.transform);
                     var telDismissImg = telDismissGo.AddComponent<Image>();
                     telDismissImg.sprite = UIHelpers.BtnSp; telDismissImg.type = Image.Type.Sliced;
@@ -277,7 +243,6 @@ namespace DescendersModMenu.UI
                         FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                     UIHelpers.Fill(UIHelpers.RT(telDismissTxt.gameObject));
 
-                    // Text — second child, right of the button.
                     var telExpl = UIHelpers.Obj("TelExpl", telRow.transform);
                     var telExplText = telExpl.AddComponent<Text>();
                     telExplText.font = UIHelpers.GetFont();
@@ -299,14 +264,10 @@ namespace DescendersModMenu.UI
                     });
                 }
 
-                // SAVE / LOAD / RESET — centred in the gap between version badge and the
-                // right-hand info column. Shifted left of their old position now that the
-                // right column is wider (telemetry toggle + explanation need the room).
                 _hdrSaveImg = HeaderBtn(hdr.transform, "SAVE", 383f, () => { StatsManager.SaveStats(); FlashHeader(_hdrSaveImg); });
                 _hdrLoadImg = HeaderBtn(hdr.transform, "LOAD", 443f, () => { StatsManager.LoadStats(); RefreshAll(); FlashHeader(_hdrLoadImg); });
                 _hdrResetImg = HeaderBtn(hdr.transform, "RESET", 503f, () => { StatsManager.ResetStats(); RefreshAll(); FlashHeader(_hdrResetImg); });
 
-                // Brief note under SAVE / LOAD / RESET (centred under the trio)
                 var slrHint = UIHelpers.Txt("SLRHint", hdr.transform,
                     "(Saves, Loads and resets active mods)",
                     8, FontStyle.Normal, TextAnchor.UpperCenter, Color.white);
@@ -314,21 +275,17 @@ namespace DescendersModMenu.UI
                 slrHintRt.anchorMin = new Vector2(0, 1); slrHintRt.anchorMax = new Vector2(0, 1);
                 slrHintRt.pivot = new Vector2(0.5f, 1);
                 slrHintRt.sizeDelta = new Vector2(180, 16);
-                // Buttons: SAVE@383, LOAD@443, RESET@503 (w=52) → group centre ≈ 469
                 slrHintRt.anchoredPosition = new Vector2(469f, -42f);
                 slrHint.horizontalOverflow = HorizontalWrapMode.Overflow;
                 slrHint.verticalOverflow = VerticalWrapMode.Overflow;
                 slrHint.raycastTarget = false;
                 slrHint.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
-                // Body
                 var body = UIHelpers.Obj("Body", win.transform);
                 var bodyRT = UIHelpers.RT(body);
                 bodyRT.anchorMin = Vector2.zero; bodyRT.anchorMax = Vector2.one;
                 bodyRT.offsetMin = new Vector2(0, 0); bodyRT.offsetMax = new Vector2(0, -UIHelpers.HeaderH);
 
-                // Sidebar
-                // Sidebar panel transparent — nav indicators and text define it visually
                 var sidebar = UIHelpers.Panel("Sidebar", body.transform, UIHelpers.SidebarBg);
                 var sibRT = UIHelpers.RT(sidebar);
                 sibRT.anchorMin = Vector2.zero; sibRT.anchorMax = new Vector2(0, 1);
@@ -340,7 +297,6 @@ namespace DescendersModMenu.UI
                 sbrt2.anchoredPosition = Vector2.zero;
                 sibBorder.AddComponent<LayoutElement>().ignoreLayout = true;
 
-                // ScrollRect wrapper inside sidebar so tabs never clip at small heights
                 var sibScroll = UIHelpers.Obj("SibScroll", sidebar.transform);
                 UIHelpers.Fill(UIHelpers.RT(sibScroll));
                 var sibSR = sibScroll.AddComponent<ScrollRect>();
@@ -362,7 +318,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.AddScrollbar(sibSR);
                 _sibScroll = sibSR;
 
-                // Bottom "scroll for more" hint (▼) — visible when list overflows and you're at the top.
                 var moreHint = UIHelpers.Obj("MoreHint", sidebar.transform);
                 var moreRt = UIHelpers.RT(moreHint);
                 moreRt.anchorMin = new Vector2(0, 0); moreRt.anchorMax = new Vector2(1, 0);
@@ -381,7 +336,6 @@ namespace DescendersModMenu.UI
                 _sibMoreHint.blocksRaycasts = false;
                 _sibMoreHint.interactable = false;
 
-                // Top "scroll up" hint (▲) — visible when list overflows and you're at the bottom.
                 var moreHintTop = UIHelpers.Obj("MoreHintTop", sidebar.transform);
                 var moreTopRt = UIHelpers.RT(moreHintTop);
                 moreTopRt.anchorMin = new Vector2(0, 1); moreTopRt.anchorMax = new Vector2(1, 1);
@@ -445,7 +399,6 @@ namespace DescendersModMenu.UI
                     lblRT.offsetMin = new Vector2(18, 0); lblRT.offsetMax = Vector2.zero;
                     _navTxts[i] = lbl;
 
-                    // ── Active mod dot (top-right of nav item) ────────
                     var dotObj = UIHelpers.Obj("ActiveDot", item.transform);
                     var dotImg = dotObj.AddComponent<Image>();
                     dotImg.sprite = UIHelpers.DotSp;
@@ -473,7 +426,6 @@ namespace DescendersModMenu.UI
                     }
                     if (pageNum == 12)
                     {
-                        // Unread message count badge on the Chat tab
                         var badge = UIHelpers.Panel("ChatUnread", item.transform, UIHelpers.Orange, UIHelpers.BtnSp);
                         _chatUnreadBadge = badge;
                         var brt = UIHelpers.RT(badge);
@@ -495,7 +447,6 @@ namespace DescendersModMenu.UI
                     bcol.pressedColor = new Color(0.85f, 0.85f, 0.85f, 1); bcol.colorMultiplier = 1; btn.colors = bcol;
                 }
 
-                // Content area
                 var cont = UIHelpers.Obj("Cnt", body.transform);
                 var crt = UIHelpers.RT(cont);
                 crt.anchorMin = Vector2.zero; crt.anchorMax = Vector2.one;
@@ -579,7 +530,6 @@ namespace DescendersModMenu.UI
 
             UIHelpers.SectionHeader("BIKE PHYSICS", pg);
 
-            // ── Acceleration (now with toggle) ────────────────────────
             var ar = UIHelpers.StatRow("Acceleration", pg);
             accelTogVal = UIHelpers.Txt("ATV", ar.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
             accelTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
@@ -590,7 +540,6 @@ namespace DescendersModMenu.UI
             UIHelpers.SmallBtn(ar.transform, "-", () => { Acceleration.Decrease(); RefreshAll(); });
             UIHelpers.SmallBtn(ar.transform, "+", () => { Acceleration.Increase(); RefreshAll(); });
 
-            // ── Max Speed compound row (now with toggle) ───────────────
             var mso = UIHelpers.Panel("MSR", pg, UIHelpers.RowBg, UIHelpers.RowSp);
             mso.AddComponent<LayoutElement>().minHeight = UIHelpers.RowH + 38;
             var mbd = UIHelpers.Panel("MBd", mso.transform, UIHelpers.RowBorder, UIHelpers.RowSp);
@@ -620,7 +569,6 @@ namespace DescendersModMenu.UI
             UIHelpers.SmallBtn(mst.transform, "-", () => { MaxSpeedMultiplier.Decrease(); RefreshAll(); });
             UIHelpers.SmallBtn(mst.transform, "+", () => { MaxSpeedMultiplier.Increase(); RefreshAll(); });
 
-            // No Speed Cap button
             var cap = UIHelpers.Obj("Cap", mso.transform);
             capBg = cap.AddComponent<Image>(); capBg.sprite = UIHelpers.BtnSp;
             capBg.type = Image.Type.Sliced; capBg.color = UIHelpers.NeonBlue;
@@ -696,7 +644,6 @@ namespace DescendersModMenu.UI
             UIHelpers.InfoBox(pg, "Level 1-9: fast drag deceleration. Level 10 (MAX): truly instant stop.");
             // ── Launch button row ─────────────────────────────────────
             var qar = UIHelpers.StatRow("Actions", pg);
-            // Super Launch — fires player forward+up, does NOT touch any mod state
             UIHelpers.ActionBtn(qar.transform, "Launch", () =>
             {
                 try
@@ -716,7 +663,6 @@ namespace DescendersModMenu.UI
             }, 60);
             UIHelpers.InfoBox(pg, "Launch: fires you forward at high speed.");
 
-            // ── STAR BUTTONS (Favourites) ──────────────────────────────
             FavouritesManager.RegisterStarButton("Acceleration", UIHelpers.StarBtn(ar.transform, "Acceleration", () => FavouritesManager.Toggle("Acceleration")));
             FavouritesManager.RegisterStarButton("MaxSpeed", UIHelpers.StarBtn(mst.transform, "MaxSpeed", () => FavouritesManager.Toggle("MaxSpeed")));
             FavouritesManager.RegisterStarButton("NoSpeedCap", UIHelpers.StarBtnAbs(cap.transform, "NoSpeedCap", () => FavouritesManager.Toggle("NoSpeedCap")));
@@ -727,7 +673,6 @@ namespace DescendersModMenu.UI
             FavouritesManager.RegisterStarButton("QuickBrake", UIHelpers.StarBtn(brakeRow.transform, "QuickBrake", () => FavouritesManager.Toggle("QuickBrake")));
             FavouritesManager.RegisterStarButton("Launch", UIHelpers.StarBtn(qar.transform, "Launch", () => FavouritesManager.Toggle("Launch")));
 
-            // ── FACTORY REGISTRATIONS (General tab mods) ───────────────
             FavouritesManager.Register(new ModFavEntry
             {
                 Id = "Acceleration",
@@ -841,7 +786,6 @@ namespace DescendersModMenu.UI
         {
             var g = UIHelpers.Obj(lbl + "HB", hdr);
             var rt = UIHelpers.RT(g);
-            // Align with title row near top of header (was centre-anchored).
             rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1);
             rt.pivot = new Vector2(0, 0.5f);
             rt.sizeDelta = new Vector2(52, 22);
@@ -990,9 +934,6 @@ namespace DescendersModMenu.UI
             UpdateChatUnreadBadge(true);
         }
 
-        // Public wrapper so MenuUI can force the sidebar to a specific
-        // page (e.g. General) on a normal F6/dpad open, independent of
-        // whatever the ColorSchemeManager reopen-on-Customise flow does.
         public static void GoToPage(int pg) { Switch(pg); }
 
         public static bool IsChatOpen
@@ -1010,7 +951,6 @@ namespace DescendersModMenu.UI
             if (pg7) pg7.SetActive(cur == 7); if (pg8) pg8.SetActive(cur == 8);
             if (pg9) pg9.SetActive(cur == 9); if (pg10) pg10.SetActive(cur == 10);
             if (pg11) pg11.SetActive(cur == 11);
-            // Cancel outfit rename when navigating away from outfit page
             if (cur != 11) OutfitPage.CancelRename(); if (pg12) pg12.SetActive(cur == 12);
             if (pg13) pg13.SetActive(cur == 13); if (pg14) pg14.SetActive(cur == 14);
             if (pg15) pg15.SetActive(cur == 15);
@@ -1043,7 +983,6 @@ namespace DescendersModMenu.UI
                 if (_navBars[i]) _navBars[i].color = new Color(0, 0, 0, 0);
                 if (_navTxts[i]) _navTxts[i].color = on ? UIHelpers.Accent : UITheme.NavInactiveText;
                 if (_navBgs[i]) _navBgs[i].color = on ? UIHelpers.NavActive : new Color(0, 0, 0, 0);
-                // Show active dot only when tab is not currently selected
                 if (_activeDots[i]) _activeDots[i].enabled = active && !on;
             }
             if (cur == 2) EspPage.RefreshTexts();
@@ -1067,7 +1006,6 @@ namespace DescendersModMenu.UI
             _chatUnreadBadge.SetActive(true);
             if (_chatUnreadTxt)
                 _chatUnreadTxt.text = n > 99 ? "99+" : n.ToString();
-            // Widen slightly for multi-digit counts
             var rt = UIHelpers.RT(_chatUnreadBadge);
             rt.sizeDelta = new Vector2(n > 9 ? 22f : 18f, 14f);
         }
@@ -1150,12 +1088,8 @@ namespace DescendersModMenu.UI
 
         public static void TickLive()
         {
-            // Only update session tab text when menu is visible — eliminates
-            // ~720 string allocations/sec that were happening every frame regardless
             if (MenuUI.IsOpen) SessionPage.TickLive();
 
-            // Update status — reapplied every tick so it survives menu rebuilds after scene changes
-            // Unity fake-null: (object)==null misses destroyed header Text (same class as GhostPage).
             if (!UnityNull.Alive(_updateStatusText))
             {
                 _updateStatusText = null;
@@ -1169,13 +1103,13 @@ namespace DescendersModMenu.UI
             else if (UpdateChecker.UpdateAvailable)
             {
                 _updateStatusText.text = "\u25B2 v" + UpdateChecker.LatestVersion + " available";
-                _updateStatusText.color = new UnityEngine.Color(1f, 0.20f, 0.20f, 1f); // red
+                _updateStatusText.color = new UnityEngine.Color(1f, 0.20f, 0.20f, 1f);
                 _updateStatusText.fontStyle = FontStyle.Bold;
             }
             else
             {
                 _updateStatusText.text = "\u2713 v" + BuildInfo.Version + " up to date";
-                _updateStatusText.color = UIHelpers.OnColor; // lime green
+                _updateStatusText.color = UIHelpers.OnColor;
                 _updateStatusText.fontStyle = FontStyle.Normal;
             }
 
@@ -1197,8 +1131,6 @@ namespace DescendersModMenu.UI
 
         private static void UpdateSidebarMoreHint()
         {
-            // Unity fake-null: destroyed UI still fails (object)x == null.
-            // Xbox set_alpha throws NullReferenceException, not MissingReferenceException.
             if (!_sibScroll)
             {
                 _sibMoreHint = null;
@@ -1239,3 +1171,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

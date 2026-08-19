@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using System.Collections.Generic;
 using System.Reflection;
@@ -6,19 +6,6 @@ using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // PerkMenu — instant-grant for the game's own crew member perk system.
-    //
-    // Crew members are GameModifier ScriptableObject assets - confirmed by reading
-    // GameModifier.cs (clean type name, public "modifiers" array of Modifier
-    // {modifierType, percentageValue} pairs) and PlayerInfoImpact.cs, where the
-    // real crew-member-pick screen grants one by calling the clean, public,
-    // unobfuscated PlayerInfoImpact.AddGameModifier(GameModifier). This drives
-    // that exact same method, so a perk applies identically to earning it
-    // normally - no faking the effect by combining unrelated toggle mods.
-    //
-    // GameData exposes the full roster the game draws random choices from as a
-    // public GameModifier[] field (obfuscated name - found by TYPE, not a
-    // hardcoded name, per project convention, so this survives re-obfuscation).
     public static class PerkMenu
     {
         public static string LastResult { get; private set; } = "";
@@ -64,10 +51,6 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[PerkMenu] LoadRoster: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "PerkMenu"); }
         }
 
-        // Category badge art (colored shield/circle per Green/Blue/Yellow class) -
-        // GetCrewMemberSprite is clean, unobfuscated, and is exactly what
-        // CrewMemberCard's own real Initialize() method uses for the background
-        // behind the (monochrome-mask) perk icon.
         private static GameData _gameData;
 
         private static GameData GetGameData()
@@ -94,14 +77,6 @@ namespace DescendersModMenu.Mods
 
         public static void ForceReload() { _allPerks = null; _gameData = null; LoadRoster(); }
 
-        // perk.name is a localization KEY. LocalizationManager.GetLocalizedText(key, sheet)
-        // forwards to VpjVZ[_0080.ESPn{xs(key, sheet) - confirmed by reading that class
-        // directly. IMPORTANT: the second parameter is a SHEET NAME, not a fallback
-        // string (misread this initially - a miss just returns "#!#key#!#" or empty,
-        // it never returns the fallback unless key/sheet themselves are empty strings).
-        // Sheet titles are read from the real LocalizationSettings asset (clean,
-        // unobfuscated "sheetTitles" field) and tried in turn since there's no single
-        // "the" sheet - crew member names could live in any of them.
         private static string[] _sheetTitles;
         private static bool _sheetTitlesSearched;
 
@@ -141,7 +116,7 @@ namespace DescendersModMenu.Mods
                 {
                     string resolved = lm.GetLocalizedText(key, sheets[i]);
                     if (string.IsNullOrEmpty(resolved)) continue;
-                    if (resolved.Length > 0 && resolved[0] == '#') continue; // "#!#key#!#" miss marker
+                    if (resolved.Length > 0 && resolved[0] == '#') continue;
                     return resolved;
                 }
                 return key;
@@ -153,9 +128,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Generic Singleton<T> accessor - the property itself carries an
-        // obfuscated name (same string across every closed generic instance),
-        // so it's found by return type rather than a literal identifier.
         private static T GetSingletonInstance<T>() where T : UnityEngine.MonoBehaviour
         {
             try
@@ -282,10 +254,6 @@ namespace DescendersModMenu.Mods
 
         private static FieldInfo FindFieldByType(System.Type onType, System.Type wantType, BindingFlags flags)
         {
-            // NOTE: .Equals(), never == or != on Type objects - Type's operator
-            // overloads compile to Type.op_Equality/op_Inequality, and this build's
-            // mscorlib.dll is missing those (documented, recurring gotcha in this
-            // project - see How_to_fix_after_update.md).
             FieldInfo[] fields = onType.GetFields(flags);
             for (int i = 0; i < fields.Length; i++)
                 if (fields[i].FieldType.Equals(wantType)) return fields[i];
@@ -293,3 +261,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

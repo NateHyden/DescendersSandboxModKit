@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
@@ -13,9 +13,6 @@ namespace DescendersModMenu.Mods
         public static float ClimbSpeed = 20f;
         public static float LookSpeed = 90f;
 
-        // ── Adjustable speed ranges ─────────────────────────────────
-        // MoveSpeed drives forward/back AND left/right together (see Tick()).
-        // ClimbSpeed drives up/down. Exposed as +/- steppers in the Fun tab.
         public const float MinMoveSpeed = 5f;
         public const float MaxMoveSpeed = 80f;
         public const float MoveSpeedStep = 5f;
@@ -37,8 +34,8 @@ namespace DescendersModMenu.Mods
         private static Transform _playerTrans = null;
         private static VehicleController _vc = null;
 
-        private static FieldInfo _physField = null; // bYxcVhv on Vehicle / subclass
-        private static MethodInfo _toggleCtrl = null; // ToggleControl
+        private static FieldInfo _physField = null;
+        private static MethodInfo _toggleCtrl = null;
 
         private static bool _savedKinematic = false;
         private static bool _savedGravity = false;
@@ -69,7 +66,6 @@ namespace DescendersModMenu.Mods
                 _vehicle = player.GetComponent<Vehicle>();
                 _vc = player.GetComponent<VehicleController>();
 
-                // Rigidbody lives on a child — use GetComponentInChildren
                 _rb = player.GetComponentInChildren<Rigidbody>();
 
                 if (!UnityNull.Alive(_vehicle))
@@ -84,12 +80,11 @@ namespace DescendersModMenu.Mods
                     Enabled = false; return;
                 }
 
-                // Find physField on actual runtime type (may be a subclass of Vehicle)
                 if ((object)_physField == null)
                 {
                     _physField = _vehicle.GetType().GetField("bYxcVhv",
                         BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                    if ((object)_physField == null) // fallback to declared type
+                    if ((object)_physField == null)
                         _physField = typeof(Vehicle).GetField("bYxcVhv",
                             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 }
@@ -98,7 +93,6 @@ namespace DescendersModMenu.Mods
                     _toggleCtrl = typeof(VehicleController).GetMethod("ToggleControl",
                         BindingFlags.Public | BindingFlags.Instance);
 
-                // Kill physics on the rigidbody
                 _savedKinematic = _rb.isKinematic;
                 _savedGravity = _rb.useGravity;
                 _rb.velocity = Vector3.zero;
@@ -106,19 +100,15 @@ namespace DescendersModMenu.Mods
                 _rb.useGravity = false;
                 _rb.isKinematic = true;
 
-                // Disable vehicle physics simulation
                 if ((object)_physField != null)
                     _physField.SetValue(_vehicle, false);
 
-                // Disable controller input
                 if ((object)_vc != null && (object)_toggleCtrl != null)
                     _toggleCtrl.Invoke(_vc, new object[] { false, false });
 
-                // Suppress bail
                 _savedNoBail = NoBail.Enabled;
                 NoBail.SetEnabled(true);
 
-                // Seed rotation from current orientation
                 _yaw = _playerTrans.eulerAngles.y;
                 _pitch = 0f;
 
@@ -138,7 +128,6 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // Re-enable vehicle physics
                 if (UnityNull.Alive(_vehicle) && (object)_physField != null)
                     _physField.SetValue(_vehicle, true);
 
@@ -150,11 +139,9 @@ namespace DescendersModMenu.Mods
                     _rb.angularVelocity = Vector3.zero;
                 }
 
-                // Re-enable controller input
                 if (UnityNull.Alive(_vc) && (object)_toggleCtrl != null)
                     _toggleCtrl.Invoke(_vc, new object[] { true, true });
 
-                // Restore bail behaviour
                 NoBail.SetEnabled(_savedNoBail);
             }
             catch (System.Exception ex)
@@ -172,8 +159,6 @@ namespace DescendersModMenu.Mods
         public static void Tick()
         {
             if (!Enabled) return;
-            // Map change destroys Rigidbody; (object)_rb == null misses Unity fake-null
-            // and get_isKinematic() then NREs (Discord reports from Xbox + Steam).
             if (!UnityNull.Alive(_vehicle) || !UnityNull.Alive(_rb) || !UnityNull.Alive(_playerTrans))
             {
                 Enabled = false;
@@ -183,11 +168,9 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                // Keep vehicle physics suppressed every frame
                 if ((object)_physField != null)
                     _physField.SetValue(_vehicle, false);
 
-                // Also keep kinematic in case something restores it
                 if (!_rb.isKinematic)
                 {
                     _rb.velocity = Vector3.zero;
@@ -197,7 +180,6 @@ namespace DescendersModMenu.Mods
 
                 InControl.InputDevice dev = InControl.InputManager.ActiveDevice;
 
-                // Right stick — yaw and pitch
                 float rsX = (float)dev.RightStick.X;
                 float rsY = (float)dev.RightStick.Y;
                 if (Mathf.Abs(rsX) > 0.1f) _yaw += rsX * LookSpeed * Time.deltaTime;
@@ -206,7 +188,6 @@ namespace DescendersModMenu.Mods
 
                 Quaternion newRot = Quaternion.Euler(_pitch, _yaw, 0f);
 
-                // Move player root via rb.MovePosition (works correctly on kinematic)
                 Vector3 move = Vector3.zero;
                 float v = (float)dev.LeftStick.Y;
                 float h = (float)dev.LeftStick.X;
@@ -223,11 +204,9 @@ namespace DescendersModMenu.Mods
                 if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) down = 1f;
                 move += Vector3.up * (up - down) * ClimbSpeed * Time.deltaTime;
 
-                // Move the root transform — all children (including kinematic rb) follow
                 _playerTrans.position += move;
                 _playerTrans.rotation = newRot;
 
-                // Keep camera locked behind the bike
                 Camera cam = Camera.main;
                 if (UnityNull.Alive(cam))
                 {
@@ -253,3 +232,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

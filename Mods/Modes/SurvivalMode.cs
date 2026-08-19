@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
@@ -28,9 +28,8 @@ namespace DescendersModMenu.Mods
         public static int HealIndex = 1;
         public static string HealDisplay => HealLabels[HealIndex];
 
-        // Airtime thresholds for heal tiers
-        private const float SmallJumpTime = 0.4f; // > this = small heal (+5)
-        private const float BigJumpTime = 1.2f; // > this = big heal (configurable)
+        private const float SmallJumpTime = 0.4f;
+        private const float BigJumpTime = 1.2f;
 
         // ── Selectors ─────────────────────────────────────────────────
         public static void PrevBailPenalty() { if (BailPenaltyIndex > 0) BailPenaltyIndex--; }
@@ -51,7 +50,6 @@ namespace DescendersModMenu.Mods
         private static float _airtimeAccum = 0f;
         private static float _prevVelY = 0f;
 
-        // Cached rigidbody
         private static Rigidbody _rb = null;
 
         // ── Toggle / Reset ────────────────────────────────────────────
@@ -107,12 +105,10 @@ namespace DescendersModMenu.Mods
             if (bleedRate > 0f)
                 HP -= bleedRate * Time.deltaTime;
 
-            // ── Airtime / landing heal ────────────────────────────────
-            // Detect landing via vertical velocity transition: was falling → now grounded
             float velY = GetVerticalVelocity();
 
             bool falling = velY < -2f;
-            bool grounded = velY > -0.5f && _prevVelY < -0.5f; // just transitioned to ground
+            bool grounded = velY > -0.5f && _prevVelY < -0.5f;
 
             if (falling || (_wasAirborne && !grounded))
             {
@@ -139,7 +135,6 @@ namespace DescendersModMenu.Mods
                 _airtimeAccum = 0f;
             }
 
-            // Reset airtime if bail cleared them while in air
             if (bailedThisFrame)
             {
                 _wasAirborne = false;
@@ -177,3 +172,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

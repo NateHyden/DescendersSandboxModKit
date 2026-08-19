@@ -1,4 +1,4 @@
-using DescendersModMenu;
+﻿using DescendersModMenu;
 ﻿using MelonLoader;
 using UnityEngine;
 using System.Reflection;
@@ -13,7 +13,7 @@ namespace DescendersModMenu.Mods
         public struct MapEntry
         {
             public string Name;
-            public int CustomSeed; // -1 = base world
+            public int CustomSeed;
             public int WorldInt;
             public bool IsBikePark;
         }
@@ -24,23 +24,22 @@ namespace DescendersModMenu.Mods
         public static MapEntry GetEntry(int i) => _maps[i];
         public static bool HasBikeParks { get; private set; } = false;
 
-        // Base game worlds
         private static readonly string[] _baseNames =
             { "Highlands","Forest","Canyon","Peaks","Hell","Desert","Jungle","Favela","Glaciers","Ridges" };
         private static readonly int[] _baseWorlds =
             { 1, 2, 3, 4, 5, 6, 7, 8, 9, 11 };
 
         // ── Reflection cache ──────────────────────────────────────────
-        private static System.Type _wiWlGzType = null; // \u0081wiWlGz
-        private static MethodInfo _fmDOWdg = null; // FmDOWdg(long)
-        private static System.Type _rDRSType = null; // r}RS (session type enum)
-        private static object _sandboxValue = null; // r}RS.Sandbox
-        private static MethodInfo _startNewSession = null; // StartNewSession(World, r}RS)
-        private static FieldInfo _sessionDataFld = null; // 83ESVMoz on SessionManager
-        private static FieldInfo _currentLevelFld = null; // vebf81kn on session data
-        private static MethodInfo _pushState = null; // StateMachine.PushState(Vt)
-        private static object _vtGenerating = null; // Vt.Generating
-        private static object _vtSandbox = null; // Vt.Sandbox
+        private static System.Type _wiWlGzType = null;
+        private static MethodInfo _fmDOWdg = null;
+        private static System.Type _rDRSType = null;
+        private static object _sandboxValue = null;
+        private static MethodInfo _startNewSession = null;
+        private static FieldInfo _sessionDataFld = null;
+        private static FieldInfo _currentLevelFld = null;
+        private static MethodInfo _pushState = null;
+        private static object _vtGenerating = null;
+        private static object _vtSandbox = null;
 
         // ── Build map list ────────────────────────────────────────────
         public static void BuildMapList()
@@ -64,7 +63,6 @@ namespace DescendersModMenu.Mods
 
                 int found = 0;
 
-                // Scan FqVmLOT (BonusLevelInfo[]) — the definitive bike park list
                 System.Array fqv = GetPublicField<System.Array>(gd, "FqVmLOT");
                 if ((object)fqv != null && fqv.Length > 0)
                 {
@@ -76,7 +74,6 @@ namespace DescendersModMenu.Mods
                         object we = GetPublicField<object>(b, "world");
                         int world = we != null ? (int)we : 0;
                         if (string.IsNullOrEmpty(name) || seed == 0) continue;
-                        // Pretty-print the internal key e.g. BIKEOUTV2 → Bike Out V2
                         _maps.Add(new MapEntry
                         {
                             Name = PrettyName(name),
@@ -95,12 +92,9 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[MapChanger] BuildMapList: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MapChanger"); }
         }
 
-        // Convert internal ALL_CAPS keys to Title Case display names
-        // e.g. BIKEOUTV2 → Bike Out V2,  MTPALUMBO → Mt. Palumbo
         private static string PrettyName(string key)
         {
             if (string.IsNullOrEmpty(key)) return key;
-            // Known remaps
             switch (key)
             {
                 case "BIKEOUT": return "Bike Out";
@@ -145,7 +139,6 @@ namespace DescendersModMenu.Mods
                 case "IDO": return "IDO Bike Park";
                 case "RIOT": return "Ragesquid Riot";
             }
-            // Fallback: title-case the raw key
             return System.Globalization.CultureInfo.CurrentCulture
                 .TextInfo.ToTitleCase(key.ToLowerInvariant());
         }
@@ -154,7 +147,7 @@ namespace DescendersModMenu.Mods
         private static int _pendingLoad = -1;
         private static float _loadTimer = 0f;
         private static int _scoreToRestore = 0;
-        private static float _suppressTimer = 0f; // keeps Last Stand suppressed after seed load
+        private static float _suppressTimer = 0f;
         public static string LastLoadedSeed { get; private set; } = "";
         private static float _restoreTimer = 0f;
 
@@ -209,31 +202,21 @@ namespace DescendersModMenu.Mods
 
                 if (!map.IsBikePark)
                 {
-                    // Try LoadLevel with world only (no -1 level suffix).
-                    // "5-1" = career level 1 of Hell. "5" alone may load freeride.
-                    // Also try LoadLevelFromSeed with the world index string.
                     SuppressInactivityWarning();
                     string worldStr = map.WorldInt.ToString();
                     ModLog.Debug("[MapChanger] Base world load attempt: worldStr=" + worldStr);
-                    // Attempt 1: LoadLevel with just world index (no career suffix)
                     DevCommandsGameplay.LoadLevel(worldStr);
                     ModLog.Debug("[MapChanger] Base world: LoadLevel(" + worldStr + ") called");
                     return;
                 }
 
                 // ── Bike park load ────────────────────────────────────
-                // Replicates BikeParkSelectButton.OnClick():
-                // 1. SessionManager.StartNewSession(world, Sandbox)
-                // 2. session.currentLevel = wiWlGz.FmDOWdg((long)customSeed)
-                // 3. StateMachine.PushState(Vt.Generating)
 
                 ModLog.Debug("[MapChanger] Bike park: " + map.Name
                     + " seed=" + map.CustomSeed + " world=" + map.WorldInt);
 
-                // Resolve reflection cache
                 if (!ResolveReflection()) return;
 
-                // Get singleton instances
                 object smInstance = GetSingleton(typeof(SessionManager));
                 object stInstance = GetSingleton(typeof(StateMachine));
                 if ((object)smInstance == null || (object)stInstance == null)
@@ -245,10 +228,6 @@ namespace DescendersModMenu.Mods
 
                 SuppressInactivityWarning();
 
-                // BikeParkSelectButton always sets HCq84\u0083xy = -1 before loading.
-                // Without this, ResetPlayer (called by StartNewSession) sets obpDRQw=0
-                // because the session is Sandbox, making IsLastStand() true and
-                // triggering the "LAST STAND" banner animation.
                 try
                 {
                     object pip = GetSingleton(typeof(PlayerManager));
@@ -272,12 +251,9 @@ namespace DescendersModMenu.Mods
                 }
                 catch { }
 
-                // 1. StartNewSession(world, Sandbox, -1, null) — must pass all 4 params,
-                //    reflection doesn't honour C# default parameter values
                 _startNewSession.Invoke(smInstance,
                     new object[] { (World)map.WorldInt, _sandboxValue, -1, null });
 
-                // 2. Get session data object (83ESVMoz field)
                 object sessionData = _sessionDataFld.GetValue(smInstance);
                 if ((object)sessionData == null)
                 {
@@ -286,7 +262,6 @@ namespace DescendersModMenu.Mods
                     return;
                 }
 
-                // 3. Create level info: wiWlGz.FmDOWdg((long)customSeed)
                 object levelInfo = _fmDOWdg.Invoke(null, new object[] { (long)map.CustomSeed });
                 if ((object)levelInfo == null)
                 {
@@ -295,10 +270,8 @@ namespace DescendersModMenu.Mods
                     return;
                 }
 
-                // 4. Set session.currentLevel = levelInfo
                 _currentLevelFld.SetValue(sessionData, levelInfo);
 
-                // 5. StateMachine.PushState(Vt.Generating)
                 _pushState.Invoke(stInstance, new object[] { _vtGenerating });
 
                 ModLog.Debug("[MapChanger] Bike park load dispatched.");
@@ -308,10 +281,6 @@ namespace DescendersModMenu.Mods
 
         private static void SuppressInactivityWarning()
         {
-            // The "LAST STAND" banner fires because the inactivity timer (murgZZE)
-            // keeps running during the gap between StartNewSession and the Generating
-            // state activating. Fix: reset murgZZE = 0 and kVhi84yF = now so the
-            // elapsed-time condition (murgZZE > gd82zUG5D * 0.75) is never met.
             try
             {
                 object mm = GetSingleton(typeof(MultiManager));
@@ -327,7 +296,6 @@ namespace DescendersModMenu.Mods
                 if ((object)murgZZE != null) murgZZE.SetValue(mm, 0f);
                 if ((object)kVhi84yF != null) kVhi84yF.SetValue(mm, Time.unscaledTime);
 
-                // Also hide it immediately in case it's already visible
                 var f = typeof(PermaGUI).GetField(
                     "\u005B\u007EqsVD\u007C", BindingFlags.Public | BindingFlags.Static);
                 if ((object)f == null) return;
@@ -342,11 +310,10 @@ namespace DescendersModMenu.Mods
 
         private static bool ResolveReflection()
         {
-            if ((object)_fmDOWdg != null) return true; // already cached
+            if ((object)_fmDOWdg != null) return true;
 
             try
             {
-                // Find \u0081wiWlGz type (level info class)
                 foreach (var asm in System.AppDomain.CurrentDomain.GetAssemblies())
                 {
                     if (!string.Equals(asm.GetName().Name, "Assembly-CSharp",
@@ -354,7 +321,6 @@ namespace DescendersModMenu.Mods
                     _wiWlGzType = asm.GetType("\u0081wiWlGz");
                     if ((object)_wiWlGzType == null)
                     {
-                        // Try all types to find it by its known static method
                         foreach (var t in asm.GetTypes())
                         {
                             var m = t.GetMethod("Fm\u007DOWd\u0060",
@@ -376,8 +342,6 @@ namespace DescendersModMenu.Mods
                     BindingFlags.Public | BindingFlags.Static,
                     null, new System.Type[] { typeof(long) }, null);
 
-                // Find StartNewSession(World, r}RS, int, List<GameModifier>) on SessionManager
-                // Derive session-type enum from parameter — avoids picking Vt (also has Sandbox)
                 foreach (var m in typeof(SessionManager).GetMethods(
                     BindingFlags.Public | BindingFlags.Instance))
                 {
@@ -404,12 +368,10 @@ namespace DescendersModMenu.Mods
                     return false;
                 }
 
-                // Session data field on SessionManager
                 _sessionDataFld = typeof(SessionManager).GetField(
                     "ESVMoz",
                     BindingFlags.Public | BindingFlags.Instance);
 
-                // Current level field on session data type
                 if ((object)_sessionDataFld != null)
                 {
                     _currentLevelFld = _sessionDataFld.FieldType.GetField(
@@ -424,8 +386,6 @@ namespace DescendersModMenu.Mods
                     return false;
                 }
 
-                // Vt.Generating — the state machine enum value
-                // PushState(Vt) on StateMachine
                 _pushState = typeof(StateMachine).GetMethod("PushState",
                     BindingFlags.Public | BindingFlags.Instance);
                 if ((object)_pushState != null)
@@ -457,9 +417,6 @@ namespace DescendersModMenu.Mods
 
         public static void OnSceneInitialized() { CacheCurrentLevelSeed(); }
 
-        // ── Harmony patch — fires when UI_FreerideBikeParks.OnEnable runs ──
-        // OnEnable reads GameData.Mg^xbWZ directly, so by the time it fires
-        // the bike park bundle data is guaranteed to be populated.
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
         {
             try
@@ -486,10 +443,9 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Called by Harmony after State_FreerideBikeParks.Refresh()
         public static void Patch_FreerideBikeParksRefresh()
         {
-            if (HasBikeParks) return; // already scanned — no need to repeat
+            if (HasBikeParks) return;
             ModLog.Debug("[MapChanger] Freeride screen opened — scanning bike parks...");
             BuildMapList();
             try { MapPage.RebuildList(); } catch { }
@@ -500,8 +456,6 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // First: check for direct public static field [~qsVD| on the type itself
-                // (GameData, SessionManager etc. use this pattern)
                 var directField = targetType.GetField(
                     "[~qsVD|",
                     BindingFlags.Public | BindingFlags.Static);
@@ -511,7 +465,6 @@ namespace DescendersModMenu.Mods
                     if ((object)val != null) return val;
                 }
 
-                // Fallback: Singleton<T> wrapper
                 var singletonType = typeof(Singleton<>).MakeGenericType(targetType);
                 foreach (var p in singletonType.GetProperties(
                     BindingFlags.Public | BindingFlags.Static))
@@ -580,13 +533,9 @@ namespace DescendersModMenu.Mods
         }
 
         // ── Read live session seed ────────────────────────────────────
-        // Reads SessionManager.\u0083ESVMoz.vebf\u0081kn.digk\u0084\u007FK() — the actual seed
-        // used to generate the current map, regardless of how it was loaded.
         private static MethodInfo _seedGetterMethod = null;
         private static string _cachedSeedString = "";
 
-        // Called once from ModEntry.OnSceneWasInitialized — reads and caches the
-        // seed for the newly loaded map. Zero per-frame cost.
         public static void CacheCurrentLevelSeed()
         {
             _cachedSeedString = "";
@@ -606,7 +555,6 @@ namespace DescendersModMenu.Mods
                 object levelInfo = _currentLevelFld.GetValue(sessionData);
                 if ((object)levelInfo == null) return;
 
-                // Find digk\u0084\u007FK — the only public no-arg method returning long
                 MethodInfo[] methods = levelInfo.GetType().GetMethods(
                     BindingFlags.Public | BindingFlags.Instance);
                 for (int i = 0; i < methods.Length; i++)
@@ -634,26 +582,21 @@ namespace DescendersModMenu.Mods
         }
 
         public static string GetCurrentLevelSeed() { return _cachedSeedString; }
-        // Uses the exact same path as bike park loading — proven to work
-        // without Last Stand. Parses seed string -> FmDOWdg -> StartNewSession(World, Sandbox)
         public static void LoadFromSeed(string seed)
         {
             try
             {
                 if (!ResolveReflection()) return;
 
-                // Parse seed string to long (take first segment before any dash)
                 long seedNum;
                 string[] parts = seed.Split('-');
                 if (!long.TryParse(parts[0].Trim(), out seedNum))
                 { MelonLogger.Error("[MapChanger] LoadFromSeed: could not parse \"" + seed + "\" as a number."); Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: could not parse \"" + seed + "\" as a number."), "MapChanger"); return; }
 
-                // Convert seed to level info via FmDOWdg
                 object levelInfo = _fmDOWdg.Invoke(null, new object[] { seedNum });
                 if ((object)levelInfo == null)
                 { MelonLogger.Error("[MapChanger] LoadFromSeed: FmDOWdg returned null for seed=" + seedNum); Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: FmDOWdg returned null for seed=" + seedNum), "MapChanger"); return; }
 
-                // Get the World from levelInfo (g^ErFwSM public field)
                 System.Reflection.FieldInfo worldFld = levelInfo.GetType().GetField(
                     "g\u005ErFwSM", BindingFlags.Public | BindingFlags.Instance);
                 if ((object)worldFld == null)
@@ -668,10 +611,6 @@ namespace DescendersModMenu.Mods
                 _suppressTimer = 5f;
                 SuppressInactivityWarning();
 
-                // Set HCqxy = -1 on ALL players before StartNewSession.
-                // StartNewSession loops GetAllPlayersImpact() and calls ResetPlayer() on each.
-                // ResetPlayer: if session is Sandbox, sets obpDRQw = HCqxy.
-                // HCqxy defaults to 0 -> obpDRQw=0 -> IsLastStand()=true -> LAST STAND banner.
                 try
                 {
                     object pip = GetSingleton(typeof(PlayerManager));
@@ -701,11 +640,9 @@ namespace DescendersModMenu.Mods
                 }
                 catch { }
 
-                // StartNewSession(World, Sandbox, -1, null) — identical to bike park path
                 _startNewSession.Invoke(smInstance,
                     new object[] { (World)world, _sandboxValue, -1, null });
 
-                // Set session currentLevel to the seed-derived level info
                 object sessionData = _sessionDataFld.GetValue(smInstance);
                 if ((object)sessionData == null)
                 { MelonLogger.Error("[MapChanger] LoadFromSeed: session data null after StartNewSession."); Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: session data null after StartNewSession."), "MapChanger"); return; }
@@ -713,7 +650,6 @@ namespace DescendersModMenu.Mods
 
                 SuppressInactivityWarning();
 
-                // Push Generating state to start the world load
                 _pushState.Invoke(stInstance, new object[] { _vtGenerating });
 
                 LastLoadedSeed = seed;
@@ -725,3 +661,4 @@ namespace DescendersModMenu.Mods
 
     }
 }
+

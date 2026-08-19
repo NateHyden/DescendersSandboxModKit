@@ -1,14 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Automatically cycles to a different bike every few seconds, purely
-    // by calling BikeSwitcher.NextBike() a random number of times per tick
-    // (1-4) — reuses BikeSwitcher's existing index wraparound entirely, no
-    // need to know the total bike count. Snapshots the bike you were on
-    // when enabled and restores it exactly on disable.
     public static class RandomBikeSwitch
     {
         public static bool Enabled { get; private set; } = false;
@@ -48,7 +43,7 @@ namespace DescendersModMenu.Mods
             if (Time.unscaledTime < _nextSwitchTime) return;
             try
             {
-                int hops = Random.Range(1, 5); // 1-4 — feels random without needing the total bike count
+                int hops = Random.Range(1, 5);
                 for (int i = 0; i < hops; i++) BikeSwitcher.NextBike();
                 ModLog.Feedback("[RandomBikeSwitch] Switched (" + hops + " hop(s)) -> index " + BikeSwitcher.CurrentBikeIndex);
             }
@@ -71,3 +66,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

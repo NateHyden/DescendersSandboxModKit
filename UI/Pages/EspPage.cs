@@ -1,4 +1,4 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -23,11 +23,6 @@ namespace DescendersModMenu.UI
             GameObject pg = null;
             try
             {
-                // This tab grew past one screen's worth of content once World Object Finder
-                // was added, so it needs the same ScrollRect setup every other scrollable
-                // page in this project uses. "pg" becomes the scrollable content object here
-                // (not the outer root) so every existing "pg.transform" reference below still
-                // parents correctly inside the scroll view without needing to change.
                 var root = UIHelpers.Obj("P2R", parent);
                 UIHelpers.Fill(UIHelpers.RT(root));
 
@@ -162,7 +157,6 @@ namespace DescendersModMenu.UI
                 var mutle = _modUsersText.gameObject.AddComponent<LayoutElement>();
                 mutle.preferredHeight = 60; mutle.flexibleWidth = 1;
 
-                // ── STAR BUTTONS (Favourites) ──────────────────────────
                 FavouritesManager.RegisterStarButton("ESP", UIHelpers.StarBtn(er.transform, "ESP", () => FavouritesManager.Toggle("ESP")));
                 FavouritesManager.RegisterStarButton("ESPDistance", UIHelpers.StarBtn(dr.transform, "ESPDistance", () => FavouritesManager.Toggle("ESPDistance")));
                 FavouritesManager.RegisterStarButton("ESPTracers", UIHelpers.StarBtn(tr.transform, "ESPTracers", () => FavouritesManager.Toggle("ESPTracers")));
@@ -224,7 +218,6 @@ namespace DescendersModMenu.UI
             RefreshModUsers();
         }
 
-        // Keep the lobby list in sync with ModDetection's periodic Scan().
         public static void Tick()
         {
             if (!_modUsersText) return;
@@ -306,3 +299,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

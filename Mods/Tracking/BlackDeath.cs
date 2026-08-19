@@ -1,13 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
-    // Full-screen black from bail until the player actually respawns (B).
-    // A dedicated camera holds the black so BikeCamera switches cannot
-    // punch through. Game RespawnOnTrack fires during camera/bail setup —
-    // those are ignored for a couple of seconds after the crash.
     public static class BlackDeath
     {
         public static bool Enabled { get; private set; } = false;
@@ -35,8 +31,6 @@ namespace DescendersModMenu.Mods
             EnsureCam();
         }
 
-        // Real respawn after lying on the ground. Camera-mode changes also
-        // hit this patch, so ignore anything too soon after the bail.
         public static void OnRespawn()
         {
             if (!IsActive) return;
@@ -119,3 +113,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

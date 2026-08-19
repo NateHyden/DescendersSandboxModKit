@@ -1,13 +1,10 @@
-using System.Reflection;
+﻿using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Calls RespawnOnTrack(true) immediately on bail — skips the countdown entirely.
-    // Triggered via SessionTrackers.OnBailDetected() (already debounced 1s).
-    // Uses the same PlayerManager.GetPlayerImpact() pattern as TeleportToCheckpoint.
     public static class InstantRespawn
     {
         public static bool Enabled { get; private set; } = false;
@@ -18,7 +15,6 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[InstantRespawn] -> " + (Enabled ? "ON" : "OFF"));
         }
 
-        // Called by SessionTrackers.OnBailDetected()
         public static void OnBail()
         {
             if (!Enabled) return;
@@ -72,3 +68,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -7,25 +7,10 @@ using MelonLoader;
 
 namespace DescendersModMenu
 {
-    // Fires a one-shot Discord webhook on mod load, and (opt-in) posts
-    // unhandled-exception reports, so Nate can see installs and diagnose
-    // issues without needing the user's Latest.log.
-    //
-    // Gated behind MelonPreferences "EnableTelemetry" (default: false —
-    // opt-in, never forced on for a fresh install).
-    // The UI toggle lives in the menu header — see MenuWindow.cs.
-    //
-    // Silent by design — no MelonLogger output at all, success or
-    // failure. If this needs debugging again, logging can be re-added
-    // temporarily; it's deliberately absent from the shipped behaviour.
     internal static class Telemetry
     {
-        // Not hardcoded — the repo is public. Set the real URL once in
-        // UserData/MelonPreferences.cfg under [DescendersSandbox_Telemetry]
-        // WebhookUrl = "..."  (created automatically on first run, empty).
         private static bool _hasPinged;
 
-        // ── Steam client reflection cache ──────────────────────────────
         private static bool _steamClientChecked;
         private static object _steamClientInstance;
         private static Type _steamClientType;
@@ -77,8 +62,6 @@ namespace DescendersModMenu
             get { EnsurePrefs(); return _prefEnabled != null && _prefEnabled.Value; }
         }
 
-        // Header hint ("Please read telemetry page in Info/Customize") —
-        // dismissible, saved so it stays gone once the player's read it.
         public static bool HeaderHintDismissed
         {
             get { EnsurePrefs(); return _prefHeaderHintDismissed != null && _prefHeaderHintDismissed.Value; }
@@ -99,16 +82,6 @@ namespace DescendersModMenu
             _prefEnabled.Value = !_prefEnabled.Value;
             MelonPreferences.Save();
 
-            // Just turned ON mid-session — fire a ping now, EVERY time,
-            // not just once per session. This deliberately bypasses
-            // PingAsync()'s _hasPinged guard (that guard exists only to
-            // stop the automatic launch-time ping firing twice — it was
-            // wrongly also blocking this manual path, since the automatic
-            // ping normally fires once telemetry's already on). This is
-            // the main way someone reports a bug in practice: they hit
-            // something wrong, flip the switch, and this snapshot is what
-            // reaches Discord — should work no matter how many times they
-            // toggle it during a session.
             if (_prefEnabled.Value && !string.IsNullOrEmpty(WebhookUrl))
             {
                 try
@@ -139,20 +112,6 @@ namespace DescendersModMenu
             catch { }
         }
 
-        // ── Entry point — error/crash report ──────────────────────────
-        // De-duped per (mod, exception type) per session — a bug that
-        // throws every frame only pings once, not hundreds of times.
-        //
-        // No lock here (deliberately, not an oversight): every call site
-        // is a Harmony Postfix/Prefix on Update/FixedUpdate/LateUpdate/
-        // OnGUI, which Unity only ever calls from the main thread — so
-        // this genuinely never runs concurrently. A `lock` statement was
-        // here originally, compiled down to Monitor.Enter(object, ref
-        // bool), which doesn't exist in this Mono build's stripped
-        // mscorlib — same class of bug as the Type.op_Inequality issue
-        // earlier tonight. That one `lock` silently broke ALL 23 wiring
-        // sites from the telemetry sweep, not just this one, since they
-        // all funnel through this shared method.
         private static readonly HashSet<string> _reportedErrors = new HashSet<string>();
         private static readonly HashSet<string> _reportedWarnings = new HashSet<string>();
 
@@ -218,30 +177,10 @@ namespace DescendersModMenu
             catch { }
         }
 
-        // ── Entry point — user-submitted feedback / bug report / feature request ──
-        // Deliberately NOT gated by Enabled (the passive-telemetry toggle) —
-        // this is an active choice the user made by typing a message and
-        // hitting Send, not passive diagnostic collection. Still needs a
-        // webhook configured, and has its own light cooldown so mashing the
-        // button can't spam the channel. Environment.TickCount (not
-        // UnityEngine.Time) — this file has no UnityEngine dependency
-        // anywhere else and there's no reason to add one just for a timer.
-        //
-        // _hasSentFeedback, NOT a sentinel tick value: the previous version
-        // used int.MinValue to mean "never sent", but TickCount - int.MinValue
-        // overflows a 32-bit int and wraps to a NEGATIVE number — which
-        // always failed the >= cooldown check. That silently broke the
-        // very first Send click every session, permanently (nothing after
-        // it can succeed either, since the broken tick value never gets
-        // replaced). A plain bool sidesteps the overflow entirely.
         private static bool _hasSentFeedback = false;
         private static int _lastFeedbackSendTick;
         private const int FeedbackCooldownMs = 15000;
 
-        // Polled by InfoPage.Refresh() so the UI can show real delivery
-        // status instead of an optimistic "Sent!" the instant Send is
-        // clicked — the actual POST happens on a background thread, so
-        // this is the hand-off point back to the main thread.
         public enum FeedbackSendState { Idle, Sending, Success, Failed }
         private static FeedbackSendState _feedbackState = FeedbackSendState.Idle;
         public static FeedbackSendState GetFeedbackState() => _feedbackState;
@@ -274,7 +213,6 @@ namespace DescendersModMenu
                 if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
                 string playerName = Sanitise(rawName, 32);
 
-                // Colour-code by category: red=bug, green=feature, purple=general
                 int color = string.Equals(category, "Bug Report", StringComparison.Ordinal) ? 15158332
                     : string.Equals(category, "Feature Request", StringComparison.Ordinal) ? 3066993
                     : 10181046;
@@ -302,7 +240,6 @@ namespace DescendersModMenu
             catch { _feedbackState = FeedbackSendState.Failed; }
         }
 
-        // ── Entry point — batched init-failure report ─────────────────
         public static void ReportInitFailuresAsync(List<string> failures)
         {
             EnsurePrefs();
@@ -331,7 +268,6 @@ namespace DescendersModMenu
             catch { }
         }
 
-        // ── Background thread — load ping ─────────────────────────────
         private static void DoPost()
         {
             try
@@ -364,14 +300,11 @@ namespace DescendersModMenu
             catch { }
         }
 
-        // ── Background thread — error report ──────────────────────────
         private static void DoPostError(string exType, string exMsg, string stack,
             string mod, string platform, string mlVer, string mods, string playerName)
         {
             try
             {
-                // Refresh name on the worker if the caller only had "unknown"
-                // (e.g. error fired before Photon/Steam nick was ready).
                 if (string.IsNullOrEmpty(playerName) || string.Equals(playerName, "unknown", StringComparison.Ordinal))
                 {
                     WaitForSteamReady();
@@ -433,7 +366,6 @@ namespace DescendersModMenu
             catch { }
         }
 
-        // ── Background thread — batched init-failure report ────────────
         private static void DoPostInitFailures(List<string> failures, string extra,
             string platform, string mlVer, string mods, string playerName)
         {
@@ -469,18 +401,6 @@ namespace DescendersModMenu
         }
 
         // ── Shared webhook POST ────────────────────────────────────────
-        // curl.exe (external process), not in-process HttpWebRequest —
-        // direct networking from inside the Mono-hosted game process gets
-        // refused; spawning curl reaches Discord fine via Windows' own
-        // Schannel TLS stack. JSON body is piped via stdin, never on the
-        // command line, so there's nothing to escape.
-        //
-        // Returns success/failure — not logged anywhere (still silent by
-        // design for the passive paths: ping/error/init-failure callers
-        // just discard it), but the feedback-send path needs a REAL
-        // result to show the user, not just an optimistic "Sent!" the
-        // instant they click — so this checks curl's exit code and
-        // whether Discord returned an error body.
         private static bool PostJson(string json)
         {
             try
@@ -506,8 +426,6 @@ namespace DescendersModMenu
 
                 if (proc.ExitCode != 0) return false;
                 string stdout = proc.StandardOutput.ReadToEnd();
-                // Discord returns an empty body (204) on success; anything
-                // else is Discord's own error JSON.
                 return string.IsNullOrEmpty(stdout == null ? stdout : stdout.Trim());
             }
             catch { return false; }
@@ -548,8 +466,6 @@ namespace DescendersModMenu
             return _isWindowsAppsInstall.Value;
         }
 
-        // ── Shared Steam client lookup ───────────────────────────────────
-        // Only caches on SUCCESS — a failed attempt must be retryable.
         private static object GetSteamClientInstance()
         {
             if (_steamClientChecked) return _steamClientInstance;
@@ -577,9 +493,6 @@ namespace DescendersModMenu
             return null;
         }
 
-        // ── Bounded retry — short safety margin, not the primary wait ──
-        // Fired once Player_Human exists (see ModEntry.cs), so Steam
-        // should already be ready in the common case.
         private static void WaitForSteamReady()
         {
             if (IsWindowsAppsInstall()) return;
@@ -635,15 +548,6 @@ namespace DescendersModMenu
             catch { return "unknown"; }
         }
 
-        // ── Get the local player's display name via Photon ───────────────
-        // Photon's NetworkingPeer wrapper (obfuscated name "upVWa\u0084E",
-        // confirmed by its Photon SDK version constant "1.94" and by
-        // PlayerInfoImpact.cs already calling SetCustomProperties through
-        // the exact same static "gQ\u0060\u0083tus" property, which Photon
-        // only permits on the local player) exposes a static LocalPlayer
-        // equivalent, whose Player object (obfuscated "Mn\u0081\u0084vL\u007F")
-        // has a NickName-equivalent property (obfuscated "DiQND\u0080L").
-        // Works identically on Steam and Xbox, unlike the Steam-only lookup.
         private static string GetPhotonLocalPlayerName()
         {
             try
@@ -676,9 +580,6 @@ namespace DescendersModMenu
             return null;
         }
 
-        // ── Get the local player's Steam name via Facepunch.Steamworks ──
-        // No Windows-username fallback — reports "unknown" instead of
-        // leaking the PC account name (e.g. on Xbox/Game Pass).
         private static string GetSteamName()
         {
             try
@@ -702,7 +603,6 @@ namespace DescendersModMenu
             return "unknown";
         }
 
-        // ── Strip local username from paths/stack traces before posting ──
         private static string ScrubPath(string s)
         {
             if (string.IsNullOrEmpty(s)) return s;
@@ -716,7 +616,6 @@ namespace DescendersModMenu
             return s;
         }
 
-        // ── Strip characters that would break JSON or the PS command ─────
         private static string Sanitise(string input, int maxLen)
         {
             if (string.IsNullOrEmpty(input)) return "unknown";
@@ -731,3 +630,4 @@ namespace DescendersModMenu
         }
     }
 }
+

@@ -1,4 +1,4 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,10 +7,8 @@ namespace DescendersModMenu.UI
     public static class UIHelpers
     {
         // ════════════════════════════════════════════════════
-        //  REDESIGN PALETTE — v3.0 Grungy MTB + Neon Lime
         // ════════════════════════════════════════════════════
 
-        // Backgrounds — gunmetal grey
         public static Color WinOuter => UITheme.BgOuter;
         public static Color WinPanel => UITheme.BgContent;
         public static Color WinBorder => UITheme.BorderWin;
@@ -21,27 +19,22 @@ namespace DescendersModMenu.UI
         public static Color RowBorder => UITheme.BorderRow;
         public static Color BtnBg => UITheme.BtnActionBg;
 
-        // Primary accent — NEON LIME
         public static Color Accent => UITheme.Accent;
         public static Color AccentDim => UITheme.AccentDim;
         public static Color AccentBdr => UITheme.AccentBorder;
 
-        // Button colour — NEON BLUE
-        public static Color NeonBlue => UITheme.Secondary;  // legacy name — maps to Secondary
+        public static Color NeonBlue => UITheme.Secondary;
 
-        // Secondary accent — ORANGE (destructive actions only)
         public static Color Orange => UITheme.Warning;
         public static Color OrangeDim => UITheme.WarningDim;
         public static Color OrangeBdr => UITheme.WarningBdr;
         public static Color ActionBtnBg => UITheme.BtnActionBg;
 
-        // Text
         public static Color TextLight => UITheme.TextHeading;
         public static Color TextMid => UITheme.TextBody;
         public static Color TextDim => UITheme.TextDim;
         public static Color BtnText => UITheme.BtnActionText;
 
-        // States
         public static Color OnColor => UITheme.StateOn;
         public static Color OnBg => UITheme.StateOnBg;
         public static Color OnBdr => UITheme.StateOnBdr;
@@ -49,13 +42,11 @@ namespace DescendersModMenu.UI
         public static Color RedDim => UITheme.StateOffBg;
         public static Color RedBdr => UITheme.StateOffBdr;
 
-        // Toggles
         public static Color TogOffTrack => UITheme.ToggleTrackOff;
         public static Color TogOnTrack => UITheme.ToggleTrackOn;
         public static Color TogKnobOn => UITheme.ToggleKnobOn;
         public static Color TogKnobOff => UITheme.ToggleKnobOff;
 
-        // Bars
         public static Color BarBg => UITheme.SliderBg;
         public static Color BarFill => UITheme.SliderFill;
 
@@ -79,7 +70,6 @@ namespace DescendersModMenu.UI
             return _font;
         }
 
-        // ── Procedural rounded sprites ───────────────────────────────────────
         public static Texture2D RoundTex(int w, int h, int r, Color fill)
         {
             var tex = new Texture2D(w, h, TextureFormat.ARGB32, false);
@@ -110,14 +100,12 @@ namespace DescendersModMenu.UI
                 SpriteMeshType.FullRect, new Vector4(r, r, r, r));
         }
 
-        // Angular corners — radius 2 for rows/buttons, radius 3 for window
         private static Sprite _rowSp, _btnSp, _winSp, _togSp, _knobSp, _barSp, _dotSp;
         public static Sprite RowSp { get { if (_rowSp == null) _rowSp = RoundSprite(128, 8, Color.white); return _rowSp; } }
         public static Sprite BtnSp { get { if (_btnSp == null) _btnSp = RoundSprite(128, 10, Color.white); return _btnSp; } }
         public static Sprite WinSp { get { if (_winSp == null) _winSp = RoundSprite(128, 20, Color.white); return _winSp; } }
         private static Sprite _navSp;
         public static Sprite NavSp { get { if (_navSp == null) _navSp = RoundSprite(128, 12, Color.white); return _navSp; } }
-        // ── Frame texture — hollow ring for window border ─────────────────────
         public static Texture2D FrameTex(int sz, int r, int thick)
         {
             var t = new Texture2D(sz, sz, TextureFormat.RGBA32, false);
@@ -266,8 +254,6 @@ namespace DescendersModMenu.UI
             var w = Obj(n, p);
             var wi = w.AddComponent<Image>();
             wi.sprite = BarSp; wi.type = Image.Type.Sliced;
-            // Invisible track — the row shows through so Favourites / scheme
-            // tints never leave a mismatched maroon/black trough behind the fill.
             wi.color = Color.clear; wi.raycastTarget = false;
             var le = w.AddComponent<LayoutElement>();
             le.preferredWidth = 70; le.preferredHeight = 4;
@@ -290,8 +276,6 @@ namespace DescendersModMenu.UI
             if (fi) RT(fi.gameObject).sizeDelta = new Vector2(70f * Mathf.Clamp01(pct), 4);
         }
 
-        // Bare row for a lone top button (Reset Tab / Remove All Favourites) —
-        // no StatRow background pill, just a centred button.
         public static GameObject BareBtnRow(Transform p, float height = -1f)
         {
             var row = Obj("BareBtnRow", p);
@@ -332,7 +316,6 @@ namespace DescendersModMenu.UI
         }
 
         // ── Active row highlight ──────────────────────────────────────
-        // Call from RefreshAll to tint the row bg when a mod is ON.
         public static void SetRowActive(GameObject row, bool active)
         {
             if ((object)row == null) return;
@@ -340,7 +323,6 @@ namespace DescendersModMenu.UI
             if (img) img.color = active ? NavActive : RowBg;
         }
 
-        // ── Star button for Favourites ───────────────────────────────
         public static Button StarBtn(Transform parent, string id, UnityEngine.Events.UnityAction onClick)
         {
             var b = Btn("Star_" + id, parent, "\u2605", new Vector2(22, 22), 13, onClick,
@@ -354,7 +336,6 @@ namespace DescendersModMenu.UI
 
         public static void SetStarActive(Button btn, bool active)
         {
-            // Unity fake-null — (object)btn == null misses destroyed UI.
             if (!btn) return;
             var t = btn.GetComponentInChildren<Text>();
             if (t) t.color = active ? Accent : TextDim;
@@ -362,7 +343,6 @@ namespace DescendersModMenu.UI
             if (img) img.color = new Color(0, 0, 0, 0);
         }
 
-        // ── Star button for section headers (absolute position) ──────
         public static Button StarBtnAbs(Transform parent, string id, UnityEngine.Events.UnityAction onClick)
         {
             var g = Obj("Star_" + id, parent);
@@ -393,7 +373,6 @@ namespace DescendersModMenu.UI
             track.sprite = TogSp; track.type = Image.Type.Sliced;
             track.color = TogOffTrack;
 
-            // Border overlay on track
             var tbdr = Panel("TBdr", g.transform, RowBorder, TogSp);
             tbdr.GetComponent<Image>().raycastTarget = false;
             Fill(RT(tbdr));
@@ -427,7 +406,6 @@ namespace DescendersModMenu.UI
             if (track)
             {
                 track.color = on ? TogOnTrack : TogOffTrack;
-                // Update border colour
                 Transform tbdr = track.transform.Find("TBdr");
                 if (tbdr != null)
                 {
@@ -445,7 +423,6 @@ namespace DescendersModMenu.UI
             }
         }
 
-        // Unity fake-null safe — never use (object)btn != null for Components
         public static void SetInteractable(UnityEngine.UI.Button btn, bool on)
         {
             if (btn) btn.interactable = on;
@@ -457,14 +434,12 @@ namespace DescendersModMenu.UI
             var le = row.AddComponent<LayoutElement>();
             le.preferredHeight = 28; le.minHeight = 28; le.flexibleHeight = 0;
 
-            // Left accent bar — neon lime
             var bar = Panel("Bar", row.transform, Accent);
             var brt = RT(bar);
             brt.anchorMin = new Vector2(0, 0.5f); brt.anchorMax = new Vector2(0, 0.5f);
             brt.pivot = new Vector2(0, 0.5f); brt.sizeDelta = new Vector2(3, 14);
             brt.anchoredPosition = Vector2.zero;
 
-            // Text — neon lime, bold, uppercase
             var t = Txt(title + "T", row.transform, title.ToUpper(), 11,
                 FontStyle.Bold, TextAnchor.MiddleLeft, Accent);
             var trt = RT(t.gameObject);
@@ -472,9 +447,6 @@ namespace DescendersModMenu.UI
             trt.offsetMin = new Vector2(10, 0); trt.offsetMax = Vector2.zero;
         }
 
-        // Same visuals as SectionHeader, but clickable — the whole row is a
-        // transparent Button so tapping anywhere on the header fires onClick.
-        // Used for tap-to-unlock gates (see DevLock).
         public static void SectionHeaderButton(string title, Transform p, UnityEngine.Events.UnityAction onClick)
         {
             var row = Obj(title + "H", p);
@@ -482,7 +454,7 @@ namespace DescendersModMenu.UI
             le.preferredHeight = 28; le.minHeight = 28; le.flexibleHeight = 0;
 
             var img = row.AddComponent<Image>();
-            img.color = new Color(0f, 0f, 0f, 0f); // invisible, just needed to catch raycasts
+            img.color = new Color(0f, 0f, 0f, 0f);
             var btn = row.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(onClick);
@@ -508,21 +480,15 @@ namespace DescendersModMenu.UI
 
         public static void InfoBox(Transform p, string txt) => InfoBox(p, txt, TextDim);
 
-        // Overload with an explicit text colour — the default InfoBox is
-        // always TextDim (used everywhere else in the UI), so this exists
-        // specifically for cases that need to stand out (e.g. white).
-        // Doesn't touch the existing calls or their colour at all.
         public static void InfoBox(Transform p, string txt, Color textColor)
         {
             var bx = Panel("Inf", p, RowBg, RowSp);
             bx.AddComponent<LayoutElement>().preferredHeight = 34;
 
-            // Border overlay
             var bd = Panel("Bd", bx.transform, RowBorder, RowSp);
             bd.GetComponent<Image>().raycastTarget = false; Fill(RT(bd));
             bd.AddComponent<LayoutElement>().ignoreLayout = true;
 
-            // Left accent bar
             var lbar = Panel("LBar", bx.transform, TextDim);
             var lbRT = RT(lbar);
             lbRT.anchorMin = Vector2.zero; lbRT.anchorMax = new Vector2(0, 1);
@@ -553,13 +519,11 @@ namespace DescendersModMenu.UI
             var dle = dt.gameObject.AddComponent<LayoutElement>();
             dle.flexibleWidth = 1; dle.preferredHeight = 30;
 
-            // Accent badge — width scales with text so long labels like "RS Dbl Click" fit
             var badge = Panel("KB", row.transform, AccentDim, BtnSp);
             var ble = badge.AddComponent<LayoutElement>();
             float badgeW = Mathf.Max(38f, key.Length * 8f + 16f);
             ble.preferredWidth = badgeW; ble.minWidth = badgeW; ble.preferredHeight = 20; ble.flexibleHeight = 0;
 
-            // Badge border
             var bbdr = Panel("BBdr", badge.transform, AccentBdr, BtnSp);
             bbdr.GetComponent<Image>().raycastTarget = false;
             Fill(RT(bbdr));
@@ -569,8 +533,6 @@ namespace DescendersModMenu.UI
             Fill(RT(kt.gameObject));
         }
 
-        // ── Circle sprite — anti-aliased disk, used for scrollbar handle caps ──
-        // Rendered at 8× the world-unit size for quality, then scaled down by ppu.
         private static Sprite CreateCircleSprite(int worldDiameter)
         {
             int scale = 8;
@@ -587,15 +549,10 @@ namespace DescendersModMenu.UI
                     tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
                 }
             tex.Apply();
-            // pixelsPerUnit = scale so the sprite renders at worldDiameter world units
             return Sprite.Create(tex, new Rect(0, 0, px, px),
                 new Vector2(0.5f, 0.5f), (float)scale);
         }
 
-        // ── Scrollbar — custom manual implementation ─────────────────────
-        // Unity's Scrollbar component is unreliable when created at runtime in
-        // Unity 2017.4 Mono. ManualScrollbar directly drives verticalNormalizedPosition.
-        // Track anchored to LEFT edge — sits in the gap between sidebar and content.
         public static void AddScrollbar(ScrollRect sr)
         {
             try
@@ -613,25 +570,21 @@ namespace DescendersModMenu.UI
                 trackRT.sizeDelta = new Vector2(trackW, 0f);
                 trackRT.anchoredPosition = Vector2.zero;
                 var trackImg = trackGO.AddComponent<Image>();
-                trackImg.color = new Color(UITheme.BgSidebar.r, UITheme.BgSidebar.g, UITheme.BgSidebar.b, 0.0f);  // invisible track
+                trackImg.color = new Color(UITheme.BgSidebar.r, UITheme.BgSidebar.g, UITheme.BgSidebar.b, 0.0f);
                 trackImg.raycastTarget = true;
-                // Block clicks on the track from bubbling to the menu window drag handler
                 trackGO.AddComponent<ScrollbarEventBlocker>();
 
-                // ── Handle container — ManualScrollbar drives its position ──────
                 var handleGO = Obj("SBHandle", trackGO.transform);
                 var handleRT = RT(handleGO);
                 handleRT.anchorMin = new Vector2(0f, 1f);
                 handleRT.anchorMax = new Vector2(1f, 1f);
                 handleRT.pivot = new Vector2(0.5f, 1f);
-                handleRT.offsetMin = new Vector2(inset, -40f); // ManualScrollbar overrides this
+                handleRT.offsetMin = new Vector2(inset, -40f);
                 handleRT.offsetMax = new Vector2(-inset, 0f);
-                // No Image on the container itself — three child pieces form the pill
 
                 int capD = Mathf.Max(2, Mathf.RoundToInt(trackW - inset * 2f));
                 var circleSp = CreateCircleSprite(capD);
 
-                // ── Top cap (circle, anchored top) ────────────────────────────
                 var topGO = Obj("SBTop", handleGO.transform);
                 var topRT = RT(topGO);
                 topRT.anchorMin = new Vector2(0f, 1f);
@@ -644,7 +597,6 @@ namespace DescendersModMenu.UI
                 topImg.color = UITheme.Accent;
                 topImg.raycastTarget = true;
 
-                // ── Bottom cap (circle, anchored bottom) ──────────────────────
                 var botGO = Obj("SBBot", handleGO.transform);
                 var botRT = RT(botGO);
                 botRT.anchorMin = new Vector2(0f, 0f);
@@ -657,20 +609,16 @@ namespace DescendersModMenu.UI
                 botImg.color = UITheme.Accent;
                 botImg.raycastTarget = true;
 
-                // ── Middle (solid rect, fills between caps) ───────────────────
                 var midGO = Obj("SBMid", handleGO.transform);
                 var midRT = RT(midGO);
                 midRT.anchorMin = Vector2.zero;
                 midRT.anchorMax = Vector2.one;
-                // Overlap halfway into each cap — hides the inner half of each circle,
-                // leaving only the outer semicircle visible as the rounded end
                 midRT.offsetMin = new Vector2(0f, capD / 2f);
                 midRT.offsetMax = new Vector2(0f, -capD / 2f);
                 var midImg = midGO.AddComponent<Image>();
                 midImg.color = UITheme.Accent;
                 midImg.raycastTarget = true;
 
-                // ── ManualScrollbar — handles positioning and drag ────────────
                 var msb = handleGO.AddComponent<ManualScrollbar>();
                 msb.Init(sr, trackRT, handleRT, inset);
             }
@@ -680,7 +628,6 @@ namespace DescendersModMenu.UI
             }
         }
 
-        // ── Scroll fix: forward scroll events from buttons to parent ScrollRect ──
         public static void AddScrollForwarders(Transform root)
         {
             if ((object)root == null) return;
@@ -694,7 +641,6 @@ namespace DescendersModMenu.UI
             for (int i = 0; i < t.childCount; i++)
             {
                 Transform child = t.GetChild(i);
-                // Add forwarder to anything with a Graphic that receives raycasts
                 var graphic = child.GetComponent<UnityEngine.UI.Graphic>();
                 if ((object)graphic != null && graphic.raycastTarget)
                 {
@@ -710,8 +656,6 @@ namespace DescendersModMenu.UI
         }
     }
 
-    // MonoBehaviour that catches scroll events on buttons/toggles and
-    // forwards them to the parent ScrollRect so scrolling works everywhere
     public class ScrollForwarder : MonoBehaviour, UnityEngine.EventSystems.IScrollHandler
     {
         public ScrollRect target;
@@ -723,17 +667,12 @@ namespace DescendersModMenu.UI
         }
     }
 
-    // Blocks IPointerDown on the scrollbar TRACK so clicking the empty track area
-    // doesn't bubble to the menu window drag handler and move the whole window.
     public class ScrollbarEventBlocker : MonoBehaviour,
         UnityEngine.EventSystems.IPointerDownHandler
     {
         public void OnPointerDown(UnityEngine.EventSystems.PointerEventData e) { }
     }
 
-    // Custom scrollbar — replaces Unity's Scrollbar component which is unreliable
-    // when created at runtime in Unity 2017.4 Mono.
-    // Lives on the HANDLE. Positions itself each LateUpdate and handles drag events.
     public class ManualScrollbar : MonoBehaviour,
         UnityEngine.EventSystems.IPointerDownHandler,
         UnityEngine.EventSystems.IBeginDragHandler,
@@ -757,7 +696,6 @@ namespace DescendersModMenu.UI
             _inset = inset;
         }
 
-        // Position the handle every frame to match the ScrollRect's scroll position
         private void LateUpdate()
         {
             if ((object)_sr == null || (object)_trackRT == null || (object)_handleRT == null) return;
@@ -773,24 +711,20 @@ namespace DescendersModMenu.UI
                 float handleH = Mathf.Max(MinHandleH, trackH * ratio);
                 float maxOff = trackH - handleH;
 
-                // normalizedPosition: 1=top, 0=bottom → offset from top: 0=top, maxOff=bottom
                 float norm = Mathf.Clamp01(_sr.verticalNormalizedPosition);
                 float topOff = (1f - norm) * maxOff;
 
-                // Drive handle RectTransform directly
                 _handleRT.anchorMin = new Vector2(0f, 1f);
                 _handleRT.anchorMax = new Vector2(1f, 1f);
                 _handleRT.pivot = new Vector2(0.5f, 1f);
                 _handleRT.offsetMin = new Vector2(_inset, -topOff - handleH);
                 _handleRT.offsetMax = new Vector2(-_inset, -topOff);
 
-                // Hide when content fits
                 gameObject.SetActive(ratio < 0.999f);
             }
             catch { }
         }
 
-        // Consume pointer down on handle so menu drag doesn't start
         public void OnPointerDown(UnityEngine.EventSystems.PointerEventData e) { }
 
         public void OnBeginDrag(UnityEngine.EventSystems.PointerEventData e)
@@ -823,7 +757,6 @@ namespace DescendersModMenu.UI
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     _trackRT, e.position, e.pressEventCamera, out local);
 
-                // Local Y increases going UP. Drag up = positive delta = scroll toward top.
                 float deltaY = local.y - _dragStartLocalY;
                 float normDelta = deltaY / maxOff;
                 _sr.verticalNormalizedPosition = Mathf.Clamp01(_dragStartNormPos + normDelta);
@@ -834,3 +767,4 @@ namespace DescendersModMenu.UI
         public void OnEndDrag(UnityEngine.EventSystems.PointerEventData e) { _dragging = false; }
     }
 }
+

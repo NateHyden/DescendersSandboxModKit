@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -20,7 +20,7 @@ namespace DescendersModMenu.Mods
     public static class DevLock
     {
         private const int TapsRequired = 7;
-        private const float TapWindow = 3f; // seconds allowed between taps before the streak resets
+        private const float TapWindow = 3f;
 
         public static bool IsUnlocked { get; private set; } = false;
 
@@ -37,7 +37,7 @@ namespace DescendersModMenu.Mods
             if (IsUnlocked) return;
 
             float now = Time.realtimeSinceStartup;
-            if (now - _lastTapTime > TapWindow) _tapCount = 0; // streak expired, restart count
+            if (now - _lastTapTime > TapWindow) _tapCount = 0;
             _lastTapTime = now;
             _tapCount++;
 

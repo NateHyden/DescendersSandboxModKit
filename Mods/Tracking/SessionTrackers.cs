@@ -1,8 +1,8 @@
-using System.Reflection;
+﻿using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -35,7 +35,7 @@ namespace DescendersModMenu.Mods
         // ── Bail Counter ──────────────────────────────────────────────────
         public static int BailCount { get; private set; } = 0;
         private static float _lastBailTime = -999f;
-        private const float BailCooldown = 1.0f; // ignore duplicate Bail() calls within 1 second
+        private const float BailCooldown = 1.0f;
 
         public static string BailCountDisplay
         {
@@ -46,8 +46,6 @@ namespace DescendersModMenu.Mods
         public static int CheckpointCount { get; private set; } = 0;
         private static int _lastCpIndex = -1;
 
-        // ]w\u0082Jbz} is an AUTO-PROPERTY on VehicleEvents, NOT a field.
-        // Must use GetProperties(), not GetFields().
         private static System.Reflection.PropertyInfo _cpIndexProp = null;
         private static bool _cpPropSearchDone = false;
 
@@ -58,13 +56,10 @@ namespace DescendersModMenu.Mods
             get { return CheckpointCount.ToString(); }
         }
 
-        // Poll VehicleEvents.]w\u0082Jbz} (auto-property, furthest checkpoint index) each frame.
-        // When the value increases a checkpoint was crossed.
         public static void CheckpointTick()
         {
             try
             {
-                // ── 1. Ensure we have a live VehicleEvents instance ──────────
                 if ((object)_cachedVE == null || !(bool)(UnityEngine.Object)_cachedVE)
                 {
                     _cachedVE = UnityEngine.Object.FindObjectOfType<VehicleEvents>();
@@ -73,7 +68,6 @@ namespace DescendersModMenu.Mods
                     _cpPropSearchDone = false;
                 }
 
-                // ── 2. Find the ]w\u0082Jbz} PROPERTY (not a field!) ─────────
                 if ((object)_cpIndexProp == null && !_cpPropSearchDone)
                 {
                     _cpPropSearchDone = true;
@@ -88,7 +82,6 @@ namespace DescendersModMenu.Mods
                         if (!string.Equals(props[p].PropertyType.Name, "Int32",
                             System.StringComparison.Ordinal)) continue;
                         string n = props[p].Name;
-                        // ]w\u0082Jbz} — ']' = 93, 'w' = 119
                         if (n.Length >= 2 && n[0] == ']' && n[1] == 'w')
                         {
                             _cpIndexProp = props[p];
@@ -99,7 +92,6 @@ namespace DescendersModMenu.Mods
 
                 if ((object)_cpIndexProp == null) return;
 
-                // ── 3. Read value and detect crossings ───────────────────────
                 int idx = (int)_cpIndexProp.GetValue(_cachedVE, null);
 
                 if (_lastCpIndex < 0)
@@ -115,7 +107,6 @@ namespace DescendersModMenu.Mods
                 }
                 else if (idx == 0 && _lastCpIndex > 0)
                 {
-                    // Respawn reset — don't decrement count
                 }
 
                 _lastCpIndex = idx;
@@ -136,18 +127,14 @@ namespace DescendersModMenu.Mods
             ModLog.Debug("[SessionTrackers] Checkpoint #" + CheckpointCount);
         }
 
-        // Called by Harmony postfix on Cyclist.Bail()
         public static void OnBailDetected()
         {
-            // Game calls Bail() twice per wipeout from two VehicleController code paths
-            // Debounce so we only count once per actual crash
             float now = Time.unscaledTime;
             if (now - _lastBailTime < BailCooldown) return;
             _lastBailTime = now;
             BailCount++;
             ModLog.Debug("[SessionTrackers] Bail #" + BailCount);
 
-            // Capture impact speed for BikeDamage before respawn resets velocity
             float impactSpeed = 0f;
             if (UnityNull.Alive(_cachedRb))
                 impactSpeed = _cachedRb.velocity.magnitude;
@@ -169,14 +156,12 @@ namespace DescendersModMenu.Mods
         private static Vector3 _lastVelocity = Vector3.zero;
         private static bool _hasLastVelocity = false;
 
-        // Cached for ground check — same property NoSpeedCap uses
         private static PropertyInfo _onGroundProp = null;
         private static bool _groundPropCached = false;
 
-        // Cached refs
         private static GameObject _cachedPlayer = null;
         private static Vehicle _cachedVehicle = null;
-        private static Rigidbody _cachedRb = null;  // cached — eliminates GetComponent every frame
+        private static Rigidbody _cachedRb = null;
 
         public static string AirtimeDisplay
         {
@@ -193,21 +178,18 @@ namespace DescendersModMenu.Mods
             get { return PeakGForce > 0.1f ? PeakGForce.ToString("F1") + "G" : "--"; }
         }
 
-        // ── Tick (call from OnUpdate) ─────────────────────────────────────
         public static void Tick()
         {
             try
             {
-                // Start session timer on first tick
                 if (_sessionStartTime < 0f)
                     _sessionStartTime = Time.unscaledTime;
 
-                // Re-find player if cache is stale
                 if (!UnityNull.Alive(_cachedPlayer) || !_cachedPlayer.activeInHierarchy)
                 {
                     _cachedPlayer = GameObject.Find("Player_Human");
                     _cachedVehicle = null;
-                    _cachedRb = null;  // invalidate Rigidbody cache with player
+                    _cachedRb = null;
                 }
                 if (!UnityNull.Alive(_cachedPlayer)) return;
 
@@ -221,7 +203,6 @@ namespace DescendersModMenu.Mods
                 if (!_groundPropCached)
                 {
                     _groundPropCached = true;
-                    // Find the onGround bool property — starts with 'T' (TDEX{ib)
                     PropertyInfo[] props = _cachedVehicle.GetType().GetProperties(
                         BindingFlags.Public | BindingFlags.Instance);
                     for (int i = 0; i < props.Length; i++)
@@ -246,10 +227,8 @@ namespace DescendersModMenu.Mods
 
                 if (!onGround)
                 {
-                    // In the air
                     if (_wasOnGround)
                     {
-                        // Just left ground
                         _currentAirtimeStart = Time.unscaledTime;
                     }
                     else if (_currentAirtimeStart > 0f)
@@ -261,7 +240,6 @@ namespace DescendersModMenu.Mods
                 }
                 else
                 {
-                    // On ground — finalize any airtime
                     if (!_wasOnGround && _currentAirtimeStart > 0f)
                     {
                         float airtime = Time.unscaledTime - _currentAirtimeStart;
@@ -328,14 +306,10 @@ namespace DescendersModMenu.Mods
         public static void ResetAirtime() { LongestAirtime = 0f; _currentAirtimeStart = -1f; }
         public static void ResetGForce() { PeakGForce = 0f; CurrentGForce = 0f; }
 
-        // ── Harmony Patch for bail detection ──────────────────────────────
-        // Patches Cyclist.Bail() — the actual crash/bail method
-        // NOT Vehicle.Reset(bool) which is manual reset
         public static void ApplyBailPatch(HarmonyLib.Harmony harmony)
         {
             try
             {
-                // Cyclist.Bail() is public and unobfuscated
                 MethodInfo bailMethod = typeof(Cyclist).GetMethod("Bail",
                     BindingFlags.Public | BindingFlags.Instance);
 
@@ -359,27 +333,20 @@ namespace DescendersModMenu.Mods
         }
         public static void ApplyCheckpointPatch(HarmonyLib.Harmony harmony)
         {
-            // Checkpoint counting uses polling via Tick() — no Harmony patch needed.
         }
     }
 
-    // Harmony postfix on VehicleEvents.E\u0081\u007EPyeF(int)
-    // Fires only when a checkpoint is genuinely hit (after all index guards).
-    // Checkpoint counting is done via polling in SessionTrackers.Tick()
     public static class CheckpointDetector_Patch
     {
         public static void Postfix() { }
     }
 
-    // Harmony postfix on Cyclist.Bail()
-    // Fires when the player actually crashes/wipes out
     public static class BailDetector_Patch
     {
         public static void Postfix(Cyclist __instance)
         {
             if ((object)__instance == null) return;
 
-            // Only count local player bails
             if (!string.Equals(__instance.gameObject.name, "Player_Human",
                 System.StringComparison.Ordinal)) return;
 
@@ -387,3 +354,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

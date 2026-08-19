@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using MelonLoader;
@@ -77,8 +77,6 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                // Re-scan fresh so we always get the current live position
-                // Match by name to find the right player
                 List<PlayerEntry> fresh = ScanForPlayers();
                 PlayerEntry target = null;
 
@@ -91,7 +89,6 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // Fall back to the cached root if name match fails
                 if ((object)target == null)
                 {
                     ModLog.Warn("[TeleportToPlayer] Could not re-find " + entry.Name + " - using cached position.");
@@ -116,10 +113,8 @@ namespace DescendersModMenu.Mods
                 Vehicle vehicle = local.GetComponent<Vehicle>();
                 if ((object)vehicle != null)
                 {
-                    // Move the transform first
                     local.transform.position = dest;
 
-                    // Zero out the rigidbody so physics doesn't launch us
                     Rigidbody rb = vehicle.GetComponent<Rigidbody>();
                     if ((object)rb == null)
                         rb = vehicle.GetComponentInChildren<Rigidbody>();
@@ -131,8 +126,6 @@ namespace DescendersModMenu.Mods
                         rb.angularVelocity = Vector3.zero;
                     }
 
-                    // Call Vehicle.Reset(true) - same as the game uses for respawning
-                    // This clears all physics state, tricks, bail flags cleanly
                     try
                     {
                         System.Reflection.MethodInfo resetMethod = vehicle.GetType().GetMethod(

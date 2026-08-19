@@ -1,19 +1,13 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Fires a confetti particle burst whenever the player lands after
-    // airtime above the threshold. Hooked from SessionTrackers' existing
-    // ground-transition detection (SessionTrackers.Tick landing branch)
-    // via ConfettiOnTrick.OnLanded(airtime) — no new ground-detection
-    // code needed, reuses the same onGround property SessionTrackers
-    // already resolves for the Longest Airtime tracker.
     public static class ConfettiOnTrick
     {
         public static bool Enabled { get; private set; } = false;
-        private const float AirtimeThreshold = 0.35f; // seconds — below this it's not a "trick", just a bump
+        private const float AirtimeThreshold = 0.35f;
 
         public static void Toggle()
         {
@@ -21,7 +15,6 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[ConfettiOnTrick] -> " + (Enabled ? "ON" : "OFF"));
         }
 
-        // Called from SessionTrackers when the player transitions air -> ground.
         public static void OnLanded(float airtime)
         {
             if (!Enabled) return;
@@ -47,16 +40,16 @@ namespace DescendersModMenu.Mods
             var ps = psObj.AddComponent<ParticleSystem>();
             var main = ps.main;
             main.duration = 1.0f;
-            main.startLifetime = 1.7f;                                    // was 1.2f — hangs in the air longer
-            main.startSpeed = new ParticleSystem.MinMaxCurve(1.8f, 4.0f);  // was 3-7 — slower burst
-            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.14f); // back to original small size per feedback
-            main.gravityModifier = 0.7f;                                  // lighter fall to match the slower speed
+            main.startLifetime = 1.7f;
+            main.startSpeed = new ParticleSystem.MinMaxCurve(1.8f, 4.0f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.14f);
+            main.gravityModifier = 0.7f;
             main.loop = false;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
 
             var emission = ps.emission;
             emission.rateOverTime = 0f;
-            emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, 160) }); // was 90 — more particles at the original small size
+            emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, 160) });
 
             var shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Sphere;
@@ -80,9 +73,6 @@ namespace DescendersModMenu.Mods
         }
 
         // ── Pop sound ─────────────────────────────────────────────────
-        // Synthesised the same way Airhorn.cs builds its clip — short burst
-        // of filtered noise with a fast decay, reads as a "bang"/party-popper
-        // pop rather than a tone.
         private static AudioClip _popClip = null;
 
         private static void PlayPop(Vector3 worldPos)
@@ -94,10 +84,6 @@ namespace DescendersModMenu.Mods
             src.clip = _popClip;
             src.spatialBlend = 0f;
             src.volume = 1f;
-            // Force highest priority (0 = highest, 256 = lowest, default 128) —
-            // if the game's own landing/impact SFX are playing at the same
-            // instant, Unity can silently virtualise (mute) lower-priority
-            // voices when too many sounds compete. This guarantees ours wins.
             src.priority = 0;
             src.Play();
             UnityEngine.Object.Destroy(go, _popClip.length + 0.1f);
@@ -106,7 +92,7 @@ namespace DescendersModMenu.Mods
         private static AudioClip BuildPopClip()
         {
             const int sampleRate = 44100;
-            const float duration = 0.55f; // was 0.3f — proper explosion length, not a quick pop
+            const float duration = 0.55f;
             int samples = (int)(sampleRate * duration);
             float[] data = new float[samples];
 
@@ -115,20 +101,16 @@ namespace DescendersModMenu.Mods
             {
                 float t = (float)i / sampleRate;
 
-                // Sharp opening "crack" — fast decay, wideband noise
-                float crackEnv = Mathf.Exp(-t * 22f); // was 40f — hangs on a bit longer too
+                float crackEnv = Mathf.Exp(-t * 22f);
                 float noise = Random.Range(-1f, 1f);
-                float filtered = prev + 0.55f * (noise - prev); // was 0.5 — even less muffled
+                float filtered = prev + 0.55f * (noise - prev);
                 prev = filtered;
                 float crack = filtered * crackEnv;
 
-                // Deep sub-bass "boom" — the actual explosion body, slower
-                // decay so it rumbles rather than just ticking
                 float boomFreq = Mathf.Lerp(120f, 38f, Mathf.Clamp01(t / 0.15f));
-                float boomEnv = Mathf.Exp(-t * 6f); // was 14f — much longer rumble
+                float boomEnv = Mathf.Exp(-t * 6f);
                 float boom = Mathf.Sin(2f * Mathf.PI * boomFreq * t) * boomEnv;
 
-                // Low rumble noise layered under the boom for extra body
                 float rumbleNoise = Random.Range(-1f, 1f) * Mathf.Exp(-t * 5f) * 0.35f;
 
                 data[i] = Mathf.Clamp(crack * 0.6f + boom * 0.85f + rumbleNoise, -1f, 1f);
@@ -145,3 +127,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

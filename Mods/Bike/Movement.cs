@@ -7,34 +7,28 @@ namespace DescendersModMenu.Mods
 {
     public static class Movement
     {
-        // ── Rotation Speed ────────────────────────────────────────────
         public static bool SpinEnabled   { get; private set; } = false;
         public static int  SpinLevel     { get; private set; } = 5;
         private static FieldInfo _spinField   = null;
         private static float     _spinDefault = -1f;
 
-        // ── Hop Force ─────────────────────────────────────────────────
         public static bool HopEnabled    { get; private set; } = false;
         public static int  HopLevel      { get; private set; } = 5;
         private static FieldInfo _hopField    = null;
         private static float     _hopDefault  = -1f;
 
-        // ── Wheelie Force ─────────────────────────────────────────────
         public static bool WheelieEnabled  { get; private set; } = false;
         public static int  WheelieLevel    { get; private set; } = 5;
         private static FieldInfo _wheelieField   = null;
         private static float     _wheelieDefault = -1f;
 
-        // ── Lean Strength ─────────────────────────────────────────────
         public static bool LeanEnabled   { get; private set; } = false;
         public static int  LeanLevel     { get; private set; } = 5;
         private static FieldInfo _leanField   = null;
         private static float     _leanDefault = -1f;
 
-        // Level 5 = 1× default. Range 1–10, step 0.2 → 0.4× to 2.8×
         private static float Mult(int level) { return 0.2f + (level - 1) * 0.3f; }
 
-        // ── Rotation Speed ────────────────────────────────────────────
         public static void ToggleSpin()
         {
             SpinEnabled = !SpinEnabled;
@@ -74,7 +68,6 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
-        // ── Hop Force ─────────────────────────────────────────────────
         public static void ToggleHop()
         {
             HopEnabled = !HopEnabled;
@@ -114,7 +107,6 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
-        // ── Wheelie Force ─────────────────────────────────────────────
         public static void ToggleWheelie()
         {
             WheelieEnabled = !WheelieEnabled;
@@ -154,7 +146,6 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
-        // ── Lean Strength ─────────────────────────────────────────────
         public static void ToggleLean()
         {
             LeanEnabled = !LeanEnabled;
@@ -194,17 +185,14 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
-        // ── Scene reset ───────────────────────────────────────────────
         public static void Reset()
         {
-            // Restore all before clearing — no player on next scene so do in-place
             SpinEnabled = false;   _spinDefault = -1f;    _spinField = null;
             HopEnabled = false;    _hopDefault = -1f;     _hopField = null;
             WheelieEnabled = false; _wheelieDefault = -1f; _wheelieField = null;
             LeanEnabled = false;   _leanDefault = -1f;    _leanField = null;
         }
 
-        // ── Helpers ───────────────────────────────────────────────────
         private static Cyclist GetCyclist()
         {
             GameObject local = GameObject.Find("Player_Human");
@@ -224,3 +212,5 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+
+

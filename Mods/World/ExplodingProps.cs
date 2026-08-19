@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
@@ -11,7 +11,6 @@ namespace DescendersModMenu.Mods
         public static bool Enabled { get; private set; } = false;
         private static PropCollisionHandler _handler = null;
 
-        // Career map scene names — exploding props disabled here
         private static readonly string[] CareerScenes =
         {
             "highlands", "forest", "canyon", "peaks", "hell",
@@ -76,7 +75,6 @@ namespace DescendersModMenu.Mods
             Detach();
         }
 
-        // Called from OnSceneWasInitialized — auto-disable on career maps
         public static void OnSceneInitialized(string sceneName)
         {
             if (Enabled && IsCareerScene(sceneName))
@@ -87,7 +85,7 @@ namespace DescendersModMenu.Mods
             }
             else if (Enabled)
             {
-                Attach(); // re-attach after scene load if still enabled
+                Attach();
             }
         }
     }
@@ -103,7 +101,7 @@ namespace DescendersModMenu.Mods
         private float _lastBounceTime = -999f;
         private const float BounceCooldown = 0.5f;
         private const float BounceSpeed = 18f;
-        private const float MinImpactSpeed = 2f; // lowered from 5f — triggers on lighter touches
+        private const float MinImpactSpeed = 2f;
 
         private void Start()
         {
@@ -219,3 +217,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

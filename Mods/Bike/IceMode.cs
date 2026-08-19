@@ -1,21 +1,16 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using MelonLoader;
 using System.Reflection;
 using UnityEngine;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
-    // Ice Grip: zero wheel roll friction + ground grip so the bike slides on
-    // contact. Do NOT zero Rigidbody.angularDrag — that made mid-air spins /
-    // flips integrate forever and runaway to ridiculous speeds.
     public static class IceMode
     {
         public static bool Enabled { get; private set; } = false;
 
-        // Soft air safety: if angular speed somehow spikes while ice is on,
-        // clamp it. Does not fight normal trick spins under this cap.
-        private const float MaxAirAngularSpeed = 14f; // rad/s ≈ 800 deg/s
+        private const float MaxAirAngularSpeed = 14f;
 
         private static PropertyInfo _vehicleGroundedProp = null;
 
@@ -110,7 +105,6 @@ namespace DescendersModMenu.Mods
 
     public static class IceMode_WheelPatch
     {
-        // WbmnXfG = rollFriction property on Wheel
         private static PropertyInfo _rollFrictionProp = null;
 
         public static void Postfix(Wheel __instance)
@@ -137,8 +131,6 @@ namespace DescendersModMenu.Mods
 
     public static class IceMode_VehiclePatch
     {
-        // n\u0080jDpmV = actual ground grip (public property on Vehicle)
-        // eSXpeQc gets overwritten inside FixedUpdate before our postfix.
         private static PropertyInfo _groundGripProp = null;
 
         public static void Postfix(Vehicle __instance)
@@ -153,7 +145,6 @@ namespace DescendersModMenu.Mods
 
                 if ((object)_groundGripProp == null)
                 {
-                    // Prefer exact unicode name; fall back to scan (mojibake-safe).
                     _groundGripProp = typeof(Vehicle).GetProperty(
                         "n\u0080jDpmV", BindingFlags.Public | BindingFlags.Instance);
                     if ((object)_groundGripProp == null)
@@ -183,3 +174,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

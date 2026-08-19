@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -11,9 +11,6 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // Use RespawnOnTrack(true) — works in all modes including freeride.
-                // The game calls this on bail — it matches checkpoint by terrain index,
-                // so no race route is needed.
                 PlayerManager pm = UnityEngine.Object.FindObjectOfType<PlayerManager>();
                 if ((object)pm == null) { ModLog.Warn("[TeleportCP] PlayerManager not found."); return; }
 
@@ -29,7 +26,7 @@ namespace DescendersModMenu.Mods
                     new System.Type[] { typeof(bool) }, null);
                 if ((object)respawn == null) { ModLog.Warn("[TeleportCP] RespawnOnTrack not found."); return; }
 
-                respawn.Invoke(pii, new object[] { true }); // true = skip CanRespawn check
+                respawn.Invoke(pii, new object[] { true });
                 ModLog.Debug("[TeleportCP] RespawnOnTrack called.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[TeleportCP] Teleport: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "TeleportToCheckpoint"); }
@@ -53,7 +50,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Teleport to checkpoint by index ──────────────────────────
         public static void TeleportByIndex(int index)
         {
             try
@@ -101,3 +97,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

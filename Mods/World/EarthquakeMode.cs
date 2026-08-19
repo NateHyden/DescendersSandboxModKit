@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
@@ -9,36 +9,27 @@ namespace DescendersModMenu.Mods
     {
         public static bool Enabled { get; private set; } = false;
 
-        // Intensity 1-10: force per impulse
         public static int IntensityLevel { get; private set; } = 5;
-        // Duration 1-10: seconds each quake event lasts
         public static int DurationLevel { get; private set; } = 5;
-        // Frequency 1-10: only used in Timed mode
         public static int FrequencyLevel { get; private set; } = 5;
 
-        // 0 = Timed, 1 = Random, 2 = Constant
         public static int FrequencyMode { get; private set; } = 0;
 
         private const int MinLevel = 1;
         private const int MaxLevel = 10;
 
         // ── Derived values ────────────────────────────────────────────
-        // Level 1 = 10f, Level 5 = 40f, Level 10 = 100f
         private static float ImpulseForce =>
             Mathf.Lerp(10f, 100f, (IntensityLevel - 1) / 9f);
 
-        // Timed interval: Level 1 = 8s, Level 10 = 1s
         private static float TimedInterval =>
             Mathf.Lerp(8f, 1f, (FrequencyLevel - 1) / 9f);
 
-        // Duration: Level 1 = 1s, Level 10 = 10s
         private static float EventDuration =>
             Mathf.Lerp(1f, 10f, (DurationLevel - 1) / 9f);
 
-        // Impulse cadence within an event
         private const float ImpulseCadence = 0.25f;
 
-        // Camera shake — significantly stronger: Level 1 = 80f, Level 10 = 400f
         private static float ShakeAmount =>
             Mathf.Lerp(80f, 400f, (IntensityLevel - 1) / 9f);
 
@@ -97,7 +88,6 @@ namespace DescendersModMenu.Mods
 
             float dt = Time.fixedDeltaTime;
 
-            // Constant mode — always quaking, skip interval logic
             if (FrequencyMode == 2)
             {
                 ApplyCameraShake(ShakeAmount);
@@ -112,7 +102,6 @@ namespace DescendersModMenu.Mods
 
             if (_quakeRemaining > 0f)
             {
-                // Inside a quake event
                 _quakeRemaining -= dt;
                 _impulseTimer -= dt;
                 ApplyCameraShake(ShakeAmount);
@@ -126,7 +115,6 @@ namespace DescendersModMenu.Mods
                 if (_quakeRemaining <= 0f)
                 {
                     _quakeRemaining = 0f;
-                    // Pick next interval based on mode
                     if (FrequencyMode == 1)
                         _intervalTimer = Random.Range(0f, 30f);
                     else
@@ -138,7 +126,6 @@ namespace DescendersModMenu.Mods
             }
             else
             {
-                // Waiting for next event
                 _intervalTimer -= dt;
                 if (_intervalTimer <= 0f)
                 {
@@ -163,7 +150,6 @@ namespace DescendersModMenu.Mods
             if (!UnityNull.Alive(_rb)) return;
 
             float f = ImpulseForce;
-            // Horizontal shaking only — tiny Y so the player stays on the bike
             Vector3 impulse = new Vector3(
                 Random.Range(-f, f),
                 Random.Range(-f * 0.05f, f * 0.05f),
@@ -219,3 +205,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

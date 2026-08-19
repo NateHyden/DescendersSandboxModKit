@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Collections.Generic;
 using HarmonyLib;
 using MelonLoader;
@@ -7,21 +7,6 @@ using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Spectate chase-cam for Descenders multiplayer remotes.
-    //
-    // Decompile (VehicleNetworking / VehicleReplay / lKRMtV):
-    //   Remotes are replay-driven. Full pose keyframes land every
-    //   lKRMtV.Q_tLUUr (= 100) fixed frames via VehicleReplay.\u007Fg\u0084zUF\u0083 —
-    //   a hard transform/velocity write. Buffer skips (ZbiDa^I) also teleport.
-    //   Those snaps are the ~1–2s jolt; the camera was already smooth.
-    //
-    // Fix while spectating that remote:
-    //   1) Harmony on keyframe appliers + buffer seeks: SoftDamp heal from
-    //      pre-snap pose.
-    //   2) Skip Vehicle.hgIcHdS on the spectated bike (Cubxx calls this after
-    //      hard-setting pose — full local reset, irregular timing).
-    //   3) Velocity-relative discontinuity heal + min heal duration as backup.
-    //   4) Mild ZbiDa^I nudge; draw-only override while healing.
     public static class SpectateMode
     {
         public static bool Enabled { get; private set; } = false;
@@ -97,7 +82,6 @@ namespace DescendersModMenu.Mods
         {
             int patched = 0;
 
-            // Keyframe appliers — each isolated so one failure doesn't kill the rest.
             MethodInfo keyPrefix = typeof(SpectateMode_KeyframePatch).GetMethod(
                 "Prefix", BindingFlags.Public | BindingFlags.Static);
             string[] keyNames = { "\u007Fg\u0084zUF\u0083", "NH\u007CIuw\u0081" };
@@ -109,7 +93,6 @@ namespace DescendersModMenu.Mods
                         keyNames[i], BindingFlags.NonPublic | BindingFlags.Instance);
                     if ((object)m == null)
                     {
-                        // Steam names — Xbox/Game Pass CSharp often differs. Not a lobby issue.
                         ModLog.Debug("[SpectateMode] Keyframe method missing: " + i);
                         continue;
                     }
@@ -122,11 +105,7 @@ namespace DescendersModMenu.Mods
                 }
             }
 
-            // Do NOT patch rjcGHqt — it's a [SpecialName] one-liner setter and
-            // Harmony emits "IL Compile Error" on it. Buffer seeks are covered by
-            // velocity-relative discontinuity healing in onPreRender.
 
-            // Cubxx hard-sets call Vehicle.hgIcHdS(bool) afterward.
             try
             {
                 MethodInfo resetLike = typeof(Vehicle).GetMethod(
@@ -555,7 +534,6 @@ namespace DescendersModMenu.Mods
             if (!Enabled) return;
             if ((object)cam == null || (object)Camera.main == null || cam != Camera.main) return;
 
-            // Never leave a stale override if we early-out.
             RestorePoseOverride();
 
             try
@@ -583,8 +561,6 @@ namespace DescendersModMenu.Mods
                 float frameJump = _havePrevRaw ? (rawPos - _prevRawPos).magnitude : 0f;
                 float error = (rawPos - _smoothPos).magnitude;
                 float dt = Mathf.Max(Time.unscaledDeltaTime, 0.0001f);
-                // Unexpected jump vs recent motion / speed — catches Cubxx hard-sets
-                // that don't go through the keyframe Harmony hooks.
                 float speed = (object)_targetRb != null && _targetRb != null
                     ? _targetRb.velocity.magnitude
                     : (_prevFrameJump / dt);
@@ -628,8 +604,6 @@ namespace DescendersModMenu.Mods
                 _prevRawRot = rawRot;
                 _havePrevRaw = true;
 
-                // Draw-only override: mesh matches camera for this frame, then
-                // onPostRender puts the real replay pose/velocity back.
                 _rawPos = rawPos;
                 _rawRot = rawRot;
                 _rawHadRb = (object)_targetRb != null && _targetRb != null;
@@ -796,7 +770,6 @@ namespace DescendersModMenu.Mods
 
     public static class SpectateMode_HgPatch
     {
-        // Skip the destructive post-Cubxx reset on the spectated bike; ease instead.
         public static bool Prefix(Vehicle __instance, bool CjKxewL)
         {
             if (!SpectateMode.IsWatchingVehicle(__instance)) return true;
@@ -805,3 +778,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

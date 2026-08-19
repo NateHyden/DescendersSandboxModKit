@@ -1,4 +1,4 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -31,7 +31,6 @@ namespace DescendersModMenu.UI
         private static Image _moonBg, _moonBdr;
         private static Text _moonTxt;
 
-        // ── Row GO refs for highlight ─────────────────────────────────
         private static GameObject _invisPlayerRow, _mirrorRow, _flyRow, _drunkRow;
 
 
@@ -74,7 +73,6 @@ namespace DescendersModMenu.UI
                 pg = UIHelpers.Obj("P9R", parent);
                 UIHelpers.Fill(UIHelpers.RT(pg));
 
-                // ScrollRect wrapper
                 var scrollObj = UIHelpers.Obj("Scroll", pg.transform);
                 UIHelpers.Fill(UIHelpers.RT(scrollObj));
                 var sr = scrollObj.AddComponent<ScrollRect>();
@@ -126,7 +124,6 @@ namespace DescendersModMenu.UI
                 // ── PRESETS ───────────────────────────────────────────
                 UIHelpers.SectionHeader("PRESETS", pg9);
 
-                // Moon Mode compound row
                 var mmo = UIHelpers.Panel("MMR", pg9, UIHelpers.RowBg, UIHelpers.RowSp);
                 mmo.AddComponent<LayoutElement>().minHeight = UIHelpers.RowH + 38;
                 var mmbd = UIHelpers.Panel("MMBd", mmo.transform, UIHelpers.RowBorder, UIHelpers.RowSp);
@@ -243,7 +240,6 @@ namespace DescendersModMenu.UI
                     RefreshAll();
                 }, out _invisTrack, out _invisKnob);
 
-                // ── STAR BUTTONS (Favourites) ──────────────────────────
                 FavouritesManager.RegisterStarButton("DrunkMode", UIHelpers.StarBtn(_drunkRow.transform, "DrunkMode", () => FavouritesManager.Toggle("DrunkMode")));
                 FavouritesManager.RegisterStarButton("FlyMode", UIHelpers.StarBtn(_flyRow.transform, "FlyMode", () => FavouritesManager.Toggle("FlyMode")));
                 FavouritesManager.RegisterStarButton("FlyMoveSpeed", UIHelpers.StarBtn(flyMoveRow.transform, "FlyMoveSpeed", () => FavouritesManager.Toggle("FlyMoveSpeed")));
@@ -255,7 +251,6 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("InvisiblePlayer", UIHelpers.StarBtn(_invisPlayerRow.transform, "InvisiblePlayer", () => FavouritesManager.Toggle("InvisiblePlayer")));
                 FavouritesManager.RegisterStarButton("MoonMode", UIHelpers.StarBtnAbs(mmtop.transform, "MoonMode", () => FavouritesManager.Toggle("MoonMode")));
 
-                // ── FACTORY REGISTRATIONS (Fun tab mods) ───────────────
                 FavouritesManager.Register(new ModFavEntry
                 {
                     Id = "DrunkMode",
@@ -372,7 +367,6 @@ namespace DescendersModMenu.UI
         // ── RefreshAll ────────────────────────────────────────────────
         public static void RefreshAll()
         {
-            // Player size level
             if (_playerSizeLvlVal) _playerSizeLvlVal.text = PlayerSize.Level.ToString();
             if ((object)_playerSizeMinus != null && _playerSizeMinus) _playerSizeMinus.interactable = PlayerSize.Level > 1;
             if ((object)_playerSizePlus != null && _playerSizePlus) _playerSizePlus.interactable = PlayerSize.Level < 20;
@@ -380,7 +374,6 @@ namespace DescendersModMenu.UI
             if (_invisVal) { _invisVal.text = InvisiblePlayer.Enabled ? "ON" : "OFF"; _invisVal.color = InvisiblePlayer.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_invisTrack, _invisKnob, InvisiblePlayer.Enabled);
 
-            // Moon Mode
             if (_moonTxt) { _moonTxt.text = MoonMode.IsActive ? "MOON MODE ACTIVE" : "ACTIVATE MOON MODE"; _moonTxt.color = new Color(0, 0, 0, 1); }
             if (_moonBg) _moonBg.color = MoonMode.IsActive ? UIHelpers.OnColor : UIHelpers.NeonBlue;
             if (_moonBdr) _moonBdr.color = MoonMode.IsActive ? UIHelpers.OnColor : UIHelpers.NeonBlue;
@@ -410,7 +403,6 @@ namespace DescendersModMenu.UI
             if (_hoverHeightVal) _hoverHeightVal.text = HoverMode.DisplayHeight;
             UIHelpers.SetToggle(_hoverTrack, _hoverKnob, hover);
 
-            // Camera Shake
             bool shOn = CameraShake.Enabled;
             if (_shakeTogVal) { _shakeTogVal.text = shOn ? "ON" : "OFF"; _shakeTogVal.color = shOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_shakeTrack, _shakeKnob, shOn);
@@ -420,3 +412,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

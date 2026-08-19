@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using DescendersModMenu.UI;
 using UnityEngine;
@@ -26,32 +26,28 @@ namespace DescendersModMenu.Mods
         private static readonly List<ChatMessage> _messages = new List<ChatMessage>();
         public static IList<ChatMessage> Messages { get { return _messages; } }
 
-        // UI dirty flag — ChatPage rebuilds when true (not the same as unread).
         public static bool HasNewMessages { get; private set; }
         public static void ClearNewFlag() { HasNewMessages = false; }
 
-        // Unread count for the Chat tab badge. Cleared when the Chat page is opened.
         public static int UnreadCount { get; private set; }
         public static void MarkAsRead() { UnreadCount = 0; }
 
-        // Photon reflection cache
         private static Type _photonType = null;
-        private static FieldInfo _eventDelegate = null; // fu\u0080P\u0084yF
-        private static MethodInfo _raiseEvent = null; // nO\u0084yY\u005Bu
-        private static object _defaultOptions = null; // \u005Ex\u0080gl\u007DS.qK\u005DlINI
-        private static PropertyInfo _localPlayer = null; // gQ`\u0083tus (property, not field)
-        private static PropertyInfo _nickName = null; // DiQND€L on Photon player
-        private static PropertyInfo _inRoom = null; // La€lETO
-        private static PropertyInfo _connectionState = null; // W}ikkp€
-        private static System.Type _photonHashtable = null; // ExitGames.Client.Photon.Hashtable
+        private static FieldInfo _eventDelegate = null;
+        private static MethodInfo _raiseEvent = null;
+        private static object _defaultOptions = null;
+        private static PropertyInfo _localPlayer = null;
+        private static PropertyInfo _nickName = null;
+        private static PropertyInfo _inRoom = null;
+        private static PropertyInfo _connectionState = null;
+        private static System.Type _photonHashtable = null;
         private static bool _subscribed = false;
         private static bool _resolved = false;
-        private static bool _photonAccessEnabled = false; // don't touch PhotonNetwork statics until game is ready
+        private static bool _photonAccessEnabled = false;
         private static bool _initRequested = false;
-        private static bool _wasInRoom; // clears chat only when leaving a multiplayer room
+        private static bool _wasInRoom;
         private static bool _roomStateKnown;
 
-        // True when PhotonNetwork.inRoom — RaiseEvent only works then.
         public static bool InRoom
         {
             get
@@ -111,7 +107,6 @@ namespace DescendersModMenu.Mods
                     if ((object)roomProp == null) return "";
                     object room = roomProp.GetValue(null, null);
                     if ((object)room == null) return "";
-                    // Room.Name is usually ToString or a name property — try common patterns
                     PropertyInfo nameProp = room.GetType().GetProperty("name", BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
                     if ((object)nameProp == null)
                         nameProp = room.GetType().GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);
@@ -142,19 +137,14 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // Delegate wrapper — stored to allow unsubscription
         private static Delegate _handlerDelegate = null;
 
         // ── Init ──────────────────────────────────────────────────────────
-        // Do NOT touch PhotonNetwork statics during MelonLoader init — that
-        // runs PhotonNetwork's static ctor and creates PhotonMono before the
-        // game is ready, which can leave the peer stuck on ConnectingToNameServer.
         public static void Init()
         {
             _initRequested = true;
         }
 
-        // Call once the player/session is up (after "Sandbox loaded").
         public static void EnablePhotonAccess()
         {
             if (_photonAccessEnabled) return;
@@ -170,8 +160,6 @@ namespace DescendersModMenu.Mods
             CheckLobbyChanged();
         }
 
-        // Only clear when leaving a Photon room. Room-name flicker used to wipe
-        // the history mid-session; map swaps clear via OnMapChanged instead.
         private static void CheckLobbyChanged()
         {
             bool inRoom = InRoom;
@@ -186,7 +174,6 @@ namespace DescendersModMenu.Mods
             _wasInRoom = inRoom;
         }
 
-        // Called from ModEntry on scene unload (map / session change).
         public static void OnMapChanged()
         {
             ClearMessages();
@@ -213,11 +200,9 @@ namespace DescendersModMenu.Mods
                     { asm = allAsm[ai]; break; }
                 if ((object)asm == null) return false;
 
-                // Find PhotonNetwork type (upVWa\u0084E)
                 foreach (Type t in asm.GetTypes())
                 {
                     if (!t.IsClass || !t.IsAbstract || !t.IsSealed) continue;
-                    // Has the X}Osi~[ delegate = it's our PhotonNetwork
                     foreach (Type nested in t.GetNestedTypes())
                     {
                         if ((object)nested.BaseType != null && string.Equals(nested.BaseType.FullName, typeof(MulticastDelegate).FullName, StringComparison.Ordinal))
@@ -240,8 +225,6 @@ namespace DescendersModMenu.Mods
                 if ((object)_photonType == null)
                 { MelonLogger.Error("[ModChat] PhotonNetwork type not found."); Telemetry.ReportErrorAsync(new Exception("PhotonNetwork type not found"), "ModChat"); return false; }
 
-                // fu\u0080P\u0084yF — field-like OnEventCall event. The compiler emits a
-                // *private* backing field; Public-only GetFields never sees it.
                 foreach (FieldInfo f in _photonType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
                 {
                     if ((object)f.FieldType.BaseType != null && string.Equals(f.FieldType.BaseType.FullName, typeof(MulticastDelegate).FullName, StringComparison.Ordinal))
@@ -256,7 +239,6 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // Fallback: locate private backing field via the public EventInfo name
                 if ((object)_eventDelegate == null)
                 {
                     foreach (EventInfo ev in _photonType.GetEvents(BindingFlags.Public | BindingFlags.Static))
@@ -281,7 +263,6 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // nO\u0084yY\u005Bu — RaiseEvent(byte, object, bool, options)
                 foreach (MethodInfo m in _photonType.GetMethods(BindingFlags.Public | BindingFlags.Static))
                 {
                     var p = m.GetParameters();
@@ -291,7 +272,6 @@ namespace DescendersModMenu.Mods
                     { _raiseEvent = m; break; }
                 }
 
-                // Default RaiseEventOptions — find type with static default field
                 if ((object)_raiseEvent != null)
                 {
                     var optType = _raiseEvent.GetParameters()[3].ParameterType;
@@ -299,15 +279,12 @@ namespace DescendersModMenu.Mods
                         if (string.Equals(f.FieldType.FullName, optType.FullName, StringComparison.Ordinal)) { _defaultOptions = f.GetValue(null); break; }
                 }
 
-                // Local player is a PROPERTY on PhotonNetwork (upVWa…)
                 _localPlayer = _photonType.GetProperty("gQ\u0060\u0083tus",
                     BindingFlags.Public | BindingFlags.Static);
 
-                // inRoom + connectionStateDetailed for diagnostics / gating
                 _inRoom = _photonType.GetProperty("La\u0080lETO", BindingFlags.Public | BindingFlags.Static);
                 _connectionState = _photonType.GetProperty("W\u007Dikkp\u0080", BindingFlags.Public | BindingFlags.Static);
 
-                // Cache Photon Hashtable type
                 Assembly[] htAsms = AppDomain.CurrentDomain.GetAssemblies();
                 for (int ai = 0; ai < htAsms.Length; ai++)
                     if (string.Equals(htAsms[ai].GetName().Name, "Photon3Unity3D", StringComparison.Ordinal))
@@ -328,13 +305,11 @@ namespace DescendersModMenu.Mods
             if (_subscribed || (object)_eventDelegate == null) return;
             try
             {
-                // Get delegate invoke method to create handler
                 Type delType = _eventDelegate.FieldType;
                 var handler = typeof(ModChat).GetMethod("OnPhotonEvent",
                     BindingFlags.NonPublic | BindingFlags.Static);
                 _handlerDelegate = Delegate.CreateDelegate(delType, handler);
 
-                // Subscribe: fu\u0080P\u0084yF += handler
                 Delegate existing = _eventDelegate.GetValue(null) as Delegate;
                 _eventDelegate.SetValue(null,
                     (object)existing != null ? Delegate.Combine(existing, _handlerDelegate) : _handlerDelegate);
@@ -405,7 +380,6 @@ namespace DescendersModMenu.Mods
                 string playerName = GetLocalPlayerName();
                 bool inRoom = InRoom;
 
-                // Always show locally + toast — even if Photon rejects the network send.
                 AddMessage(new ChatMessage
                 {
                     PlayerName = playerName,
@@ -474,7 +448,6 @@ namespace DescendersModMenu.Mods
         {
             try
             {
-                // Prefer Photon NickName (DiQND€L) — works for single-word names too.
                 if ((object)_localPlayer != null)
                 {
                     object player = _localPlayer.GetValue(null, null);
@@ -492,7 +465,6 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // Fallback: scrape PhotonView owner string (letter required; space optional).
                 PlayerManager pm = GameObject.FindObjectOfType<PlayerManager>();
                 if ((object)pm == null) return "Unknown";
                 PlayerInfoImpact pip = pm.GetPlayerImpact();
@@ -543,7 +515,6 @@ namespace DescendersModMenu.Mods
             if (_messages.Count > MaxMessages)
                 _messages.RemoveAt(0);
             HasNewMessages = true;
-            // Count as unread unless the player is already looking at Chat.
             if (!msg.IsSelf && !MenuWindow.IsChatOpen)
                 UnreadCount++;
             ModLog.Debug("[ModChat] <" + msg.PlayerName + "> " + msg.Text);
@@ -579,3 +550,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

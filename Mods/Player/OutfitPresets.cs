@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 using System.Reflection;
@@ -16,7 +16,6 @@ namespace DescendersModMenu.Mods
         private static MethodInfo _equipOutfit = null;
         private static MethodInfo _getOutfit = null;
 
-        // MelonPreferences category
         private static MelonPreferences_Category _cat;
         private static MelonPreferences_Entry<string>[] _entries
             = new MelonPreferences_Entry<string>[SlotCount];
@@ -24,7 +23,6 @@ namespace DescendersModMenu.Mods
             = new MelonPreferences_Entry<string>[SlotCount];
         private static string[] _presetNames = new string[SlotCount];
 
-        // ── Init — call once from OnInitializeMelon ───────────────────────
         public static void Init()
         {
             _cat = MelonPreferences.CreateCategory("OutfitPresets", "Outfit Presets");
@@ -128,7 +126,6 @@ namespace DescendersModMenu.Mods
                 for (int i = 0; i < equipped.Length; i++)
                     _presetIds[slot][i] = equipped[i].itemID;
 
-                // Persist to disk
                 if (_entries[slot] != null)
                 {
                     _entries[slot].Value = IdsToString(_presetIds[slot]);
@@ -183,3 +180,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

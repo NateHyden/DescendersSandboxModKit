@@ -1,25 +1,21 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.UI
 {
     public static class InfoPage
     {
         // ── Sub-tab state ─────────────────────────────────────────────
-        // Info page only: System / Hotkeys / Version. Customise + Career
-        // are top-level sidebar tabs now (pages 25 / 26).
-        private static int _activeTab = 0; // 0=System 1=Hotkeys 2=Version Update Check
+        private static int _activeTab = 0;
 
         private static readonly string[] TabLabels = { "System", "Hotkeys", "Version Update Check" };
 
-        // Sub-tab bar buttons
         private static Image[] _tabBgs = new Image[3];
         private static Text[] _tabTxts = new Text[3];
 
-        // Page root GameObjects
         private static GameObject _pgSystem;
         private static GameObject _pgHotkeys;
         private static GameObject _pgCustomise;
@@ -29,16 +25,12 @@ namespace DescendersModMenu.UI
         private static Text _verLatestTxt;
         private static Text _verStatusTxt;
 
-        // Customise tab refs
         private static Text _custPosLbl;
         private static Text _custScaleLbl;
         private static Text _custOpacityLbl;
         private static GameObject _custSavedRow;
 
-        // Legacy: kept for any callers that still set it; Info no longer
-        // uses Customise/Career sub-tab indices.
         public static int PendingSubTab = -1;
-        // System tab
         private static Text _unityVersionTxt;
         private static Text _steamPlayerTxt;
         private static Text _unityMatchTxt;
@@ -46,8 +38,7 @@ namespace DescendersModMenu.UI
         private static Text _careerResultTxt;
         private static Text _telemetryStatusTxt;
 
-        // ── Feedback / bug report / feature request ─────────────────────
-        private static int _feedbackCategory = 2; // 0=Bug Report, 1=Feature Request, 2=Feedback (default)
+        private static int _feedbackCategory = 2;
         private static readonly string[] _feedbackCatNames = { "Bug Report", "Feature Request", "Feedback" };
         private static Image[] _feedbackCatBgs = new Image[3];
         private static InputField _feedbackInput;
@@ -60,7 +51,6 @@ namespace DescendersModMenu.UI
         private static UnityEngine.UI.Button _inGameRepMinus, _inGameRepPlus;
         private static Text _inGameRepMultVal;
         private static GameObject _devDiagContent;
-        // Locked hint intentionally omitted — unlock still works via header taps.
 
         // ── CreatePage ────────────────────────────────────────────────
         public static GameObject CreatePage(Transform parent)
@@ -68,7 +58,6 @@ namespace DescendersModMenu.UI
             GameObject pg = null;
             try
             {
-                // Root — fills the content slot
                 pg = UIHelpers.Obj("P3R", parent);
                 UIHelpers.Fill(UIHelpers.RT(pg));
                 var rootVlg = pg.AddComponent<VerticalLayoutGroup>();
@@ -137,7 +126,6 @@ namespace DescendersModMenu.UI
                 UIHelpers.Fill(UIHelpers.RT(_pgHotkeys));
                 BuildHotkeysPage(_pgHotkeys.transform);
 
-                // ── Version Update Check page ─────────────────────────
                 _pgVersion = UIHelpers.Obj("PgVersion", contentArea.transform);
                 UIHelpers.Fill(UIHelpers.RT(_pgVersion));
                 BuildVersionPage(_pgVersion.transform);
@@ -155,7 +143,6 @@ namespace DescendersModMenu.UI
             return pg;
         }
 
-        // Top-level Customise sidebar page (was an Info sub-tab).
         public static GameObject CreateCustomisePage(Transform parent)
         {
             GameObject pg = null;
@@ -175,8 +162,6 @@ namespace DescendersModMenu.UI
             return pg;
         }
 
-        // Top-level Career sidebar page (was an Info sub-tab).
-        // Opens behind a Yes/No gate so people think twice about the grind.
         private static GameObject _careerGate;
         private static GameObject _careerContentHost;
         private static bool _careerUnlockedThisVisit;
@@ -211,7 +196,6 @@ namespace DescendersModMenu.UI
         public static void RefreshCustomisePage() { RefreshCustomise(); }
         public static void RefreshCareerPage() { RefreshCareerResult(); }
 
-        // Called from MenuWindow when Career becomes the active page.
         public static void OnCareerTabOpened()
         {
             if (_careerUnlockedThisVisit)
@@ -225,7 +209,6 @@ namespace DescendersModMenu.UI
             if (_careerContentHost) _careerContentHost.SetActive(false);
         }
 
-        // Leaving Career re-arms the gate for the next visit.
         public static void OnCareerTabClosed()
         {
             _careerUnlockedThisVisit = false;
@@ -302,7 +285,7 @@ namespace DescendersModMenu.UI
                 _careerUnlockedThisVisit = false;
                 if (_careerGate) _careerGate.SetActive(true);
                 if (_careerContentHost) _careerContentHost.SetActive(false);
-                MenuWindow.GoToPage(1); // General
+                MenuWindow.GoToPage(1);
             }, 100);
 
             return gate;
@@ -330,9 +313,6 @@ namespace DescendersModMenu.UI
         // ── System page ───────────────────────────────────────────────
         private static void BuildSystemPage(Transform p)
         {
-            // Scrollable - this tab grew past one screen's worth of content once
-            // Career Progression moved in, so it needs the same ScrollRect setup every
-            // other scrollable page in this project already uses.
             var scrollObj = UIHelpers.Obj("SysScroll", p);
             UIHelpers.Fill(UIHelpers.RT(scrollObj));
             var sr = scrollObj.AddComponent<ScrollRect>();
@@ -376,11 +356,6 @@ namespace DescendersModMenu.UI
             _steamPlayerTxt = MakeInfoRow("Steam Players Online", vlg.transform);
 
             // ── Telemetry ────────────────────────────────────────────
-            // Plain-language explanation, split into short InfoBox chunks
-            // (InfoBox is sized for a sentence or two, not a paragraph).
-            // Toggle itself lives in the header — this page just explains
-            // what it actually does, since "read the telemetry page" is
-            // what the header now points people to.
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeader("TELEMETRY", vlg.transform);
             _telemetryStatusTxt = MakeInfoRow("Status", vlg.transform);
@@ -399,10 +374,6 @@ namespace DescendersModMenu.UI
 
             UIHelpers.InfoBox(vlg.transform, "Tip: click the small X next to the header hint to dismiss it for good - it won't come back.", Color.white);
 
-            // ── Feedback / bug report / feature request ──────────────────
-            // Independent of the telemetry toggle above — this is an active
-            // choice (typing a message and hitting Send), not passive
-            // collection, so it works even with telemetry off.
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeader("FEEDBACK", vlg.transform);
             UIHelpers.InfoBox(vlg.transform, "Report a bug, request a feature, or send Feedback - sent straight to my Discord.", Color.white);
@@ -468,21 +439,12 @@ namespace DescendersModMenu.UI
             UIHelpers.Fill(UIHelpers.RT(placeholderGo), 20, 8, 6, 6);
             _feedbackInput.placeholder = placeholderComp;
 
-            // Explicit caret settings — without these the caret can end up
-            // invisible/non-blinking against a dark background even though
-            // typing itself works fine.
             _feedbackInput.customCaretColor = true;
             _feedbackInput.caretColor = Color.white;
             _feedbackInput.caretWidth = 2;
             _feedbackInput.caretBlinkRate = 0.85f;
             _feedbackInput.selectionColor = new Color(UIHelpers.Accent.r, UIHelpers.Accent.g, UIHelpers.Accent.b, 0.4f);
 
-            // Manual blink indicator — the built-in caret above still isn't
-            // reliably visible at runtime in this old Unity/Mono build
-            // (same class of issue as the Scrollbar note in UIHelpers.cs).
-            // A small dot that blinks while the field is focused is a much
-            // more robust "you're in type mode" signal than fighting
-            // Unity's internal caret rendering further.
             var caretDotGo = UIHelpers.Obj("CaretBlink", inputGo.transform);
             var caretDotImg = caretDotGo.AddComponent<Image>();
             caretDotImg.sprite = UIHelpers.DotSp;
@@ -490,9 +452,6 @@ namespace DescendersModMenu.UI
             caretDotImg.raycastTarget = false;
             caretDotImg.enabled = false;
             var caretDotRt = UIHelpers.RT(caretDotGo);
-            // Left edge, aligned vertically with the first line of text
-            // (which starts at the same 8px left padding used by the Text
-            // and Placeholder components above, and ~6px top padding).
             caretDotRt.anchorMin = new Vector2(0, 1); caretDotRt.anchorMax = new Vector2(0, 1);
             caretDotRt.pivot = new Vector2(0, 1);
             caretDotRt.sizeDelta = new Vector2(8, 8);
@@ -516,11 +475,6 @@ namespace DescendersModMenu.UI
             var statusLe = _feedbackStatusTxt.gameObject.AddComponent<LayoutElement>();
             statusLe.flexibleWidth = 1; statusLe.preferredHeight = 28;
 
-            // Runs its own Update() loop — handles the caret blink and
-            // polls the send result continuously, independent of
-            // InfoPage.Refresh() (which only fires on tab-switch/save/load
-            // events, not every frame — that's why "Sending..." was
-            // getting stuck even after the message had actually sent).
             var updater = sendRow.gameObject.AddComponent<FeedbackPanelUpdater>();
             updater.InputField = _feedbackInput;
             updater.CaretDot = caretDotImg;
@@ -528,15 +482,9 @@ namespace DescendersModMenu.UI
 
             RefreshFeedbackCategoryButtons();
 
-            // ── Diagnostics - gated behind DevLock (tap header 7x within 3s).
-            // Content lives in its own container so unlocking just toggles
-            // visibility instead of needing a full page rebuild. Neither row here
-            // has a Favourites entry, so there's no bypass-via-Favourites concern
-            // like the career-progression tools would have had.
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeaderButton("DEVELOPER DIAGNOSTICS", vlg.transform, HandleDevDiagTap);
 
-            // No locked hint text — silent gate. Content appears after enough header taps.
             _devDiagContent = UIHelpers.Obj("DevDiagContent", vlg.transform);
             var dcLe = _devDiagContent.AddComponent<LayoutElement>();
             dcLe.flexibleHeight = 0;
@@ -569,7 +517,6 @@ namespace DescendersModMenu.UI
             UIHelpers.AddScrollForwarders(vlg.transform);
         }
 
-        // ── Career page (its own tab, next to Customise) ────────────────
         private static void BuildCareerPage(Transform p)
         {
             var scrollObj = UIHelpers.Obj("CareerScroll", p);
@@ -645,9 +592,6 @@ namespace DescendersModMenu.UI
             });
             UIHelpers.InfoBox(vlg.transform, "Cycles through every sponsor team. Changes which sponsor's branding/menus/tier progress you're currently signed to.");
 
-            // ── Unlock All (bikes + gear) - two plain instant buttons, no
-            // status text, no confirm step. Default OFF each session (the flag
-            // itself already starts false / resets via PrefsManager as before).
             var unlockAllRow = UIHelpers.StatRow("Unlock All (Bikes + Gear)", vlg.transform);
             UIHelpers.ActionBtnOrange(unlockAllRow.transform, "Unlock All", () =>
             {
@@ -867,7 +811,6 @@ namespace DescendersModMenu.UI
             if (_feedbackStatusTxt) { _feedbackStatusTxt.text = "Sending..."; _feedbackStatusTxt.color = UIHelpers.TextDim; }
         }
 
-        // ── Dev Diagnostics tap-to-unlock (gates Scene Dump / Bike Unlock Status) ──
         private static void HandleDevDiagTap()
         {
             DevLock.RegisterTap();
@@ -909,7 +852,6 @@ namespace DescendersModMenu.UI
 
         }
 
-        // ── Version Update Check page ─────────────────────────────────
         private static void BuildVersionPage(Transform p)
         {
             var vlg = UIHelpers.Obj("VerVlg", p);
@@ -1069,7 +1011,6 @@ namespace DescendersModMenu.UI
             UIHelpers.ActionBtn(btnRow.transform, "Reset to Defaults",
                 () => { Mods.MenuCustomiser.Reset(); RefreshCustomise(); }, 120);
 
-            // ── Saved indicator (hidden until save fires) ─────────────
             _custSavedRow = UIHelpers.Obj("SavedIndicator", c);
             var siLE = _custSavedRow.AddComponent<LayoutElement>();
             siLE.preferredHeight = 22; siLE.minHeight = 22;
@@ -1094,9 +1035,6 @@ namespace DescendersModMenu.UI
         }
 
         // ── Colour scheme swatches ───────────────────────────────────
-        // Rebuilt fresh every time this page is built (which happens on
-        // every RebuildMenu call), so it always reflects the live
-        // ColorSchemeManager.CurrentIndex — no separate refresh needed.
         private static void BuildSchemeSwatches(Transform c)
         {
             var schemes = ColorSchemeManager.Presets;
@@ -1116,7 +1054,7 @@ namespace DescendersModMenu.UI
                 int rowCount = Mathf.Min(perRow, schemes.Length - i);
                 for (int j = 0; j < rowCount; j++)
                 {
-                    int idx = i + j; // captured per-iteration, safe for the lambda below
+                    int idx = i + j;
                     var s = schemes[idx];
                     string label = (idx == ColorSchemeManager.CurrentIndex ? "\u2713 " : "") + s.Name;
                     var swatch = UIHelpers.Btn("Scheme" + idx, row.transform, label,
@@ -1216,7 +1154,6 @@ namespace DescendersModMenu.UI
             if (_custSavedRow)
                 _custSavedRow.SetActive(Mods.MenuCustomiser.ShowSavedIndicator);
 
-            // Refresh system tab once steam fetch completes
             if (_steamPlayerTxt && Mods.SteamPlayerCount.FetchComplete
                 && _steamPlayerTxt.text == "...")
                 Refresh();
@@ -1245,7 +1182,6 @@ namespace DescendersModMenu.UI
         {
             try
             {
-                // System tab values
                 if (_unityVersionTxt) _unityVersionTxt.text = DiagnosticsManager.UnityVersion;
                 if (_mlVersionTxt) _mlVersionTxt.text = DiagnosticsManager.MelonLoaderVersion;
                 bool match = DiagnosticsManager.UnityVersionMatch;
@@ -1257,7 +1193,6 @@ namespace DescendersModMenu.UI
                     _unityMatchTxt.color = match ? UIHelpers.OnColor : UIHelpers.OffColor;
                 }
 
-                // Steam player count — updates once fetch completes
                 if (_steamPlayerTxt)
                 {
                     _steamPlayerTxt.text = Mods.SteamPlayerCount.DisplayValue;
@@ -1265,7 +1200,6 @@ namespace DescendersModMenu.UI
                         ? UIHelpers.OffColor : UIHelpers.Accent;
                 }
 
-                // Telemetry status — mirrors the header toggle
                 if (_telemetryStatusTxt)
                 {
                     bool telOn = Telemetry.Enabled;
@@ -1275,9 +1209,6 @@ namespace DescendersModMenu.UI
 
                 RefreshVersion();
 
-                // Feedback send status — real result polled back from the
-                // background thread that actually did the POST, not an
-                // optimistic guess made the instant Send was clicked.
                 if (_feedbackStatusTxt)
                 {
                     switch (Telemetry.GetFeedbackState())
@@ -1290,8 +1221,6 @@ namespace DescendersModMenu.UI
                             _feedbackStatusTxt.text = "Failed to send - please try again.";
                             _feedbackStatusTxt.color = UIHelpers.OffColor;
                             break;
-                        // Idle/Sending — leave whatever's already showing
-                        // ("Sending...", or a validation message) alone.
                     }
                 }
 
@@ -1301,14 +1230,6 @@ namespace DescendersModMenu.UI
 
     }
 
-    // Runs continuously via Update() — deliberately independent of
-    // InfoPage.Refresh(), which only fires on specific events (tab
-    // switches, save/load), not every frame. Two jobs: blink a dot while
-    // the feedback InputField is focused (since Unity's built-in caret
-    // isn't reliably visible at runtime in this old Unity/Mono build),
-    // and poll Telemetry's feedback-send state so the status text updates
-    // promptly instead of getting stuck on "Sending..." until something
-    // else happens to trigger a refresh.
     public class FeedbackPanelUpdater : MonoBehaviour
     {
         public InputField InputField;
@@ -1360,3 +1281,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

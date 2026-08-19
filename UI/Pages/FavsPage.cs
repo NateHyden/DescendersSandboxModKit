@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -36,7 +36,6 @@ namespace DescendersModMenu.UI
             if (!_dirty) return;
             try
             {
-                // Unity fake-null: destroyed menu Transform still fails (object)==null.
                 if (!_contentRoot) { ClearUiRefs(); return; }
                 Transform t = _contentRoot;
                 bool visible = true;
@@ -54,7 +53,6 @@ namespace DescendersModMenu.UI
             }
             catch (NullReferenceException)
             {
-                // Destroyed Unity objects sometimes surface as NRE on get_gameObject.
                 ClearUiRefs();
                 _dirty = false;
             }
@@ -110,30 +108,18 @@ namespace DescendersModMenu.UI
 
                 _contentRoot = content.transform;
 
-                // NOT calling Rebuild() here on purpose — CreateMenu() builds
-                // FavsPage (page 17) before some later pages (e.g. OtherPage,
-                // built last) have run their FavouritesManager.Register()
-                // calls, so an immediate Rebuild() here would silently drop
-                // any saved favourite whose owning page hasn't registered
-                // yet ("Skipping unknown ID" — confirmed via log 2026-08-05,
-                // BigHeadMode specifically, an Other-tab mod). Marking dirty
-                // instead defers the real build to the first actual tab
-                // visit, by which point every page — and therefore every
-                // registry entry — has finished building.
                 _dirty = true;
             }
             catch (Exception ex) { MelonLogger.Error("[FavsPage] CreatePage: " + ex);  Telemetry.ReportErrorAsync(ex, "FavsPage"); }
             return pg;
         }
 
-        // ── Rebuild — destroys and recreates all favourite entries ────
         public static void Rebuild()
         {
             if ((object)_contentRoot == null) return;
 
             FavouritesManager.ClearRefreshCallbacks();
 
-            // Destroy all children
             for (int i = _contentRoot.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.DestroyImmediate(_contentRoot.GetChild(i).gameObject);
 
@@ -161,7 +147,6 @@ namespace DescendersModMenu.UI
                     continue;
                 }
 
-                // Tight card: header + controls with almost no gap between them
                 var card = UIHelpers.Obj("Fav_" + id, _contentRoot);
                 var cardLe = card.AddComponent<LayoutElement>();
                 cardLe.flexibleWidth = 1;
@@ -174,7 +159,6 @@ namespace DescendersModMenu.UI
                 cardV.childControlWidth = true;
                 cardV.childControlHeight = true;
 
-                // ── Entry header: tab badge + mod name + remove star ──
                 var hdr = UIHelpers.Obj("FH_" + id, card.transform);
                 var hle = hdr.AddComponent<LayoutElement>();
                 hle.preferredHeight = 14; hle.minHeight = 14;
@@ -208,15 +192,13 @@ namespace DescendersModMenu.UI
 
             UIHelpers.AddScrollForwarders(_contentRoot);
 
-            // Force layout recalculation so scrollbar detects content height
             var crtRT = UIHelpers.RT(_contentRoot.gameObject);
             LayoutRebuilder.ForceRebuildLayoutImmediate(crtRT);
             Canvas.ForceUpdateCanvases();
             if ((object)_scrollRect != null)
-                _scrollRect.verticalNormalizedPosition = 1f; // scroll to top
+                _scrollRect.verticalNormalizedPosition = 1f;
         }
 
-        // ── RefreshFavourites — updates displayed values ─────────────
         public static void RefreshFavourites()
         {
             FavouritesManager.InvokeRefresh();
@@ -234,29 +216,23 @@ namespace DescendersModMenu.UI
             vlg.childForceExpandWidth = true; vlg.childForceExpandHeight = false;
             vlg.padding = new RectOffset(20, 20, 40, 20);
 
-            // Spacer
             var sp1 = UIHelpers.Obj("Sp1", box.transform);
             sp1.AddComponent<LayoutElement>().preferredHeight = 20;
 
-            // Big star
             var starT = UIHelpers.Txt("BStar", box.transform, "\u2605", 32,
                 FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
             starT.gameObject.AddComponent<LayoutElement>().preferredHeight = 40;
 
-            // "No favourites yet"
             var msg = UIHelpers.Txt("EMsg", box.transform, "No favourites yet", 13,
                 FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextDim);
             msg.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
 
-            // Hint
             var hint = UIHelpers.Txt("EHint", box.transform,
                 "Star any mod from its tab to add it here", 10,
                 FontStyle.Normal, TextAnchor.MiddleCenter, UIHelpers.TextDim);
             hint.gameObject.AddComponent<LayoutElement>().preferredHeight = 16;
         }
 
-        // Shorter than a normal StatRow so more favourites fit on screen.
-        // Public so custom BuildControls (Bike switcher, etc.) can match.
         public const float CompactRowH = 24f;
 
         public static GameObject CompactStatRow(string label, Transform p)
@@ -268,8 +244,6 @@ namespace DescendersModMenu.UI
             var hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.spacing = 5; hlg.padding = new RectOffset(5, 5, 0, 0);
             hlg.childAlignment = TextAnchor.MiddleCenter;
-            // Keep false so MakeBar stays 4px tall (same as other tabs). Expanding
-            // height turned the bar track into a tall inset that looked wrong.
             hlg.childForceExpandWidth = false; hlg.childForceExpandHeight = false;
             hlg.childControlWidth = true; hlg.childControlHeight = true;
 
@@ -288,7 +262,6 @@ namespace DescendersModMenu.UI
         }
 
         // ══════════════════════════════════════════════════════════════
-        //  BUILDER HELPERS — used by page factories
         // ══════════════════════════════════════════════════════════════
 
         /// <summary>Simple toggle row (e.g. Cut Brakes, No Bail)</summary>
@@ -469,7 +442,6 @@ namespace DescendersModMenu.UI
             FavFloatGetter pct1, FavFloatGetter pct2, FavFloatGetter pct3,
             FavAction refreshPage, int defaultLevel = 5)
         {
-            // Row 1
             var r1 = CompactStatRow(label1, parent);
             var b1 = UIHelpers.MakeBar("FB1_" + id, r1.transform, pct1());
             var v1 = UIHelpers.Txt("FV1_" + id, r1.transform, get1().ToString(), 12,
@@ -478,7 +450,6 @@ namespace DescendersModMenu.UI
             UIHelpers.SmallBtn(r1.transform, "-", () => { dec1(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
             UIHelpers.SmallBtn(r1.transform, "+", () => { inc1(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
 
-            // Row 2
             var r2 = CompactStatRow(label2, parent);
             var b2 = UIHelpers.MakeBar("FB2_" + id, r2.transform, pct2());
             var v2 = UIHelpers.Txt("FV2_" + id, r2.transform, get2().ToString(), 12,
@@ -487,7 +458,6 @@ namespace DescendersModMenu.UI
             UIHelpers.SmallBtn(r2.transform, "-", () => { dec2(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
             UIHelpers.SmallBtn(r2.transform, "+", () => { inc2(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
 
-            // Row 3
             var r3 = CompactStatRow(label3, parent);
             var b3 = UIHelpers.MakeBar("FB3_" + id, r3.transform, pct3());
             var v3 = UIHelpers.Txt("FV3_" + id, r3.transform, get3().ToString(), 12,
@@ -607,3 +577,4 @@ namespace DescendersModMenu.UI
         }
     }
 }
+

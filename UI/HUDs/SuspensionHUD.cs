@@ -1,4 +1,4 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using System.Reflection;
 using UnityEngine;
@@ -9,18 +9,14 @@ namespace DescendersModMenu.Mods
     {
         public static bool Enabled { get; private set; } = false;
 
-        // ── Cached wheel refs (cleared on scene change) ───────────────
         private static Wheel _frontWheel = null;
         private static Wheel _rearWheel = null;
-        private static bool _wheelsSearched = false;   // true once Player_Human was present & we ran full search
+        private static bool _wheelsSearched = false;
 
         // ── Reflection cache ──────────────────────────────────────────
         private static FieldInfo _suspField = null;
         private static bool _fieldCached = false;
 
-        // ── Trick feed (UI_RepPopup) ──────────────────────────────────
-        // Spawned once by UIManager — lives for the full session, not per-scene.
-        // Cached separately so ClearCache() (scene change) never touches it.
         private static MonoBehaviour _repPopup = null;
         private static bool _repPopupSearched = false;
 
@@ -32,14 +28,10 @@ namespace DescendersModMenu.Mods
         private const float HardtailThresh = 0.01f;
 
         // ── Auto-calibration ──────────────────────────────────────────
-        // suspensionPress may be in metres (matching travel ~0.5) not 0-1.
-        // Track the peak raw value per disc and normalise against it so bars
-        // always fill proportionally regardless of the actual unit/range.
-        private static float _frontCalibMax = 0.01f; // safe non-zero starting point
+        private static float _frontCalibMax = 0.01f;
         private static float _rearCalibMax = 0.01f;
-        private static int _calibLogCount = 0;     // log first few readings
+        private static int _calibLogCount = 0;
 
-        // ── OnGUI texture and cached styles ──────────────────────────
         private static Texture2D _tex = null;
         private static GUIStyle _lblStyle = null;
         private static GUIStyle _pctStyle = null;
@@ -57,7 +49,6 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Layout constants (base 1080p) ─────────────────────────────
         private const float BarW = 14f;
         private const float BarH = 220f;
         private const float BarGap = 8f;
@@ -87,7 +78,6 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[SuspensionHUD] Trick feed -> " + (visible ? "SHOWN" : "HIDDEN"));
         }
 
-        // Cached type for UI_RepPopup — resolved once via assembly scan, avoids FindObjectsOfType
         private static System.Type _repPopupType = null;
         private static bool _repPopupTypeSearched = false;
 
@@ -97,7 +87,6 @@ namespace DescendersModMenu.Mods
             _repPopupSearched = true;
             try
             {
-                // Resolve UI_RepPopup type once — much cheaper than scanning all MonoBehaviours
                 if (!_repPopupTypeSearched)
                 {
                     _repPopupTypeSearched = true;
@@ -117,7 +106,6 @@ namespace DescendersModMenu.Mods
                     return;
                 }
 
-                // FindObjectOfType(type) — Unity's internal fast path, stops at first match
                 Object obj = Object.FindObjectOfType(_repPopupType);
                 if ((object)obj != null)
                 {
@@ -160,12 +148,10 @@ namespace DescendersModMenu.Mods
             if (Enabled)
             {
                 ModLog.Feedback("[SuspensionHUD] Reset -> OFF");
-                SetTrickFeedVisible(true); // restore trick feed before disabling
+                SetTrickFeedVisible(true);
             }
             Enabled = false;
             ClearCache();
-            // Note: _repPopup and _repPopupSearched intentionally NOT cleared —
-            // UI_RepPopup persists for the whole session and is expensive to re-find.
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -175,7 +161,6 @@ namespace DescendersModMenu.Mods
 
             EnsureWheels();
 
-            // If neither wheel is available yet, bail silently
             if (!UnityNull.Alive(_frontWheel) && !UnityNull.Alive(_rearWheel))
             {
                 if ((object)_frontWheel != null || (object)_rearWheel != null)
@@ -201,16 +186,12 @@ namespace DescendersModMenu.Mods
             float frontRaw = GetCompression(_frontWheel);
             float rearRaw = GetCompression(_rearWheel);
 
-            // ── Auto-calibrate: track peak raw values and normalise ────
-            // suspensionPress unit is unknown — could be metres not 0-1.
-            // Normalise against the highest value seen so bars always fill correctly.
             if (frontRaw > _frontCalibMax) _frontCalibMax = frontRaw;
             if (rearRaw > _rearCalibMax) _rearCalibMax = rearRaw;
 
             float frontComp = frontRaw / _frontCalibMax;
             float rearComp = rearRaw / _rearCalibMax;
 
-            // Log first few raw+normalised readings so range can be confirmed in log
             if (_calibLogCount < 5 && (frontRaw > 0f || rearRaw > 0f))
             {
                 _calibLogCount++;
@@ -222,7 +203,6 @@ namespace DescendersModMenu.Mods
                     + " R=" + _rearCalibMax.ToString("F4"));
             }
 
-            // ── Hardtail detection (sample for HardtailFrames then decide) ──
             if (!_isHardtail && _rearSamples < HardtailFrames)
             {
                 if (rearRaw > _rearMaxComp) _rearMaxComp = rearRaw;
@@ -236,7 +216,6 @@ namespace DescendersModMenu.Mods
                 }
             }
 
-            // ── Draw: bottom-left corner ──────────────────────────────
             float yBase = Screen.height - marginY - barH - labelH - pctH;
 
             DrawBar(marginX, yBase, barW, barH, labelH, pctH, labelFs, pctFs,
@@ -259,10 +238,8 @@ namespace DescendersModMenu.Mods
 
             float b = Mathf.Max(1f, s);
 
-            // Background
             DrawRect(x, y, barW, barH, bgC);
 
-            // Border (4 sides, 1px)
             DrawRect(x, y, barW, b, borderC);
             DrawRect(x, y + barH - b, barW, b, borderC);
             DrawRect(x, y, b, barH, borderC);
@@ -270,17 +247,14 @@ namespace DescendersModMenu.Mods
 
             if (hardtail)
             {
-                // Extra dim overlay
                 DrawRect(x, y, barW, barH, new Color(0f, 0f, 0f, 0.40f));
             }
             else if (compression > 0f)
             {
-                // Fill from bottom up
                 float fillH = barH * compression;
                 DrawRect(x, y + barH - fillH, barW, fillH, GetBarColor(compression));
             }
 
-            // Tick marks at 25 / 50 / 75 %
             Color tickC = new Color(1f, 1f, 1f, 0.10f);
             float tickW = barW - b * 2f;
             float tickH1 = Mathf.Max(1f, s);
@@ -288,7 +262,6 @@ namespace DescendersModMenu.Mods
             DrawRect(x + b, y + barH * 0.50f, tickW, tickH1, tickC);
             DrawRect(x + b, y + barH * 0.75f, tickW, tickH1, tickC);
 
-            // Label "F" / "R"
             Color labelCol = hardtail
                 ? new Color(0.333f, 0.333f, 0.333f, 1f)
                 : new Color(0.80f, 1.00f, 0.00f, 1f);
@@ -321,9 +294,9 @@ namespace DescendersModMenu.Mods
 
         private static Color GetBarColor(float compression)
         {
-            if (compression < 0.4f) return new Color(0.80f, 1.00f, 0.00f, 1f);   // lime
-            if (compression < 0.7f) return new Color(1.00f, 0.60f, 0.00f, 1f);   // orange
-            return new Color(1.00f, 0.20f, 0.20f, 1f);   // red
+            if (compression < 0.4f) return new Color(0.80f, 1.00f, 0.00f, 1f);
+            if (compression < 0.7f) return new Color(1.00f, 0.60f, 0.00f, 1f);
+            return new Color(1.00f, 0.20f, 0.20f, 1f);
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -343,16 +316,14 @@ namespace DescendersModMenu.Mods
             }
 
             GameObject player = GameObject.Find("Player_Human");
-            if (!UnityNull.Alive(player)) return; // silent — player not spawned yet
+            if (!UnityNull.Alive(player)) return;
 
-            // Mark searched so we don't repeat every frame even if search partially fails
             _wheelsSearched = true;
 
             try
             {
                 ModLog.Debug("[SuspensionHUD] Player_Human found — searching for wheels...");
 
-                // ── Approach A: named child transforms ────────────────
                 Transform frontT = player.transform.Find("wheel_front");
                 Transform rearT = player.transform.Find("wheel_back");
 
@@ -369,7 +340,6 @@ namespace DescendersModMenu.Mods
                 ModLog.Debug("[SuspensionHUD] Rear Wheel component: "
                     + ((object)_rearWheel != null ? "OK" : "NOT FOUND on wheel_back"));
 
-                // ── Approach B: fallback if named approach failed ─────
                 if ((object)_frontWheel == null && (object)_rearWheel == null)
                 {
                     ModLog.Warn("[SuspensionHUD] Named transforms failed — fallback: GetComponentsInChildren<Wheel>()");
@@ -385,7 +355,6 @@ namespace DescendersModMenu.Mods
                         Telemetry.ReportErrorAsync(new System.Exception("[SuspensionHUD] No Wheel components found on Player_Human subtree. HUD will not function."), "SuspensionHUD");
                 }
 
-                // ── Cache the reflection field ────────────────────────
                 EnsureField();
             }
             catch (System.Exception ex)
@@ -398,7 +367,7 @@ namespace DescendersModMenu.Mods
         private static void EnsureField()
         {
             if (_fieldCached) return;
-            _fieldCached = true; // set early — prevents re-scan on failure
+            _fieldCached = true;
 
             Wheel w = UnityNull.Alive(_frontWheel) ? _frontWheel
                 : (UnityNull.Alive(_rearWheel) ? _rearWheel : null);
@@ -410,14 +379,12 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                // ── Attempt 1: direct backing field ──────────────────
                 _suspField = w.GetType().GetField(
                     "<suspensionPress>k__BackingField",
                     BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if ((object)_suspField != null)
                 {
-                    // Verify it returns float and reads a sane value
                     float testVal = -1f;
                     try { testVal = (float)_suspField.GetValue(w); } catch { }
                     ModLog.Debug("[SuspensionHUD] <suspensionPress>k__BackingField FOUND."
@@ -428,7 +395,6 @@ namespace DescendersModMenu.Mods
 
                 ModLog.Warn("[SuspensionHUD] <suspensionPress>k__BackingField NOT found by exact name.");
 
-                // ── Attempt 2: scan NonPublic Instance fields for suspension-related names ──
                 FieldInfo[] nonPubFields = w.GetType().GetFields(
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 ModLog.Debug("[SuspensionHUD] Scanning " + nonPubFields.Length + " NonPublic Instance fields on Wheel...");
@@ -456,7 +422,6 @@ namespace DescendersModMenu.Mods
                     }
                 }
 
-                // ── Attempt 3: log ALL float-returning 0-param public methods ──
                 ModLog.Warn("[SuspensionHUD] No suspension field found by name scan. Listing all float 0-param public methods on Wheel:");
                 MethodInfo[] methods = w.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance);
                 int listed = 0;
@@ -474,7 +439,6 @@ namespace DescendersModMenu.Mods
                 }
                 ModLog.Debug("[SuspensionHUD] Listed " + listed + " float 0-param public methods.");
 
-                // ── Attempt 4: log ALL NonPublic fields (raw dump) ────
                 ModLog.Warn("[SuspensionHUD] Dumping ALL NonPublic Instance fields on Wheel for manual inspection:");
                 for (int i = 0; i < nonPubFields.Length; i++)
                     ModLog.Debug("[SuspensionHUD]   field[" + i + "]: " + nonPubFields[i].Name + " (" + nonPubFields[i].FieldType.Name + ")");
@@ -499,9 +463,8 @@ namespace DescendersModMenu.Mods
             if ((object)_suspField == null) return 0f;
             try
             {
-                // Return raw value — calibration normalisation happens in OnGUI
                 float v = (float)_suspField.GetValue(w);
-                return v < 0f ? 0f : v; // clamp only negative values
+                return v < 0f ? 0f : v;
             }
             catch (System.Exception ex)
             {
@@ -512,3 +475,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

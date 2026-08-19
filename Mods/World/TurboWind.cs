@@ -1,11 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Turbo Wind: push the bike + boost WindZones / grass. Power is 1–10
-    // (default 3). Level 10 ≈ the old fixed blast that felt too strong.
     public static class TurboWind
     {
         public static bool Enabled = false;
@@ -225,3 +223,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

@@ -1,8 +1,8 @@
-using System.Reflection;
+﻿using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
-using DescendersModMenu; // Telemetry
+using DescendersModMenu;
 
 namespace DescendersModMenu.Mods
 {
@@ -15,15 +15,6 @@ namespace DescendersModMenu.Mods
         public static int TweakSpeedLevel { get; private set; } = 1;
         public static int IcePhysicsLevel { get; private set; } = 1;
 
-        // WHEELIEBALANCE/AIRCORRECTION/FAKIEBALANCE/PUMPSTRENGTH/TWEAKSPEED
-        // are percentage-POINT deltas on GameModifier.percentageValue, not
-        // multipliers — confirmed via DumpAllModifiers before this mod ever
-        // touched them: true vanilla defaults were small integers like
-        // WHEELIEBALANCE=25, AIRCORRECTION=40, FAKIEBALANCE=-10 — nowhere
-        // near the old 1.0-4.0 range this used to write. That old scale was
-        // ~10-40x too small to have any real effect, which is the actual
-        // root cause behind "wheelie balance doesn't feel tunable."
-        // Level 5/6 = 0 (neutral), Level 1 = -90, Level 10 = +90.
         private static float Delta(int level) { return (level - 5.5f) * 20f; }
         public static string DeltaDisplay(int level) { return Delta(level).ToString("+0;-0") + "%"; }
 
@@ -127,9 +118,6 @@ namespace DescendersModMenu.Mods
             NoSpeedWobblesEnabled = false;
         }
 
-        // Direct patch on Vehicle.FixedUpdate � zeroes the steering wobble property
-        // every physics frame when enabled. More reliable than the GameModifier route
-        // because PlayerInfoImpact can reset modifiers on scene transitions.
         public static void ApplyNoSpeedWobblesPatch(HarmonyLib.Harmony harmony)
         {
             try
@@ -145,10 +133,6 @@ namespace DescendersModMenu.Mods
             }
             catch (System.Exception ex) { MelonLogger.Error("[GameMod] NoSpeedWobbles Vehicle patch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
 
-            // Patch BikeCamera.FixedUpdate � calls RemoveCameraShake() every frame
-            // to zero VgM\u007Fk\u0080u (shake velocity) and OXXnhI\u0081 (shake offset).
-            // BikeCamera.FixedUpdate always calls the active camera mode function,
-            // so this covers every camera view with a single patch.
             try
             {
                 System.Type bikeCamType = typeof(BikeCamera);
@@ -192,12 +176,6 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[GameMod] ApplyMod " + modName + ": " + ex.Message); Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
         }
 
-        // One-shot diagnostic — logs every entry in GameData's GameModifier[]
-        // array (name + current percentageValue). Only 6 of these are wired
-        // up today (WHEELIEBALANCE, AIRCORRECTION, FAKIEBALANCE, PUMPSTRENGTH,
-        // OFFROADFRICTION, SPEEDWOBBLES); this exists to find the exact
-        // string name for ones that aren't yet — e.g. "Tweak Speed" — without
-        // guessing and burning a build/test cycle on a wrong name.
         public static void DumpAllModifiers()
         {
             try
@@ -229,9 +207,6 @@ namespace DescendersModMenu.Mods
         }
     }
 
-    // Postfix on Vehicle.FixedUpdate � directly zeros steering wobble property
-    // Z\u0082kM\u005DJM when NoSpeedWobbles is enabled. This fires every physics frame
-    // so it can't be overwritten by PlayerInfoImpact resets.
     public static class NoSpeedWobbles_Patch
     {
         private static PropertyInfo _wobbleProp = null;
@@ -269,10 +244,8 @@ namespace DescendersModMenu.Mods
 
     public static class NoSpeedWobbles_CamPatch
     {
-        // Remove all camera-shake vectors produced by the speed wobble system.
-        // These are separate from the CameraAngle.cameraShake field.
-        private static FieldInfo _shakeVel = null;   // VgM\u007Fk\u0080u  � Vector3
-        private static FieldInfo _shakeOff = null;   // OXXnhI\u0081  � Vector3
+        private static FieldInfo _shakeVel = null;
+        private static FieldInfo _shakeOff = null;
         private static bool _cached = false;
 
         public static void Postfix(BikeCamera __instance)
@@ -306,3 +279,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

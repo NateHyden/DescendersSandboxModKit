@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -13,8 +13,6 @@ namespace DescendersModMenu.Mods
         private const int MaxLevel = 10;
         private const float DefaultShake = 30f;
 
-        // Level 5 = 30f (exact default), Level 10 = 120f (4x), Level 1 ≈ 10f (subtle)
-        // shake = 30f * 2^((level-5)/2.5f)
         public static float ShakeValue => DefaultShake * Mathf.Pow(2f, (Level - 5) / 2.5f);
         public static string DisplayValue => Level.ToString();
 
@@ -47,9 +45,6 @@ namespace DescendersModMenu.Mods
             if (Enabled) Apply(ShakeValue);
         }
 
-        // Reset state only — no Apply() because scene objects are destroyed
-        // during unload. ResetStats handles restoration via Toggle() which
-        // calls Apply() when scene objects exist.
         public static void Reset()
         {
             Enabled = false;
@@ -66,9 +61,6 @@ namespace DescendersModMenu.Mods
                 if (cameras == null || cameras.Length == 0)
                 { ModLog.Warn("[CameraShake] No BikeCamera found."); return; }
 
-                // Resolve CameraAngle field once via reflection — field name contains
-                // control chars that C# source cannot express as an identifier.
-                // Scan for the public CameraAngle field on BikeCamera.
                 if ((object)_caFld == null)
                 {
                     var fields = typeof(BikeCamera).GetFields(
@@ -98,3 +90,4 @@ namespace DescendersModMenu.Mods
         }
     }
 }
+

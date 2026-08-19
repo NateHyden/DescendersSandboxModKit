@@ -1,4 +1,4 @@
-using DescendersModMenu.Mods;
+﻿using DescendersModMenu.Mods;
 using DescendersModMenu.BikeStats;
 using DescendersModMenu.UI;
 using HarmonyLib;
@@ -24,11 +24,10 @@ namespace DescendersModMenu
         private bool _pendingRStickSave = false;
         private float _rStickSaveTime = 0f;
 
-        // == Deferred mod reapply after map change ==
         private bool _pendingReapply;
-        private bool _pendingAutoLoad = true; // fires once when first Player_Human appears
-        private bool _pendingTelemetryPing = true; // fires once when first Player_Human appears — see below
-        private bool _pendingModifierDump = true; // fires once — see DumpAllModifiers below
+        private bool _pendingAutoLoad = true;
+        private bool _pendingTelemetryPing = true;
+        private bool _pendingModifierDump = true;
         private bool _reapplyFlyMode, _reapplyDrunkMode, _reapplyMirrorMode, _reapplyWideTyres;
         private int _reapplyWideTyresLevel;
         private bool _reapplyFov, _reapplySpeedrunTimer, _reapplyAcceleration, _reapplyMaxSpeed;
@@ -128,10 +127,6 @@ namespace DescendersModMenu
             try { ModChat.Init(); }
             catch (System.Exception ex) { MelonLogger.Error("ModChat.Init: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "ModChat.Init"); }
 
-            // Tier 3: batch every init-time failure recorded above (Harmony
-            // PatchAll + all individual ApplyPatch calls, via
-            // DiagnosticsManager.Report) into ONE Discord message, instead
-            // of firing a webhook per catch block.
             try
             {
                 var failures = new System.Collections.Generic.List<string>();
@@ -165,27 +160,19 @@ namespace DescendersModMenu
             DiagnosticsManager.Report("AirControl", true); DiagnosticsManager.Report("ModDetection", true);
             TopSpeed.Load(); TopSpeed.StartTracking();
 
-            // Load favourites configuration
             try { UI.FavouritesManager.LoadFromFile(); }
             catch (System.Exception ex) { ModLog.Warn("FavouritesManager.LoadFromFile: " + ex.Message); }
 
-            // Load key bindings
             try { KeyBindManager.LoadBindings(); }
             catch (System.Exception ex) { ModLog.Warn("KeyBindManager.LoadBindings: " + ex.Message); }
 
-            // Load colour scheme (applies to UITheme before the menu is ever built)
             try { UI.ColorSchemeManager.LoadAndApply(); }
             catch (System.Exception ex) { ModLog.Warn("ColorSchemeManager.LoadAndApply: " + ex.Message); }
 
             DiagnosticsManager.LogStartupSummary();
 
-            // Check for updates on a background thread
             try { UpdateChecker.CheckAsync(); } catch (System.Exception ex) { MelonLogger.Error("UpdateChecker.CheckAsync: " + ex.Message); Telemetry.ReportErrorAsync(ex, "UpdateChecker"); }
             try { SteamPlayerCount.FetchAsync(); } catch (System.Exception ex) { MelonLogger.Error("SteamPlayerCount.FetchAsync: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SteamPlayerCount"); }
-            // Telemetry.PingAsync() is now deferred to OnUpdate() until
-            // Player_Human exists — see _pendingTelemetryPing below. Firing
-            // it here (splash screen) was too early for both Steam client
-            // state and Photon's local player name to be populated.
         }
 
         public override void OnSceneWasLoaded(int buildindex, string sceneName)
@@ -206,8 +193,6 @@ namespace DescendersModMenu
             if (buildindex == 1) MapChanger.BuildMapList();
             try { UI.SessionPage.RefreshAll(); } catch { }
 
-            // Once a real scene is up, allow Photon reflection. Still avoids Melon
-            // OnInitializeMelon (which was creating PhotonMono too early).
             if (buildindex > 0)
             {
                 try { ModChat.EnablePhotonAccess(); }
@@ -216,22 +201,10 @@ namespace DescendersModMenu
         }
 
         // ================================================================
-        //  SCENE TRANSITION: Snapshot -> Reset -> Restore
         // ================================================================
-        //  PERSISTS across scenes: everything except the items below
-        //  ALWAYS RESETS (never restored):
-        //    Graphics tab, Sky section, Modes, Ghost Replay, ESP
         // ================================================================
         public override void OnSceneWasUnloaded(int buildIndex, string sceneName)
         {
-            // MenuWindow.CreateMenu() builds a plain GameObject with no
-            // DontDestroyOnLoad, so Unity destroys the whole menu (and every
-            // star button) on scene load. FavouritesManager's _starButtons
-            // dict doesn't find out until RefreshAllStars() hits a dead ref
-            // and self-heals one warning at a time — clear it here instead so
-            // there's nothing stale left for the post-reapply RefreshAll() to
-            // trip over. CreateMenu() re-populates it fresh next time the
-            // menu is actually built, so this is a pure no-op if it isn't.
             try { FavouritesManager.ClearStarButtons(); } catch (System.Exception ex) { MelonLogger.Error("FavouritesManager.ClearStarButtons: " + ex.Message); Telemetry.ReportErrorAsync(ex, "FavouritesManager"); }
             try { ModChat.OnMapChanged(); } catch { }
             try { ModesPage.ClearUiRefs(); } catch { }
@@ -250,18 +223,13 @@ namespace DescendersModMenu
             try { TimeOfDay.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("TimeOfDay.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
             try { PlayerCache.Clear(); } catch (System.Exception ex) { MelonLogger.Error("PlayerCache.Clear: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PlayerCache"); }
 
-            // -- GUARD: intermediate scene (e.g. EmptyScene) --
-            // If a reapply is already pending, this is a transition scene.
-            // The snapshot from the REAL scene is still valid — don't overwrite it.
             if (_pendingReapply)
             {
                 ModLog.Debug("[Reapply] Skipping intermediate scene (" + sceneName + ")");
                 return;
             }
 
-            // == SNAPSHOT: capture all mods that should persist ==
 
-            // Immediate (Harmony / pure flags)
             bool wasSlowMotion = SlowMotion.Enabled;
             int slowMotionLv = SlowMotion.Level;
             bool wasCutBrakes = CutBrakes.Enabled;
@@ -289,7 +257,6 @@ namespace DescendersModMenu
             int gravLevel = Gravity.Level;
             bool gravNeed = gravLevel != 5;
 
-            // Deferred (need Player_Human)
             bool wasFlyMode = FlyMode.Enabled;
             bool wasDrunkMode = DrunkMode.Enabled;
             bool wasMirrorMode = MirrorMode.Enabled;
@@ -345,7 +312,6 @@ namespace DescendersModMenu
             bool wasBrakeFade = BrakeFade.Enabled;
             int brakeBalanceLv = BrakeFade.BalanceLevel;
 
-            // Log
             ModLog.Debug("[Reapply] === SNAPSHOT (" + sceneName + ") ===");
             if (wasSlowMotion) ModLog.Debug("[Reapply]   SlowMotion lv=" + slowMotionLv);
             if (wasCutBrakes) ModLog.Debug("[Reapply]   CutBrakes");
@@ -401,7 +367,6 @@ namespace DescendersModMenu
             if (wasSuspHUD) ModLog.Debug("[Reapply]   SuspensionHUD");
             if (wasBrakeFade) ModLog.Debug("[Reapply]   BrakeFade balance=" + brakeBalanceLv);
 
-            // == RESET everything ==
             SlowMotion.Reset(); QuickBrake.Reset(); QuickBrake_Patch.ClearCache();
             CutBrakes.Reset(); ReverseSteering.Reset(); AutoBalance.Reset();
             RubberBandSteering.Reset(); RubberBandSteering.ClearCache();
@@ -415,11 +380,9 @@ namespace DescendersModMenu
             FOV.Reset(); Acceleration.Reset(); MaxSpeedMultiplier.Reset();
             Movement.Reset(); LandingImpact.Reset();
             NoBail.ClearCache(); WheelSize.Reset();
-            // Silent — Toggle() Feedback would spam Melon every map change.
             if (NoSpeedCap.Enabled) NoSpeedCap.SetEnabled(false);
             if (NoBail.Enabled) NoBail.SetEnabled(false);
             BikeTorch.Reset(); CameraShake.Reset(); NearMissSensitivity.Reset();
-            // Always-reset (NOT restored):
             SkyColours.Reset(); GraphicsSettings.Reset();
             AvalancheMode.Reset(); GhostReplay.Reset();
             EarthquakeMode.Reset(); PoliceChaseMode.Reset();
@@ -437,20 +400,10 @@ namespace DescendersModMenu
             UIRemover.ClearCache();
             TrailPainter.ClearCache();
             BigHeadMode.ClearCache();
-            // TopSpeed used to call Reset() here, which zeroes SessionTopSpeed AND
-            // saves that 0 straight to TopSpeed.txt on disk - permanently wiping the
-            // persisted best-speed record on every single level transition within a
-            // career session (confirmed 2026-08-04: log shows "Loaded: 0.0 km/h" at
-            // boot, and Reset() firing every scene change explains why it can never
-            // climb past whatever was tracked on the very first level of a session).
-            // ClearCache() only refreshes the stale Player_Human/Rigidbody refs (which
-            // do need refreshing every scene - they point at destroyed objects
-            // otherwise) without touching the tracked value at all.
             TopSpeed.ClearCache();
+            try { ESP.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("ESP.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ESP"); }
             if (ESP.Enabled) ESP.Toggle();
 
-            // == RESTORE IMMEDIATE (Harmony patches) ==
-            // == SNAPSHOT restore (immediate mods) ==
             ModLog.SuppressUserFeedback = true;
             try
             {
@@ -478,7 +431,6 @@ namespace DescendersModMenu
             if (gravNeed) { Gravity.SetLevel(gravLevel); Gravity.Apply(); ModLog.Debug("[Reapply] IMM Gravity lv=" + gravLevel); }
             ModLog.Debug("[Reapply] Immediate restores done.");
 
-            // == QUEUE DEFERRED ==
             _reapplyFlyMode = wasFlyMode; _reapplyDrunkMode = wasDrunkMode;
             _reapplyMirrorMode = wasMirrorMode; _reapplyWideTyres = wasWideTyres;
             _reapplyWideTyresLevel = wideTyresLevel;
@@ -530,7 +482,6 @@ namespace DescendersModMenu
 
         public override void OnUpdate()
         {
-            // Boot / reapply waits — one Player_Human lookup shared across pending flags
             if (_pendingModifierDump || _pendingAutoLoad || _pendingTelemetryPing || _pendingReapply)
             {
                 GameObject playerHuman = GameObject.Find("Player_Human");
@@ -602,7 +553,6 @@ namespace DescendersModMenu
 
                     ModLog.Debug("[Reapply] === DONE: " + ok + " applied, " + fail + " failed ===");
 
-                    // Verify immediate mods survived the deferred reapply
                     ModLog.Debug("[Reapply] VERIFY: NoSpeedCap=" + NoSpeedCap.Enabled
                         + " SlowMotion=" + SlowMotion.Enabled
                         + " CutBrakes=" + CutBrakes.Enabled
@@ -620,7 +570,6 @@ namespace DescendersModMenu
                         + " SuspHUD=" + SuspensionHUD.Enabled
                         + " BrakeFade=" + BrakeFade.Enabled);
 
-                    // Refresh UI so menu toggles reflect restored state
                     try { MenuWindow.RefreshAll(); }
                     catch (System.Exception ex)
                     {
@@ -666,6 +615,7 @@ namespace DescendersModMenu
             try { SceneDumper.CheckHotkey(); } catch (System.Exception ex) { MelonLogger.Error("SceneDumper: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SceneDumper"); }
             try { SpeedWatcher.CheckHotkey(); } catch (System.Exception ex) { MelonLogger.Error("SpeedWatcher: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SpeedWatcher"); }
             try { TopSpeed.Tick(); } catch (System.Exception ex) { MelonLogger.Error("TopSpeed.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TopSpeed"); }
+            try { ESP.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ESP.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ESP"); }
             try { TrickMultiplier.Tick(); } catch (System.Exception ex) { MelonLogger.Error("TrickMultiplier.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TrickMultiplier"); }
             try { ScreenshotMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ScreenshotMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ScreenshotMode"); }
             try { SessionTrackers.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SessionTrackers.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionTrackers"); }
@@ -731,13 +681,11 @@ namespace DescendersModMenu
             try { BikeDamage.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("BikeDamage.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BikeDamage"); }
             try { HoverMode.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("HoverMode.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "HoverMode"); }
             try { TurboWind.FixedTick(); } catch (System.Exception ex) { MelonLogger.Error("TurboWind.FixedTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TurboWind"); }
-            // BrakeFade heat model runs inside BrakeFade_Patch.Postfix (no separate tick needed)
         }
 
         public override void OnLateUpdate()
         {
             try { FOV.Apply(); } catch (System.Exception ex) { MelonLogger.Error("FOV.Apply: " + ex.Message); Telemetry.ReportErrorAsync(ex, "FOV"); }
-            // Storm tick only — early-out inside is cheap, but skip the call when idle.
             if (SkyColours.StormEnabled)
             {
                 try { SkyColours.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SkyColours.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SkyColours"); }
@@ -752,20 +700,11 @@ namespace DescendersModMenu
             try { BlizzardDial.Tick(); } catch (System.Exception ex) { MelonLogger.Error("BlizzardDial.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BlizzardDial"); }
             try { TurboWind.Tick(); } catch (System.Exception ex) { MelonLogger.Error("TurboWind.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TurboWind"); }
             try { RandomBikeSwitch.Tick(); } catch (System.Exception ex) { MelonLogger.Error("RandomBikeSwitch.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RandomBikeSwitch"); }
-            // Vehicle/Cyclist stat mods that need to win the race against the game's
-            // own bike-stat init, which runs after a one-time apply and silently
-            // clobbers a plain field write (confirmed via scene dump 2026-08-04:
-            // Acceleration's field showed the raw default instead of our multiplied
-            // value, no exception, just overwritten). Re-enforcing every LateUpdate
-            // frame beats that instead of applying once on scene load.
             try { Acceleration.Tick(); } catch (System.Exception ex) { MelonLogger.Error("Acceleration.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "Acceleration"); }
             try { MaxSpeedMultiplier.Tick(); } catch (System.Exception ex) { MelonLogger.Error("MaxSpeedMultiplier.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MaxSpeedMultiplier"); }
             try { LandingImpact.Tick(); } catch (System.Exception ex) { MelonLogger.Error("LandingImpact.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LandingImpact"); }
         }
 
-        // UI Tick during scene unload often hits destroyed Unity objects.
-        // MissingReferenceException / NullReferenceException on get_gameObject
-        // are expected noise — don't spam log/Discord.
         private static void LogUiTickError(string where, System.Exception ex)
         {
             if (ex is MissingReferenceException || ex is System.NullReferenceException) return;
@@ -800,3 +739,4 @@ namespace DescendersModMenu
         }
     }
 }
+

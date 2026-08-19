@@ -1,10 +1,9 @@
-using MelonLoader;
+﻿using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
 {
-    // Enabled = true means music is MUTED
     public static class Music
     {
         public static bool Enabled = false;
@@ -13,7 +12,7 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             Enabled = !Enabled;
-            Apply(!Enabled); // true = play, false = mute
+            Apply(!Enabled);
             ModLog.Feedback("[Music] -> " + (Enabled ? "ON" : "OFF"));
         }
 

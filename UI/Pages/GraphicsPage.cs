@@ -41,7 +41,6 @@ namespace DescendersModMenu.UI
                 vlg.childForceExpandWidth = true;
                 vlg.childForceExpandHeight = false;
 
-                // ── Post Processing ───────────────────────────────────────
                 UIHelpers.SectionHeader("POST PROCESSING", pg.transform);
 
                 var br = UIHelpers.StatRow("Bloom", pg.transform);
@@ -71,7 +70,6 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(pg.transform);
 
-                // ── Render ────────────────────────────────────────────────
                 UIHelpers.SectionHeader("RENDER", pg.transform);
 
                 var shR = UIHelpers.StatRow("Shadows", pg.transform);
@@ -89,11 +87,10 @@ namespace DescendersModMenu.UI
                     FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _aaVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
                 UIHelpers.ActionBtn(aaR.transform, "Cycle", () => { GraphicsSettings.CycleAntiAliasing(); RefreshAll(); }, 48);
-                UIHelpers.InfoBox(pg.transform, "Shadows / Soft Particles / AA use Unity quality settings (instant). Cycle AA: Off → 2x → 4x → 8x.");
+                UIHelpers.InfoBox(pg.transform, "Shadows / Soft Particles / AA use Unity quality settings (instant). Cycle AA: Off â†’ 2x â†’ 4x â†’ 8x.");
 
                 UIHelpers.Divider(pg.transform);
 
-                // ── Quality ───────────────────────────────────────────────
                 UIHelpers.SectionHeader("QUALITY", pg.transform);
 
                 var qr = UIHelpers.StatRow("Preset", pg.transform);
@@ -104,12 +101,11 @@ namespace DescendersModMenu.UI
                 UIHelpers.ActionBtn(qr.transform, "Default", () => { GraphicsSettings.RestoreDefaultQuality(); RefreshAll(); }, 54);
 
                 var qvr = UIHelpers.StatRow("Current", pg.transform);
-                _qualityVal = UIHelpers.Txt("QlV", qvr.transform, "—", 11, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.Accent);
+                _qualityVal = UIHelpers.Txt("QlV", qvr.transform, "â€”", 11, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.Accent);
                 _qualityVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
                 UIHelpers.Divider(pg.transform);
 
-                // ── GAME HUD ──────────────────────────────────────────────
                 UIHelpers.SectionHeader("GAME HUD", pg.transform);
 
                 var uir = UIHelpers.StatRow("Hide Game HUD", pg.transform);
