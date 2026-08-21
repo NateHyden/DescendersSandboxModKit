@@ -17,6 +17,8 @@ and — separately — edit your own career progression if you want to.
 Press **F6 OR DPAD DOWN** in-game to open the menu (fully rebindable to
 any controller button — see Key Binds below). XBOX/GamesPass users can now access and download mod.io maps via the XboxWorkshop tab!
 
+# INSTALL INSTRUCTIONS AT THE BOTTOM OF THE PAGE
+
 ---
 
 ## Features
