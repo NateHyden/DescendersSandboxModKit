@@ -379,3 +379,7 @@ Core/TelemetryConfig.cs
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Scene dumps from the in-game dumper (often 100MB+; GitHub rejects >100MB)
+_scenedump/
+**/SceneDump/
+

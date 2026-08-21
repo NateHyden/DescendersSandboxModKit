@@ -9,10 +9,23 @@ namespace DescendersModMenu.Mods
     public static class QuickBrake
     {
         public static bool Enabled { get; private set; } = false;
-        public static int Level { get; private set; } = 5;
+        public static int Level { get; private set; } = 1;
+        public const int MaxLevel = 3;
 
-        public static float GetMultiplier() { return Level < 10 ? 1.03f + (Level - 1) * 0.027f : 1.3f; }
-        public static float GetDrag() { return Level < 10 ? (Level - 1) * 0.67f : 200f; }
+        // L1/L2 = mild assist only; L3 (MAX) = hard stop.
+        public static float GetMultiplier()
+        {
+            if (Level <= 1) return 1.01f;
+            if (Level == 2) return 1.02f;
+            return 1.15f;
+        }
+
+        public static float GetDrag()
+        {
+            if (Level <= 1) return 1.5f;
+            if (Level == 2) return 3.5f;
+            return 200f;
+        }
 
         public static void Toggle()
         {
@@ -20,9 +33,21 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[QuickBrake] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
         }
 
-        public static void Increase() { if (Level < 10) Level++; }
+        public static void Increase() { if (Level < MaxLevel) Level++; }
         public static void Decrease() { if (Level > 1) Level--; }
-        public static void SetLevel(int v) { Level = System.Math.Max(1, System.Math.Min(10, v)); }
+        public static void SetLevel(int v) { Level = System.Math.Max(1, System.Math.Min(MaxLevel, v)); }
+
+        /// <summary>
+        /// Load from bike-stats save. Clamp/migrate older higher caps down to 1–3.
+        /// </summary>
+        public static void SetLevelFromSave(int v)
+        {
+            if (v <= 0) v = 1;
+            // Old default (5) / anything above new max → sensible mapping.
+            if (v == 5) v = 1;
+            else if (v > MaxLevel) v = MaxLevel;
+            SetLevel(v);
+        }
 
         public static void ApplyPatch(HarmonyLib.Harmony harmony)
         {
@@ -102,7 +127,7 @@ namespace DescendersModMenu.Mods
 
                 if (!UnityNull.Alive(_rb)) return;
 
-                if (QuickBrake.Level >= 10)
+                if (QuickBrake.Level >= QuickBrake.MaxLevel)
                 {
                     _rb.velocity = Vector3.zero;
                     _rb.angularVelocity = Vector3.zero;

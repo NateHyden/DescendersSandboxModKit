@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -16,10 +17,16 @@ namespace DescendersModMenu.Mods
         private static System.Reflection.PropertyInfo _treeInstancesProp = null;
         private static System.Reflection.PropertyInfo _treeDistanceProp = null;
 
+        private static System.Type _gpuiTreeManagerType = null;
+        private static System.Type _gpuiDetailManagerType = null;
+        private static bool _gpuiTypesResolved = false;
+
         private static Dictionary<int, System.Array> _savedTreeInstances = new Dictionary<int, System.Array>();
         private static Dictionary<int, float> _savedTreeDistances = new Dictionary<int, float>();
 
         private static readonly List<GameObject> _hiddenRoots = new List<GameObject>();
+        private static readonly List<Behaviour> _disabledGpuiManagers = new List<Behaviour>();
+        private static readonly List<GameObject> _disabledGpuiObjects = new List<GameObject>();
 
         private static float _tickTimer = 0f;
         private const float TickInterval = 1f;
@@ -46,13 +53,15 @@ namespace DescendersModMenu.Mods
             try
             {
                 ApplyTerrainVisibility(false, log: false);
+                int gpui = ApplyGpuInstancerVisibility(false, log: false);
 
                 int caughtRoots = HideTreeRoots(logNew: true);
                 int caughtCols = DisableCollisionObjects(logNew: true);
 
-                if (caughtRoots > 0 || caughtCols > 0)
+                if (caughtRoots > 0 || caughtCols > 0 || gpui > 0)
                     ModLog.Debug("[Trees] Reassert: re-hid " + caughtRoots
-                        + " root(s), disabled " + caughtCols + " CollisionObject collider(s).");
+                        + " root(s), disabled " + caughtCols + " CollisionObject collider(s)"
+                        + ", GPUI managers=" + gpui + ".");
             }
             catch (System.Exception ex) { MelonLogger.Error("[Trees] ReassertHidden: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Trees"); }
         }
@@ -62,6 +71,7 @@ namespace DescendersModMenu.Mods
             try
             {
                 ApplyTerrainVisibility(showTrees, log: true);
+                int gpuiCount = ApplyGpuInstancerVisibility(showTrees, log: true);
 
                 int rootCount;
                 int colCount;
@@ -80,7 +90,8 @@ namespace DescendersModMenu.Mods
                 }
 
                 ModLog.Feedback("[Trees] " + (showTrees ? "SHOW" : "HIDE")
-                    + " | terrain handled | tree roots=" + rootCount
+                    + " | terrain handled | GPUI=" + gpuiCount
+                    + " | tree roots=" + rootCount
                     + " | CollisionObject colliders=" + colCount);
             }
             catch (System.Exception ex) { MelonLogger.Error("[Trees] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Trees"); }
@@ -105,6 +116,24 @@ namespace DescendersModMenu.Mods
                 _terrainDataProp = _terrainType.GetProperty("terrainData");
             if ((object)_treeDistanceProp == null)
                 _treeDistanceProp = _terrainType.GetProperty("treeDistance");
+        }
+
+        private static void EnsureGpuInstancerTypes()
+        {
+            if (_gpuiTypesResolved) return;
+            _gpuiTypesResolved = true;
+
+            System.Reflection.Assembly[] assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+            for (int a = 0; a < assemblies.Length; a++)
+            {
+                Assembly asm = assemblies[a];
+                if ((object)_gpuiTreeManagerType == null)
+                    _gpuiTreeManagerType = asm.GetType("GPUInstancer.GPUInstancerTreeManager");
+                if ((object)_gpuiDetailManagerType == null)
+                    _gpuiDetailManagerType = asm.GetType("GPUInstancer.GPUInstancerDetailManager");
+                if ((object)_gpuiTreeManagerType != null && (object)_gpuiDetailManagerType != null)
+                    break;
+            }
         }
 
         private static void ApplyTerrainVisibility(bool showTrees, bool log)
@@ -181,6 +210,129 @@ namespace DescendersModMenu.Mods
             if (log)
                 ModLog.Debug("[Trees] terrain instances cleared=" + clearedCount + " restored=" + restoredCount
                     + " terrains=" + terrains.Length);
+        }
+
+        /// <summary>
+        /// STMP / GPUI maps render trees + foliage via GPU Instancer, not Unity terrain trees.
+        /// Disable those managers or the toggle appears to do nothing.
+        /// </summary>
+        private static int ApplyGpuInstancerVisibility(bool showTrees, bool log)
+        {
+            EnsureGpuInstancerTypes();
+
+            int affected = 0;
+            if (!showTrees)
+            {
+                _disabledGpuiManagers.Clear();
+                _disabledGpuiObjects.Clear();
+                affected += DisableGpuiManagersOfType(_gpuiTreeManagerType);
+                affected += DisableGpuiManagersOfType(_gpuiDetailManagerType);
+            }
+            else
+            {
+                affected += RestoreGpuiManagers();
+            }
+
+            if (log)
+                ModLog.Debug("[Trees] GPUI managers " + (showTrees ? "restored" : "disabled") + "=" + affected
+                    + " (treeType=" + ((object)_gpuiTreeManagerType != null)
+                    + " detailType=" + ((object)_gpuiDetailManagerType != null) + ")");
+
+            return affected;
+        }
+
+        private static int DisableGpuiManagersOfType(System.Type managerType)
+        {
+            if ((object)managerType == null) return 0;
+
+            int count = 0;
+            Object[] managers = Resources.FindObjectsOfTypeAll(managerType);
+            for (int i = 0; i < managers.Length; i++)
+            {
+                Behaviour mb = managers[i] as Behaviour;
+                if ((object)mb == null || mb == null) continue;
+                GameObject go = mb.gameObject;
+                if (!IsSceneObject(go)) continue;
+
+                if (mb.enabled)
+                {
+                    mb.enabled = false;
+                    if (!_disabledGpuiManagers.Contains(mb))
+                        _disabledGpuiManagers.Add(mb);
+                    count++;
+                }
+
+                if (go.activeSelf)
+                {
+                    go.SetActive(false);
+                    if (!_disabledGpuiObjects.Contains(go))
+                        _disabledGpuiObjects.Add(go);
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private static int RestoreGpuiManagers()
+        {
+            int count = 0;
+
+            for (int i = 0; i < _disabledGpuiObjects.Count; i++)
+            {
+                GameObject go = _disabledGpuiObjects[i];
+                if ((object)go == null || go == null) continue;
+                if (!go.activeSelf)
+                {
+                    go.SetActive(true);
+                    count++;
+                }
+            }
+            _disabledGpuiObjects.Clear();
+
+            for (int i = 0; i < _disabledGpuiManagers.Count; i++)
+            {
+                Behaviour mb = _disabledGpuiManagers[i];
+                if ((object)mb == null || mb == null) continue;
+                if (!mb.enabled)
+                {
+                    mb.enabled = true;
+                    count++;
+                }
+            }
+            _disabledGpuiManagers.Clear();
+
+            // Catch managers we never tracked (e.g. after scene reload while toggle stayed on)
+            count += EnableGpuiManagersOfType(_gpuiTreeManagerType);
+            count += EnableGpuiManagersOfType(_gpuiDetailManagerType);
+
+            return count;
+        }
+
+        private static int EnableGpuiManagersOfType(System.Type managerType)
+        {
+            if ((object)managerType == null) return 0;
+
+            int count = 0;
+            Object[] managers = Resources.FindObjectsOfTypeAll(managerType);
+            for (int i = 0; i < managers.Length; i++)
+            {
+                Behaviour mb = managers[i] as Behaviour;
+                if ((object)mb == null || mb == null) continue;
+                GameObject go = mb.gameObject;
+                if (!IsSceneObject(go)) continue;
+
+                if (!go.activeSelf)
+                {
+                    go.SetActive(true);
+                    count++;
+                }
+                if (!mb.enabled)
+                {
+                    mb.enabled = true;
+                    count++;
+                }
+            }
+            return count;
         }
 
         private static void BounceTerrainCollider(Object terrain)
@@ -337,6 +489,11 @@ namespace DescendersModMenu.Mods
             _savedTreeInstances.Clear();
             _savedTreeDistances.Clear();
             _hiddenRoots.Clear();
+            _disabledGpuiManagers.Clear();
+            _disabledGpuiObjects.Clear();
+            _gpuiTypesResolved = false;
+            _gpuiTreeManagerType = null;
+            _gpuiDetailManagerType = null;
         }
 
         public static void Reset()
@@ -345,4 +502,3 @@ namespace DescendersModMenu.Mods
         }
     }
 }
-

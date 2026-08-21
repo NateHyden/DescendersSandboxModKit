@@ -16,16 +16,15 @@ namespace DescendersModMenu.Mods
             LastPath.Length > 0 ? Path.GetFileName(LastPath) : "—";
         public static bool IsCapturing => _state != 0;
 
+        // Game install / Melon UserData (not AppData — avoids Windows profile name in the path).
         public static string SaveFolder =>
-            Path.Combine(Path.Combine(Application.persistentDataPath,
+            Path.Combine(Path.Combine(Path.Combine(
+                System.AppDomain.CurrentDomain.BaseDirectory, "UserData"),
                 "DescendersModMenu"), "Screenshots");
 
+        // Small 1x shot for the in-menu preview only (full shot stays in SaveFolder).
         private static string PreviewPath =>
-            Path.Combine(Path.Combine(Application.persistentDataPath,
-                "DescendersModMenu"), "preview_last.png");
-
-        // ── Counter ───────────────────────────────────────────────────
-        private static int _shotCounter = 0;
+            Path.Combine(SaveFolder, "preview_last.png");
 
         // ── State machine ─────────────────────────────────────────────
         private static int _state = 0;
@@ -35,6 +34,9 @@ namespace DescendersModMenu.Mods
         private static bool _btnHeld = false;
         private static int _previewPolls = 0;
         private static int _enableGrace = 0;
+        private static long _watchSize = -1;
+        private static int _watchStable = 0;
+        private static string _watchPath = "";
 
         private static readonly System.Collections.Generic.List<Canvas> _hiddenCanvases
             = new System.Collections.Generic.List<Canvas>();
@@ -108,19 +110,18 @@ namespace DescendersModMenu.Mods
                     break;
 
                 case 2:
-                    _shotCounter = (_shotCounter % 100) + 1;
-                    _pending = Path.Combine(SaveFolder,
-                        "screenshot_" + _shotCounter.ToString("D3") + ".png");
+                    // Unique name every shot — never overwrite older screenshots.
                     EnsureFolder();
-                    try { if (File.Exists(PreviewPath)) File.Delete(PreviewPath); } catch { }
+                    _pending = Path.Combine(SaveFolder,
+                        "screenshot_" + System.DateTime.Now.ToString("yyyyMMdd_HHmmss_fff") + ".png");
                     Capture(_pending, 2);
-                    _state = 5; _wait = 1;
+                    // Next frame: queue a cheap 1x preview (Unity only finishes one capture per frame).
+                    _state = 5; _wait = 3;
                     break;
 
                 case 5:
                     Capture(PreviewPath, 1);
-                    ModLog.Debug("[ScreenshotMode] Preview capture queued.");
-                    _state = 3; _wait = 15;
+                    _state = 3; _wait = 4;
                     break;
 
                 case 3:
@@ -131,25 +132,31 @@ namespace DescendersModMenu.Mods
 
                     LastPath = _pending;
                     _previewPolls = 0;
-                    _state = 4; _wait = 6;
+                    _watchSize = -1;
+                    _watchStable = 0;
+                    _watchPath = "";
+                    _state = 4; _wait = 12;
                     try { UI.ScreenshotPage.RefreshAll(); } catch { }
                     break;
 
                 case 4:
                     _previewPolls++;
-                    if (File.Exists(PreviewPath))
+                    // Prefer small preview file; only fall back to the 2x archive once preview is missing.
+                    bool ready = File.Exists(PreviewPath)
+                        ? TryLoadWhenFileReady(PreviewPath)
+                        : TryLoadWhenFileReady(_pending);
+                    if (ready)
                     {
                         ModLog.Debug("[ScreenshotMode] Preview ready after " + _previewPolls + " poll(s).");
-                        LoadPreview(PreviewPath);
                         _state = 0;
                         try { UI.ScreenshotPage.RefreshAll(); } catch { }
                     }
-                    else if (_previewPolls >= 30)
+                    else if (_previewPolls >= 120)
                     {
                         ModLog.Warn("[ScreenshotMode] Preview timed out. Use Reload Preview.");
                         _state = 0;
                     }
-                    else { _wait = 6; }
+                    else { _wait = 5; }
                     break;
             }
         }
@@ -194,14 +201,71 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[ScreenshotMode] EnsureFolder: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ScreenshotMode"); }
         }
 
-        private static void LoadPreview(string path)
+        private static bool TryLoadWhenFileReady(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            try
+            {
+                if (!File.Exists(path)) return false;
+                long len = new FileInfo(path).Length;
+                if (len < 64) return false;
+
+                if (path != _watchPath)
+                {
+                    _watchPath = path;
+                    _watchSize = -1;
+                    _watchStable = 0;
+                }
+
+                // Wait until Unity finishes writing (size stops changing).
+                if (len != _watchSize)
+                {
+                    _watchSize = len;
+                    _watchStable = 0;
+                    return false;
+                }
+                _watchStable++;
+                if (_watchStable < 2) return false;
+
+                return TryLoadPreview(path);
+            }
+            catch (IOException) { return false; }
+            catch { return false; }
+        }
+
+        private static bool TryLoadPreview(string path)
         {
             try
             {
-                if (!File.Exists(path)) { ModLog.Warn("[ScreenshotMode] Preview not found."); return; }
-                byte[] bytes = File.ReadAllBytes(path);
+                if (!File.Exists(path)) return false;
+
+                byte[] bytes;
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    if (fs.Length <= 0) return false;
+                    bytes = new byte[fs.Length];
+                    int read = 0;
+                    while (read < bytes.Length)
+                    {
+                        int n = fs.Read(bytes, read, bytes.Length - read);
+                        if (n <= 0) break;
+                        read += n;
+                    }
+                    if (read < 64) return false;
+                    if (read < bytes.Length)
+                    {
+                        byte[] trim = new byte[read];
+                        System.Buffer.BlockCopy(bytes, 0, trim, 0, read);
+                        bytes = trim;
+                    }
+                }
+
+                // PNG magic — reject incomplete / locked garbage.
+                if (bytes.Length < 8
+                    || bytes[0] != 0x89 || bytes[1] != 0x50 || bytes[2] != 0x4E || bytes[3] != 0x47)
+                    return false;
+
                 ModLog.Debug("[ScreenshotMode] Preview bytes: " + bytes.Length);
-                if (bytes == null || bytes.Length == 0) { ModLog.Warn("[ScreenshotMode] Preview empty."); return; }
 
                 if ((object)PreviewTexture != null) Object.Destroy(PreviewTexture);
                 var tex = new Texture2D(2, 2);
@@ -209,15 +273,22 @@ namespace DescendersModMenu.Mods
                 {
                     PreviewTexture = tex;
                     ModLog.Debug("[ScreenshotMode] Preview loaded: " + tex.width + "x" + tex.height);
+                    return true;
                 }
-                else
-                {
-                    MelonLogger.Error("[ScreenshotMode] LoadImage failed.");
-                    Telemetry.ReportErrorAsync(new System.Exception("[ScreenshotMode] LoadImage failed."), "ScreenshotMode");
-                    Object.Destroy(tex);
-                }
+
+                Object.Destroy(tex);
+                return false;
             }
-            catch (System.Exception ex) { MelonLogger.Error("[ScreenshotMode] LoadPreview: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ScreenshotMode"); }
+            catch (IOException)
+            {
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("[ScreenshotMode] LoadPreview: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ScreenshotMode");
+                return false;
+            }
         }
 
         private static bool InControlDPadUp()
@@ -263,7 +334,11 @@ namespace DescendersModMenu.Mods
             if (LastPath.Length > 0)
             {
                 ModLog.Debug("[ScreenshotMode] ForceReload preview.");
-                LoadPreview(PreviewPath);
+                _watchSize = -1;
+                _watchStable = 0;
+                _watchPath = "";
+                if (!TryLoadPreview(PreviewPath))
+                    TryLoadPreview(LastPath);
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using DescendersModMenu.Mods;
+using DescendersModMenu.Mods;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -9,17 +9,17 @@ namespace DescendersModMenu.UI
     public static class MovePage
     {
         // ── Movement row fields ───────────────────────────────────────
-        private static Text spinVal, hopVal, wheelieVal, leanVal;
-        private static Image spinBar, hopBar, wheelieBar, leanBar;
-        private static Text spinTogVal, hopTogVal, wheelieTogVal, leanTogVal;
-        private static Image spinTrack, hopTrack, wheelieTrack, leanTrack;
-        private static RectTransform spinKnob, hopKnob, wheelieKnob, leanKnob;
+        private static Text spinVal, wheelieVal, leanVal;
+        private static Image spinBar, wheelieBar, leanBar;
+        private static Text spinTogVal, wheelieTogVal, leanTogVal;
+        private static Image spinTrack, wheelieTrack, leanTrack;
+        private static RectTransform spinKnob, wheelieKnob, leanKnob;
 
-        private static Text wbVal, iacVal, psVal;
-        private static Image wbBar, iacBar, psBar;
-        private static Text _wbTogVal, _iacTogVal;
-        private static Image _wbTrack, _iacTrack;
-        private static RectTransform _wbKnob, _iacKnob;
+        private static Text wbVal, psVal;
+        private static Image wbBar, psBar;
+        private static Text _wbTogVal;
+        private static Image _wbTrack;
+        private static RectTransform _wbKnob;
 
         private static Text _gmWbVal, _gmTsVal;
         private static Image _gmWbBar, _gmTsBar;
@@ -44,9 +44,9 @@ namespace DescendersModMenu.UI
         private static Image _comLRBar, _comFBBar, _comUDBar;
 
         public static bool IsAnyActive =>
-            Movement.SpinEnabled || Movement.HopEnabled ||
+            Movement.SpinEnabled ||
             Movement.WheelieEnabled || Movement.LeanEnabled ||
-            WheelieAngleLimit.Enabled || AirControl.Enabled ||
+            WheelieAngleLimit.Enabled ||
             WheelieHUD.Enabled ||
             GameModifierMods.PumpStrengthLevel != 5 ||
             GameModifierMods.WheelieBalanceLevel != 5 ||
@@ -106,27 +106,17 @@ namespace DescendersModMenu.UI
                 spinTogVal = UIHelpers.Txt("SpTV", sr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 spinTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(sr.transform, "SpT", () => { Movement.ToggleSpin(); RefreshAll(); }, out spinTrack, out spinKnob);
-                spinBar = UIHelpers.MakeBar("SpB", sr.transform, (Movement.SpinLevel - 1) / 9f);
+                spinBar = UIHelpers.MakeBar("SpB", sr.transform, (Movement.SpinLevel - 1) / (float)(Movement.MaxLevel - 1));
                 spinVal = UIHelpers.Txt("SpV", sr.transform, Movement.SpinLevel.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
                 spinVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
                 UIHelpers.SmallBtn(sr.transform, "-", () => { Movement.SpinDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(sr.transform, "+", () => { Movement.SpinIncrease(); RefreshAll(); });
 
-                var hr = UIHelpers.StatRow("Hop Force", pg6);
-                hopTogVal = UIHelpers.Txt("HpTV", hr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-                hopTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-                UIHelpers.Toggle(hr.transform, "HpT", () => { Movement.ToggleHop(); RefreshAll(); }, out hopTrack, out hopKnob);
-                hopBar = UIHelpers.MakeBar("HpB", hr.transform, (Movement.HopLevel - 1) / 9f);
-                hopVal = UIHelpers.Txt("HpV", hr.transform, Movement.HopLevel.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
-                hopVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
-                UIHelpers.SmallBtn(hr.transform, "-", () => { Movement.HopDecrease(); RefreshAll(); });
-                UIHelpers.SmallBtn(hr.transform, "+", () => { Movement.HopIncrease(); RefreshAll(); });
-
                 var wr = UIHelpers.StatRow("Wheelie Force", pg6);
                 wheelieTogVal = UIHelpers.Txt("WlTV", wr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 wheelieTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(wr.transform, "WlT", () => { Movement.ToggleWheelie(); RefreshAll(); }, out wheelieTrack, out wheelieKnob);
-                wheelieBar = UIHelpers.MakeBar("WlB", wr.transform, (Movement.WheelieLevel - 1) / 9f);
+                wheelieBar = UIHelpers.MakeBar("WlB", wr.transform, (Movement.WheelieLevel - 1) / (float)(Movement.MaxLevel - 1));
                 wheelieVal = UIHelpers.Txt("WlV", wr.transform, Movement.WheelieLevel.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
                 wheelieVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
                 UIHelpers.SmallBtn(wr.transform, "-", () => { Movement.WheelieDecrease(); RefreshAll(); });
@@ -136,7 +126,7 @@ namespace DescendersModMenu.UI
                 leanTogVal = UIHelpers.Txt("LnTV", lr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 leanTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(lr.transform, "LnT", () => { Movement.ToggleLean(); RefreshAll(); }, out leanTrack, out leanKnob);
-                leanBar = UIHelpers.MakeBar("LnB", lr.transform, (Movement.LeanLevel - 1) / 9f);
+                leanBar = UIHelpers.MakeBar("LnB", lr.transform, (Movement.LeanLevel - 1) / (float)(Movement.MaxLevel - 1));
                 leanVal = UIHelpers.Txt("LnV", lr.transform, Movement.LeanLevel.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
                 leanVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
                 UIHelpers.SmallBtn(lr.transform, "-", () => { Movement.LeanDecrease(); RefreshAll(); });
@@ -158,7 +148,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(wbr.transform, "-", () => { WheelieAngleLimit.Decrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(wbr.transform, "+", () => { WheelieAngleLimit.Increase(); RefreshAll(); });
                 _wbTrack = wbTrack; _wbKnob = wbKnob;
-                UIHelpers.InfoBox(pg6, "Caps pitch angle in a wheelie. Lower = tighter cap.");
+                UIHelpers.InfoBox(pg6, "Stops your wheelie looping too far. Lower = you tip over sooner.");
 
                 var whr = UIHelpers.StatRow("Wheelie HUD", pg6);
                 _whRow = whr;
@@ -167,27 +157,15 @@ namespace DescendersModMenu.UI
                 Image whTrack; RectTransform whKnob;
                 UIHelpers.Toggle(whr.transform, "WhT", () => { WheelieHUD.Toggle(); RefreshAll(); }, out whTrack, out whKnob);
                 _whTrack = whTrack; _whKnob = whKnob;
-                UIHelpers.InfoBox(pg6, "Top-right HUD showing a live bike pitch gauge — green to red as you approach your wheelie limit. Stacks below Brake Fade if both are on.");
-
-                var iacr = UIHelpers.StatRow("Air Control", pg6);
-                iacBar = UIHelpers.MakeBar("IaB", iacr.transform, (AirControl.Level - 1) / 9f);
-                iacVal = UIHelpers.Txt("IaV", iacr.transform, AirControl.DisplayValue, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
-                iacVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
-                _iacTogVal = UIHelpers.Txt("IaTV", iacr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-                _iacTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-                Image iacTrack; RectTransform iacKnob;
-                UIHelpers.Toggle(iacr.transform, "IaT", () => { AirControl.Toggle(); RefreshAll(); }, out iacTrack, out iacKnob);
-                UIHelpers.SmallBtn(iacr.transform, "-", () => { AirControl.Decrease(); RefreshAll(); });
-                UIHelpers.SmallBtn(iacr.transform, "+", () => { AirControl.Increase(); RefreshAll(); });
-                _iacTrack = iacTrack; _iacKnob = iacKnob;
-                UIHelpers.InfoBox(pg6, "Damps rotation while airborne. Higher = more stable.");
+                UIHelpers.InfoBox(pg6, "Shows a wheelie meter in the corner. Goes red as you get close to tipping.");
 
                 var fbr = UIHelpers.StatRow("Pump Strength", pg6);
                 psBar = UIHelpers.MakeBar("PsB", fbr.transform, (GameModifierMods.PumpStrengthLevel - 1) / 9f);
-                psVal = UIHelpers.Txt("PsV", fbr.transform, GameModifierMods.PumpStrengthLevel.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
-                psVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
+                psVal = UIHelpers.Txt("PsV", fbr.transform, GameModifierMods.DeltaDisplay(GameModifierMods.PumpStrengthLevel), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                psVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
                 UIHelpers.SmallBtn(fbr.transform, "-", () => { GameModifierMods.PumpStrengthDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(fbr.transform, "+", () => { GameModifierMods.PumpStrengthIncrease(); RefreshAll(); });
+                UIHelpers.InfoBox(pg6, "How hard you pump for speed. 0% is normal. Higher = more speed from pumps.");
 
                 var gmWbR = UIHelpers.StatRow("Wheelie Balance", pg6);
                 _gmWbBar = UIHelpers.MakeBar("GmWbB", gmWbR.transform, (GameModifierMods.WheelieBalanceLevel - 1) / 9f);
@@ -195,7 +173,7 @@ namespace DescendersModMenu.UI
                 _gmWbVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
                 UIHelpers.SmallBtn(gmWbR.transform, "-", () => { GameModifierMods.WheelieBalanceDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(gmWbR.transform, "+", () => { GameModifierMods.WheelieBalanceIncrease(); RefreshAll(); });
-                UIHelpers.InfoBox(pg6, "How forgiving wheelie balance is. Shown as a % offset — near 0% is vanilla. Lower = twitchier, higher = more assisted.");
+                UIHelpers.InfoBox(pg6, "How easy wheelies are to hold. 0% is normal. Higher = more help balancing.");
 
                 var gmTsR = UIHelpers.StatRow("Tweak Speed", pg6);
                 _gmTsBar = UIHelpers.MakeBar("GmTsB", gmTsR.transform, (GameModifierMods.TweakSpeedLevel - 1) / 9f);
@@ -203,7 +181,7 @@ namespace DescendersModMenu.UI
                 _gmTsVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
                 UIHelpers.SmallBtn(gmTsR.transform, "-", () => { GameModifierMods.TweakSpeedDecrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(gmTsR.transform, "+", () => { GameModifierMods.TweakSpeedIncrease(); RefreshAll(); });
-                UIHelpers.InfoBox(pg6, "How fast you can tweak/adjust your bike pose mid-trick. Shown as a % offset — near 0% is vanilla.");
+                UIHelpers.InfoBox(pg6, "How fast you can twist the bike mid-trick. 0% is normal.");
 
                 var pwtR = UIHelpers.StatRow("Pedal While Tweak", pg6);
                 _pwtTogVal = UIHelpers.Txt("PwtTV", pwtR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -211,7 +189,7 @@ namespace DescendersModMenu.UI
                 Image pwtTrack; RectTransform pwtKnob;
                 UIHelpers.Toggle(pwtR.transform, "PwtT", () => { PedalWhileTweak.Toggle(); RefreshAll(); }, out pwtTrack, out pwtKnob);
                 _pwtTrack = pwtTrack; _pwtKnob = pwtKnob;
-                UIHelpers.InfoBox(pg6, "Restores pedal input when the right stick is deflected, overriding the game's default behaviour of cutting acceleration during tweaks.");
+                UIHelpers.InfoBox(pg6, "Lets you keep pedalling while you tweak with the stick.");
                 FavouritesManager.RegisterStarButton("PedalWhileTweak", UIHelpers.StarBtn(pwtR.transform, "PedalWhileTweak", () => FavouritesManager.Toggle("PedalWhileTweak")));
 
                 var nmr = UIHelpers.StatRow("Near Miss Sensitivity", pg6);
@@ -225,7 +203,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(nmr.transform, "-", () => { NearMissSensitivity.Decrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(nmr.transform, "+", () => { NearMissSensitivity.Increase(); RefreshAll(); });
                 _nmTrack = nmTrack; _nmKnob = nmKnob;
-                UIHelpers.InfoBox(pg6, "Level 5 = default. Lower = must get closer. Level 10 = near misses everywhere.");
+                UIHelpers.InfoBox(pg6, "How close you need to get for a near miss. Higher = easier near misses.");
 
                 UIHelpers.Divider(pg6);
 
@@ -259,15 +237,13 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(comUDr.transform, "-", () => { CenterOfMass.DecreaseUD(); RefreshAll(); });
                 UIHelpers.SmallBtn(comUDr.transform, "+", () => { CenterOfMass.IncreaseUD(); RefreshAll(); });
 
-                UIHelpers.InfoBox(pg6, "Shifts the bike's balance point. All axes start at 0. + moves right / forward / up. Press 0 to reset that axis.");
+                UIHelpers.InfoBox(pg6, "Moves where the bike balances. Start at 0. Press 0 on an axis to reset it.");
 
                 FavouritesManager.RegisterStarButton("Spin", UIHelpers.StarBtn(sr.transform, "Spin", () => FavouritesManager.Toggle("Spin")));
-                FavouritesManager.RegisterStarButton("Hop", UIHelpers.StarBtn(hr.transform, "Hop", () => FavouritesManager.Toggle("Hop")));
                 FavouritesManager.RegisterStarButton("Wheelie", UIHelpers.StarBtn(wr.transform, "Wheelie", () => FavouritesManager.Toggle("Wheelie")));
                 FavouritesManager.RegisterStarButton("Lean", UIHelpers.StarBtn(lr.transform, "Lean", () => FavouritesManager.Toggle("Lean")));
                 FavouritesManager.RegisterStarButton("WheelieAngle", UIHelpers.StarBtn(wbr.transform, "WheelieAngle", () => FavouritesManager.Toggle("WheelieAngle")));
                 FavouritesManager.RegisterStarButton("WheelieHUD", UIHelpers.StarBtn(whr.transform, "WheelieHUD", () => FavouritesManager.Toggle("WheelieHUD")));
-                FavouritesManager.RegisterStarButton("AirControl", UIHelpers.StarBtn(iacr.transform, "AirControl", () => FavouritesManager.Toggle("AirControl")));
                 FavouritesManager.RegisterStarButton("PumpStrength", UIHelpers.StarBtn(fbr.transform, "PumpStrength", () => FavouritesManager.Toggle("PumpStrength")));
                 FavouritesManager.RegisterStarButton("GmWheelieBalance", UIHelpers.StarBtn(gmWbR.transform, "GmWheelieBalance", () => FavouritesManager.Toggle("GmWheelieBalance")));
                 FavouritesManager.RegisterStarButton("TweakSpeed", UIHelpers.StarBtn(gmTsR.transform, "TweakSpeed", () => FavouritesManager.Toggle("TweakSpeed")));
@@ -284,19 +260,8 @@ namespace DescendersModMenu.UI
                     BuildControls = (p) => FavsPage.BuildToggleSlider(p, "Spin", "Rotation Speed",
                         () => Movement.SpinEnabled, () => Movement.ToggleSpin(),
                         () => Movement.SpinLevel, () => Movement.SpinIncrease(), () => Movement.SpinDecrease(),
-                        10, () => (Movement.SpinLevel - 1) / 9f, () => RefreshAll()),
+                        Movement.MaxLevel, () => (Movement.SpinLevel - 1) / (float)(Movement.MaxLevel - 1), () => RefreshAll()),
                     IsActive = () => Movement.SpinEnabled
-                });
-                FavouritesManager.Register(new ModFavEntry
-                {
-                    Id = "Hop",
-                    DisplayName = "Hop Force",
-                    TabBadge = "MOVE",
-                    BuildControls = (p) => FavsPage.BuildToggleSlider(p, "Hop", "Hop Force",
-                        () => Movement.HopEnabled, () => Movement.ToggleHop(),
-                        () => Movement.HopLevel, () => Movement.HopIncrease(), () => Movement.HopDecrease(),
-                        10, () => (Movement.HopLevel - 1) / 9f, () => RefreshAll()),
-                    IsActive = () => Movement.HopEnabled
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
@@ -306,7 +271,7 @@ namespace DescendersModMenu.UI
                     BuildControls = (p) => FavsPage.BuildToggleSlider(p, "Wheelie", "Wheelie Force",
                         () => Movement.WheelieEnabled, () => Movement.ToggleWheelie(),
                         () => Movement.WheelieLevel, () => Movement.WheelieIncrease(), () => Movement.WheelieDecrease(),
-                        10, () => (Movement.WheelieLevel - 1) / 9f, () => RefreshAll()),
+                        Movement.MaxLevel, () => (Movement.WheelieLevel - 1) / (float)(Movement.MaxLevel - 1), () => RefreshAll()),
                     IsActive = () => Movement.WheelieEnabled
                 });
                 FavouritesManager.Register(new ModFavEntry
@@ -317,7 +282,7 @@ namespace DescendersModMenu.UI
                     BuildControls = (p) => FavsPage.BuildToggleSlider(p, "Lean", "Lean Strength",
                         () => Movement.LeanEnabled, () => Movement.ToggleLean(),
                         () => Movement.LeanLevel, () => Movement.LeanIncrease(), () => Movement.LeanDecrease(),
-                        10, () => (Movement.LeanLevel - 1) / 9f, () => RefreshAll()),
+                        Movement.MaxLevel, () => (Movement.LeanLevel - 1) / (float)(Movement.MaxLevel - 1), () => RefreshAll()),
                     IsActive = () => Movement.LeanEnabled
                 });
                 FavouritesManager.Register(new ModFavEntry
@@ -343,25 +308,13 @@ namespace DescendersModMenu.UI
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
-                    Id = "AirControl",
-                    DisplayName = "Air Control",
-                    TabBadge = "MOVE",
-                    BuildControls = (p) => FavsPage.BuildToggleSlider(p, "AirControl", "Air Control",
-                        () => AirControl.Enabled, () => AirControl.Toggle(),
-                        () => AirControl.Level, () => AirControl.Increase(), () => AirControl.Decrease(),
-                        10, () => (AirControl.Level - 1) / 9f, () => RefreshAll(),
-                        () => AirControl.DisplayValue),
-                    IsActive = () => AirControl.Enabled
-                });
-                FavouritesManager.Register(new ModFavEntry
-                {
                     Id = "PumpStrength",
                     DisplayName = "Pump Strength",
                     TabBadge = "MOVE",
                     BuildControls = (p) => FavsPage.BuildSliderOnly(p, "PumpStrength", "Pump Strength",
                         () => GameModifierMods.PumpStrengthLevel, () => GameModifierMods.PumpStrengthIncrease(), () => GameModifierMods.PumpStrengthDecrease(),
                         () => (GameModifierMods.PumpStrengthLevel - 1) / 9f, () => RefreshAll(),
-                        null, () => GameModifierMods.PumpStrengthLevel != 5),
+                        () => GameModifierMods.DeltaDisplay(GameModifierMods.PumpStrengthLevel), () => GameModifierMods.PumpStrengthLevel != 5),
                     IsActive = () => GameModifierMods.PumpStrengthLevel != 5
                 });
                 FavouritesManager.Register(new ModFavEntry
@@ -452,16 +405,13 @@ namespace DescendersModMenu.UI
         private static void ResetMoveTab()
         {
             if (Movement.SpinEnabled) Movement.ToggleSpin();
-            if (Movement.HopEnabled) Movement.ToggleHop();
             if (Movement.WheelieEnabled) Movement.ToggleWheelie();
             if (Movement.LeanEnabled) Movement.ToggleLean();
-            Movement.SetSpinLevel(1); Movement.SetHopLevel(1);
+            Movement.SetSpinLevel(1);
             Movement.SetWheelieLevel(1); Movement.SetLeanLevel(1);
             if (WheelieAngleLimit.Enabled) WheelieAngleLimit.Toggle();
             WheelieAngleLimit.SetLevel(5);
             if (WheelieHUD.Enabled) WheelieHUD.Toggle();
-            if (AirControl.Enabled) AirControl.Toggle();
-            AirControl.SetLevel(5);
             GameModifierMods.SetPumpStrengthLevel(5);
             GameModifierMods.SetWheelieBalanceLevel(5);
             GameModifierMods.SetTweakSpeedLevel(5);
@@ -477,28 +427,21 @@ namespace DescendersModMenu.UI
             if (spinTogVal) { spinTogVal.text = spOn ? "ON" : "OFF"; spinTogVal.color = spOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(spinTrack, spinKnob, spOn);
             if (spinVal) spinVal.text = Movement.SpinLevel.ToString();
-            UIHelpers.SetBar(spinBar, (Movement.SpinLevel - 1) / 9f);
-
-            // ── Hop Force ─────────────────────────────────────────────
-            bool hpOn = Movement.HopEnabled;
-            if (hopTogVal) { hopTogVal.text = hpOn ? "ON" : "OFF"; hopTogVal.color = hpOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(hopTrack, hopKnob, hpOn);
-            if (hopVal) hopVal.text = Movement.HopLevel.ToString();
-            UIHelpers.SetBar(hopBar, (Movement.HopLevel - 1) / 9f);
+            UIHelpers.SetBar(spinBar, (Movement.SpinLevel - 1) / (float)(Movement.MaxLevel - 1));
 
             // ── Wheelie Force ─────────────────────────────────────────
             bool wlOn = Movement.WheelieEnabled;
             if (wheelieTogVal) { wheelieTogVal.text = wlOn ? "ON" : "OFF"; wheelieTogVal.color = wlOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(wheelieTrack, wheelieKnob, wlOn);
             if (wheelieVal) wheelieVal.text = Movement.WheelieLevel.ToString();
-            UIHelpers.SetBar(wheelieBar, (Movement.WheelieLevel - 1) / 9f);
+            UIHelpers.SetBar(wheelieBar, (Movement.WheelieLevel - 1) / (float)(Movement.MaxLevel - 1));
 
             // ── Lean Strength ─────────────────────────────────────────
             bool lnOn = Movement.LeanEnabled;
             if (leanTogVal) { leanTogVal.text = lnOn ? "ON" : "OFF"; leanTogVal.color = lnOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(leanTrack, leanKnob, lnOn);
             if (leanVal) leanVal.text = Movement.LeanLevel.ToString();
-            UIHelpers.SetBar(leanBar, (Movement.LeanLevel - 1) / 9f);
+            UIHelpers.SetBar(leanBar, (Movement.LeanLevel - 1) / (float)(Movement.MaxLevel - 1));
 
             // ── Wheelie Angle Limit ───────────────────────────────────
             if (wbVal) wbVal.text = WheelieAngleLimit.DisplayValue;
@@ -510,14 +453,8 @@ namespace DescendersModMenu.UI
             if (_whTogVal) { _whTogVal.text = WheelieHUD.Enabled ? "ON" : "OFF"; _whTogVal.color = WheelieHUD.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_whTrack, _whKnob, WheelieHUD.Enabled);
 
-            // ── Air Control ───────────────────────────────────────────
-            if (iacVal) iacVal.text = AirControl.DisplayValue;
-            if (_iacTogVal) { _iacTogVal.text = AirControl.Enabled ? "ON" : "OFF"; _iacTogVal.color = AirControl.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(_iacTrack, _iacKnob, AirControl.Enabled);
-            UIHelpers.SetBar(iacBar, (AirControl.Level - 1) / 9f);
-
             // ── Pump Strength ─────────────────────────────────────────
-            if (psVal) psVal.text = GameModifierMods.PumpStrengthLevel.ToString();
+            if (psVal) psVal.text = GameModifierMods.DeltaDisplay(GameModifierMods.PumpStrengthLevel);
             UIHelpers.SetBar(psBar, (GameModifierMods.PumpStrengthLevel - 1) / 9f);
 
             if (_gmWbVal) _gmWbVal.text = GameModifierMods.DeltaDisplay(GameModifierMods.WheelieBalanceLevel);

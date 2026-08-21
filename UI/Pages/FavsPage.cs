@@ -423,7 +423,8 @@ namespace DescendersModMenu.UI
         /// <summary>Stepper row (e.g. Bike Size, Player Size)</summary>
         public static void BuildStepper(Transform parent, string id, string label,
             FavIntGetter getLevel, FavAction onMinus, FavAction onPlus,
-            int min, int max, FavAction refreshPage, int defaultLevel = 10)
+            int min, int max, FavAction refreshPage, int defaultLevel = 10,
+            FavStringGetter getDisplayVal = null)
         {
             var row = CompactStatRow(label, parent);
             var minus = UIHelpers.SmallBtn(row.transform, "\u25C0", () =>
@@ -433,9 +434,9 @@ namespace DescendersModMenu.UI
                 RefreshFavourites();
             });
             var lvlVal = UIHelpers.Txt("FSt_" + id, row.transform,
-                getLevel().ToString(), 13, FontStyle.Bold,
+                getDisplayVal != null ? getDisplayVal() : getLevel().ToString(), 13, FontStyle.Bold,
                 TextAnchor.MiddleCenter, UIHelpers.Accent);
-            lvlVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 32;
+            lvlVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
             var plus = UIHelpers.SmallBtn(row.transform, "\u25B6", () =>
             {
                 onPlus();
@@ -446,7 +447,7 @@ namespace DescendersModMenu.UI
             FavouritesManager.RegisterRefresh(id, () =>
             {
                 int lv = getLevel();
-                if (lvlVal) lvlVal.text = lv.ToString();
+                if (lvlVal) lvlVal.text = getDisplayVal != null ? getDisplayVal() : lv.ToString();
                 if ((object)minus != null) minus.interactable = lv > min;
                 if ((object)plus != null) plus.interactable = lv < max;
                 UIHelpers.SetRowActive(row, lv != defaultLevel);
@@ -459,37 +460,41 @@ namespace DescendersModMenu.UI
             string label2, FavIntGetter get2, FavAction inc2, FavAction dec2,
             string label3, FavIntGetter get3, FavAction inc3, FavAction dec3,
             FavFloatGetter pct1, FavFloatGetter pct2, FavFloatGetter pct3,
-            FavAction refreshPage, int defaultLevel = 5)
+            FavAction refreshPage, int defaultLevel = 5,
+            FavStringGetter disp1 = null, FavStringGetter disp2 = null, FavStringGetter disp3 = null)
         {
             var r1 = CompactStatRow(label1, parent);
             var b1 = UIHelpers.MakeBar("FB1_" + id, r1.transform, pct1());
-            var v1 = UIHelpers.Txt("FV1_" + id, r1.transform, get1().ToString(), 12,
-                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
-            v1.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
+            var v1 = UIHelpers.Txt("FV1_" + id, r1.transform,
+                disp1 != null ? disp1() : get1().ToString(), 12,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            v1.gameObject.AddComponent<LayoutElement>().preferredWidth = disp1 != null ? 44 : 18;
             UIHelpers.SmallBtn(r1.transform, "-", () => { dec1(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
             UIHelpers.SmallBtn(r1.transform, "+", () => { inc1(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
 
             var r2 = CompactStatRow(label2, parent);
             var b2 = UIHelpers.MakeBar("FB2_" + id, r2.transform, pct2());
-            var v2 = UIHelpers.Txt("FV2_" + id, r2.transform, get2().ToString(), 12,
-                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
-            v2.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
+            var v2 = UIHelpers.Txt("FV2_" + id, r2.transform,
+                disp2 != null ? disp2() : get2().ToString(), 12,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            v2.gameObject.AddComponent<LayoutElement>().preferredWidth = disp2 != null ? 44 : 18;
             UIHelpers.SmallBtn(r2.transform, "-", () => { dec2(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
             UIHelpers.SmallBtn(r2.transform, "+", () => { inc2(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
 
             var r3 = CompactStatRow(label3, parent);
             var b3 = UIHelpers.MakeBar("FB3_" + id, r3.transform, pct3());
-            var v3 = UIHelpers.Txt("FV3_" + id, r3.transform, get3().ToString(), 12,
-                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
-            v3.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
+            var v3 = UIHelpers.Txt("FV3_" + id, r3.transform,
+                disp3 != null ? disp3() : get3().ToString(), 12,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            v3.gameObject.AddComponent<LayoutElement>().preferredWidth = disp3 != null ? 44 : 18;
             UIHelpers.SmallBtn(r3.transform, "-", () => { dec3(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
             UIHelpers.SmallBtn(r3.transform, "+", () => { inc3(); if (refreshPage != null) refreshPage(); RefreshFavourites(); });
 
             FavouritesManager.RegisterRefresh(id, () =>
             {
-                UIHelpers.SetBar(b1, pct1()); if (v1) v1.text = get1().ToString();
-                UIHelpers.SetBar(b2, pct2()); if (v2) v2.text = get2().ToString();
-                UIHelpers.SetBar(b3, pct3()); if (v3) v3.text = get3().ToString();
+                UIHelpers.SetBar(b1, pct1()); if (v1) v1.text = disp1 != null ? disp1() : get1().ToString();
+                UIHelpers.SetBar(b2, pct2()); if (v2) v2.text = disp2 != null ? disp2() : get2().ToString();
+                UIHelpers.SetBar(b3, pct3()); if (v3) v3.text = disp3 != null ? disp3() : get3().ToString();
                 bool active = get1() != defaultLevel || get2() != defaultLevel || get3() != defaultLevel;
                 UIHelpers.SetRowActive(r1, active);
                 UIHelpers.SetRowActive(r2, active);
@@ -501,7 +506,8 @@ namespace DescendersModMenu.UI
         public static void BuildToggleStepper(Transform parent, string id, string label,
             FavBoolGetter getState, FavAction doToggle,
             FavIntGetter getLevel, FavAction onMinus, FavAction onPlus,
-            int min, int max, FavAction refreshPage, int defaultLevel = 10)
+            int min, int max, FavAction refreshPage, int defaultLevel = 10,
+            FavStringGetter getDisplayVal = null)
         {
             bool initOn = getState();
             var row = CompactStatRow(label, parent);
@@ -525,9 +531,9 @@ namespace DescendersModMenu.UI
                 RefreshFavourites();
             });
             var lvlVal = UIHelpers.Txt("FSt_" + id, row.transform,
-                getLevel().ToString(), 13, FontStyle.Bold,
+                getDisplayVal != null ? getDisplayVal() : getLevel().ToString(), 13, FontStyle.Bold,
                 TextAnchor.MiddleCenter, UIHelpers.Accent);
-            lvlVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 32;
+            lvlVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
             var plus = UIHelpers.SmallBtn(row.transform, "\u25B6", () =>
             {
                 onPlus();
@@ -541,7 +547,7 @@ namespace DescendersModMenu.UI
                 if (togVal) { togVal.text = on ? "ON" : "OFF"; togVal.color = on ? UIHelpers.OnColor : UIHelpers.OffColor; }
                 UIHelpers.SetToggle(track, knob, on);
                 int lv = getLevel();
-                if (lvlVal) lvlVal.text = lv.ToString();
+                if (lvlVal) lvlVal.text = getDisplayVal != null ? getDisplayVal() : lv.ToString();
                 UIHelpers.SetRowActive(row, on);
             });
 

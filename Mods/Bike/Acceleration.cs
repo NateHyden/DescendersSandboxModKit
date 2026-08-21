@@ -22,13 +22,15 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[Acceleration] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
         }
 
-        public static void Increase() { if (Level < 10) Level++; if (Enabled) Apply(); }
+        public const int MaxLevel = 20;
+
+        public static void Increase() { if (Level < MaxLevel) Level++; if (Enabled) Apply(); }
         public static void Decrease() { if (Level > 1) Level--; if (Enabled) Apply(); }
 
         public static void SetLevel(int level)
         {
             if (level < 1) level = 1;
-            if (level > 10) level = 10;
+            if (level > MaxLevel) level = MaxLevel;
             Level = level;
             if (Enabled) Apply();
         }

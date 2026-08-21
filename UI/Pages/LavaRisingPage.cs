@@ -54,9 +54,9 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.SectionHeader("THE FLOOR IS LAVA", c);
                 UIHelpers.InfoBox(c,
-                    "Teleports you to a low inland point (not the map rim). After GO, climb 10m above spawn and lava appears below you. Summit distance shows metres left to climb.");
+                    "Teleports you to a low spot. Climb 10m and lava rises under you — keep going up.");
                 UIHelpers.InfoBox(c,
-                    "Caught or summit ends the mode automatically. Climb time targets: Easy 140s, Normal 90s, Hard 60s, Insane 32s.");
+                    "Getting caught or reaching the top ends the run. Harder difficulties climb faster.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("CONTROLS", c);
@@ -78,7 +78,7 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("DIFFICULTY", c);
-                UIHelpers.InfoBox(c, "Target climb time for this map's height. Easy 140s, Normal 90s, Hard 60s, Insane 32s. Lava starts after 10m climb; ramps at 55s and 100s.");
+                UIHelpers.InfoBox(c, "How fast the lava climbs. Easy is slowest, Insane is fastest.");
 
                 var dRow = UIHelpers.StatRow("Climb Time", c);
                 UIHelpers.SmallBtn(dRow.transform, "\u25C0", () => { LavaRising.CycleDifficulty(-1); RefreshAll(); });
@@ -89,7 +89,7 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("HEIGHT RECORD", c);
-                UIHelpers.InfoBox(c, "Best height gained from spawn on the map you are on. Beats save automatically.");
+                UIHelpers.InfoBox(c, "Best height gained from spawn on this map. New records save automatically.");
 
                 var mapRow = UIHelpers.StatRow("Map", c);
                 _mapLbl = UIHelpers.Txt("LrMap", mapRow.transform, LavaRising.CurrentMapDisplay,

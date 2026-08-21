@@ -19,6 +19,12 @@ namespace DescendersModMenu.Mods
 
         public static bool IsModified => Level != 10;
 
+        /// <summary>UI: stock Level 10 = 0%. Smaller = negative %, bigger = positive %.</summary>
+        public static string PercentDisplay
+        {
+            get { return DialDisplay.OffsetPercent(Level, 10, 1, 20); }
+        }
+
         public static void CaptureDefaults()
         {
             _captured = false;
@@ -32,11 +38,25 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
+        public static void Increase()
+        {
+            if (Level >= 20) return;
+            ApplyLevel(Level + 1);
+        }
+
+        public static void Decrease()
+        {
+            if (Level <= 1) return;
+            ApplyLevel(Level - 1);
+        }
+
         public static void ApplyLevel(int level)
         {
+            bool was = IsModified;
             Level = Mathf.Clamp(level, 1, 20);
-            if (Level == 10) ResetToDefault();
+            if (Level == 10) ApplyStockScale();
             else Apply(Scales[Level - 1]);
+            ModLog.Dial("Bike Size", was, IsModified);
         }
 
         public static void Apply(float scale)
@@ -50,12 +70,20 @@ namespace DescendersModMenu.Mods
                 if (!_captured) { _defaultScale = bm.localScale; _captured = true; }
                 bm.localScale = new Vector3(scale, scale, scale);
                 CurrentScale = scale;
-                ModLog.Feedback("[BikeSize] Scale -> " + scale);
+                ModLog.Debug("[BikeSize] Scale -> " + scale);
             }
             catch (System.Exception ex) { MelonLogger.Error("[BikeSize] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "BikeSize"); }
         }
 
         public static void ResetToDefault()
+        {
+            bool was = IsModified;
+            Level = 10;
+            ApplyStockScale();
+            ModLog.Dial("Bike Size", was, false);
+        }
+
+        private static void ApplyStockScale()
         {
             try
             {

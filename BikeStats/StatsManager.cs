@@ -216,8 +216,8 @@ namespace DescendersModMenu.BikeStats
                 FOV.SetLevel(data.FovLevel);
                 Gravity.SetLevel(data.GravityLevel);
                 WideTyres.SetLevel(data.WideTyresLevel);
-
-                if (data.WideTyresEnabled && !WideTyres.Enabled) WideTyres.Toggle();
+                if (data.WideTyresLevel != 5 && data.WideTyresLevel >= 1)
+                    WideTyres.Apply();
                 if (data.StickyTyresEnabled && !StickyTyres.Enabled) StickyTyres.Toggle();
                 if (data.SpiderBikeEnabled && !SpiderBike.Enabled) SpiderBike.Toggle();
                 if (data.SlowMotionEnabled && !SlowMotion.Enabled) SlowMotion.Toggle();
@@ -256,7 +256,7 @@ namespace DescendersModMenu.BikeStats
                 if (data.WheelieEnabled && !Movement.WheelieEnabled) Movement.ToggleWheelie();
                 if (data.LeanEnabled && !Movement.LeanEnabled) Movement.ToggleLean();
 
-                QuickBrake.SetLevel(data.QuickBrakeLevel);
+                QuickBrake.SetLevelFromSave(data.QuickBrakeLevel);
                 if (data.QuickBrakeEnabled && !QuickBrake.Enabled) QuickBrake.Toggle();
 
                 MenuCustomiser.PositionPreset = data.MenuPositionPreset;
@@ -291,7 +291,7 @@ namespace DescendersModMenu.BikeStats
                 {
                     try { WheelSize.ApplyIndividualFromSave(data.FrontWheelSizeLevel, data.RearWheelSizeLevel); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats IndividualWheel: " + ex.Message); }
                 }
-                else if (data.WheelSizeEnabled)
+                else if (data.WheelSizeLevel != 10 || data.WheelSizeMode != 0)
                 {
                     try { WheelSize.ApplyFromSave(true, data.WheelSizeLevel, data.WheelSizeMode); } catch (Exception ex) { ModLog.Warn("[StatsManager] LoadStats WheelSize: " + ex.Message); }
                 }
@@ -390,15 +390,7 @@ namespace DescendersModMenu.BikeStats
                 Gravity.SetLevel(5);
                 TimeOfDay.ResetToSceneDefault();
                 SkyColours.RestoreDefault();
-                WideTyres.SetLevel(5);
-
-                FlyMode.MoveSpeed = 30f;
-                FlyMode.ClimbSpeed = 20f;
-                GhostReplay.GhostAlpha = 0.45f;
-                StickyTyres.SuctionForce = 150f;
-                SlowMotion.SetLevel(5);
-
-                if (WideTyres.Enabled) WideTyres.Toggle();
+                WideTyres.Reset();
                 if (StickyTyres.Enabled) StickyTyres.Toggle();
                 if (SpiderBike.Enabled) SpiderBike.Toggle();
                 if (SlowMotion.Enabled) SlowMotion.Toggle();
@@ -430,7 +422,7 @@ namespace DescendersModMenu.BikeStats
                 if (Movement.LeanEnabled) Movement.ToggleLean();
 
                 if (QuickBrake.Enabled) QuickBrake.Toggle();
-                QuickBrake.SetLevel(5);
+                QuickBrake.SetLevel(1);
 
                 if (BikeTorch.Enabled) BikeTorch.Toggle();
                 BikeTorch.IntensityIndex = 2;

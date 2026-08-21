@@ -18,52 +18,152 @@ namespace DescendersModMenu.Mods
         private static float Delta(int level) { return (level - 5f) * 20f; }
         public static string DeltaDisplay(int level) { return Delta(level).ToString("+0;-0") + "%"; }
 
-        public static void WheelieBalanceIncrease() { if (WheelieBalanceLevel < 10) { WheelieBalanceLevel++; ApplyMod("WHEELIEBALANCE", WheelieBalanceLevel); } }
-        public static void WheelieBalanceDecrease() { if (WheelieBalanceLevel > 1) { WheelieBalanceLevel--; ApplyMod("WHEELIEBALANCE", WheelieBalanceLevel); } }
+        private static void NotifyDial(string name, int oldLevel, int newLevel)
+        {
+            ModLog.Dial(name, oldLevel != 5, newLevel != 5);
+        }
+
+        public static void WheelieBalanceIncrease()
+        {
+            if (WheelieBalanceLevel >= 10) return;
+            int old = WheelieBalanceLevel;
+            WheelieBalanceLevel = old + 1;
+            NotifyDial("Wheelie Balance", old, WheelieBalanceLevel);
+            ApplyMod("WHEELIEBALANCE", WheelieBalanceLevel);
+        }
+        public static void WheelieBalanceDecrease()
+        {
+            if (WheelieBalanceLevel <= 1) return;
+            int old = WheelieBalanceLevel;
+            WheelieBalanceLevel = old - 1;
+            NotifyDial("Wheelie Balance", old, WheelieBalanceLevel);
+            ApplyMod("WHEELIEBALANCE", WheelieBalanceLevel);
+        }
         public static void SetWheelieBalanceLevel(int v)
         {
+            int old = WheelieBalanceLevel;
             WheelieBalanceLevel = System.Math.Max(1, System.Math.Min(10, v));
+            NotifyDial("Wheelie Balance", old, WheelieBalanceLevel);
             ApplyMod("WHEELIEBALANCE", WheelieBalanceLevel);
         }
 
-        public static void InAirCorrIncrease() { if (InAirCorrLevel < 10) { InAirCorrLevel++; ApplyMod("AIRCORRECTION", InAirCorrLevel); } }
-        public static void InAirCorrDecrease() { if (InAirCorrLevel > 1) { InAirCorrLevel--; ApplyMod("AIRCORRECTION", InAirCorrLevel); } }
+        public static void InAirCorrIncrease()
+        {
+            if (InAirCorrLevel >= 10) return;
+            int old = InAirCorrLevel;
+            InAirCorrLevel = old + 1;
+            NotifyDial("Air Correction", old, InAirCorrLevel);
+            ApplyMod("AIRCORRECTION", InAirCorrLevel);
+        }
+        public static void InAirCorrDecrease()
+        {
+            if (InAirCorrLevel <= 1) return;
+            int old = InAirCorrLevel;
+            InAirCorrLevel = old - 1;
+            NotifyDial("Air Correction", old, InAirCorrLevel);
+            ApplyMod("AIRCORRECTION", InAirCorrLevel);
+        }
         public static void SetInAirCorrLevel(int v)
         {
+            int old = InAirCorrLevel;
             InAirCorrLevel = System.Math.Max(1, System.Math.Min(10, v));
+            NotifyDial("Air Correction", old, InAirCorrLevel);
             ApplyMod("AIRCORRECTION", InAirCorrLevel);
         }
 
-        public static void FakieBalanceIncrease() { if (FakieBalanceLevel < 10) { FakieBalanceLevel++; ApplyMod("FAKIEBALANCE", FakieBalanceLevel); } }
-        public static void FakieBalanceDecrease() { if (FakieBalanceLevel > 1) { FakieBalanceLevel--; ApplyMod("FAKIEBALANCE", FakieBalanceLevel); } }
+        public static void FakieBalanceIncrease()
+        {
+            if (FakieBalanceLevel >= 10) return;
+            int old = FakieBalanceLevel;
+            FakieBalanceLevel = old + 1;
+            NotifyDial("Fakie Balance", old, FakieBalanceLevel);
+            ApplyMod("FAKIEBALANCE", FakieBalanceLevel);
+        }
+        public static void FakieBalanceDecrease()
+        {
+            if (FakieBalanceLevel <= 1) return;
+            int old = FakieBalanceLevel;
+            FakieBalanceLevel = old - 1;
+            NotifyDial("Fakie Balance", old, FakieBalanceLevel);
+            ApplyMod("FAKIEBALANCE", FakieBalanceLevel);
+        }
         public static void SetFakieBalanceLevel(int v)
         {
+            int old = FakieBalanceLevel;
             FakieBalanceLevel = System.Math.Max(1, System.Math.Min(10, v));
+            NotifyDial("Fakie Balance", old, FakieBalanceLevel);
             ApplyMod("FAKIEBALANCE", FakieBalanceLevel);
         }
 
-        public static void PumpStrengthIncrease() { if (PumpStrengthLevel < 10) { PumpStrengthLevel++; ApplyMod("PUMPSTRENGTH", PumpStrengthLevel); } }
-        public static void PumpStrengthDecrease() { if (PumpStrengthLevel > 1) { PumpStrengthLevel--; ApplyMod("PUMPSTRENGTH", PumpStrengthLevel); } }
+        public static void PumpStrengthIncrease()
+        {
+            if (PumpStrengthLevel >= 10) return;
+            int old = PumpStrengthLevel;
+            PumpStrengthLevel = old + 1;
+            NotifyDial("Pump Strength", old, PumpStrengthLevel);
+            ApplyMod("PUMPSTRENGTH", PumpStrengthLevel);
+        }
+        public static void PumpStrengthDecrease()
+        {
+            if (PumpStrengthLevel <= 1) return;
+            int old = PumpStrengthLevel;
+            PumpStrengthLevel = old - 1;
+            NotifyDial("Pump Strength", old, PumpStrengthLevel);
+            ApplyMod("PUMPSTRENGTH", PumpStrengthLevel);
+        }
         public static void SetPumpStrengthLevel(int v)
         {
+            int old = PumpStrengthLevel;
             PumpStrengthLevel = System.Math.Max(1, System.Math.Min(10, v));
+            NotifyDial("Pump Strength", old, PumpStrengthLevel);
             ApplyMod("PUMPSTRENGTH", PumpStrengthLevel);
         }
 
-        public static void TweakSpeedIncrease() { if (TweakSpeedLevel < 10) { TweakSpeedLevel++; ApplyMod("TWEAKSPEED", TweakSpeedLevel); } }
-        public static void TweakSpeedDecrease() { if (TweakSpeedLevel > 1) { TweakSpeedLevel--; ApplyMod("TWEAKSPEED", TweakSpeedLevel); } }
+        public static void TweakSpeedIncrease()
+        {
+            if (TweakSpeedLevel >= 10) return;
+            int old = TweakSpeedLevel;
+            TweakSpeedLevel = old + 1;
+            NotifyDial("Tweak Speed", old, TweakSpeedLevel);
+            ApplyMod("TWEAKSPEED", TweakSpeedLevel);
+        }
+        public static void TweakSpeedDecrease()
+        {
+            if (TweakSpeedLevel <= 1) return;
+            int old = TweakSpeedLevel;
+            TweakSpeedLevel = old - 1;
+            NotifyDial("Tweak Speed", old, TweakSpeedLevel);
+            ApplyMod("TWEAKSPEED", TweakSpeedLevel);
+        }
         public static void SetTweakSpeedLevel(int v)
         {
+            int old = TweakSpeedLevel;
             TweakSpeedLevel = System.Math.Max(1, System.Math.Min(10, v));
+            NotifyDial("Tweak Speed", old, TweakSpeedLevel);
             ApplyMod("TWEAKSPEED", TweakSpeedLevel);
         }
 
-
-        public static void IcePhysicsIncrease() { if (IcePhysicsLevel < 10) { IcePhysicsLevel++; ApplyMod("OFFROADFRICTION", IcePhysicsLevel); } }
-        public static void IcePhysicsDecrease() { if (IcePhysicsLevel > 1) { IcePhysicsLevel--; ApplyMod("OFFROADFRICTION", IcePhysicsLevel); } }
+        public static void IcePhysicsIncrease()
+        {
+            if (IcePhysicsLevel >= 10) return;
+            int old = IcePhysicsLevel;
+            IcePhysicsLevel = old + 1;
+            NotifyDial("Ice Physics", old, IcePhysicsLevel);
+            ApplyMod("OFFROADFRICTION", IcePhysicsLevel);
+        }
+        public static void IcePhysicsDecrease()
+        {
+            if (IcePhysicsLevel <= 1) return;
+            int old = IcePhysicsLevel;
+            IcePhysicsLevel = old - 1;
+            NotifyDial("Ice Physics", old, IcePhysicsLevel);
+            ApplyMod("OFFROADFRICTION", IcePhysicsLevel);
+        }
         public static void SetIcePhysicsLevel(int v)
         {
+            int old = IcePhysicsLevel;
             IcePhysicsLevel = System.Math.Max(1, System.Math.Min(10, v));
+            NotifyDial("Ice Physics", old, IcePhysicsLevel);
             ApplyMod("OFFROADFRICTION", IcePhysicsLevel);
         }
 
@@ -150,7 +250,6 @@ namespace DescendersModMenu.Mods
 
         public static void ApplyMod(string modName, int level)
         {
-            if (level == 5 && modName != "OFFROADFRICTION") return;
             try
             {
                 GameData gameData = UnityEngine.Object.FindObjectOfType<GameData>();
@@ -165,6 +264,8 @@ namespace DescendersModMenu.Mods
                     if ((object)mods[i] != null && mods[i].name == modName)
                     { target = mods[i]; break; }
                 if ((object)target == null) { ModLog.Warn("[GameMod] Modifier not found: " + modName); return; }
+                // Percentage dials: (level-5)*20 → −80%…+100%. Game uses 1 + pct/100 as multiplier.
+                // Always write the value (including 0% at level 5) so returning to stock actually clears the buff.
                 float value = modName == "OFFROADFRICTION" ? IceMult(level) : Delta(level);
                 target.modifiers[0].percentageValue = value;
                 PlayerManager pm = UnityEngine.Object.FindObjectOfType<PlayerManager>();
@@ -172,7 +273,7 @@ namespace DescendersModMenu.Mods
                 PlayerInfoImpact pi = pm.GetPlayerImpact();
                 if ((object)pi == null) { ModLog.Warn("[GameMod] PlayerInfoImpact not found."); return; }
                 pi.AddGameModifier(target);
-                ModLog.Debug("[GameMod] " + modName + " level " + level + " (" + value + ")");
+                ModLog.Debug("[GameMod] " + modName + " level " + level + " (" + value + "%)");
             }
             catch (System.Exception ex) { MelonLogger.Error("[GameMod] ApplyMod " + modName + ": " + ex.Message); Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
         }

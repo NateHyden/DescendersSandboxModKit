@@ -9,10 +9,11 @@ namespace DescendersModMenu.Mods
     {
         public static bool Enabled = false;
         public static int BouncinessLevel { get; private set; } = 5;
+        public const int MaxLevel = 20;
 
         private const float MinImpactSpeed = 4f;
 
-        private static float Restitution => 0.1f + (BouncinessLevel - 1) * (0.85f / 9f);
+        private static float Restitution => 0.1f + (BouncinessLevel - 1) * (0.9f / (MaxLevel - 1));
 
         private static PropertyInfo _onGroundProp = null;
         private static bool _groundPropCached = false;
@@ -31,9 +32,9 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[BouncyBike] -> " + (Enabled ? "ON" : "OFF"));
         }
 
-        public static void IncreaseLevel() { if (BouncinessLevel < 10) BouncinessLevel++; }
+        public static void IncreaseLevel() { if (BouncinessLevel < MaxLevel) BouncinessLevel++; }
         public static void DecreaseLevel() { if (BouncinessLevel > 1) BouncinessLevel--; }
-        public static void SetLevel(int level) { BouncinessLevel = Mathf.Clamp(level, 1, 10); }
+        public static void SetLevel(int level) { BouncinessLevel = Mathf.Clamp(level, 1, MaxLevel); }
 
         public static void Tick()
         {

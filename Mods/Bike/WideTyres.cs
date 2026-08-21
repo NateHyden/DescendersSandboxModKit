@@ -7,8 +7,6 @@ namespace DescendersModMenu.Mods
 {
     public static class WideTyres
     {
-        public static bool Enabled { get; private set; } = false;
-
         public static int Level { get; private set; } = 5;
         private static readonly float[] WidthScales = {
             0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 1.4f, 1.8f, 2.2f, 2.6f, 3.0f,
@@ -16,48 +14,51 @@ namespace DescendersModMenu.Mods
         };
         public static float Width { get { return WidthScales[Level - 1]; } }
 
+        /// <summary>True when width is off stock (0%).</summary>
+        public static bool IsModified { get { return Level != 5; } }
+
+        // Kept for save/stats/keybind compatibility.
+        public static bool Enabled { get { return IsModified; } }
+
+        public static string PercentDisplay
+        {
+            get { return DialDisplay.OffsetPercent(Level, 5, 1, 20); }
+        }
+
         private static FieldInfo _backBoneField = null;
         private static FieldInfo _frontBoneField = null;
-
-        public static void Toggle()
-        {
-            Enabled = !Enabled;
-            if (!Enabled)
-            {
-                ResetBones();
-                _tickFront = null;
-                _tickBack = null;
-            }
-            else
-                Apply();
-            ModLog.Feedback("[WideTyres] -> " + (Enabled ? "ON" : "OFF"));
-        }
+        private static Transform _tickFront;
+        private static Transform _tickBack;
 
         public static void Increase()
         {
-            if (Level < 20)
-            {
-                Level++;
-                ModLog.Feedback("[WideTyres] Increase -> Level " + Level + " (" + Width + "x)");
-                Apply();
-            }
+            if (Level >= 20) return;
+            bool was = IsModified;
+            Level++;
+            Apply();
+            ModLog.Dial("WideTyres", was, IsModified);
         }
 
         public static void Decrease()
         {
-            if (Level > 1)
-            {
-                Level--;
-                ModLog.Feedback("[WideTyres] Decrease -> Level " + Level + " (" + Width + "x)");
-                Apply();
-            }
+            if (Level <= 1) return;
+            bool was = IsModified;
+            Level--;
+            Apply();
+            ModLog.Dial("WideTyres", was, IsModified);
         }
 
-        public static void SetLevel(int v) { Level = System.Math.Max(1, System.Math.Min(20, v)); }
+        public static void SetLevel(int v)
+        {
+            bool was = IsModified;
+            Level = System.Math.Max(1, System.Math.Min(20, v));
+            Apply();
+            ModLog.Dial("WideTyres", was, IsModified);
+        }
 
         public static void Tick()
         {
-            if (!Enabled) return;
+            if (!IsModified) return;
             try
             {
                 if ((object)_tickFront == null || (object)_tickBack == null
@@ -86,12 +87,18 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
-        private static Transform _tickFront;
-        private static Transform _tickBack;
         public static void Apply()
         {
             try
             {
+                if (!IsModified)
+                {
+                    ResetBones();
+                    _tickFront = null;
+                    _tickBack = null;
+                    return;
+                }
+
                 Transform frontBone, backBone;
                 if (!GetBones(out frontBone, out backBone)) return;
 
@@ -101,15 +108,17 @@ namespace DescendersModMenu.Mods
                     float bs = frontBone.localScale.y;
                     if (bs <= 0f) bs = 1f;
                     frontBone.localScale = new Vector3(w * bs, bs, bs);
+                    _tickFront = frontBone;
                 }
                 if (UnityNull.Alive(backBone))
                 {
                     float bs = backBone.localScale.y;
                     if (bs <= 0f) bs = 1f;
                     backBone.localScale = new Vector3(w * bs, bs, bs);
+                    _tickBack = backBone;
                 }
 
-                ModLog.Feedback("[WideTyres] Width -> " + w + "x (level " + Level + ")");
+                ModLog.Debug("[WideTyres] Width -> " + w + "x (" + PercentDisplay + ")");
             }
             catch (System.Exception ex)
             {
@@ -151,17 +160,11 @@ namespace DescendersModMenu.Mods
 
             GameObject player = PlayerCache.PlayerHuman;
             if ((object)player == null)
-            {
-                ModLog.Warn("[WideTyres] Player_Human not found.");
                 return false;
-            }
 
             Transform bikeModel = player.transform.Find("BikeModel");
             if ((object)bikeModel == null)
-            {
-                ModLog.Warn("[WideTyres] BikeModel not found.");
                 return false;
-            }
 
             BikeAnimation bikeAnim = bikeModel.GetComponent<BikeAnimation>();
             if ((object)bikeAnim != null)
@@ -180,9 +183,9 @@ namespace DescendersModMenu.Mods
                         if (!UnityNull.Alive(t)) continue;
 
                         if (string.Equals(t.name, "backWheel_Jnt", System.StringComparison.Ordinal))
-                        { _backBoneField = fields[i]; ModLog.Debug("[WideTyres] Found back bone: " + fields[i].Name); }
+                            _backBoneField = fields[i];
                         else if (string.Equals(t.name, "frontWheel_Jnt", System.StringComparison.Ordinal))
-                        { _frontBoneField = fields[i]; ModLog.Debug("[WideTyres] Found front bone: " + fields[i].Name); }
+                            _frontBoneField = fields[i];
                     }
                 }
 
@@ -205,12 +208,14 @@ namespace DescendersModMenu.Mods
 
         public static void Reset()
         {
-            Enabled = false;
+            bool was = IsModified;
             Level = 5;
+            try { ResetBones(); } catch { }
             _backBoneField = null;
             _frontBoneField = null;
             _tickFront = null;
             _tickBack = null;
+            ModLog.Dial("WideTyres", was, false);
         }
     }
 }

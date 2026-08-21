@@ -138,7 +138,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.Divider(c);
 
                 UIHelpers.SectionHeader("RIDER CUSTOMISATION", c);
-                UIHelpers.InfoBox(c, "The game doesn't expose a way to read your current look back, so these track their own value rather than showing what's actually equipped - cycle to find the one you want.");
+                UIHelpers.InfoBox(c, "Cycle through looks until you find the one you want. The game won't show what's currently equipped.");
 
                 Text skinColorVal = null, hairColorVal = null, hairTypeVal = null,
                      beardColorVal = null, beardTypeVal = null, bodyTypeVal = null;

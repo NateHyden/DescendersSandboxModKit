@@ -73,7 +73,7 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(pg.transform);
                 UIHelpers.SectionHeader("WORLD OBJECT FINDER", pg.transform);
-                UIHelpers.InfoBox(pg.transform, "Collectibles, shortcuts, boost pads, hazards and checkpoints - colour-coded by type. Uses the same Distance/Tracers toggles above.");
+                UIHelpers.InfoBox(pg.transform, "Shows collectibles, shortcuts, boosts, hazards and checkpoints. Colour-coded by type.");
 
                 var wr = UIHelpers.StatRow("World Object Finder", pg.transform);
                 worldVal = UIHelpers.Txt("WV", wr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);

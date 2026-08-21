@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "1.9.5";
+        public const string Version = "2.0.0";
         public const string DownloadLink = null;
     }
 
@@ -31,8 +31,7 @@ namespace DescendersModMenu
         private bool _reapplyGameModifiers;
         private int _reapplyWheelieBalance, _reapplyInAirCorr, _reapplyFakieBalance;
         private int _reapplyPumpStrength, _reapplyTweakSpeed, _reapplyIcePhysics;
-        private bool _reapplyFlyMode, _reapplyDrunkMode, _reapplyMirrorMode, _reapplyWideTyres;
-        private int _reapplyWideTyresLevel;
+        private bool _reapplyFlyMode, _reapplyDrunkMode, _reapplyMirrorMode;
         private bool _reapplyFov, _reapplySpeedrunTimer, _reapplyAcceleration, _reapplyMaxSpeed;
         private bool _reapplyLandingImpact;
         private bool _reapplyMoveSpin, _reapplyMoveHop, _reapplyMoveWheelie, _reapplyMoveLean;
@@ -54,8 +53,6 @@ namespace DescendersModMenu
         private float _reapplyPlayerScale; private bool _reapplyPlayerScaleNeeded;
         private bool _reapplyInvisibleBike;
         private bool _reapplyInvisiblePlayer;
-        private bool _reapplyWheelSize; private int _reapplyWheelSizeMode; private int _reapplyWheelSizeLevel;
-        private bool _reapplyIndividualWheel; private int _reapplyFrontWheelLevel, _reapplyRearWheelLevel;
         private bool _reapplyBrakeFade;
 
         public override void OnInitializeMelon()
@@ -274,8 +271,7 @@ namespace DescendersModMenu
             bool wasFlyMode = FlyMode.Enabled;
             bool wasDrunkMode = DrunkMode.Enabled;
             bool wasMirrorMode = MirrorMode.Enabled;
-            bool wasWideTyres = WideTyres.Enabled;
-            int wideTyresLevel = WideTyres.Level;
+            // Wheel Size / Wide Tyres always reset to 0% on scene change (no reapply).
             bool wasFov = FOV.Enabled;
             bool wasSpeedrunTimer = SpeedrunTimer.Enabled;
             bool wasAcceleration = Acceleration.Enabled;
@@ -317,12 +313,7 @@ namespace DescendersModMenu
             bool playerScaleNeed = playerScale != 1f;
             bool wasInvisBike = InvisibleBike.Enabled;
             bool wasInvisPlayer = InvisiblePlayer.Enabled;
-            bool wasWheelSize = WheelSize.IsEnabled;
-            int wheelSizeMode = WheelSize.Mode;
-            int wheelSizeLevel = WheelSize.Level;
-            bool wasIndividualWheel = WheelSize.IsIndividualMode;
-            int frontWheelLv = WheelSize.FrontLevel;
-            int rearWheelLv = WheelSize.RearLevel;
+            // Wheel Size / Wide Tyres: intentionally not snapshotted — reset to 0% each scene.
             bool wasBrakeFade = BrakeFade.Enabled;
             int brakeBalanceLv = BrakeFade.BalanceLevel;
 
@@ -348,7 +339,6 @@ namespace DescendersModMenu
             if (wasFlyMode) ModLog.Debug("[Reapply]   FlyMode");
             if (wasDrunkMode) ModLog.Debug("[Reapply]   DrunkMode");
             if (wasMirrorMode) ModLog.Debug("[Reapply]   MirrorMode");
-            if (wasWideTyres) ModLog.Debug("[Reapply]   WideTyres lv=" + wideTyresLevel);
             if (wasFov) ModLog.Debug("[Reapply]   FOV");
             if (wasSpeedrunTimer) ModLog.Debug("[Reapply]   SpeedrunTimer");
             if (wasAcceleration) ModLog.Debug("[Reapply]   Acceleration");
@@ -376,8 +366,6 @@ namespace DescendersModMenu
             if (playerScaleNeed) ModLog.Debug("[Reapply]   PlayerScale=" + playerScale);
             if (wasInvisBike) ModLog.Debug("[Reapply]   InvisibleBike");
             if (wasInvisPlayer) ModLog.Debug("[Reapply]   InvisiblePlayer");
-            if (wasWheelSize) ModLog.Debug("[Reapply]   WheelSize level=" + wheelSizeLevel + " mode=" + wheelSizeMode);
-            if (wasIndividualWheel) ModLog.Debug("[Reapply]   IndividualWheel F=" + frontWheelLv + " R=" + rearWheelLv);
             if (wasSuspHUD) ModLog.Debug("[Reapply]   SuspensionHUD");
             if (wasBrakeFade) ModLog.Debug("[Reapply]   BrakeFade balance=" + brakeBalanceLv);
 
@@ -449,8 +437,7 @@ namespace DescendersModMenu
             try { MenuWindow.RefreshAll(); } catch { }
 
             _reapplyFlyMode = wasFlyMode; _reapplyDrunkMode = wasDrunkMode;
-            _reapplyMirrorMode = wasMirrorMode; _reapplyWideTyres = wasWideTyres;
-            _reapplyWideTyresLevel = wideTyresLevel;
+            _reapplyMirrorMode = wasMirrorMode;
             _reapplyFov = wasFov; _reapplySpeedrunTimer = wasSpeedrunTimer;
             _reapplyAcceleration = wasAcceleration; _reapplyMaxSpeed = wasMaxSpeed;
             _reapplyLandingImpact = wasLandingImpact;
@@ -474,8 +461,6 @@ namespace DescendersModMenu
             _reapplyPlayerScale = playerScale; _reapplyPlayerScaleNeeded = playerScaleNeed;
             _reapplyInvisibleBike = wasInvisBike;
             _reapplyInvisiblePlayer = wasInvisPlayer;
-            _reapplyWheelSize = wasWheelSize; _reapplyWheelSizeMode = wheelSizeMode; _reapplyWheelSizeLevel = wheelSizeLevel;
-            _reapplyIndividualWheel = wasIndividualWheel; _reapplyFrontWheelLevel = frontWheelLv; _reapplyRearWheelLevel = rearWheelLv;
             _reapplyBrakeFade = wasBrakeFade;
 
             _reapplyGameModifiers = gameModneed;
@@ -487,13 +472,13 @@ namespace DescendersModMenu
             if (_reapplyScreenshotMode) { _reapplyScreenshotMode = false; ScreenshotMode.Toggle(); ModLog.Debug("[Reapply] IMM ScreenshotMode -> " + ScreenshotMode.Enabled); }
             if (_reapplyTrickMultiplier) { _reapplyTrickMultiplier = false; TrickMultiplier.SetLevel(_reapplyTrickMultiplierLevel); ModLog.Debug("[Reapply] IMM TrickMultiplier lv=" + _reapplyTrickMultiplierLevel); }
 
-            _pendingReapply = wasFlyMode || wasDrunkMode || wasMirrorMode || wasWideTyres ||
+            _pendingReapply = wasFlyMode || wasDrunkMode || wasMirrorMode ||
                 wasFov || wasSpeedrunTimer || wasAcceleration || wasMaxSpeed ||
                 wasLandingImpact || wasMoveSpin || wasMoveHop || wasMoveWheelie || wasMoveLean ||
                 wasBikeTorch || wasCamShake || wasNearMiss || wasExploding ||
                 wasHoverMode || wasBouncyBike || wasBlizzard || wasDisco || wasDiscoTorch ||
                 comNeed || suspNeed || gameModneed || wasPedalWhileTweak ||
-                bikeScaleNeed || playerScaleNeed || wasInvisBike || wasInvisPlayer || wasWheelSize || wasIndividualWheel;
+                bikeScaleNeed || playerScaleNeed || wasInvisBike || wasInvisPlayer;
 
             if (_pendingReapply) ModLog.Debug("[Reapply] Deferred queued — waiting for Player_Human...");
             else ModLog.Debug("[Reapply] No deferred mods to reapply.");
@@ -503,6 +488,8 @@ namespace DescendersModMenu
 
         public override void OnUpdate()
         {
+            try { LoadingBrand.Tick(); } catch (System.Exception ex) { MelonLogger.Error("LoadingBrand.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LoadingBrand"); }
+
             if (_pendingModifierDump || _pendingAutoLoad || _pendingTelemetryPing || _pendingReapply)
             {
                 GameObject playerHuman = GameObject.Find("Player_Human");
@@ -544,7 +531,6 @@ namespace DescendersModMenu
                     if (_reapplyFlyMode) { _reapplyFlyMode = false; try { FlyMode.Toggle(); ok++; ModLog.Debug("[Reapply]   + FlyMode"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! FlyMode: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! FlyMode"); } }
                     if (_reapplyDrunkMode) { _reapplyDrunkMode = false; try { DrunkMode.Toggle(); ok++; ModLog.Debug("[Reapply]   + DrunkMode"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! DrunkMode: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! DrunkMode"); } }
                     if (_reapplyMirrorMode) { _reapplyMirrorMode = false; try { MirrorMode.Toggle(); ok++; ModLog.Debug("[Reapply]   + MirrorMode"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! MirrorMode: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! MirrorMode"); } }
-                    if (_reapplyWideTyres) { _reapplyWideTyres = false; try { WideTyres.SetLevel(_reapplyWideTyresLevel); WideTyres.Toggle(); ok++; ModLog.Debug("[Reapply]   + WideTyres lv=" + _reapplyWideTyresLevel); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! WideTyres: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! WideTyres"); } }
                     if (_reapplyFov) { _reapplyFov = false; try { FOV.Toggle(); ok++; ModLog.Debug("[Reapply]   + FOV"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! FOV: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! FOV"); } }
                     if (_reapplySpeedrunTimer) { _reapplySpeedrunTimer = false; try { SpeedrunTimer.Toggle(); ok++; ModLog.Debug("[Reapply]   + SpeedrunTimer"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! SpeedrunTimer: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! SpeedrunTimer"); } }
                     if (_reapplyAcceleration) { _reapplyAcceleration = false; try { Acceleration.Toggle(); ok++; ModLog.Debug("[Reapply]   + Acceleration"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! Acceleration: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! Acceleration"); } }
@@ -569,8 +555,6 @@ namespace DescendersModMenu
                     if (_reapplyPlayerScaleNeeded) { _reapplyPlayerScaleNeeded = false; try { PlayerSize.Apply(_reapplyPlayerScale); ok++; ModLog.Debug("[Reapply]   + PlayerScale=" + _reapplyPlayerScale); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! PlayerScale: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! PlayerScale"); } }
                     if (_reapplyInvisibleBike) { _reapplyInvisibleBike = false; try { InvisibleBike.SetEnabled(true); ok++; ModLog.Debug("[Reapply]   + InvisibleBike"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! InvisibleBike: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! InvisibleBike"); } }
                     if (_reapplyInvisiblePlayer) { _reapplyInvisiblePlayer = false; try { InvisiblePlayer.SetEnabled(true); ok++; ModLog.Debug("[Reapply]   + InvisiblePlayer"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! InvisiblePlayer: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! InvisiblePlayer"); } }
-                    if (_reapplyWheelSize) { _reapplyWheelSize = false; try { WheelSize.ApplyFromSave(true, _reapplyWheelSizeLevel, _reapplyWheelSizeMode); ok++; ModLog.Debug("[Reapply]   + WheelSize level=" + _reapplyWheelSizeLevel); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! WheelSize: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! WheelSize"); } }
-                    if (_reapplyIndividualWheel) { _reapplyIndividualWheel = false; try { WheelSize.ApplyIndividualFromSave(_reapplyFrontWheelLevel, _reapplyRearWheelLevel); ok++; ModLog.Debug("[Reapply]   + IndividualWheel F=" + _reapplyFrontWheelLevel + " R=" + _reapplyRearWheelLevel); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! IndividualWheel: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! IndividualWheel"); } }
                     if (_reapplyGameModifiers)
                     {
                         _reapplyGameModifiers = false;
@@ -737,6 +721,7 @@ namespace DescendersModMenu
             }
             try { DrunkMode.LateTick(); } catch (System.Exception ex) { MelonLogger.Error("DrunkMode.LateTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "DrunkMode"); }
             try { SpectateMode.LateTick(); } catch (System.Exception ex) { MelonLogger.Error("SpectateMode.LateTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SpectateMode"); }
+            try { CameraShake.Tick(); } catch (System.Exception ex) { MelonLogger.Error("CameraShake.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CameraShake"); }
             try { WheelSize.Tick(); } catch (System.Exception ex) { MelonLogger.Error("WheelSize.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "WheelSize"); }
             try { WideTyres.Tick(); } catch (System.Exception ex) { MelonLogger.Error("WideTyres.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "WideTyres"); }
             try { BikeDamage.Tick(); } catch (System.Exception ex) { MelonLogger.Error("BikeDamage.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BikeDamage"); }

@@ -147,7 +147,7 @@ namespace DescendersModMenu.UI
             numTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
 
             var bodyTxt = UIHelpers.Txt("T", row.transform, text,
-                10, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextMid);
+                10, FontStyle.Normal, TextAnchor.MiddleLeft, Color.white);
             var bLe = bodyTxt.gameObject.AddComponent<LayoutElement>();
             bLe.flexibleWidth = 1;
             bodyTxt.horizontalOverflow = HorizontalWrapMode.Wrap;

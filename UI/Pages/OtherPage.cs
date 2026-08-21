@@ -110,7 +110,7 @@ namespace DescendersModMenu.UI
                 _chaosVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(chR.transform, "ChT", () => { ChaosMode.Toggle(); RefreshAll(); }, out _chaosTrack, out _chaosKnob);
                 FavouritesManager.RegisterStarButton("ChaosMode", UIHelpers.StarBtn(chR.transform, "ChaosMode", () => FavouritesManager.Toggle("ChaosMode")));
-                UIHelpers.InfoBox(c, "Randomly flips Ice/Mirror/Drunk/Reverse Steering every few seconds. Everything reverts to how it was when you turn this off.");
+                UIHelpers.InfoBox(c, "Randomly turns silly mods on and off. Everything goes back when you disable this.");
                 var chLastR = UIHelpers.StatRow("Last flip", c);
                 _chaosLastVal = UIHelpers.Txt("ChLV", chLastR.transform, ChaosMode.LastFlipDisplay, 11,
                     FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.TextDim);
@@ -121,7 +121,7 @@ namespace DescendersModMenu.UI
                 _rbsVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(rbsR.transform, "RbsT", () => { RandomBikeSwitch.Toggle(); RefreshAll(); }, out _rbsTrack, out _rbsKnob);
                 FavouritesManager.RegisterStarButton("RandomBikeSwitch", UIHelpers.StarBtn(rbsR.transform, "RandomBikeSwitch", () => FavouritesManager.Toggle("RandomBikeSwitch")));
-                UIHelpers.InfoBox(c, "Automatically switches to a different bike every few seconds using the same switching logic as the Bike tab.");
+                UIHelpers.InfoBox(c, "Swaps you onto a different bike every few seconds.");
 
                 var mutR = UIHelpers.StatRow("Random Mutator on Checkpoint", c);
                 _mutatorVal = UIHelpers.Txt("MuV", mutR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);

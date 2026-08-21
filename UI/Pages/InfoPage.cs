@@ -359,8 +359,8 @@ namespace DescendersModMenu.UI
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeader("TELEMETRY", vlg.transform);
             _telemetryStatusTxt = MakeInfoRow("Status", vlg.transform);
-            UIHelpers.InfoBox(vlg.transform, "Helps me find and fix bugs faster. When the mod loads, or if something goes wrong, a small error report is sent to my Discord.", Color.white);
-            UIHelpers.InfoBox(vlg.transform, "Sent: mod version, platform (Steam/Xbox), MelonLoader version, which mods you have loaded, and - if something breaks - which mod and the error details.", Color.white);
+            UIHelpers.InfoBox(vlg.transform, "Helps me find bugs faster. Sends a small report to Discord if something goes wrong.", Color.white);
+            UIHelpers.InfoBox(vlg.transform, "Sends mod version, platform, MelonLoader version, loaded mods, and error details if something breaks.", Color.white);
 
             var telOffRow = UIHelpers.Obj("TelOffNotice", vlg.transform);
             var telOffLe = telOffRow.AddComponent<LayoutElement>();
@@ -372,11 +372,11 @@ namespace DescendersModMenu.UI
             telOffTxt.verticalOverflow = VerticalWrapMode.Overflow;
             UIHelpers.Fill(UIHelpers.RT(telOffTxt.gameObject), 4, 4, 0, 0);
 
-            UIHelpers.InfoBox(vlg.transform, "Tip: click the small X next to the header hint to dismiss it for good - it won't come back.", Color.white);
+            UIHelpers.InfoBox(vlg.transform, "Tip: click the small X next to the header hint to hide it for good.", Color.white);
 
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeader("FEEDBACK", vlg.transform);
-            UIHelpers.InfoBox(vlg.transform, "Report a bug, request a feature, or send Feedback - sent straight to my Discord.", Color.white);
+            UIHelpers.InfoBox(vlg.transform, "Report a bug, request a feature, or send feedback to Discord.", Color.white);
 
             var catRow = UIHelpers.Obj("FeedbackCatRow", vlg.transform);
             var catLe = catRow.AddComponent<LayoutElement>();
@@ -501,7 +501,7 @@ namespace DescendersModMenu.UI
             {
                 SceneDumper.DumpCurrentScene();
             }, 90);
-            UIHelpers.InfoBox(ddc, "Writes forensic dump files next to the game folder. Same as pressing # in-game - use this if that hotkey doesn't register on your setup.");
+            UIHelpers.InfoBox(ddc, "Saves debug dump files next to the game. Same as pressing # in-game.");
 
             var bikeUnlockDumpRow = UIHelpers.StatRow("Bike Unlock Status", ddc);
             UIHelpers.ActionBtn(bikeUnlockDumpRow.transform, "Dump Now", () =>
@@ -509,7 +509,7 @@ namespace DescendersModMenu.UI
                 CareerReset.DumpBikeUnlockStatus();
                 RefreshCareerResult();
             }, 90);
-            UIHelpers.InfoBox(ddc, "Logs every Bike/BikeType customization item with its live IsItemUnlocked() result - check MelonLoader/Latest.log for the [CareerReset] lines after clicking.");
+            UIHelpers.InfoBox(ddc, "Logs unlock status for every bike and gear item. Check MelonLoader/Latest.log after clicking.");
 
             _devDiagContent.SetActive(DevLock.IsUnlocked);
 
@@ -545,7 +545,7 @@ namespace DescendersModMenu.UI
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
             UIHelpers.SectionHeader("CAREER PROGRESSION", vlg.transform);
-            UIHelpers.InfoBox(vlg.transform, "Irreversible, no confirmation step.");
+            UIHelpers.InfoBox(vlg.transform, "This can't be undone.");
 
             var completeRow = UIHelpers.StatRow("Complete Missions", vlg.transform);
             UIHelpers.ActionBtnOrange(completeRow.transform, "Complete All", () =>
@@ -590,7 +590,7 @@ namespace DescendersModMenu.UI
                 CareerReset.NextSponsor();
                 RefreshCareerResult();
             });
-            UIHelpers.InfoBox(vlg.transform, "Cycles through every sponsor team. Changes which sponsor's branding/menus/tier progress you're currently signed to.");
+            UIHelpers.InfoBox(vlg.transform, "Cycles through every sponsor team.");
 
             var unlockAllRow = UIHelpers.StatRow("Unlock All (Bikes + Gear)", vlg.transform);
             UIHelpers.ActionBtnOrange(unlockAllRow.transform, "Unlock All", () =>
@@ -603,7 +603,7 @@ namespace DescendersModMenu.UI
                 CareerReset.UnlockAllOff();
                 RefreshCareerResult();
             }, 90);
-            UIHelpers.InfoBox(vlg.transform, "Unlocks or locks every bike and gear item immediately - no confirmation step.");
+            UIHelpers.InfoBox(vlg.transform, "Unlocks or locks every bike and gear item straight away.");
 
             // ── Adjust Rep (+/-) ──────────────────────────────────────
             var repRow = UIHelpers.StatRow("Adjust Total Rep", vlg.transform);
@@ -633,7 +633,7 @@ namespace DescendersModMenu.UI
                 CareerReset.IncreaseRepMultiplier();
                 RefreshCareerResult();
             });
-            UIHelpers.InfoBox(vlg.transform, "+/- rep per click, scaled by the multiplier on the right (x1-x10 by 1, then x20-x200 by 10). Updates TOTALREP (sponsor tiers) and the persistent lifetime rep total (the one submitted to Steam).");
+            UIHelpers.InfoBox(vlg.transform, "Adds or removes reputation. Use the multiplier for bigger jumps. Changes your total / lifetime rep.");
 
             var inGameRepRow = UIHelpers.StatRow("Adjust In-Game Rep", vlg.transform);
             _inGameRepMinus = UIHelpers.SmallBtn(inGameRepRow.transform, "\u25C0", () =>
@@ -662,7 +662,7 @@ namespace DescendersModMenu.UI
                 CareerReset.IncreaseInGameRepMultiplier();
                 RefreshCareerResult();
             });
-            UIHelpers.InfoBox(vlg.transform, "+/- rep per click, scaled by the multiplier on the right (x1-x10 by 1, then x20-x200 by 10). Adjusts the current session's combo-score rep counter only - resets to 0 at the start of each session, separate from your Total Rep above.");
+            UIHelpers.InfoBox(vlg.transform, "Adds or removes this session's combo rep only. Resets each new session.");
 
             var resultRow = UIHelpers.StatRow("Last Result", vlg.transform);
             _careerResultTxt = UIHelpers.Txt("CRResult", resultRow.transform, CareerReset.LastResult,
@@ -870,7 +870,7 @@ namespace DescendersModMenu.UI
 
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeader("DOWNLOAD", vlg.transform);
-            UIHelpers.InfoBox(vlg.transform, "GitHub releases — grab the latest build here or on Nexus.");
+            UIHelpers.InfoBox(vlg.transform, "Grab the latest build on GitHub or Nexus.");
 
             var linkRow = UIHelpers.StatRow("Releases", vlg.transform);
             UIHelpers.ActionBtn(linkRow.transform, "Open GitHub", () =>
@@ -993,13 +993,13 @@ namespace DescendersModMenu.UI
             UIHelpers.SmallBtn(opacityRow.transform, "\u25B6",
                 () => { Mods.MenuCustomiser.NextOpacity(); RefreshCustomise(); });
 
-            UIHelpers.InfoBox(c, "Below 50% opacity the menu becomes hard to read.");
+            UIHelpers.InfoBox(c, "Below 50% opacity the menu gets hard to read.");
 
             UIHelpers.Divider(c);
 
             // ── Colour Scheme ────────────────────────────────────────
             UIHelpers.SectionHeader("COLOUR SCHEME", c);
-            UIHelpers.InfoBox(c, "Pick an accent colour. Applies instantly and saves automatically.");
+            UIHelpers.InfoBox(c, "Pick an accent colour. Saves straight away.");
             BuildSchemeSwatches(c);
 
             UIHelpers.Divider(c);

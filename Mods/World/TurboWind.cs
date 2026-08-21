@@ -8,18 +8,19 @@ namespace DescendersModMenu.Mods
     {
         public static bool Enabled = false;
         public static int PowerLevel { get; private set; } = 3;
+        public const int MaxLevel = 20;
 
         private const float PushForceMin = 2f;
-        private const float PushForceMax = 28f;
+        private const float PushForceMax = 50f;
         private const float LateralSwayMin = 0.5f;
-        private const float LateralSwayMax = 8f;
+        private const float LateralSwayMax = 14f;
         private const float WindMainMin = 8f;
-        private const float WindMainMax = 80f;
+        private const float WindMainMax = 120f;
         private const float WindTurbMin = 0.4f;
-        private const float WindTurbMax = 2.5f;
+        private const float WindTurbMax = 4f;
         private const float ReassertInterval = 1.5f;
 
-        private static float PowerT { get { return (PowerLevel - 1) / 9f; } }
+        private static float PowerT { get { return (PowerLevel - 1) / (float)(MaxLevel - 1); } }
         private static float PushForce { get { return Mathf.Lerp(PushForceMin, PushForceMax, PowerT); } }
         private static float LateralSway { get { return Mathf.Lerp(LateralSwayMin, LateralSwayMax, PowerT); } }
         private static float WindMainBoost { get { return Mathf.Lerp(WindMainMin, WindMainMax, PowerT); } }
@@ -48,7 +49,7 @@ namespace DescendersModMenu.Mods
 
         public static void IncreasePower()
         {
-            if (PowerLevel >= 10) return;
+            if (PowerLevel >= MaxLevel) return;
             PowerLevel++;
             if (Enabled) Apply(true);
             ModLog.Feedback("[TurboWind] Power -> " + PowerLevel);
@@ -64,7 +65,7 @@ namespace DescendersModMenu.Mods
 
         public static void SetPowerLevel(int level)
         {
-            PowerLevel = Mathf.Clamp(level, 1, 10);
+            PowerLevel = Mathf.Clamp(level, 1, MaxLevel);
             if (Enabled) Apply(true);
         }
 

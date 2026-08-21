@@ -147,13 +147,9 @@ namespace DescendersModMenu.UI
                 UIHelpers.SectionHeader("EARTHQUAKE MODE", c);
 
                 UIHelpers.InfoBox(c,
-                    "Simulates an earthquake while you ride. Quake events strike at intervals " +
-                    "and last for the chosen duration. During each event rapid random physics " +
-                    "impulses throw your bike sideways and forward/back.");
+                    "Shakes the ground and throws your bike around in bursts.");
                 UIHelpers.InfoBox(c,
-                    "The camera shakes for the full duration of each quake. " +
-                    "Intensity = force per hit.  Frequency = time between events.  " +
-                    "Duration = how long each quake lasts.");
+                    "Intensity = how hard. Frequency = how often. Duration = how long each quake lasts.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("CONTROLS", c);
@@ -201,9 +197,7 @@ namespace DescendersModMenu.UI
                     () => { EarthquakeMode.IncreaseFrequency(); RefreshEarthquake(); });
 
                 UIHelpers.InfoBox(c,
-                    "Timed = quakes on a fixed schedule. " +
-                    "Random = surprise quakes, up to 30 seconds apart. " +
-                    "Constant = never stops shaking.");
+                    "Timed = on a schedule. Random = surprise quakes. Constant = never stops.");
 
                 var durRow = UIHelpers.StatRow("Quake Duration", c);
                 _eqDurBar = UIHelpers.MakeBar("EqDB", durRow.transform,
@@ -217,7 +211,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(durRow.transform, "+",
                     () => { EarthquakeMode.IncreaseDuration(); RefreshEarthquake(); });
 
-                UIHelpers.InfoBox(c, "Level 1 duration = 1 second. Level 10 = 10 seconds of pure chaos.");
+                UIHelpers.InfoBox(c, "How long each chaos burst lasts. 1 = short, 10 = long.");
 
                 UIHelpers.AddScrollForwarders(c);
                 RefreshEarthquake();
@@ -287,12 +281,9 @@ namespace DescendersModMenu.UI
                 UIHelpers.InfoBox(c,
                     "A pursuer spawns behind you and chases you down the mountain.");
                 UIHelpers.InfoBox(c,
-                    "If it gets within 5 metres you bail and the CAUGHT counter goes up. " +
-                    "The pursuer resets behind you and the chase begins again.");
+                    "If it gets close you bail and the catch counter goes up. Then the chase starts again.");
                 UIHelpers.InfoBox(c,
-                    "Watch for the flashing red/blue ball — that's the pursuer. " +
-                    "Police lights on screen show the mode is active. " +
-                    "The ball has real physics — it slows on corners and can crash into terrain.");
+                    "Look for the flashing red/blue ball — that's who's chasing you.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("DIFFICULTY", c);
@@ -306,9 +297,7 @@ namespace DescendersModMenu.UI
                     () => { PoliceChaseMode.SetDifficulty(2); RefreshPoliceChase(); }, 44);
 
                 UIHelpers.InfoBox(c,
-                    "Easy = 80% of your speed, no bursts. " +
-                    "Medium = 95% speed with bursts. " +
-                    "Hard = 110% speed, frequent bursts. It will catch you on straights.");
+                    "Easy = slower than you. Medium = almost as fast. Hard = faster than you on straights.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("CONTROLS", c);
@@ -328,8 +317,7 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
                 UIHelpers.InfoBox(c,
-                    "⚠ Photosensitivity Warning: This mode displays rapidly flashing " +
-                    "red and blue lights. Do not use if you are sensitive to flashing lights.");
+                    "Flashing red and blue lights. Don't use if flashing lights bother you.");
 
                 UIHelpers.AddScrollForwarders(c);
                 RefreshPoliceChase();
@@ -388,12 +376,9 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.SectionHeader("TRICK ATTACK MODE", c);
                 UIHelpers.InfoBox(c,
-                    "Set a score target, ride to your chosen spot, then click " +
-                    "LEFT STICK to start the timer. Score as many trick points " +
-                    "as you can before time runs out.");
+                    "Set a score goal, ride to your spot, then click the left stick to start the timer. Score as many tricks as you can.");
                 UIHelpers.InfoBox(c,
-                    "Hit your target before time hits zero = SUCCESS. Miss it = FAIL. " +
-                    "Timer and score are shown on screen while the run is active.");
+                    "Hit the goal before time runs out to win. Miss it and you fail.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("SETUP", c);
@@ -441,7 +426,7 @@ namespace DescendersModMenu.UI
                     }
                 }, 34);
 
-                UIHelpers.InfoBox(c, "Click the box, type your target score, press Set or Enter.");
+                UIHelpers.InfoBox(c, "Click the box, type a score goal, then press Set or Enter.");
 
                 var timeRow = UIHelpers.StatRow("Time Limit", c);
                 UIHelpers.SmallBtn(timeRow.transform, "\u25C0",
@@ -575,9 +560,9 @@ namespace DescendersModMenu.UI
                 var c = content.transform;
 
                 UIHelpers.SectionHeader("BOULDER DODGE MODE", c);
-                UIHelpers.InfoBox(c, "Boulders drop from the sky directly into your path while you ride.");
-                UIHelpers.InfoBox(c, "The mode tracks your speed and direction to predict where to drop each rock. Boulders lock into the ground on landing and won't move.");
-                UIHelpers.InfoBox(c, "Rocks disappear once you are 200 metres away from them.");
+                UIHelpers.InfoBox(c, "Boulders fall from the sky into your path.");
+                UIHelpers.InfoBox(c, "Rocks land ahead of you and stick in place.");
+                UIHelpers.InfoBox(c, "Rocks disappear once you're far away.");
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("SETTINGS", c);
 
@@ -586,7 +571,7 @@ namespace DescendersModMenu.UI
                 _bdIntervalLbl = UIHelpers.Txt("BdIntV", intRow.transform, BoulderDodgeMode.IntervalDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _bdIntervalLbl.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
                 UIHelpers.SmallBtn(intRow.transform, "\u25B6", () => { BoulderDodgeMode.NextInterval(); RefreshBoulderDodge(); });
-                UIHelpers.InfoBox(c, "How long between each boulder drop.");
+                UIHelpers.InfoBox(c, "Time between each boulder.");
 
                 var sizeRow = UIHelpers.StatRow("Size", c);
                 UIHelpers.SmallBtn(sizeRow.transform, "\u25C0", () => { BoulderDodgeMode.PrevSize(); RefreshBoulderDodge(); });
@@ -599,7 +584,7 @@ namespace DescendersModMenu.UI
                 _bdForwardLbl = UIHelpers.Txt("BdFwdV", fwdRow.transform, BoulderDodgeMode.ForwardDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _bdForwardLbl.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
                 UIHelpers.SmallBtn(fwdRow.transform, "\u25B6", () => { BoulderDodgeMode.NextForward(); RefreshBoulderDodge(); });
-                UIHelpers.InfoBox(c, "How far ahead of you the boulder targets.");
+                UIHelpers.InfoBox(c, "How far ahead rocks aim for.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("CONTROLS", c);
@@ -661,8 +646,8 @@ namespace DescendersModMenu.UI
                 var c = content.transform;
 
                 UIHelpers.SectionHeader("SURVIVAL MODE", c);
-                UIHelpers.InfoBox(c, "You have 100 HP. Every bail costs health. Standing still drains it slowly. Land tricks to earn it back.");
-                UIHelpers.InfoBox(c, "Hit zero and it's GAME OVER. Press D-Pad Up to reset and go again.");
+                UIHelpers.InfoBox(c, "You start with 100 HP. Crashes hurt you. Standing still drains HP. Land tricks to heal.");
+                UIHelpers.InfoBox(c, "Hit 0 HP and it's game over. Press D-Pad Up to restart.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("SETTINGS", c);
@@ -678,14 +663,14 @@ namespace DescendersModMenu.UI
                 _svBleedLbl = UIHelpers.Txt("SvBleedV", bleedRow.transform, SurvivalMode.BleedDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _svBleedLbl.gameObject.AddComponent<LayoutElement>().preferredWidth = 52;
                 UIHelpers.SmallBtn(bleedRow.transform, "\u25B6", () => { SurvivalMode.NextBleed(); RefreshSurvival(); });
-                UIHelpers.InfoBox(c, "HP lost per second when you're nearly stationary. Set to None to disable.");
+                UIHelpers.InfoBox(c, "HP lost per second while standing still. Set to None to turn that off.");
 
                 var healRow = UIHelpers.StatRow("Trick Heal", c);
                 UIHelpers.SmallBtn(healRow.transform, "\u25C0", () => { SurvivalMode.PrevHeal(); RefreshSurvival(); });
                 _svHealLbl = UIHelpers.Txt("SvHealV", healRow.transform, SurvivalMode.HealDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _svHealLbl.gameObject.AddComponent<LayoutElement>().preferredWidth = 52;
                 UIHelpers.SmallBtn(healRow.transform, "\u25B6", () => { SurvivalMode.NextHeal(); RefreshSurvival(); });
-                UIHelpers.InfoBox(c, "HP gained each time you land a trick combo.");
+                UIHelpers.InfoBox(c, "HP you gain each time you land a trick.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("CONTROLS", c);
@@ -699,7 +684,7 @@ namespace DescendersModMenu.UI
                 _svHPLbl = UIHelpers.Txt("SvHP", hpRow.transform, "—", 12, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextDim);
                 _svHPLbl.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
-                UIHelpers.InfoBox(c, "D-Pad Up resets the run after a Game Over.");
+                UIHelpers.InfoBox(c, "D-Pad Up restarts after a game over.");
 
                 UIHelpers.AddScrollForwarders(c);
                 RefreshSurvival();

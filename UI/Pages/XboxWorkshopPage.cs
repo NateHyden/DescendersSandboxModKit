@@ -57,8 +57,8 @@ namespace DescendersModMenu.UI
                     StateNavigator.PushGameState(StateNavigator.State_FreerideWorkshop, "Workshop");
                 }, 90);
 
-                UIHelpers.InfoBox(c, "Xbox/PC Game Pass hides this in the game's own menu, but the Workshop screen and mod.io itself work fine underneath - this jumps straight there.");
-                UIHelpers.InfoBox(c, "Only use this from the Main Menu - it jumps straight to a menu screen and can behave oddly mid-run. Use the game's own Back button to return.");
+                UIHelpers.InfoBox(c, "Game Pass hides Workshop in the normal menu. This opens it anyway.");
+                UIHelpers.InfoBox(c, "Use this from the pause menu on Mount Palumbo (Starting Map).");
 
                 UIHelpers.AddScrollForwarders(c);
             }

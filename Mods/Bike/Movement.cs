@@ -27,6 +27,8 @@ namespace DescendersModMenu.Mods
         private static FieldInfo _leanField   = null;
         private static float     _leanDefault = -1f;
 
+        public const int MaxLevel = 20;
+
         private static float Mult(int level) { return 0.2f + (level - 1) * 0.3f; }
 
         public static void ToggleSpin()
@@ -35,9 +37,9 @@ namespace DescendersModMenu.Mods
             if (SpinEnabled) ApplySpin(); else RestoreSpin();
             ModLog.Feedback("[Movement] Spin -> " + (SpinEnabled ? "ON" : "OFF"));
         }
-        public static void SpinIncrease() { if (SpinLevel < 10) { SpinLevel++; if (SpinEnabled) ApplySpin(); } }
+        public static void SpinIncrease() { if (SpinLevel < MaxLevel) { SpinLevel++; if (SpinEnabled) ApplySpin(); } }
         public static void SpinDecrease() { if (SpinLevel > 1)  { SpinLevel--; if (SpinEnabled) ApplySpin(); } }
-        public static void SetSpinLevel(int v) { SpinLevel = System.Math.Max(1, System.Math.Min(10, v)); if (SpinEnabled) ApplySpin(); }
+        public static void SetSpinLevel(int v) { SpinLevel = System.Math.Max(1, System.Math.Min(MaxLevel, v)); if (SpinEnabled) ApplySpin(); }
 
         public static void ApplySpin()
         {
@@ -74,9 +76,9 @@ namespace DescendersModMenu.Mods
             if (HopEnabled) ApplyHop(); else RestoreHop();
             ModLog.Feedback("[Movement] Hop -> " + (HopEnabled ? "ON" : "OFF"));
         }
-        public static void HopIncrease() { if (HopLevel < 10) { HopLevel++; if (HopEnabled) ApplyHop(); } }
+        public static void HopIncrease() { if (HopLevel < MaxLevel) { HopLevel++; if (HopEnabled) ApplyHop(); } }
         public static void HopDecrease() { if (HopLevel > 1)  { HopLevel--; if (HopEnabled) ApplyHop(); } }
-        public static void SetHopLevel(int v) { HopLevel = System.Math.Max(1, System.Math.Min(10, v)); if (HopEnabled) ApplyHop(); }
+        public static void SetHopLevel(int v) { HopLevel = System.Math.Max(1, System.Math.Min(MaxLevel, v)); if (HopEnabled) ApplyHop(); }
 
         public static void ApplyHop()
         {
@@ -113,9 +115,9 @@ namespace DescendersModMenu.Mods
             if (WheelieEnabled) ApplyWheelie(); else RestoreWheelie();
             ModLog.Feedback("[Movement] Wheelie -> " + (WheelieEnabled ? "ON" : "OFF"));
         }
-        public static void WheelieIncrease() { if (WheelieLevel < 10) { WheelieLevel++; if (WheelieEnabled) ApplyWheelie(); } }
+        public static void WheelieIncrease() { if (WheelieLevel < MaxLevel) { WheelieLevel++; if (WheelieEnabled) ApplyWheelie(); } }
         public static void WheelieDecrease() { if (WheelieLevel > 1)  { WheelieLevel--; if (WheelieEnabled) ApplyWheelie(); } }
-        public static void SetWheelieLevel(int v) { WheelieLevel = System.Math.Max(1, System.Math.Min(10, v)); if (WheelieEnabled) ApplyWheelie(); }
+        public static void SetWheelieLevel(int v) { WheelieLevel = System.Math.Max(1, System.Math.Min(MaxLevel, v)); if (WheelieEnabled) ApplyWheelie(); }
 
         public static void ApplyWheelie()
         {
@@ -152,9 +154,9 @@ namespace DescendersModMenu.Mods
             if (LeanEnabled) ApplyLean(); else RestoreLean();
             ModLog.Feedback("[Movement] Lean -> " + (LeanEnabled ? "ON" : "OFF"));
         }
-        public static void LeanIncrease() { if (LeanLevel < 10) { LeanLevel++; if (LeanEnabled) ApplyLean(); } }
+        public static void LeanIncrease() { if (LeanLevel < MaxLevel) { LeanLevel++; if (LeanEnabled) ApplyLean(); } }
         public static void LeanDecrease() { if (LeanLevel > 1)  { LeanLevel--; if (LeanEnabled) ApplyLean(); } }
-        public static void SetLeanLevel(int v) { LeanLevel = System.Math.Max(1, System.Math.Min(10, v)); if (LeanEnabled) ApplyLean(); }
+        public static void SetLeanLevel(int v) { LeanLevel = System.Math.Max(1, System.Math.Min(MaxLevel, v)); if (LeanEnabled) ApplyLean(); }
 
         public static void ApplyLean()
         {

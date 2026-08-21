@@ -1,4 +1,4 @@
-﻿using DescendersModMenu.Mods;
+using DescendersModMenu.Mods;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -108,16 +108,16 @@ namespace DescendersModMenu.UI
                 var psr = UIHelpers.StatRow("Size", pg9);
                 _playerSizeMinus = UIHelpers.SmallBtn(psr.transform, "◀", () =>
                 {
-                    if (PlayerSize.Level > 1) { PlayerSize.Level--; PlayerSize.ApplyLevel(PlayerSize.Level); RefreshAll(); }
+                    if (PlayerSize.Level > 1) { PlayerSize.Decrease(); RefreshAll(); }
                 });
                 _playerSizeLvlVal = UIHelpers.Txt("PsL", psr.transform, PlayerSize.Level.ToString(), 13,
                     FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _playerSizeLvlVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 32;
                 _playerSizePlus = UIHelpers.SmallBtn(psr.transform, "▶", () =>
                 {
-                    if (PlayerSize.Level < 20) { PlayerSize.Level++; PlayerSize.ApplyLevel(PlayerSize.Level); RefreshAll(); }
+                    if (PlayerSize.Level < 20) { PlayerSize.Increase(); RefreshAll(); }
                 });
-                UIHelpers.InfoBox(pg9, "10 = default size. Lower numbers shrink the player, higher numbers grow them.");
+                UIHelpers.InfoBox(pg9, "10 is normal. Lower = smaller rider, higher = bigger.");
 
                 UIHelpers.Divider(pg9);
 
@@ -189,8 +189,6 @@ namespace DescendersModMenu.UI
                 _flyClimbVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 _flyClimbPlus = UIHelpers.SmallBtn(flyClimbRow.transform, "+", () => { FlyMode.IncreaseClimbSpeed(); RefreshAll(); });
 
-                UIHelpers.InfoBox(pg9, "Side-to-Side also covers forward/back. Up/Down is vertical climb rate. Only apply while Fly Mode is on.");
-
                 _drunkRow = UIHelpers.StatRow("Drunk Mode", pg9);
                 var drnkr = _drunkRow;
                 _drunkVal = UIHelpers.Txt("DrV", drnkr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -205,7 +203,7 @@ namespace DescendersModMenu.UI
                 _hoverHeightVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
                 UIHelpers.SmallBtn(hoverRow.transform, "-", () => { HoverMode.DecreaseHeight(); RefreshAll(); });
                 UIHelpers.SmallBtn(hoverRow.transform, "+", () => { HoverMode.IncreaseHeight(); RefreshAll(); });
-                UIHelpers.InfoBox(pg9, "Height is metres above ground - negative sinks below terrain.");
+                UIHelpers.InfoBox(pg9, "How high you float above the ground. Negative sinks you under it.");
 
                 UIHelpers.Divider(pg9);
 
@@ -213,9 +211,9 @@ namespace DescendersModMenu.UI
                 UIHelpers.SectionHeader("CAMERA", pg9);
 
                 var csr = UIHelpers.StatRow("Camera Shake", pg9);
-                _shakeBar = UIHelpers.MakeBar("ShB", csr.transform, (CameraShake.Level - 1) / 9f);
+                _shakeBar = UIHelpers.MakeBar("ShB", csr.transform, (CameraShake.Level - 1) / (float)(CameraShake.MaxLevel - 1));
                 _shakeVal = UIHelpers.Txt("ShV", csr.transform, CameraShake.DisplayValue, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
-                _shakeVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
+                _shakeVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
                 _shakeTogVal = UIHelpers.Txt("ShTV", csr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 _shakeTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 Image shakeTrack; RectTransform shakeKnob;
@@ -223,7 +221,7 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(csr.transform, "-", () => { CameraShake.Decrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(csr.transform, "+", () => { CameraShake.Increase(); RefreshAll(); });
                 _shakeTrack = shakeTrack; _shakeKnob = shakeKnob;
-                UIHelpers.InfoBox(pg9, "Level 5 = default. Amplifies camera shake at speed. Level 10 = 4x default.");
+                UIHelpers.InfoBox(pg9, "Extra camera shake when going fast. Turn it on, then turn the dial up.");
 
                 UIHelpers.Divider(pg9);
 
@@ -321,7 +319,7 @@ namespace DescendersModMenu.UI
                     BuildControls = (p) => FavsPage.BuildToggleSlider(p, "CameraShake", "Camera Shake",
                         () => CameraShake.Enabled, () => CameraShake.Toggle(),
                         () => CameraShake.Level, () => CameraShake.Increase(), () => CameraShake.Decrease(),
-                        10, () => (CameraShake.Level - 1) / 9f, () => RefreshAll(),
+                        CameraShake.MaxLevel, () => (CameraShake.Level - 1) / (float)(CameraShake.MaxLevel - 1), () => RefreshAll(),
                         () => CameraShake.DisplayValue),
                     IsActive = () => CameraShake.Enabled
                 });
@@ -332,8 +330,8 @@ namespace DescendersModMenu.UI
                     TabBadge = "FUN",
                     BuildControls = (p) => FavsPage.BuildStepper(p, "PlayerSize", "Player Size",
                         () => PlayerSize.Level,
-                        () => { if (PlayerSize.Level > 1) { PlayerSize.Level--; PlayerSize.ApplyLevel(PlayerSize.Level); } },
-                        () => { if (PlayerSize.Level < 20) { PlayerSize.Level++; PlayerSize.ApplyLevel(PlayerSize.Level); } },
+                        () => PlayerSize.Decrease(),
+                        () => PlayerSize.Increase(),
                         1, 20, () => RefreshAll(), 10),
                     IsActive = () => PlayerSize.Level != 10
                 });
@@ -407,7 +405,7 @@ namespace DescendersModMenu.UI
             if (_shakeTogVal) { _shakeTogVal.text = shOn ? "ON" : "OFF"; _shakeTogVal.color = shOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_shakeTrack, _shakeKnob, shOn);
             if (_shakeVal) _shakeVal.text = CameraShake.DisplayValue;
-            UIHelpers.SetBar(_shakeBar, (CameraShake.Level - 1) / 9f);
+            UIHelpers.SetBar(_shakeBar, (CameraShake.Level - 1) / (float)(CameraShake.MaxLevel - 1));
 
         }
     }

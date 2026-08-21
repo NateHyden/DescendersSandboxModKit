@@ -1,6 +1,7 @@
 ﻿using MelonLoader;
 using DescendersModMenu;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
@@ -10,17 +11,36 @@ namespace DescendersModMenu.Mods
     {
         public static bool Enabled { get; private set; } = false;
         public static int Level { get; private set; } = 5;
+        public const int MaxLevel = 20;
 
-        private static float GetFOV() { return 45f + (Level - 1) * 9.4f; }
+        // Game clamps around 139 — going past that breaks restore / feels zoomed when toggled off.
+        private const float MinFov = 45f;
+        private const float MaxFov = 139f;
+        private const float FallbackFov = 85f;
+
+        private static float GetFOV()
+        {
+            return Mathf.Lerp(MinFov, MaxFov, (Level - 1) / (float)(MaxLevel - 1));
+        }
         public static string DisplayValue { get { return ((int)GetFOV()).ToString(); } }
 
-        private static BikeCamera[] _cameras = null;
+        private static BikeCamera[] _bikeCams = null;
         private static FieldInfo _caField = null;
-        private static bool _fieldScan = false;
+        private static FieldInfo _unityCamField = null;
+        private static MethodInfo _snapCamMethod = null;
+        private static FieldInfo _inGameField = null;
+        private static bool _refsCached = false;
 
-        private static float[] _defaults = null;
+        // Keyed by CameraAngle instance ID so EnsureCameras rebuilds can't wipe defaults.
+        private static readonly Dictionary<int, float> _defaults = new Dictionary<int, float>();
 
-        // ── Public API ────────────────────────────────────────────────
+        private static float SanitizeDefault(float fov)
+        {
+            if (float.IsNaN(fov) || float.IsInfinity(fov)) return FallbackFov;
+            if (fov < MinFov || fov > MaxFov) return FallbackFov;
+            return fov;
+        }
+
         public static void Toggle()
         {
             Enabled = !Enabled;
@@ -29,13 +49,13 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[FOV] -> " + (Enabled ? "ON (" + DisplayValue + ")" : "OFF"));
         }
 
-        public static void Increase() { if (Level < 10) Level++; if (Enabled) Apply(); }
+        public static void Increase() { if (Level < MaxLevel) Level++; if (Enabled) Apply(); }
         public static void Decrease() { if (Level > 1) Level--; if (Enabled) Apply(); }
 
         public static void SetLevel(int level)
         {
             if (level < 1) level = 1;
-            if (level > 10) level = 10;
+            if (level > MaxLevel) level = MaxLevel;
             Level = level;
             if (Enabled) Apply();
         }
@@ -45,55 +65,57 @@ namespace DescendersModMenu.Mods
             if (!Enabled) return;
             try
             {
-                EnsureCameras();
-                if ((object)_cameras == null || (object)_caField == null) return;
-
                 float target = GetFOV();
-                for (int i = 0; i < _cameras.Length; i++)
-                {
-                    if (!UnityNull.Alive(_cameras[i])) continue;
-                    CameraAngle ca = _caField.GetValue(_cameras[i]) as CameraAngle;
-                    if (!UnityNull.Alive(ca)) continue;
-
-                    if (_defaults[i] < 0f)
-                    {
-                        _defaults[i] = ca.targetFOV;
-                        ModLog.Debug("[FOV] Captured default for camera " + i
-                            + ": " + _defaults[i]);
-                    }
-
-                    ca.targetFOV = target;
-                }
+                ApplyToAllAngles(target, captureDefaults: true);
+                SyncLiveCameras(target, snap: false);
             }
-            catch (System.Exception ex) { MelonLogger.Error("[FOV] Apply: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Fov"); }
+            catch (System.Exception ex) { MelonLogger.Error("[FOV] Apply: " + ex.Message); Telemetry.ReportErrorAsync(ex, "Fov"); }
         }
 
         private static void Restore()
         {
             try
             {
-                EnsureCameras();
-                if ((object)_cameras == null || (object)_caField == null) return;
-                for (int i = 0; i < _cameras.Length; i++)
+                // Restore every in-game angle to its captured stock FOV (or fallback).
+                EnsureRefs();
+                CameraAngle[] angles = FindInGameAngles();
+                for (int i = 0; i < angles.Length; i++)
                 {
-                    if (!UnityNull.Alive(_cameras[i])) continue;
-                    CameraAngle ca = _caField.GetValue(_cameras[i]) as CameraAngle;
+                    CameraAngle ca = angles[i];
                     if (!UnityNull.Alive(ca)) continue;
-                    ca.targetFOV = (_defaults != null && _defaults[i] > 0f)
-                        ? _defaults[i]
-                        : 85f;
+                    int id = ca.GetInstanceID();
+                    float restore = FallbackFov;
+                    float saved;
+                    if (_defaults.TryGetValue(id, out saved) && saved > 0f)
+                        restore = SanitizeDefault(saved);
+                    ca.targetFOV = restore;
                 }
-                ModLog.Debug("[FOV] Restored default FOV.");
+
+                // First-person keeps Unity Camera.fieldOfView until a cam switch;
+                // push the live lens back and snap so we don't need to cycle views.
+                float live = FallbackFov;
+                BikeCamera active = FindActiveBikeCamera();
+                if (UnityNull.Alive(active) && (object)_caField != null)
+                {
+                    CameraAngle activeCa = _caField.GetValue(active) as CameraAngle;
+                    if (UnityNull.Alive(activeCa))
+                        live = activeCa.targetFOV;
+                }
+                SyncLiveCameras(live, snap: true);
+                ModLog.Debug("[FOV] Restored default FOV (live=" + live + ").");
             }
-            catch (System.Exception ex) { MelonLogger.Error("[FOV] Restore: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Fov"); }
+            catch (System.Exception ex) { MelonLogger.Error("[FOV] Restore: " + ex.Message); Telemetry.ReportErrorAsync(ex, "Fov"); }
         }
 
         public static void ClearCache()
         {
-            _cameras = null;
+            _bikeCams = null;
             _caField = null;
-            _fieldScan = false;
-            _defaults = null;
+            _unityCamField = null;
+            _snapCamMethod = null;
+            _inGameField = null;
+            _refsCached = false;
+            _defaults.Clear();
         }
 
         public static void Reset()
@@ -103,57 +125,158 @@ namespace DescendersModMenu.Mods
             ClearCache();
         }
 
-        // ── Internals ─────────────────────────────────────────────────
-        private static void EnsureCameras()
+        private static void ApplyToAllAngles(float target, bool captureDefaults)
         {
-            bool rebuild = (object)_cameras == null || _cameras.Length == 0;
+            EnsureRefs();
+            CameraAngle[] angles = FindInGameAngles();
+            for (int i = 0; i < angles.Length; i++)
+            {
+                CameraAngle ca = angles[i];
+                if (!UnityNull.Alive(ca)) continue;
+                int id = ca.GetInstanceID();
+                if (captureDefaults && !_defaults.ContainsKey(id))
+                {
+                    float stock = SanitizeDefault(ca.targetFOV);
+                    _defaults[id] = stock;
+                    ModLog.Debug("[FOV] Captured default id=" + id + " fov=" + stock
+                        + (string.IsNullOrEmpty(ca.displayName) ? "" : " (" + ca.displayName + ")"));
+                }
+                ca.targetFOV = target;
+            }
+        }
+
+        private static CameraAngle[] FindInGameAngles()
+        {
+            CameraAngle[] all = UnityEngine.Object.FindObjectsOfType<CameraAngle>();
+            if ((object)all == null || all.Length == 0) return new CameraAngle[0];
+
+            // Prefer inGame==true when the field is available; otherwise keep all.
+            if ((object)_inGameField == null)
+                return all;
+
+            List<CameraAngle> list = new List<CameraAngle>(all.Length);
+            for (int i = 0; i < all.Length; i++)
+            {
+                CameraAngle ca = all[i];
+                if (!UnityNull.Alive(ca)) continue;
+                try
+                {
+                    object v = _inGameField.GetValue(ca);
+                    if ((object)v != null
+                        && string.Equals(v.GetType().FullName, "System.Boolean", StringComparison.Ordinal)
+                        && !(bool)v)
+                        continue;
+                }
+                catch { }
+                list.Add(ca);
+            }
+            return list.Count > 0 ? list.ToArray() : all;
+        }
+
+        private static void SyncLiveCameras(float fov, bool snap)
+        {
+            EnsureBikeCameras();
+            if ((object)_bikeCams == null) return;
+
+            for (int i = 0; i < _bikeCams.Length; i++)
+            {
+                BikeCamera bc = _bikeCams[i];
+                if (!UnityNull.Alive(bc)) continue;
+
+                Camera cam = GetUnityCamera(bc);
+                if (UnityNull.Alive(cam))
+                    cam.fieldOfView = fov;
+
+                if (snap && (object)_snapCamMethod != null)
+                {
+                    try { _snapCamMethod.Invoke(bc, new object[] { true }); }
+                    catch { }
+                }
+            }
+        }
+
+        private static BikeCamera FindActiveBikeCamera()
+        {
+            EnsureBikeCameras();
+            if ((object)_bikeCams == null) return null;
+            for (int i = 0; i < _bikeCams.Length; i++)
+            {
+                BikeCamera bc = _bikeCams[i];
+                if (!UnityNull.Alive(bc)) continue;
+                if (!bc.isActiveAndEnabled) continue;
+                Camera cam = GetUnityCamera(bc);
+                if (UnityNull.Alive(cam) && cam.enabled) return bc;
+            }
+            for (int i = 0; i < _bikeCams.Length; i++)
+            {
+                if (UnityNull.Alive(_bikeCams[i])) return _bikeCams[i];
+            }
+            return null;
+        }
+
+        private static Camera GetUnityCamera(BikeCamera bc)
+        {
+            if ((object)_unityCamField != null)
+            {
+                try
+                {
+                    Camera c = _unityCamField.GetValue(bc) as Camera;
+                    if (UnityNull.Alive(c)) return c;
+                }
+                catch { }
+            }
+            Camera onGo = bc.GetComponent<Camera>();
+            if (UnityNull.Alive(onGo)) return onGo;
+            return bc.GetComponentInChildren<Camera>();
+        }
+
+        private static void EnsureRefs()
+        {
+            if (_refsCached) return;
+            _refsCached = true;
+
+            _inGameField = typeof(CameraAngle).GetField("inGame",
+                BindingFlags.Public | BindingFlags.Instance);
+
+            FieldInfo[] fields = typeof(BikeCamera).GetFields(
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            for (int i = 0; i < fields.Length; i++)
+            {
+                if ((object)_caField == null
+                    && string.Equals(fields[i].FieldType.Name, "CameraAngle", StringComparison.Ordinal))
+                    _caField = fields[i];
+                if ((object)_unityCamField == null
+                    && string.Equals(fields[i].FieldType.Name, "Camera", StringComparison.Ordinal))
+                    _unityCamField = fields[i];
+            }
+
+            _snapCamMethod = typeof(BikeCamera).GetMethod("SnapCamera",
+                BindingFlags.Public | BindingFlags.Instance, null,
+                new System.Type[] { typeof(bool) }, null);
+
+            if ((object)_caField != null)
+                ModLog.Debug("[FOV] CameraAngle field: " + _caField.Name);
+            else
+                ModLog.Warn("[FOV] CameraAngle field not found on BikeCamera.");
+        }
+
+        private static void EnsureBikeCameras()
+        {
+            bool rebuild = (object)_bikeCams == null || _bikeCams.Length == 0;
             if (!rebuild)
             {
-                for (int i = 0; i < _cameras.Length; i++)
+                for (int i = 0; i < _bikeCams.Length; i++)
                 {
-                    if (!UnityNull.Alive(_cameras[i]))
+                    if (!UnityNull.Alive(_bikeCams[i]))
                     {
                         rebuild = true;
                         break;
                     }
                 }
             }
-
             if (rebuild)
-            {
-                _cameras = UnityEngine.Object.FindObjectsOfType<BikeCamera>();
-                _defaults = new float[_cameras.Length];
-                for (int i = 0; i < _defaults.Length; i++) _defaults[i] = -1f;
-                _fieldScan = false;
-            }
-
-            if (!_fieldScan && _cameras.Length > 0)
-            {
-                BikeCamera probe = null;
-                for (int i = 0; i < _cameras.Length; i++)
-                {
-                    if (UnityNull.Alive(_cameras[i]))
-                    {
-                        probe = _cameras[i];
-                        break;
-                    }
-                }
-                if (!UnityNull.Alive(probe)) return;
-                _fieldScan = true;
-                FieldInfo[] fields = probe.GetType().GetFields(
-                    BindingFlags.Public | BindingFlags.Instance);
-                for (int j = 0; j < fields.Length; j++)
-                {
-                    if (!string.Equals(fields[j].FieldType.Name, "CameraAngle",
-                        StringComparison.Ordinal)) continue;
-                    _caField = fields[j];
-                    ModLog.Debug("[FOV] Found CameraAngle field: " + fields[j].Name);
-                    break;
-                }
-                if ((object)_caField == null)
-                    ModLog.Warn("[FOV] CameraAngle field not found on BikeCamera.");
-            }
+                _bikeCams = UnityEngine.Object.FindObjectsOfType<BikeCamera>();
+            EnsureRefs();
         }
     }
 }
-

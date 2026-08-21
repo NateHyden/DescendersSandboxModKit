@@ -136,7 +136,7 @@ namespace DescendersModMenu.UI
                     }
                 }, 52);
 
-                UIHelpers.InfoBox(_listRoot, "Session Seed: share this number so friends can ride the same world. Paste any seed and press Load for freeride.");
+                UIHelpers.InfoBox(_listRoot, "Share this number so friends get the same world. Paste a seed and hit Load to ride it.");
 
                 UIHelpers.Divider(_listRoot);
 

@@ -35,6 +35,45 @@ namespace DescendersModMenu.UI
         private static Image nswTrack;
         private static RectTransform nswKnob;
         private static Image capBg, capBdr; private static Text capTxt;
+        // ── Camera & HUD (moved from Session) ─────────────────────────
+        private static Text _fovVal, _fovTogVal;
+        private static Image _fovBar, _fovTrack;
+        private static RectTransform _fovKnob;
+        private static Text _hudTogVal;
+        private static Image _hudTrack;
+        private static RectTransform _hudKnob;
+        private static Text _compassVal;
+        private static Image _compassTrack;
+        private static RectTransform _compassKnob;
+        // ── Motion (moved from Move / Session) ───────────────────────
+        private static Text _hopVal, _hopTogVal;
+        private static Image _hopBar, _hopTrack;
+        private static RectTransform _hopKnob;
+        private static Text _iacVal, _iacTogVal;
+        private static Image _iacBar, _iacTrack;
+        private static RectTransform _iacKnob;
+        private static Text _airCorrVal;
+        private static Image _airCorrBar;
+        private static Text _fakieBalVal;
+        private static Image _fakieBalBar;
+        private static Text _slowVal, _slowSpeedVal;
+        private static Image _slowSpeedBar, _slowTrack;
+        private static RectTransform _slowKnob;
+        private static Text _smobVal;
+        private static Image _smobTrack;
+        private static RectTransform _smobKnob;
+        private static Text _instRespVal;
+        private static Image _instRespTrack;
+        private static RectTransform _instRespKnob;
+        // ── Grip & World (moved from Bike / World) ───────────────────
+        private static Text _stickyVal;
+        private static Image _stickyTrack;
+        private static RectTransform _stickyKnob;
+        private static Text _gravityVal;
+        private static Image _gravityBar;
+        private static Text _treesVal;
+        private static Image _treesTrack;
+        private static RectTransform _treesKnob;
         // ── Pages ─────────────────────────────────────────────────────
         private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22, pg23, pg24, pg25, pg26;
         private static int cur = 1;
@@ -534,7 +573,7 @@ namespace DescendersModMenu.UI
             accelTogVal = UIHelpers.Txt("ATV", ar.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
             accelTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.Toggle(ar.transform, "AT", () => { Acceleration.Toggle(); RefreshAll(); }, out accelTrack, out accelKnob);
-            accelBar = UIHelpers.MakeBar("AB", ar.transform, (Acceleration.Level - 1) / 9f);
+            accelBar = UIHelpers.MakeBar("AB", ar.transform, (Acceleration.Level - 1) / (float)(Acceleration.MaxLevel - 1));
             accelVal = UIHelpers.Txt("AV", ar.transform, Acceleration.Level.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
             accelVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
             UIHelpers.SmallBtn(ar.transform, "-", () => { Acceleration.Decrease(); RefreshAll(); });
@@ -563,7 +602,7 @@ namespace DescendersModMenu.UI
             msTogVal = UIHelpers.Txt("MSTV", mst.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
             msTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.Toggle(mst.transform, "MST2", () => { MaxSpeedMultiplier.Toggle(); RefreshAll(); }, out msTrack, out msKnob);
-            msBar = UIHelpers.MakeBar("MSB", mst.transform, (MaxSpeedMultiplier.Level - 1) / 9f);
+            msBar = UIHelpers.MakeBar("MSB", mst.transform, (MaxSpeedMultiplier.Level - 1) / (float)(MaxSpeedMultiplier.MaxLevel - 1));
             msVal = UIHelpers.Txt("MSV", mst.transform, MaxSpeedMultiplier.Level.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
             msVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
             UIHelpers.SmallBtn(mst.transform, "-", () => { MaxSpeedMultiplier.Decrease(); RefreshAll(); });
@@ -589,12 +628,12 @@ namespace DescendersModMenu.UI
             landTogVal = UIHelpers.Txt("LTV", lr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
             landTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.Toggle(lr.transform, "LT", () => { LandingImpact.Toggle(); RefreshAll(); }, out landTrack, out landKnob);
-            landBar = UIHelpers.MakeBar("LB", lr.transform, (LandingImpact.Level - 1) / 9f);
+            landBar = UIHelpers.MakeBar("LB", lr.transform, (LandingImpact.Level - 1) / (float)(LandingImpact.MaxLevel - 1));
             landVal = UIHelpers.Txt("LV", lr.transform, LandingImpact.DisplayValue, 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
             landVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.SmallBtn(lr.transform, "-", () => { LandingImpact.Decrease(); RefreshAll(); });
             UIHelpers.SmallBtn(lr.transform, "+", () => { LandingImpact.Increase(); RefreshAll(); });
-            UIHelpers.InfoBox(pg, "Raises the impact speed required to bail. Level 200 = almost impossible to fall off.");
+            UIHelpers.InfoBox(pg, "Makes it harder to fall off on hard landings. Max it out and you almost never bail.");
 
             // ── No Bail ───────────────────────────────────────────────
             var nr = UIHelpers.StatRow("No Bail", pg);
@@ -619,6 +658,116 @@ namespace DescendersModMenu.UI
             nswVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.Toggle(nswr.transform, "NwT", () => { GameModifierMods.NoSpeedWobblesToggle(); RefreshAll(); }, out nswTrack, out nswKnob);
 
+            // ── CAMERA & HUD ──────────────────────────────────────────
+            UIHelpers.Divider(pg);
+            UIHelpers.SectionHeader("CAMERA & HUD", pg);
+
+            var fovr = UIHelpers.StatRow("FOV", pg);
+            _fovTogVal = UIHelpers.Txt("FTV", fovr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _fovTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(fovr.transform, "FT", () => { FOV.Toggle(); RefreshAll(); }, out _fovTrack, out _fovKnob);
+            _fovBar = UIHelpers.MakeBar("FB", fovr.transform, (FOV.Level - 1) / (float)(FOV.MaxLevel - 1));
+            _fovVal = UIHelpers.Txt("FV", fovr.transform, FOV.DisplayValue, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+            _fovVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 26;
+            UIHelpers.SmallBtn(fovr.transform, "-", () => { FOV.Decrease(); RefreshAll(); });
+            UIHelpers.SmallBtn(fovr.transform, "+", () => { FOV.Increase(); RefreshAll(); });
+
+            var hudr = UIHelpers.StatRow("Show HUD", pg);
+            _hudTogVal = UIHelpers.Txt("HdV", hudr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _hudTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(hudr.transform, "HdT", () => { SessionHUD.Toggle(); RefreshAll(); }, out _hudTrack, out _hudKnob);
+            UIHelpers.InfoBox(pg, "Shows your session stats in the top-right while you ride.");
+
+            var compassRow = UIHelpers.StatRow("Show Compass", pg);
+            _compassVal = UIHelpers.Txt("CmpV", compassRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _compassVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(compassRow.transform, "CmpT", () => { CompassAlwaysOn.Toggle(); RefreshAll(); }, out _compassTrack, out _compassKnob);
+            UIHelpers.InfoBox(pg, "Points toward the finish in Bike Park or Career.");
+
+            // ── MOTION ────────────────────────────────────────────────
+            UIHelpers.SectionHeader("MOTION", pg);
+
+            var hopr = UIHelpers.StatRow("Hop Force", pg);
+            _hopTogVal = UIHelpers.Txt("HpTV", hopr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _hopTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(hopr.transform, "HpT", () => { Movement.ToggleHop(); RefreshAll(); }, out _hopTrack, out _hopKnob);
+            _hopBar = UIHelpers.MakeBar("HpB", hopr.transform, (Movement.HopLevel - 1) / (float)(Movement.MaxLevel - 1));
+            _hopVal = UIHelpers.Txt("HpV", hopr.transform, Movement.HopLevel.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+            _hopVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
+            UIHelpers.SmallBtn(hopr.transform, "-", () => { Movement.HopDecrease(); RefreshAll(); });
+            UIHelpers.SmallBtn(hopr.transform, "+", () => { Movement.HopIncrease(); RefreshAll(); });
+
+            var iacr = UIHelpers.StatRow("Air Control", pg);
+            _iacBar = UIHelpers.MakeBar("IaB", iacr.transform, (AirControl.Level - 1) / (float)(AirControl.MaxLevel - 1));
+            _iacVal = UIHelpers.Txt("IaV", iacr.transform, AirControl.DisplayValue, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+            _iacVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
+            _iacTogVal = UIHelpers.Txt("IaTV", iacr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _iacTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(iacr.transform, "IaT", () => { AirControl.Toggle(); RefreshAll(); }, out _iacTrack, out _iacKnob);
+            UIHelpers.SmallBtn(iacr.transform, "-", () => { AirControl.Decrease(); RefreshAll(); });
+            UIHelpers.SmallBtn(iacr.transform, "+", () => { AirControl.Increase(); RefreshAll(); });
+            UIHelpers.InfoBox(pg, "Keeps you steadier in the air. Higher = less spinning out.");
+
+            var airCorrR = UIHelpers.StatRow("Air Correction", pg);
+            _airCorrBar = UIHelpers.MakeBar("AcB", airCorrR.transform, (GameModifierMods.InAirCorrLevel - 1) / 9f);
+            _airCorrVal = UIHelpers.Txt("AcV", airCorrR.transform, GameModifierMods.DeltaDisplay(GameModifierMods.InAirCorrLevel), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            _airCorrVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
+            UIHelpers.SmallBtn(airCorrR.transform, "-", () => { GameModifierMods.InAirCorrDecrease(); RefreshAll(); });
+            UIHelpers.SmallBtn(airCorrR.transform, "+", () => { GameModifierMods.InAirCorrIncrease(); RefreshAll(); });
+            UIHelpers.InfoBox(pg, "Helps the bike straighten itself in the air. 0% is normal.");
+
+            var fakieR = UIHelpers.StatRow("Fakie Balance", pg);
+            _fakieBalBar = UIHelpers.MakeBar("FkB", fakieR.transform, (GameModifierMods.FakieBalanceLevel - 1) / 9f);
+            _fakieBalVal = UIHelpers.Txt("FkV", fakieR.transform, GameModifierMods.DeltaDisplay(GameModifierMods.FakieBalanceLevel), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            _fakieBalVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
+            UIHelpers.SmallBtn(fakieR.transform, "-", () => { GameModifierMods.FakieBalanceDecrease(); RefreshAll(); });
+            UIHelpers.SmallBtn(fakieR.transform, "+", () => { GameModifierMods.FakieBalanceIncrease(); RefreshAll(); });
+            UIHelpers.InfoBox(pg, "Helps you stay balanced while riding backwards. 0% is normal.");
+
+            var smr = UIHelpers.StatRow("Slow Motion", pg);
+            _slowVal = UIHelpers.Txt("SMV", smr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _slowVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(smr.transform, "SMT", () => { SlowMotion.Toggle(); RefreshAll(); }, out _slowTrack, out _slowKnob);
+            _slowSpeedBar = UIHelpers.MakeBar("SmSB", smr.transform, (SlowMotion.Level - 1) / 8f);
+            _slowSpeedVal = UIHelpers.Txt("SmSV", smr.transform, SlowMotion.DisplayValue, 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+            _slowSpeedVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.SmallBtn(smr.transform, "-", () => { SlowMotion.Decrease(); RefreshAll(); });
+            UIHelpers.SmallBtn(smr.transform, "+", () => { SlowMotion.Increase(); RefreshAll(); });
+            var smHint = UIHelpers.Txt("SMH", smr.transform, "F2", 10, FontStyle.Normal, TextAnchor.MiddleRight, UIHelpers.TextDim);
+            smHint.gameObject.AddComponent<LayoutElement>().preferredWidth = 22;
+
+            var smobr = UIHelpers.StatRow("Slow Mo on Bail", pg);
+            _smobVal = UIHelpers.Txt("SbV", smobr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _smobVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(smobr.transform, "SbT", () => { SlowMoOnBail.Toggle(); RefreshAll(); }, out _smobTrack, out _smobKnob);
+
+            var irr = UIHelpers.StatRow("Instant Respawn", pg);
+            _instRespVal = UIHelpers.Txt("IrV", irr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _instRespVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(irr.transform, "IrT", () => { InstantRespawn.Toggle(); RefreshAll(); }, out _instRespTrack, out _instRespKnob);
+
+            // ── GRIP & WORLD ──────────────────────────────────────────
+            UIHelpers.SectionHeader("GRIP & WORLD", pg);
+
+            var stickyr = UIHelpers.StatRow("Sticky Tyres", pg);
+            _stickyVal = UIHelpers.Txt("StV", stickyr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _stickyVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(stickyr.transform, "StT", () => { StickyTyres.Toggle(); RefreshAll(); }, out _stickyTrack, out _stickyKnob);
+
+            var gravr = UIHelpers.StatRow("Gravity", pg);
+            _gravityBar = UIHelpers.MakeBar("GrB", gravr.transform, (Gravity.Level - 1) / 9f);
+            _gravityVal = UIHelpers.Txt("GrV", gravr.transform, Gravity.DisplayValue, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+            _gravityVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
+            UIHelpers.SmallBtn(gravr.transform, "-", () => { Gravity.Decrease(); RefreshAll(); });
+            UIHelpers.SmallBtn(gravr.transform, "+", () => { Gravity.Increase(); RefreshAll(); });
+            UIHelpers.Txt("GrHint", gravr.transform, "def:-17.5", 9, FontStyle.Italic, TextAnchor.MiddleRight, UIHelpers.TextDim)
+                .gameObject.AddComponent<LayoutElement>().preferredWidth = 52;
+
+            var treer = UIHelpers.StatRow("Trees & Foliage", pg);
+            _treesVal = UIHelpers.Txt("TrV", treer.transform, "ON", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
+            _treesVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(treer.transform, "TrT", () => { Trees.Toggle(); RefreshAll(); }, out _treesTrack, out _treesKnob);
+
             // ── QUICK ACTIONS ─────────────────────────────────────────
             UIHelpers.Divider(pg);
             UIHelpers.SectionHeader("QUICK ACTIONS", pg);
@@ -632,16 +781,16 @@ namespace DescendersModMenu.UI
                 QuickBrake.Toggle();
                 RefreshAll();
             }, out _brakeTrack, out _brakeKnob);
-            _brakeLevelBar = UIHelpers.MakeBar("BkB", brakeRow.transform, (QuickBrake.Level - 1) / 9f);
+            _brakeLevelBar = UIHelpers.MakeBar("BkB", brakeRow.transform, (QuickBrake.Level - 1) / (float)(QuickBrake.MaxLevel - 1));
             _brakeLevelVal = UIHelpers.Txt("BkLV", brakeRow.transform,
-                QuickBrake.Level == 10 ? "MAX" : QuickBrake.Level.ToString(), 11,
+                QuickBrake.Level == QuickBrake.MaxLevel ? "MAX" : QuickBrake.Level.ToString(), 11,
                 FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
             _brakeLevelVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.SmallBtn(brakeRow.transform, "-", () =>
             { QuickBrake.Decrease(); RefreshAll(); });
             UIHelpers.SmallBtn(brakeRow.transform, "+", () =>
             { QuickBrake.Increase(); RefreshAll(); });
-            UIHelpers.InfoBox(pg, "Level 1-9: fast drag deceleration. Level 10 (MAX): truly instant stop.");
+            UIHelpers.InfoBox(pg, "Level 1 soft brake, Level 2 stronger, Level 3 hard stop.");
             // ── Launch button row ─────────────────────────────────────
             var qar = UIHelpers.StatRow("Actions", pg);
             UIHelpers.ActionBtn(qar.transform, "Launch", () =>
@@ -661,7 +810,7 @@ namespace DescendersModMenu.UI
                 }
                 catch (System.Exception ex) { MelonLogger.Error("[SuperLaunch] " + ex.Message);  Telemetry.ReportErrorAsync(ex, "MenuWindow"); }
             }, 60);
-            UIHelpers.InfoBox(pg, "Launch: fires you forward at high speed.");
+            UIHelpers.InfoBox(pg, "Fires you forward fast. Fun for testing.");
 
             FavouritesManager.RegisterStarButton("Acceleration", UIHelpers.StarBtn(ar.transform, "Acceleration", () => FavouritesManager.Toggle("Acceleration")));
             FavouritesManager.RegisterStarButton("MaxSpeed", UIHelpers.StarBtn(mst.transform, "MaxSpeed", () => FavouritesManager.Toggle("MaxSpeed")));
@@ -672,6 +821,19 @@ namespace DescendersModMenu.UI
             FavouritesManager.RegisterStarButton("NoSpeedWobbles", UIHelpers.StarBtn(nswr.transform, "NoSpeedWobbles", () => FavouritesManager.Toggle("NoSpeedWobbles")));
             FavouritesManager.RegisterStarButton("QuickBrake", UIHelpers.StarBtn(brakeRow.transform, "QuickBrake", () => FavouritesManager.Toggle("QuickBrake")));
             FavouritesManager.RegisterStarButton("Launch", UIHelpers.StarBtn(qar.transform, "Launch", () => FavouritesManager.Toggle("Launch")));
+            FavouritesManager.RegisterStarButton("FOV", UIHelpers.StarBtn(fovr.transform, "FOV", () => FavouritesManager.Toggle("FOV")));
+            FavouritesManager.RegisterStarButton("ShowHUD", UIHelpers.StarBtn(hudr.transform, "ShowHUD", () => FavouritesManager.Toggle("ShowHUD")));
+            FavouritesManager.RegisterStarButton("CompassAlwaysOn", UIHelpers.StarBtn(compassRow.transform, "CompassAlwaysOn", () => FavouritesManager.Toggle("CompassAlwaysOn")));
+            FavouritesManager.RegisterStarButton("Hop", UIHelpers.StarBtn(hopr.transform, "Hop", () => FavouritesManager.Toggle("Hop")));
+            FavouritesManager.RegisterStarButton("AirControl", UIHelpers.StarBtn(iacr.transform, "AirControl", () => FavouritesManager.Toggle("AirControl")));
+            FavouritesManager.RegisterStarButton("AirCorrection", UIHelpers.StarBtn(airCorrR.transform, "AirCorrection", () => FavouritesManager.Toggle("AirCorrection")));
+            FavouritesManager.RegisterStarButton("FakieBalance", UIHelpers.StarBtn(fakieR.transform, "FakieBalance", () => FavouritesManager.Toggle("FakieBalance")));
+            FavouritesManager.RegisterStarButton("SlowMotion", UIHelpers.StarBtn(smr.transform, "SlowMotion", () => FavouritesManager.Toggle("SlowMotion")));
+            FavouritesManager.RegisterStarButton("SlowMoOnBail", UIHelpers.StarBtn(smobr.transform, "SlowMoOnBail", () => FavouritesManager.Toggle("SlowMoOnBail")));
+            FavouritesManager.RegisterStarButton("InstantRespawn", UIHelpers.StarBtn(irr.transform, "InstantRespawn", () => FavouritesManager.Toggle("InstantRespawn")));
+            FavouritesManager.RegisterStarButton("StickyTyres", UIHelpers.StarBtn(stickyr.transform, "StickyTyres", () => FavouritesManager.Toggle("StickyTyres")));
+            FavouritesManager.RegisterStarButton("Gravity", UIHelpers.StarBtn(gravr.transform, "Gravity", () => FavouritesManager.Toggle("Gravity")));
+            FavouritesManager.RegisterStarButton("Trees", UIHelpers.StarBtn(treer.transform, "Trees", () => FavouritesManager.Toggle("Trees")));
 
             FavouritesManager.Register(new ModFavEntry
             {
@@ -681,7 +843,7 @@ namespace DescendersModMenu.UI
                 BuildControls = (fp) => FavsPage.BuildToggleSlider(fp, "Acceleration", "Acceleration",
                     () => Mods.Acceleration.Enabled, () => Mods.Acceleration.Toggle(),
                     () => Mods.Acceleration.Level, () => Mods.Acceleration.Increase(), () => Mods.Acceleration.Decrease(),
-                    10, () => (Mods.Acceleration.Level - 1) / 9f, () => RefreshAll()),
+                    Acceleration.MaxLevel, () => (Mods.Acceleration.Level - 1) / (float)(Acceleration.MaxLevel - 1), () => RefreshAll()),
                 IsActive = () => Mods.Acceleration.Enabled
             });
             FavouritesManager.Register(new ModFavEntry
@@ -692,7 +854,7 @@ namespace DescendersModMenu.UI
                 BuildControls = (fp) => FavsPage.BuildToggleSlider(fp, "MaxSpeed", "Max Speed",
                     () => Mods.MaxSpeedMultiplier.Enabled, () => Mods.MaxSpeedMultiplier.Toggle(),
                     () => Mods.MaxSpeedMultiplier.Level, () => Mods.MaxSpeedMultiplier.Increase(), () => Mods.MaxSpeedMultiplier.Decrease(),
-                    10, () => (Mods.MaxSpeedMultiplier.Level - 1) / 9f, () => RefreshAll()),
+                    MaxSpeedMultiplier.MaxLevel, () => (Mods.MaxSpeedMultiplier.Level - 1) / (float)(MaxSpeedMultiplier.MaxLevel - 1), () => RefreshAll()),
                 IsActive = () => Mods.MaxSpeedMultiplier.Enabled
             });
             FavouritesManager.Register(new ModFavEntry
@@ -712,7 +874,7 @@ namespace DescendersModMenu.UI
                 BuildControls = (fp) => FavsPage.BuildToggleSlider(fp, "LandingImpact", "Landing Impact",
                     () => Mods.LandingImpact.Enabled, () => Mods.LandingImpact.Toggle(),
                     () => Mods.LandingImpact.Level, () => Mods.LandingImpact.Increase(), () => Mods.LandingImpact.Decrease(),
-                    10, () => (Mods.LandingImpact.Level - 1) / 9f, () => RefreshAll(),
+                    LandingImpact.MaxLevel, () => (Mods.LandingImpact.Level - 1) / (float)(LandingImpact.MaxLevel - 1), () => RefreshAll(),
                     () => Mods.LandingImpact.DisplayValue),
                 IsActive = () => Mods.LandingImpact.Enabled
             });
@@ -753,7 +915,7 @@ namespace DescendersModMenu.UI
                 BuildControls = (fp) => FavsPage.BuildToggleSlider(fp, "QuickBrake", "Quick Brake",
                     () => Mods.QuickBrake.Enabled, () => Mods.QuickBrake.Toggle(),
                     () => Mods.QuickBrake.Level, () => Mods.QuickBrake.Increase(), () => Mods.QuickBrake.Decrease(),
-                    10, () => (Mods.QuickBrake.Level - 1) / 9f, () => RefreshAll()),
+                    QuickBrake.MaxLevel, () => (Mods.QuickBrake.Level - 1) / (float)(QuickBrake.MaxLevel - 1), () => RefreshAll()),
                 IsActive = () => Mods.QuickBrake.Enabled
             });
             FavouritesManager.Register(new ModFavEntry
@@ -778,6 +940,140 @@ namespace DescendersModMenu.UI
                     }, 60);
                 },
                 IsActive = () => false
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "FOV",
+                DisplayName = "FOV",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildToggleSlider(fp, "FOV", "FOV",
+                    () => Mods.FOV.Enabled, () => Mods.FOV.Toggle(),
+                    () => Mods.FOV.Level, () => Mods.FOV.Increase(), () => Mods.FOV.Decrease(),
+                    FOV.MaxLevel, () => (Mods.FOV.Level - 1) / (float)(FOV.MaxLevel - 1), () => RefreshAll(),
+                    () => Mods.FOV.DisplayValue),
+                IsActive = () => Mods.FOV.Enabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "ShowHUD",
+                DisplayName = "Show HUD",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "ShowHUD", "Show HUD",
+                    () => SessionHUD.Enabled, () => SessionHUD.Toggle(), () => RefreshAll()),
+                IsActive = () => SessionHUD.Enabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "CompassAlwaysOn",
+                DisplayName = "Show Compass",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "CompassAlwaysOn", "Show Compass",
+                    () => Mods.CompassAlwaysOn.Enabled, () => Mods.CompassAlwaysOn.Toggle(), () => RefreshAll()),
+                IsActive = () => Mods.CompassAlwaysOn.Enabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "Hop",
+                DisplayName = "Hop Force",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildToggleSlider(fp, "Hop", "Hop Force",
+                    () => Mods.Movement.HopEnabled, () => Mods.Movement.ToggleHop(),
+                    () => Mods.Movement.HopLevel, () => Mods.Movement.HopIncrease(), () => Mods.Movement.HopDecrease(),
+                    Movement.MaxLevel, () => (Mods.Movement.HopLevel - 1) / (float)(Movement.MaxLevel - 1), () => RefreshAll()),
+                IsActive = () => Mods.Movement.HopEnabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "AirControl",
+                DisplayName = "Air Control",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildToggleSlider(fp, "AirControl", "Air Control",
+                    () => Mods.AirControl.Enabled, () => Mods.AirControl.Toggle(),
+                    () => Mods.AirControl.Level, () => Mods.AirControl.Increase(), () => Mods.AirControl.Decrease(),
+                    AirControl.MaxLevel, () => (Mods.AirControl.Level - 1) / (float)(AirControl.MaxLevel - 1), () => RefreshAll(),
+                    () => Mods.AirControl.DisplayValue),
+                IsActive = () => Mods.AirControl.Enabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "AirCorrection",
+                DisplayName = "Air Correction",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSliderOnly(fp, "AirCorrection", "Air Correction",
+                    () => Mods.GameModifierMods.InAirCorrLevel, () => Mods.GameModifierMods.InAirCorrIncrease(), () => Mods.GameModifierMods.InAirCorrDecrease(),
+                    () => (Mods.GameModifierMods.InAirCorrLevel - 1) / 9f, () => RefreshAll(),
+                    () => Mods.GameModifierMods.DeltaDisplay(Mods.GameModifierMods.InAirCorrLevel), () => Mods.GameModifierMods.InAirCorrLevel != 5),
+                IsActive = () => Mods.GameModifierMods.InAirCorrLevel != 5
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "FakieBalance",
+                DisplayName = "Fakie Balance",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSliderOnly(fp, "FakieBalance", "Fakie Balance",
+                    () => Mods.GameModifierMods.FakieBalanceLevel, () => Mods.GameModifierMods.FakieBalanceIncrease(), () => Mods.GameModifierMods.FakieBalanceDecrease(),
+                    () => (Mods.GameModifierMods.FakieBalanceLevel - 1) / 9f, () => RefreshAll(),
+                    () => Mods.GameModifierMods.DeltaDisplay(Mods.GameModifierMods.FakieBalanceLevel), () => Mods.GameModifierMods.FakieBalanceLevel != 5),
+                IsActive = () => Mods.GameModifierMods.FakieBalanceLevel != 5
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "SlowMotion",
+                DisplayName = "Slow Motion",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildToggleSlider(fp, "SlowMotion", "Slow Motion",
+                    () => Mods.SlowMotion.Enabled, () => Mods.SlowMotion.Toggle(),
+                    () => Mods.SlowMotion.Level, () => Mods.SlowMotion.Increase(), () => Mods.SlowMotion.Decrease(),
+                    9, () => (Mods.SlowMotion.Level - 1) / 8f, () => RefreshAll(),
+                    () => Mods.SlowMotion.DisplayValue),
+                IsActive = () => Mods.SlowMotion.Enabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "SlowMoOnBail",
+                DisplayName = "Slow Mo On Bail",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "SlowMoOnBail", "Slow Mo On Bail",
+                    () => Mods.SlowMoOnBail.Enabled, () => Mods.SlowMoOnBail.Toggle(), () => RefreshAll()),
+                IsActive = () => Mods.SlowMoOnBail.Enabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "InstantRespawn",
+                DisplayName = "Instant Respawn",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "InstantRespawn", "Instant Respawn",
+                    () => Mods.InstantRespawn.Enabled, () => Mods.InstantRespawn.Toggle(), () => RefreshAll()),
+                IsActive = () => Mods.InstantRespawn.Enabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "StickyTyres",
+                DisplayName = "Sticky Tyres",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "StickyTyres", "Sticky Tyres",
+                    () => Mods.StickyTyres.Enabled, () => Mods.StickyTyres.Toggle(), () => RefreshAll()),
+                IsActive = () => Mods.StickyTyres.Enabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "Gravity",
+                DisplayName = "Gravity",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSliderOnly(fp, "Gravity", "Gravity",
+                    () => Mods.Gravity.Level, () => Mods.Gravity.Increase(), () => Mods.Gravity.Decrease(),
+                    () => (Mods.Gravity.Level - 1) / 9f, () => RefreshAll(),
+                    () => Mods.Gravity.DisplayValue, () => Mods.Gravity.Level != 5),
+                IsActive = () => Mods.Gravity.Level != 5
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "Trees",
+                DisplayName = "Trees & Foliage",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "Trees", "Trees & Foliage",
+                    () => Mods.Trees.Enabled, () => Mods.Trees.Toggle(), () => RefreshAll()),
+                IsActive = () => Mods.Trees.Enabled
             });
             UIHelpers.AddScrollForwarders(content.transform);
         }
@@ -901,7 +1197,16 @@ namespace DescendersModMenu.UI
                                     Mods.NoSpeedCap.Enabled || Mods.LandingImpact.Enabled ||
                                     Mods.QuickBrake.Enabled || Mods.NoBail.Enabled ||
                                     Mods.AutoBalance.Enabled ||
-                                    Mods.GameModifierMods.NoSpeedWobblesEnabled;
+                                    Mods.GameModifierMods.NoSpeedWobblesEnabled ||
+                                    Mods.FOV.Enabled || SessionHUD.Enabled ||
+                                    Mods.CompassAlwaysOn.Enabled ||
+                                    Mods.Movement.HopEnabled || Mods.AirControl.Enabled ||
+                                    Mods.GameModifierMods.InAirCorrLevel != 5 ||
+                                    Mods.GameModifierMods.FakieBalanceLevel != 5 ||
+                                    Mods.SlowMotion.Enabled || Mods.SlowMoOnBail.Enabled ||
+                                    Mods.InstantRespawn.Enabled ||
+                                    Mods.StickyTyres.Enabled || Mods.Gravity.Level != 5 ||
+                                    Mods.Trees.Enabled;
                     case 6: return MovePage.IsAnyActive;
                     case 7: return WorldPage.IsAnyActive;
                     case 8: return BikePage.IsAnyActive;
@@ -1018,14 +1323,14 @@ namespace DescendersModMenu.UI
             if (accelTogVal) { accelTogVal.text = acOn ? "ON" : "OFF"; accelTogVal.color = acOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(accelTrack, accelKnob, acOn);
             if (accelVal) accelVal.text = Acceleration.Level.ToString();
-            UIHelpers.SetBar(accelBar, (Acceleration.Level - 1) / 9f);
+            UIHelpers.SetBar(accelBar, (Acceleration.Level - 1) / (float)(Acceleration.MaxLevel - 1));
 
             // ── Max Speed ─────────────────────────────────────────────
             bool msOn = MaxSpeedMultiplier.Enabled;
             if (msTogVal) { msTogVal.text = msOn ? "ON" : "OFF"; msTogVal.color = msOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(msTrack, msKnob, msOn);
             if (msVal) msVal.text = MaxSpeedMultiplier.Level.ToString();
-            UIHelpers.SetBar(msBar, (MaxSpeedMultiplier.Level - 1) / 9f);
+            UIHelpers.SetBar(msBar, (MaxSpeedMultiplier.Level - 1) / (float)(MaxSpeedMultiplier.MaxLevel - 1));
 
             // ── No Speed Cap ──────────────────────────────────────────
             bool cap2 = NoSpeedCap.Enabled;
@@ -1038,14 +1343,14 @@ namespace DescendersModMenu.UI
             if (landTogVal) { landTogVal.text = liOn ? "ON" : "OFF"; landTogVal.color = liOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(landTrack, landKnob, liOn);
             if (landVal) landVal.text = LandingImpact.DisplayValue;
-            UIHelpers.SetBar(landBar, (LandingImpact.Level - 1) / 9f);
+            UIHelpers.SetBar(landBar, (LandingImpact.Level - 1) / (float)(LandingImpact.MaxLevel - 1));
 
             // ── Quick Brake ───────────────────────────────────────────
             bool qbOn = QuickBrake.Enabled;
             if (_brakeTogVal) { _brakeTogVal.text = qbOn ? "ON" : "OFF"; _brakeTogVal.color = qbOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_brakeTrack, _brakeKnob, qbOn);
-            if (_brakeLevelBar) UIHelpers.SetBar(_brakeLevelBar, (QuickBrake.Level - 1) / 9f);
-            if (_brakeLevelVal) { _brakeLevelVal.text = QuickBrake.Level == 10 ? "MAX" : QuickBrake.Level.ToString(); }
+            if (_brakeLevelBar) UIHelpers.SetBar(_brakeLevelBar, (QuickBrake.Level - 1) / (float)(QuickBrake.MaxLevel - 1));
+            if (_brakeLevelVal) { _brakeLevelVal.text = QuickBrake.Level == QuickBrake.MaxLevel ? "MAX" : QuickBrake.Level.ToString(); }
 
             // ── No Bail ───────────────────────────────────────────────
             bool bail = NoBail.Enabled;
@@ -1063,6 +1368,73 @@ namespace DescendersModMenu.UI
             bool nsw = GameModifierMods.NoSpeedWobblesEnabled;
             if (nswVal) { nswVal.text = nsw ? "ON" : "OFF"; nswVal.color = nsw ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(nswTrack, nswKnob, nsw);
+
+            // ── FOV ───────────────────────────────────────────────────
+            bool fovOn = FOV.Enabled;
+            if (_fovTogVal) { _fovTogVal.text = fovOn ? "ON" : "OFF"; _fovTogVal.color = fovOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_fovTrack, _fovKnob, fovOn);
+            if (_fovVal) _fovVal.text = FOV.DisplayValue;
+            UIHelpers.SetBar(_fovBar, (FOV.Level - 1) / (float)(FOV.MaxLevel - 1));
+
+            // ── Show HUD ──────────────────────────────────────────────
+            bool hudOn = SessionHUD.Enabled;
+            if (_hudTogVal) { _hudTogVal.text = hudOn ? "ON" : "OFF"; _hudTogVal.color = hudOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_hudTrack, _hudKnob, hudOn);
+
+            // ── Show Compass ──────────────────────────────────────────
+            bool compassOn = CompassAlwaysOn.Enabled;
+            if (_compassVal) { _compassVal.text = compassOn ? "ON" : "OFF"; _compassVal.color = compassOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_compassTrack, _compassKnob, compassOn);
+
+            // ── Hop Force ─────────────────────────────────────────────
+            bool hopOn = Movement.HopEnabled;
+            if (_hopTogVal) { _hopTogVal.text = hopOn ? "ON" : "OFF"; _hopTogVal.color = hopOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_hopTrack, _hopKnob, hopOn);
+            if (_hopVal) _hopVal.text = Movement.HopLevel.ToString();
+            UIHelpers.SetBar(_hopBar, (Movement.HopLevel - 1) / (float)(Movement.MaxLevel - 1));
+
+            // ── Air Control ───────────────────────────────────────────
+            bool iacOn = AirControl.Enabled;
+            if (_iacTogVal) { _iacTogVal.text = iacOn ? "ON" : "OFF"; _iacTogVal.color = iacOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_iacTrack, _iacKnob, iacOn);
+            if (_iacVal) _iacVal.text = AirControl.DisplayValue;
+            UIHelpers.SetBar(_iacBar, (AirControl.Level - 1) / (float)(AirControl.MaxLevel - 1));
+
+            // ── Air Correction / Fakie Balance ────────────────────────
+            if (_airCorrVal) _airCorrVal.text = GameModifierMods.DeltaDisplay(GameModifierMods.InAirCorrLevel);
+            UIHelpers.SetBar(_airCorrBar, (GameModifierMods.InAirCorrLevel - 1) / 9f);
+            if (_fakieBalVal) _fakieBalVal.text = GameModifierMods.DeltaDisplay(GameModifierMods.FakieBalanceLevel);
+            UIHelpers.SetBar(_fakieBalBar, (GameModifierMods.FakieBalanceLevel - 1) / 9f);
+
+            // ── Slow Motion ───────────────────────────────────────────
+            bool slowOn = SlowMotion.Enabled;
+            if (_slowVal) { _slowVal.text = slowOn ? "ON" : "OFF"; _slowVal.color = slowOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_slowTrack, _slowKnob, slowOn);
+            if (_slowSpeedVal) _slowSpeedVal.text = SlowMotion.DisplayValue;
+            UIHelpers.SetBar(_slowSpeedBar, (SlowMotion.Level - 1) / 8f);
+
+            // ── Slow Mo on Bail ───────────────────────────────────────
+            bool smobOn = SlowMoOnBail.Enabled;
+            if (_smobVal) { _smobVal.text = smobOn ? "ON" : "OFF"; _smobVal.color = smobOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_smobTrack, _smobKnob, smobOn);
+
+            // ── Instant Respawn ───────────────────────────────────────
+            bool irOn = InstantRespawn.Enabled;
+            if (_instRespVal) { _instRespVal.text = irOn ? "ON" : "OFF"; _instRespVal.color = irOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_instRespTrack, _instRespKnob, irOn);
+
+            // ── Sticky Tyres ──────────────────────────────────────────
+            bool stickyOn = StickyTyres.Enabled;
+            if (_stickyVal) { _stickyVal.text = stickyOn ? "ON" : "OFF"; _stickyVal.color = stickyOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_stickyTrack, _stickyKnob, stickyOn);
+
+            // ── Gravity ───────────────────────────────────────────────
+            if (_gravityVal) _gravityVal.text = Gravity.DisplayValue;
+            UIHelpers.SetBar(_gravityBar, (Gravity.Level - 1) / 9f);
+
+            // ── Trees & Foliage ───────────────────────────────────────
+            if (_treesVal) { _treesVal.text = !Trees.Enabled ? "ON" : "OFF"; _treesVal.color = !Trees.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_treesTrack, _treesKnob, !Trees.Enabled);
 
             SessionPage.RefreshAll();
             try { BikePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("BikePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "BikePage.RefreshAll"); }

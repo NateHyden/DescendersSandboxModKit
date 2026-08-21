@@ -38,6 +38,15 @@ namespace DescendersModMenu.UI
         public static Color OnColor => UITheme.StateOn;
         public static Color OnBg => UITheme.StateOnBg;
         public static Color OnBdr => UITheme.StateOnBdr;
+
+        /// <summary>
+        /// Dial label where the stock/default level shows as 0%,
+        /// below default goes negative, above goes positive (capped ±100%).
+        /// </summary>
+        public static string OffsetPercent(int level, int defaultLevel, int minLevel, int maxLevel)
+        {
+            return DialDisplay.OffsetPercent(level, defaultLevel, minLevel, maxLevel);
+        }
         public static Color OffColor => UITheme.StateOff;
         public static Color RedDim => UITheme.StateOffBg;
         public static Color RedBdr => UITheme.StateOffBdr;
@@ -478,29 +487,44 @@ namespace DescendersModMenu.UI
                 .AddComponent<LayoutElement>().preferredHeight = 1;
         }
 
-        public static void InfoBox(Transform p, string txt) => InfoBox(p, txt, TextDim);
+        public static void InfoBox(Transform p, string txt) => InfoBox(p, txt, InfoText);
+
+        // Near-white so hints stay readable on dark rows (TextDim is too faint).
+        private static readonly Color InfoText = new Color(0.90f, 0.90f, 0.92f, 1f);
+        private static readonly Color InfoAccent = new Color(0.72f, 0.72f, 0.76f, 1f);
 
         public static void InfoBox(Transform p, string txt, Color textColor)
         {
+            int lines = 1;
+            if (!string.IsNullOrEmpty(txt))
+            {
+                for (int i = 0; i < txt.Length; i++)
+                    if (txt[i] == '\n') lines++;
+            }
+            float h = Mathf.Max(20f, 6f + lines * 13f);
+
             var bx = Panel("Inf", p, RowBg, RowSp);
-            bx.AddComponent<LayoutElement>().preferredHeight = 34;
+            var le = bx.AddComponent<LayoutElement>();
+            le.preferredHeight = h;
+            le.minHeight = h;
+            le.flexibleHeight = 0;
 
             var bd = Panel("Bd", bx.transform, RowBorder, RowSp);
             bd.GetComponent<Image>().raycastTarget = false; Fill(RT(bd));
             bd.AddComponent<LayoutElement>().ignoreLayout = true;
 
-            var lbar = Panel("LBar", bx.transform, TextDim);
+            var lbar = Panel("LBar", bx.transform, InfoAccent);
             var lbRT = RT(lbar);
             lbRT.anchorMin = Vector2.zero; lbRT.anchorMax = new Vector2(0, 1);
             lbRT.pivot = new Vector2(0, 0.5f);
-            lbRT.sizeDelta = new Vector2(2, 0); lbRT.offsetMin = new Vector2(0, 4);
-            lbRT.offsetMax = new Vector2(2, -4);
+            lbRT.sizeDelta = new Vector2(2, 0); lbRT.offsetMin = new Vector2(0, 3);
+            lbRT.offsetMax = new Vector2(2, -3);
             lbar.AddComponent<LayoutElement>().ignoreLayout = true;
 
-            var t = Txt("IT", bx.transform, txt, 10, FontStyle.Italic, TextAnchor.MiddleLeft, textColor);
+            var t = Txt("IT", bx.transform, txt, 10, FontStyle.Normal, TextAnchor.MiddleLeft, textColor);
             t.horizontalOverflow = HorizontalWrapMode.Wrap;
             t.verticalOverflow = VerticalWrapMode.Truncate;
-            Fill(RT(t.gameObject), 14, 12, 4, 4);
+            Fill(RT(t.gameObject), 12, 10, 2, 2);
         }
 
         public static void HotkeyRow(Transform p, string desc, string key)

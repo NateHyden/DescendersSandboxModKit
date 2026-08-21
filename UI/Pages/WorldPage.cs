@@ -1,4 +1,4 @@
-﻿using DescendersModMenu.Mods;
+using DescendersModMenu.Mods;
 using MelonLoader;
 using DescendersModMenu;
 using UnityEngine;
@@ -21,13 +21,8 @@ namespace DescendersModMenu.UI
         private static Text _bzSnowVal, _bzSeasonVal;
         private static UnityEngine.UI.Button _bzSnowMinus, _bzSnowPlus;
 
-        private static Text _gravityVal;
-        private static Image _gravityBar;
         private static Text _todVal;
         private static Image _todBar;
-        private static Text _treesVal;
-        private static Image _treesTrack;
-        private static RectTransform _treesKnob;
         private static Text _musicVal;
         private static Image _musicTrack;
         private static RectTransform _musicKnob;
@@ -60,8 +55,7 @@ namespace DescendersModMenu.UI
         public static bool IsAnyActive =>
             SkyColours.CurrentPreset != 0 || SkyColours.StormEnabled || DiscoMode.Enabled ||
             BlizzardDial.Enabled || IceMode.Enabled || RandomWeatherRoulette.Enabled ||
-            Gravity.Level != 5 ||
-            Trees.Enabled || Music.Enabled || Fog.Enabled ||
+            Music.Enabled || Fog.Enabled ||
             TurboWind.Enabled || ExplodingProps.Enabled || HeadlightsOnly.Enabled;
 
         public static GameObject CreatePage(Transform parent)
@@ -136,7 +130,7 @@ namespace DescendersModMenu.UI
                 _discoSpeedVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.SmallBtn(discoR.transform, "-", () => { DiscoMode.DecreaseSpeed(); RefreshAll(); });
                 UIHelpers.SmallBtn(discoR.transform, "+", () => { DiscoMode.IncreaseSpeed(); RefreshAll(); });
-                UIHelpers.InfoBox(pg7, "Strobes the sky and ambient light through neon disco colours. Speed = how fast it flips. Warning: flashing lights.");
+                UIHelpers.InfoBox(pg7, "Flashes the sky through neon colours. Warning: flashing lights.");
 
                 UIHelpers.Divider(pg7);
 
@@ -161,13 +155,13 @@ namespace DescendersModMenu.UI
                 _bzSeasonVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 56;
                 UIHelpers.SmallBtn(bzser.transform, "\u25B6", () => { BlizzardDial.NextSeason(); RefreshAll(); });
 
-                UIHelpers.InfoBox(pg7, "Turn Blizzard Dial ON first. Amount = snow thickness. Season = strong snow tint (Spring green / Summer warm / Autumn orange / Winter blue) — does nothing while Blizzard is off. Hides grass while on.");
+                UIHelpers.InfoBox(pg7, "Turn Blizzard on first. Amount = how much snow. Season changes the snow colour. Hides grass while on.");
 
                 var wthR = UIHelpers.StatRow("Random Weather Roulette", pg7);
                 _weatherVal = UIHelpers.Txt("WthV", wthR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 _weatherVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(wthR.transform, "WthT", () => { RandomWeatherRoulette.Toggle(); RefreshAll(); }, out _weatherTrack, out _weatherKnob);
-                UIHelpers.InfoBox(pg7, "Flips immediately, then every ~10–18s between Storm, thick Fog, Moon Mode, and Normal. Watch “Current weather”. Reverts when turned off.");
+                UIHelpers.InfoBox(pg7, "Cycles weather every few seconds (storm, fog, night, clear). Turns back to normal when off.");
                 var wthLastR = UIHelpers.StatRow("Current weather", pg7);
                 _weatherLastVal = UIHelpers.Txt("WthLV", wthLastR.transform, RandomWeatherRoulette.LastFlipDisplay, 11,
                     FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.TextDim);
@@ -178,21 +172,11 @@ namespace DescendersModMenu.UI
                 // ── Physics ───────────────────────────────────────────────
                 UIHelpers.SectionHeader("PHYSICS", pg7);
 
-                var gr = UIHelpers.StatRow("Gravity", pg7);
-                _gravityBar = UIHelpers.MakeBar("GrB", gr.transform, (Gravity.Level - 1) / 9f);
-                _gravityVal = UIHelpers.Txt("GrV", gr.transform, Gravity.DisplayValue, 12,
-                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
-                _gravityVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
-                UIHelpers.SmallBtn(gr.transform, "-", () => { Gravity.Decrease(); RefreshAll(); });
-                UIHelpers.SmallBtn(gr.transform, "+", () => { Gravity.Increase(); RefreshAll(); });
-                UIHelpers.Txt("GrHint", gr.transform, "def:-17.5", 9, FontStyle.Italic, TextAnchor.MiddleRight, UIHelpers.TextDim)
-                    .gameObject.AddComponent<LayoutElement>().preferredWidth = 52;
-
                 var imr = UIHelpers.StatRow("Ice Grip", pg7);
                 _iceModeVal = UIHelpers.Txt("ImV", imr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 _iceModeVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(imr.transform, "ImT", () => { IceMode.Toggle(); RefreshAll(); }, out _iceModeTrack, out _iceModeKnob);
-                UIHelpers.InfoBox(pg7, "Removes tyre grip entirely — the whole world is ice.");
+                UIHelpers.InfoBox(pg7, "No tyre grip — everything is ice.");
 
                 UIHelpers.Divider(pg7);
 
@@ -206,16 +190,6 @@ namespace DescendersModMenu.UI
                 _todVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 70;
                 UIHelpers.SmallBtn(tr.transform, "-", () => { TimeOfDay.Decrease(); RefreshAll(); });
                 UIHelpers.SmallBtn(tr.transform, "+", () => { TimeOfDay.Increase(); RefreshAll(); });
-
-                var ter = UIHelpers.StatRow("Trees & Foliage", pg7);
-                _treesVal = UIHelpers.Txt("TrV", ter.transform, "ON", 11,
-                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
-                _treesVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-                UIHelpers.Toggle(ter.transform, "TrT", () =>
-                {
-                    Trees.Toggle();
-                    RefreshAll();
-                }, out _treesTrack, out _treesKnob);
 
                 var mur = UIHelpers.StatRow("Music", pg7);
                 _musicVal = UIHelpers.Txt("MuV", mur.transform, "ON", 11,
@@ -246,7 +220,7 @@ namespace DescendersModMenu.UI
                     HeadlightsOnly.Toggle();
                     RefreshAll();
                 }, out _hlTrack, out _hlKnob);
-                UIHelpers.InfoBox(pg7, "Kills all ambient and directional lighting. Only your headlight illuminates the trail. BikeTorch is auto-enabled at max intensity.");
+                UIHelpers.InfoBox(pg7, "Turns the world dark. Only your headlight lights the trail.");
 
                 var wr = UIHelpers.StatRow("Turbo Wind", pg7);
                 _windVal = UIHelpers.Txt("WnV", wr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -263,7 +237,7 @@ namespace DescendersModMenu.UI
                     FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _windPowerVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
                 UIHelpers.SmallBtn(wpr.transform, "+", () => { TurboWind.IncreasePower(); RefreshAll(); });
-                UIHelpers.InfoBox(pg7, "Pushes your bike with a gust and boosts WindZones / grass. Power 1 = breeze, 3 = default, 10 = old max blast.");
+                UIHelpers.InfoBox(pg7, "Pushes you with wind. 1 = light breeze, 10 = huge blast.");
 
                 var er = UIHelpers.StatRow("No Mistakes", pg7);
                 _explodeVal = UIHelpers.Txt("ExV", er.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -278,13 +252,11 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(pg7);
 
-                FavouritesManager.RegisterStarButton("Gravity", UIHelpers.StarBtn(gr.transform, "Gravity", () => FavouritesManager.Toggle("Gravity")));
                 FavouritesManager.RegisterStarButton("TimeOfDay", UIHelpers.StarBtn(tr.transform, "TimeOfDay", () => FavouritesManager.Toggle("TimeOfDay")));
                 FavouritesManager.RegisterStarButton("TurboWind", UIHelpers.StarBtn(wr.transform, "TurboWind", () => FavouritesManager.Toggle("TurboWind")));
                 FavouritesManager.RegisterStarButton("ExplodingProps", UIHelpers.StarBtn(er.transform, "ExplodingProps", () => FavouritesManager.Toggle("ExplodingProps")));
                 FavouritesManager.RegisterStarButton("Storm", UIHelpers.StarBtn(stmr.transform, "Storm", () => FavouritesManager.Toggle("Storm")));
                 FavouritesManager.RegisterStarButton("DiscoMode", UIHelpers.StarBtn(discoR.transform, "DiscoMode", () => FavouritesManager.Toggle("DiscoMode")));
-                FavouritesManager.RegisterStarButton("Trees", UIHelpers.StarBtn(ter.transform, "Trees", () => FavouritesManager.Toggle("Trees")));
                 FavouritesManager.RegisterStarButton("Music", UIHelpers.StarBtn(mur.transform, "Music", () => FavouritesManager.Toggle("Music")));
                 FavouritesManager.RegisterStarButton("Fog", UIHelpers.StarBtn(fogr.transform, "Fog", () => FavouritesManager.Toggle("Fog")));
                 FavouritesManager.RegisterStarButton("HeadlightsOnly", UIHelpers.StarBtn(_hlRow.transform, "HeadlightsOnly", () => FavouritesManager.Toggle("HeadlightsOnly")));
@@ -293,17 +265,6 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("IceGrip", UIHelpers.StarBtn(imr.transform, "IceGrip", () => FavouritesManager.Toggle("IceGrip")));
                 FavouritesManager.RegisterStarButton("RandomWeatherRoulette", UIHelpers.StarBtn(wthR.transform, "RandomWeatherRoulette", () => FavouritesManager.Toggle("RandomWeatherRoulette")));
 
-                FavouritesManager.Register(new ModFavEntry
-                {
-                    Id = "Gravity",
-                    DisplayName = "Gravity",
-                    TabBadge = "WORLD",
-                    BuildControls = (p) => FavsPage.BuildSliderOnly(p, "Gravity", "Gravity",
-                        () => Gravity.Level, () => Gravity.Increase(), () => Gravity.Decrease(),
-                        () => (Gravity.Level - 1) / 9f, () => RefreshAll(),
-                        () => Gravity.DisplayValue, () => Gravity.Level != 5),
-                    IsActive = () => Gravity.Level != 5
-                });
                 FavouritesManager.Register(new ModFavEntry
                 {
                     Id = "TimeOfDay",
@@ -335,7 +296,7 @@ namespace DescendersModMenu.UI
                             () => TurboWind.Enabled, () => { TurboWind.Toggle(); }, () => RefreshAll());
                         FavsPage.BuildSliderOnly(p, "TurboWindPower", "Wind Power",
                             () => TurboWind.PowerLevel, () => TurboWind.IncreasePower(), () => TurboWind.DecreasePower(),
-                            () => (TurboWind.PowerLevel - 1) / 9f, () => RefreshAll(),
+                            () => (TurboWind.PowerLevel - 1) / (float)(TurboWind.MaxLevel - 1), () => RefreshAll(),
                             () => TurboWind.PowerDisplay, () => TurboWind.Enabled);
                     },
                     IsActive = () => TurboWind.Enabled
@@ -359,15 +320,6 @@ namespace DescendersModMenu.UI
                         () => DiscoMode.SpeedLevel, () => DiscoMode.DecreaseSpeed(), () => DiscoMode.IncreaseSpeed(),
                         1, 10, () => RefreshAll(), 5),
                     IsActive = () => DiscoMode.Enabled
-                });
-                FavouritesManager.Register(new ModFavEntry
-                {
-                    Id = "Trees",
-                    DisplayName = "Trees & Foliage",
-                    TabBadge = "WORLD",
-                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "Trees", "Trees & Foliage",
-                        () => Trees.Enabled, () => { Trees.Toggle(); }, () => RefreshAll()),
-                    IsActive = () => Trees.Enabled
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
@@ -483,13 +435,8 @@ namespace DescendersModMenu.UI
 
         public static void RefreshAll()
         {
-            if (_gravityVal) _gravityVal.text = Gravity.DisplayValue;
-            UIHelpers.SetBar(_gravityBar, (Gravity.Level - 1) / 9f);
             if (_todVal) _todVal.text = TimeOfDay.DisplayValue;
             UIHelpers.SetBar(_todBar, (TimeOfDay.Level - 1) / 9f);
-
-            if (_treesVal) { _treesVal.text = !Trees.Enabled ? "ON" : "OFF"; _treesVal.color = !Trees.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
-            UIHelpers.SetToggle(_treesTrack, _treesKnob, !Trees.Enabled);
 
             if (_musicVal) { _musicVal.text = !Music.Enabled ? "ON" : "OFF"; _musicVal.color = !Music.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_musicTrack, _musicKnob, !Music.Enabled);

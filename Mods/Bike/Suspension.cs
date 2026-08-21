@@ -21,15 +21,37 @@ namespace DescendersModMenu.Mods
 
         private static float Mult(int level) { return level * 0.2f; }
 
+        /// <summary>UI: stock Level 5 = 0%.</summary>
+        public static string PercentDisplay(int level)
+        {
+            return DialDisplay.OffsetPercent(level, 5, 1, 10);
+        }
+
         // ── Travel ────────────────────────────────────────────────────────
-        public static void TravelIncrease() { if (TravelLevel < 10) { TravelLevel++; ApplyTravel(); } }
-        public static void TravelDecrease() { if (TravelLevel > 1) { TravelLevel--; ApplyTravel(); } }
+        public static void TravelIncrease()
+        {
+            if (TravelLevel >= 10) return;
+            bool was = TravelLevel != 5;
+            TravelLevel++;
+            ApplyTravel();
+            ModLog.Dial("Travel", was, TravelLevel != 5);
+        }
+        public static void TravelDecrease()
+        {
+            if (TravelLevel <= 1) return;
+            bool was = TravelLevel != 5;
+            TravelLevel--;
+            ApplyTravel();
+            ModLog.Dial("Travel", was, TravelLevel != 5);
+        }
         public static void SetTravelLevel(int level)
         {
             if (level < 1) level = 1;
             if (level > 10) level = 10;
+            bool was = TravelLevel != 5;
             TravelLevel = level;
             ApplyTravel();
+            ModLog.Dial("Travel", was, TravelLevel != 5);
         }
 
         public static void ApplyTravel()
@@ -54,14 +76,30 @@ namespace DescendersModMenu.Mods
         }
 
         // ── Stiffness ─────────────────────────────────────────────────────
-        public static void StiffnessIncrease() { if (StiffnessLevel < 10) { StiffnessLevel++; ApplyStiffness(); } }
-        public static void StiffnessDecrease() { if (StiffnessLevel > 1) { StiffnessLevel--; ApplyStiffness(); } }
+        public static void StiffnessIncrease()
+        {
+            if (StiffnessLevel >= 10) return;
+            bool was = StiffnessLevel != 5;
+            StiffnessLevel++;
+            ApplyStiffness();
+            ModLog.Dial("Stiffness", was, StiffnessLevel != 5);
+        }
+        public static void StiffnessDecrease()
+        {
+            if (StiffnessLevel <= 1) return;
+            bool was = StiffnessLevel != 5;
+            StiffnessLevel--;
+            ApplyStiffness();
+            ModLog.Dial("Stiffness", was, StiffnessLevel != 5);
+        }
         public static void SetStiffnessLevel(int level)
         {
             if (level < 1) level = 1;
             if (level > 10) level = 10;
+            bool was = StiffnessLevel != 5;
             StiffnessLevel = level;
             ApplyStiffness();
+            ModLog.Dial("Stiffness", was, StiffnessLevel != 5);
         }
 
         public static void ApplyStiffness()
@@ -86,14 +124,30 @@ namespace DescendersModMenu.Mods
         }
 
         // ── Damping ───────────────────────────────────────────────────────
-        public static void DampingIncrease() { if (DampingLevel < 10) { DampingLevel++; ApplyDamping(); } }
-        public static void DampingDecrease() { if (DampingLevel > 1) { DampingLevel--; ApplyDamping(); } }
+        public static void DampingIncrease()
+        {
+            if (DampingLevel >= 10) return;
+            bool was = DampingLevel != 5;
+            DampingLevel++;
+            ApplyDamping();
+            ModLog.Dial("Damping", was, DampingLevel != 5);
+        }
+        public static void DampingDecrease()
+        {
+            if (DampingLevel <= 1) return;
+            bool was = DampingLevel != 5;
+            DampingLevel--;
+            ApplyDamping();
+            ModLog.Dial("Damping", was, DampingLevel != 5);
+        }
         public static void SetDampingLevel(int level)
         {
             if (level < 1) level = 1;
             if (level > 10) level = 10;
+            bool was = DampingLevel != 5;
             DampingLevel = level;
             ApplyDamping();
+            ModLog.Dial("Damping", was, DampingLevel != 5);
         }
 
         public static void ApplyDamping()

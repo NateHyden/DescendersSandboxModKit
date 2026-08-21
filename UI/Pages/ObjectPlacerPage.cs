@@ -138,14 +138,14 @@ namespace DescendersModMenu.UI
                     FontStyle.Italic, TextAnchor.MiddleLeft, UIHelpers.TextDim);
                 _statusVal.gameObject.AddComponent<LayoutElement>().preferredHeight = 18;
 
-                UIHelpers.InfoBox(c, "Scan a Bike Park to fill Map Objects, then star what you want — favourites are saved and stay available on other maps. LB/RB (Z/C) roll, right stick yaw/pitch, left stick / WASD move, E/Q lift. Scroll or +/- camera distance. A/Enter place, B/Esc exit.", Color.white);
+                UIHelpers.InfoBox(c, "Scan a Bike Park, star objects you like, then place them. Favourites save across maps. Stick moves / place with A / exit with B.", Color.white);
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("FAVOURITES", c);
                 int favs = ObjectPlacer.FavCount;
                 if (favs == 0)
                 {
-                    UIHelpers.InfoBox(c, "No favourites yet — tap the star on any object below to pin it here.");
+                    UIHelpers.InfoBox(c, "No favourites yet — tap the star on an object below to pin it here.");
                 }
                 else
                 {

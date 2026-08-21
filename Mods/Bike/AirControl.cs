@@ -8,8 +8,9 @@ namespace DescendersModMenu.Mods
     {
         public static bool Enabled { get; private set; } = false;
         public static int Level { get; private set; } = 5;
+        public const int MaxLevel = 20;
 
-        private static float DampStrength { get { return Mathf.Lerp(0.5f, 5f, (Level - 1) / 9f); } }
+        private static float DampStrength { get { return Mathf.Lerp(0.5f, 10f, (Level - 1) / (float)(MaxLevel - 1)); } }
         public static string DisplayValue { get { return Level.ToString(); } }
 
         private static PropertyInfo _rbProp = null;
@@ -22,9 +23,9 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[AirControl] -> " + (Enabled ? "ON (level " + Level + ")" : "OFF"));
         }
 
-        public static void Increase() { if (Level < 10) Level++; }
+        public static void Increase() { if (Level < MaxLevel) Level++; }
         public static void Decrease() { if (Level > 1) Level--; }
-        public static void SetLevel(int level) { Level = Mathf.Clamp(level, 1, 10); }
+        public static void SetLevel(int level) { Level = Mathf.Clamp(level, 1, MaxLevel); }
 
         public static void FixedTick()
         {

@@ -40,7 +40,7 @@ namespace DescendersModMenu.Mods
                 S("TyrePressure", () => TyrePressure.Enabled, TyrePressure.Toggle),
                 S("SpiderBike", () => SpiderBike.Enabled, SpiderBike.Toggle),
                 S("StickyTyres", () => StickyTyres.Enabled, StickyTyres.Toggle),
-                S("WideTyres", () => WideTyres.Enabled, WideTyres.Toggle),
+                S("WideTyres", () => WideTyres.IsModified, () => { if (WideTyres.IsModified) WideTyres.Reset(); }),
                 S("AirControl", () => AirControl.Enabled, AirControl.Toggle),
                 S("WheelieAngle", () => WheelieAngleLimit.Enabled, WheelieAngleLimit.Toggle),
                 S("BikeTorch", () => BikeTorch.Enabled, BikeTorch.Toggle),

@@ -10,10 +10,11 @@ namespace DescendersModMenu.Mods
     {
         public static bool Enabled { get; private set; } = false;
         public static int Level { get; private set; } = 5;
+        public const int MaxLevel = 20;
 
         private static float GetThreshold()
         {
-            return Mathf.Lerp(15f, 200f, (Level - 1) / 9f);
+            return Mathf.Lerp(15f, 400f, (Level - 1) / (float)(MaxLevel - 1));
         }
         public static string DisplayValue
         {
@@ -31,13 +32,13 @@ namespace DescendersModMenu.Mods
             ModLog.Feedback("[LandingImpact] -> " + (Enabled ? "ON (threshold " + GetThreshold() + ")" : "OFF"));
         }
 
-        public static void Increase() { if (Level < 10) Level++; if (Enabled) Apply(); }
+        public static void Increase() { if (Level < MaxLevel) Level++; if (Enabled) Apply(); }
         public static void Decrease() { if (Level > 1) Level--; if (Enabled) Apply(); }
 
         public static void SetLevel(int level)
         {
             if (level < 1) level = 1;
-            if (level > 10) level = 10;
+            if (level > MaxLevel) level = MaxLevel;
             Level = level;
             if (Enabled) Apply();
         }

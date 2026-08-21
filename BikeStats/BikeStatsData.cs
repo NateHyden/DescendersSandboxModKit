@@ -28,7 +28,7 @@ namespace DescendersModMenu.BikeStats
 
         // ── Quick Brake ────────────────────────────────────────────────
         public bool QuickBrakeEnabled = false;
-        public int QuickBrakeLevel = 5;
+        public int QuickBrakeLevel = 1;
 
         // ── Movement ───────────────────────────────────────────────────
         public int SpinLevel = 1;

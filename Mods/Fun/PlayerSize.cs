@@ -32,11 +32,25 @@ namespace DescendersModMenu.Mods
             catch { }
         }
 
+        public static void Increase()
+        {
+            if (Level >= 20) return;
+            ApplyLevel(Level + 1);
+        }
+
+        public static void Decrease()
+        {
+            if (Level <= 1) return;
+            ApplyLevel(Level - 1);
+        }
+
         public static void ApplyLevel(int level)
         {
+            bool was = IsModified;
             Level = Mathf.Clamp(level, 1, 20);
-            if (Level == 10) ResetToDefault();
+            if (Level == 10) ApplyStockScale();
             else Apply(Scales[Level - 1]);
+            ModLog.Dial("Player Size", was, IsModified);
         }
 
         public static void Apply(float scale)
@@ -55,6 +69,14 @@ namespace DescendersModMenu.Mods
         }
 
         public static void ResetToDefault()
+        {
+            bool was = IsModified;
+            Level = 10;
+            ApplyStockScale();
+            ModLog.Dial("Player Size", was, false);
+        }
+
+        private static void ApplyStockScale()
         {
             try
             {

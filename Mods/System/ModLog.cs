@@ -20,6 +20,16 @@ namespace DescendersModMenu.Mods
             if (!SuppressUserFeedback) MelonLogger.Msg(message);
         }
 
+        /// <summary>
+        /// Percentage/dial mods: log only when leaving stock (ON) or returning to stock (OFF).
+        /// Intermediate steps are silent.
+        /// </summary>
+        public static void Dial(string name, bool wasOffStock, bool isOffStock)
+        {
+            if (wasOffStock == isOffStock) return;
+            Feedback("[" + name + "] -> " + (isOffStock ? "ON" : "OFF"));
+        }
+
         public static void Warn(string message)
         {
             MelonLogger.Warning(message);

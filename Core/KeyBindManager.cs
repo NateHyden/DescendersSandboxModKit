@@ -295,7 +295,7 @@ namespace DescendersModMenu
                     case "NearMiss":           NearMissSensitivity.Toggle();                      break;
                     case "StickyTyres":        StickyTyres.Toggle();                              break;
                     case "SpiderBike":         SpiderBike.Toggle();                               break;
-                    case "WideTyres":          WideTyres.Toggle();                                break;
+                    case "WideTyres":          if (WideTyres.IsModified) WideTyres.Reset(); else WideTyres.Increase(); break;
                     case "ESP":                ESP.Toggle();                                      break;
                     case "BikeDamage":         BikeDamage.Toggle();                               break;
                     case "HeadlightsOnly":     HeadlightsOnly.Toggle();                           break;

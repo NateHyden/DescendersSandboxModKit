@@ -198,6 +198,7 @@
     <Compile Include="Mods\System\PlayerCache.cs" />
     <Compile Include="Mods\System\AllModsSwitch.cs" />
     <Compile Include="Mods\System\ModLog.cs" />
+    <Compile Include="Mods\System\LoadingBrand.cs" />
     <Compile Include="Mods\System\SlowMotion.cs" />
     <Compile Include="Mods\System\SteamPlayerCount.cs" />
     <Compile Include="Mods\System\TeleportToCheckpoint.cs" />
@@ -231,6 +232,7 @@
     <Compile Include="Core\ModEntry.cs" />
     <Compile Include="Core\UnityNull.cs" />
     <Compile Include="Core\Telemetry.cs" />
+    <Compile Include="Core\DialDisplay.cs" />
     <Compile Include="Core\TelemetryConfig.cs" Condition="Exists('Core\TelemetryConfig.cs')" />
     <Compile Include="UI\Core\ColorSchemeManager.cs" />
     <Compile Include="UI\Core\FavouritesManager.cs" />

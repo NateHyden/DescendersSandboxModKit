@@ -89,8 +89,8 @@ namespace DescendersModMenu.UI
                 UIHelpers.InfoBox(c, "Save location:\n" + ScreenshotMode.SaveFolder);
                 UIHelpers.InfoBox(c,
                     "Resolution: 2x your current display (1080p -> 4K)." +
-                    "\nFilenames: screenshot_001.png to screenshot_100.png." +
-                    "\nSlot 101 overwrites slot 001 and so on.");
+                    "\nFilenames: screenshot_yyyyMMdd_HHmmss_fff.png (keeps every shot)." +
+                    "\nNothing is overwritten — old screenshots stay in the folder.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("LAST SCREENSHOT", c);
@@ -127,7 +127,7 @@ namespace DescendersModMenu.UI
                         RefreshAll();
                     }
                 }, 120);
-                UIHelpers.InfoBox(c, "Preview updates automatically after each screenshot. Use Reload Preview if it doesn't appear.");
+                UIHelpers.InfoBox(c, "Preview updates after each shot. Hit Reload Preview if it doesn't show.");
                 UIHelpers.AddScrollForwarders(c);
 
                 FavouritesManager.Register(new ModFavEntry
