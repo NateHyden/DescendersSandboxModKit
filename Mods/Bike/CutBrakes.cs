@@ -3,6 +3,7 @@ using MelonLoader;
 using System.Reflection;
 using UnityEngine;
 using DescendersModMenu;
+using DescendersModMenu.UI;
 
 namespace DescendersModMenu.Mods
 {
@@ -48,7 +49,7 @@ namespace DescendersModMenu.Mods
 
         public static void Postfix(VehicleController __instance)
         {
-            if (!CutBrakes.Enabled) return;
+            if (!CutBrakes.Enabled || MenuUI.IsOpen) return;
             if (!UnityNull.Alive(__instance)) return;
 
             try

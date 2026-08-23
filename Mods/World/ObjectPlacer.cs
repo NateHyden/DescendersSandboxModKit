@@ -99,6 +99,74 @@ namespace DescendersModMenu.Mods
             SavePrefs();
         }
 
+        public static bool RenameFavAt(int index, string newName)
+        {
+            EnsureCatalog();
+            if (index < 0 || index >= _catalog.Count) return false;
+            Placeable p = _catalog[index];
+            string id = p.Id ?? "";
+            if (id.Length == 0 || !_favIds.Contains(id)) return false;
+
+            string cleaned = SanitizeDisplayName(newName);
+            if (cleaned.Length == 0) return false;
+            if (string.Equals(p.Name, cleaned, StringComparison.Ordinal)) return true;
+
+            p.Name = cleaned;
+            if (IsUnityAlive(p.Template)) p.Template.name = cleaned;
+            _catalog[index] = p;
+            PersistFavDisplayName(p);
+            ModLog.Feedback("[ObjectPlacer] Renamed favourite to " + cleaned);
+            return true;
+        }
+
+        private static string SanitizeDisplayName(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return "";
+            var sb = new System.Text.StringBuilder(raw.Length);
+            for (int i = 0; i < raw.Length; i++)
+            {
+                char c = raw[i];
+                if (c == '\n' || c == '\r' || c == '\t') continue;
+                if (c < 32) continue;
+                sb.Append(c);
+                if (sb.Length >= 32) break;
+            }
+            return sb.ToString().Trim();
+        }
+
+        private static void PersistFavDisplayName(Placeable p)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(p.Id)) return;
+                string metaPath = Path.Combine(FavDirFor(p.Id), "meta.txt");
+                if (!File.Exists(metaPath)) return;
+
+                string[] lines = File.ReadAllLines(metaPath);
+                bool found = false;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    if (lines[i].StartsWith("name=", StringComparison.Ordinal))
+                    {
+                        lines[i] = "name=" + p.Name;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    var list = new List<string>(lines);
+                    list.Insert(0, "name=" + p.Name);
+                    lines = list.ToArray();
+                }
+                File.WriteAllLines(metaPath, lines);
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] PersistFavDisplayName: " + ex.Message);
+            }
+        }
+
         public static int FavCount
         {
             get
@@ -115,6 +183,11 @@ namespace DescendersModMenu.Mods
         public static void BumpRotate(int dir) { EnsurePrefs(); RotateSpeedLevel = ClampLevel(RotateSpeedLevel + dir); SavePrefs(); }
         public static void BumpLift(int dir) { EnsurePrefs(); LiftSpeedLevel = ClampLevel(LiftSpeedLevel + dir); SavePrefs(); }
         public static void BumpCamDistance(int dir) { EnsurePrefs(); CamDistanceLevel = ClampLevel(CamDistanceLevel + dir); SavePrefs(); }
+        public static void BumpMeshScale(int dir)
+        {
+            MeshScaleLevel = ClampLevel(MeshScaleLevel + dir);
+            RefreshGhostShape();
+        }
 
         private static int ClampLevel(int level)
         {
@@ -145,22 +218,27 @@ namespace DescendersModMenu.Mods
         private static readonly float[] RotateSpeeds = { 30f, 45f, 60f, 75f, 90f, 115f, 140f, 175f, 220f, 280f };
         private static readonly float[] LiftSpeeds = { 1f, 1.5f, 2f, 2.5f, 3f, 4f, 5.5f, 7f, 9f, 12f };
         private static readonly float[] CamDistances = { 5f, 7f, 9f, 12f, 16f, 22f, 30f, 42f, 58f, 80f };
+        // Session-only — resets on map/scene change (not persisted).
+        private static readonly float[] MeshScales = { 0.4f, 0.55f, 0.7f, 0.85f, 1f, 1.25f, 1.5f, 2f, 2.75f, 4f };
 
         public static int MoveSpeedLevel { get; private set; } = 5;
         public static int RotateSpeedLevel { get; private set; } = 5;
         public static int LiftSpeedLevel { get; private set; } = 5;
         public static int CamDistanceLevel { get; private set; } = 5;
+        public static int MeshScaleLevel { get; private set; } = 5;
 
         public static float MoveSpeed { get { return MoveSpeeds[MoveSpeedLevel - 1]; } }
         public static float YawSpeed { get { return RotateSpeeds[RotateSpeedLevel - 1]; } }
         public static float LiftSpeed { get { return LiftSpeeds[LiftSpeedLevel - 1]; } }
         public static float PitchSpeed { get { return YawSpeed * 0.67f; } }
         public static float CamDistance { get { return CamDistances[CamDistanceLevel - 1]; } }
+        public static float MeshScale { get { return MeshScales[MeshScaleLevel - 1]; } }
 
         public static string MoveSpeedDisplay { get { return MoveSpeed.ToString("0.#"); } }
         public static string RotateSpeedDisplay { get { return YawSpeed.ToString("0"); } }
         public static string LiftSpeedDisplay { get { return LiftSpeed.ToString("0.#"); } }
         public static string CamDistanceDisplay { get { return CamDistance.ToString("0") + "m"; } }
+        public static string MeshScaleDisplay { get { return MeshScale.ToString("0.##") + "x"; } }
 
         private static readonly HashSet<string> _favIds = new HashSet<string>();
         private static bool _prefsLoaded = false;
@@ -185,6 +263,14 @@ namespace DescendersModMenu.Mods
         private const float SpawnForwardDist = 6f;
         private const int MaxHarvest = 80;
         private static readonly HashSet<string> _harvestKeys = new HashSet<string>();
+        private static readonly HashSet<int> _ownedTemplateIds = new HashSet<int>();
+        private static bool _favsRestored = false;
+        private static bool _mapScannedThisScene = false;
+        private static bool _scanActive = false;
+        private static MeshFilter[] _scanFilters;
+        private static int _scanIndex;
+        private static int _scanAdded;
+        private const int ScanBatchSize = 16;
 
         private static Vector3 CurrentCamOffset
         {
@@ -310,7 +396,8 @@ namespace DescendersModMenu.Mods
                 _savedNoBail = NoBail.Enabled;
                 NoBail.SetEnabled(true);
 
-                ScanMap();
+                if (!_mapScannedThisScene)
+                    BeginAsyncScan();
 
                 Enabled = true;
                 ModLog.Debug("[ObjectPlacer] Placement mode ON. physField=" + ((object)_physField != null)
@@ -365,6 +452,9 @@ namespace DescendersModMenu.Mods
 
         public static void Tick()
         {
+            if (_scanActive)
+                ProcessScanBatch(ScanBatchSize);
+
             if (!Enabled) return;
             if (WasCancelPressed()) { Exit(true); return; }
             if (!UnityNull.Alive(_vehicle) || !UnityNull.Alive(_rb)) { Exit(); return; }
@@ -578,6 +668,9 @@ namespace DescendersModMenu.Mods
                         e = _catalog[SelectedIndex];
                 }
                 if (!IsUnityAlive(e.Template)) return BuildPrimitiveFallback(name);
+
+                EnsureTemplateReady(e.Template);
+
                 GameObject clone = UnityEngine.Object.Instantiate(e.Template);
                 clone.name = name;
                 clone.SetActive(true);
@@ -627,6 +720,12 @@ namespace DescendersModMenu.Mods
 
         private static void PrepareInstance(GameObject go, bool ghost)
         {
+            if (!IsUnityAlive(go)) return;
+
+            float s = MeshScale;
+            if (Mathf.Abs(s - 1f) > 0.001f)
+                go.transform.localScale = go.transform.localScale * s;
+
             Collider[] cols = go.GetComponentsInChildren<Collider>(true);
             for (int i = 0; i < cols.Length; i++)
                 if ((object)cols[i] != null) cols[i].enabled = !ghost;
@@ -670,18 +769,51 @@ namespace DescendersModMenu.Mods
 
         public static void ScanMap()
         {
-            EnsureCatalog();
+            _scanActive = false;
+            _scanFilters = null;
+            BeginAsyncScan();
+            while (_scanActive)
+                ProcessScanBatch(512);
+        }
 
-            int added = 0;
+        private static void BeginAsyncScan()
+        {
+            if (_scanActive) return;
+            EnsureCatalog();
+            _scanFilters = Resources.FindObjectsOfTypeAll<MeshFilter>();
+            _scanIndex = 0;
+            _scanAdded = 0;
+            _scanActive = true;
+        }
+
+        private static void FinishScan(bool log)
+        {
+            _scanActive = false;
+            _scanFilters = null;
+            HarvestedCount += _scanAdded;
+            _mapScannedThisScene = true;
+            RefreshGhostShape();
+            if (!log) return;
+            if (_scanAdded > 0)
+                ModLog.Feedback("[ObjectPlacer] Added " + _scanAdded + " — library " + HarvestedCount);
+            else
+                ModLog.Feedback("[ObjectPlacer] No new objects — library " + HarvestedCount);
+        }
+
+        private static void ProcessScanBatch(int maxSteps)
+        {
+            if (!_scanActive || _scanFilters == null) return;
+
+            int steps = 0;
+            int added = _scanAdded;
             try
             {
-                MeshFilter[] filters = Resources.FindObjectsOfTypeAll<MeshFilter>();
-
-                for (int i = 0; i < filters.Length; i++)
+                while (_scanIndex < _scanFilters.Length && steps < maxSteps)
                 {
                     if (HarvestedCount + added >= MaxHarvest) break;
 
-                    MeshFilter mf = filters[i];
+                    MeshFilter mf = _scanFilters[_scanIndex++];
+                    steps++;
                     if ((object)mf == null) continue;
                     GameObject go = mf.gameObject;
                     if ((object)go == null || !go.activeInHierarchy) continue;
@@ -747,14 +879,13 @@ namespace DescendersModMenu.Mods
             catch (Exception ex)
             {
                 ModLog.Error("[ObjectPlacer] ScanMap: " + ex.Message, ex, "ObjectPlacer");
+                FinishScan(false);
+                return;
             }
 
-            HarvestedCount += added;
-            RefreshGhostShape();
-            if (added > 0)
-                ModLog.Feedback("[ObjectPlacer] Added " + added + " — library " + HarvestedCount);
-            else
-                ModLog.Feedback("[ObjectPlacer] No new objects — library " + HarvestedCount);
+            _scanAdded = added;
+            if (_scanIndex >= _scanFilters.Length || HarvestedCount + added >= MaxHarvest)
+                FinishScan(true);
         }
 
         private static string HarvestKey(Mesh mesh)
@@ -902,6 +1033,8 @@ namespace DescendersModMenu.Mods
         {
             EnsurePrefs();
             if (_catalog.Count == 0) SeedPrimitives();
+            if (_favsRestored) return;
+            _favsRestored = true;
             RestorePersistedFavs();
             RepairMissingFavTemplates();
         }
@@ -1030,18 +1163,16 @@ namespace DescendersModMenu.Mods
 
         public static void Reset()
         {
-            try { PersistAllLiveFavs(); } catch (Exception ex)
-            {
-                ModLog.Warn("[ObjectPlacer] PersistAllLiveFavs: " + ex.Message);
-            }
             if (Enabled) Exit();
             ClearPlaced(false);
             _physField = null;
             _toggleCtrl = null;
-            try { RepairMissingFavTemplates(); } catch (Exception ex)
-            {
-                ModLog.Warn("[ObjectPlacer] RepairMissingFavTemplates: " + ex.Message);
-            }
+            _favsRestored = false;
+            _mapScannedThisScene = false;
+            _scanActive = false;
+            _scanFilters = null;
+            _ownedTemplateIds.Clear();
+            MeshScaleLevel = 5;
         }
 
         private static string PrefsPath
@@ -1131,7 +1262,12 @@ namespace DescendersModMenu.Mods
             if (p.IsPrimitive || string.IsNullOrEmpty(p.Id)) return;
             if (!IsUnityAlive(p.Template)) return;
 
-            DetachSharedMeshes(p.Template);
+            OwnTemplateAssets(p.Template);
+            if (TemplateLooksBroken(p.Template))
+            {
+                ModLog.Warn("[ObjectPlacer] Fav save aborted (broken mesh/material): " + p.Name);
+                return;
+            }
             SaveFavToDisk(p);
         }
 
@@ -1148,6 +1284,39 @@ namespace DescendersModMenu.Mods
             }
         }
 
+        /// <summary>
+        /// Lightweight prep before ghost/place — mesh copy + colliders only.
+        /// Full material bake happens when favouriting (SaveFavToDisk).
+        /// </summary>
+        private static void EnsureTemplateReady(GameObject root)
+        {
+            if (!IsUnityAlive(root)) return;
+            int tid = root.GetInstanceID();
+            if (_ownedTemplateIds.Contains(tid)) return;
+
+            DetachSharedMeshes(root);
+            EnsureSolidColliders(root);
+            _ownedTemplateIds.Add(tid);
+        }
+
+        private static void MarkTemplateOwned(GameObject root)
+        {
+            if (!IsUnityAlive(root)) return;
+            _ownedTemplateIds.Add(root.GetInstanceID());
+        }
+
+        /// <summary>
+        /// Full bake — meshes, materials, colliders. Used for disk persistence only.
+        /// </summary>
+        private static void OwnTemplateAssets(GameObject root)
+        {
+            if (!IsUnityAlive(root)) return;
+            DetachSharedMeshes(root);
+            BakeOwnedMaterials(root);
+            EnsureSolidColliders(root);
+            MarkTemplateOwned(root);
+        }
+
         private static void DetachSharedMeshes(GameObject root)
         {
             if (!IsUnityAlive(root)) return;
@@ -1156,46 +1325,126 @@ namespace DescendersModMenu.Mods
             {
                 MeshFilter mf = filters[i];
                 if (!IsUnityAlive(mf) || !IsUnityAlive(mf.sharedMesh)) continue;
-                Mesh copy = UnityEngine.Object.Instantiate(mf.sharedMesh);
+                Mesh src = mf.sharedMesh;
+                // Already a private copy we own.
+                if (src.hideFlags == HideFlags.DontUnloadUnusedAsset
+                    && src.name != null && src.name.EndsWith("_OPCopy", StringComparison.Ordinal))
+                    continue;
+                Mesh copy = UnityEngine.Object.Instantiate(src);
+                copy.name = src.name + "_OPCopy";
                 copy.hideFlags = HideFlags.DontUnloadUnusedAsset;
                 mf.sharedMesh = copy;
             }
+        }
 
+        private static void BakeOwnedMaterials(GameObject root)
+        {
+            if (!IsUnityAlive(root)) return;
             Renderer[] rends = root.GetComponentsInChildren<Renderer>(true);
             for (int i = 0; i < rends.Length; i++)
             {
                 Renderer r = rends[i];
                 if (!IsUnityAlive(r)) continue;
-                Material[] mats = r.materials;
-                if (mats == null) continue;
-                for (int m = 0; m < mats.Length; m++)
+
+                Material[] srcMats = null;
+                try { srcMats = r.sharedMaterials; } catch { srcMats = null; }
+                if (srcMats == null || srcMats.Length == 0)
                 {
-                    if (!IsUnityAlive(mats[m])) continue;
-                    OwnMaterialTextures(mats[m]);
+                    Material one = CreateFavMaterial(new Color(0.72f, 0.55f, 0.32f, 1f), null);
+                    if (IsUnityAlive(one)) r.sharedMaterial = one;
+                    continue;
                 }
-                r.materials = mats;
+
+                Material[] owned = new Material[srcMats.Length];
+                for (int m = 0; m < srcMats.Length; m++)
+                {
+                    Material src = srcMats[m];
+                    Color col = GetMaterialColor(src);
+                    Texture albedo = GetAlbedoTexture(src);
+                    Texture2D albedoCopy = null;
+                    if (IsUnityAlive(albedo))
+                        albedoCopy = CopyTextureReadable(albedo);
+                    owned[m] = CreateFavMaterial(col, albedoCopy);
+                    if (!IsUnityAlive(owned[m]))
+                        owned[m] = CreateFavMaterial(col, null);
+                }
+                r.sharedMaterials = owned;
             }
         }
 
-        private static void OwnMaterialTextures(Material mat)
+        private static void EnsureSolidColliders(GameObject root)
         {
-            if (!IsUnityAlive(mat)) return;
-            mat.hideFlags = HideFlags.DontUnloadUnusedAsset;
-
-            string[] props = { "_MainTex", "_BaseMap", "_Diffuse", "_Albedo", "_BaseColorMap", "_ColorMap" };
-            for (int i = 0; i < props.Length; i++)
+            if (!IsUnityAlive(root)) return;
+            MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
+            for (int i = 0; i < filters.Length; i++)
             {
-                string prop = props[i];
-                if (!mat.HasProperty(prop)) continue;
-                Texture src = mat.GetTexture(prop);
-                if (!IsUnityAlive(src)) continue;
-                Texture2D owned = CopyTextureReadable(src);
-                if (!IsUnityAlive(owned)) continue;
-                owned.hideFlags = HideFlags.DontUnloadUnusedAsset;
-                mat.SetTexture(prop, owned);
-                if (prop == "_MainTex" || i == 0)
-                    mat.mainTexture = owned;
+                MeshFilter mf = filters[i];
+                if (!IsUnityAlive(mf) || !IsUnityAlive(mf.sharedMesh)) continue;
+                if (mf.sharedMesh.vertexCount < 3) continue;
+
+                MeshCollider mc = mf.GetComponent<MeshCollider>();
+                if (!IsUnityAlive(mc))
+                    mc = mf.gameObject.AddComponent<MeshCollider>();
+                mc.sharedMesh = null;
+                mc.sharedMesh = mf.sharedMesh;
+                mc.convex = false;
+                mc.isTrigger = false;
+                mc.enabled = true;
             }
+        }
+
+        private static void RepairMissingMaterials(GameObject root)
+        {
+            if (!IsUnityAlive(root)) return;
+            if (_ownedTemplateIds.Contains(root.GetInstanceID())) return;
+            Renderer[] rends = root.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < rends.Length; i++)
+            {
+                Renderer r = rends[i];
+                if (!IsUnityAlive(r)) continue;
+                Material[] mats = null;
+                try { mats = r.sharedMaterials; } catch { mats = null; }
+                bool broken = mats == null || mats.Length == 0;
+                if (!broken)
+                {
+                    for (int m = 0; m < mats.Length; m++)
+                    {
+                        if (!IsUnityAlive(mats[m]) || !IsUnityAlive(mats[m].shader))
+                        { broken = true; break; }
+                    }
+                }
+                if (!broken) continue;
+                Material fix = CreateFavMaterial(new Color(0.72f, 0.55f, 0.32f, 1f), null);
+                if (IsUnityAlive(fix)) r.sharedMaterial = fix;
+            }
+        }
+
+        private static bool TemplateLooksBroken(GameObject root)
+        {
+            if (!IsUnityAlive(root)) return true;
+            MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
+            int liveMeshes = 0;
+            for (int i = 0; i < filters.Length; i++)
+            {
+                if (!IsUnityAlive(filters[i]) || !IsUnityAlive(filters[i].sharedMesh)) continue;
+                if (filters[i].sharedMesh.vertexCount >= 3) liveMeshes++;
+            }
+            if (liveMeshes == 0) return true;
+
+            Renderer[] rends = root.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < rends.Length; i++)
+            {
+                if (!IsUnityAlive(rends[i])) continue;
+                Material[] mats = null;
+                try { mats = rends[i].sharedMaterials; } catch { return true; }
+                if (mats == null || mats.Length == 0) return true;
+                for (int m = 0; m < mats.Length; m++)
+                {
+                    if (!IsUnityAlive(mats[m]) || !IsUnityAlive(mats[m].shader))
+                        return true;
+                }
+            }
+            return false;
         }
 
         private static Texture2D CopyTextureReadable(Texture src)
@@ -1450,8 +1699,8 @@ namespace DescendersModMenu.Mods
                 if (_catalog[i].IsPrimitive) continue;
                 string id = _catalog[i].Id ?? "";
                 if (!_favIds.Contains(id)) continue;
-                if (IsUnityAlive(_catalog[i].Template)) continue;
-                TryReloadFavTemplate(i);
+                if (!IsUnityAlive(_catalog[i].Template))
+                    TryReloadFavTemplate(i);
             }
         }
 
@@ -1524,6 +1773,7 @@ namespace DescendersModMenu.Mods
                 placeable.Group = group;
                 placeable.IsPrimitive = false;
                 placeable.Template = root;
+                MarkTemplateOwned(root);
                 return true;
             }
             catch (Exception ex)
@@ -1640,20 +1890,67 @@ namespace DescendersModMenu.Mods
             }
         }
 
+        private static Shader _favShader;
+
+        private static Shader ResolveFavShader()
+        {
+            if (IsUnityAlive(_favShader)) return _favShader;
+
+            string[] names =
+            {
+                "Standard",
+                "Legacy Shaders/Diffuse",
+                "Diffuse",
+                "Mobile/Diffuse",
+                "Unlit/Texture",
+                "Unlit/Color",
+                "Sprites/Default"
+            };
+            for (int i = 0; i < names.Length; i++)
+            {
+                Shader s = Shader.Find(names[i]);
+                if (IsUnityAlive(s))
+                {
+                    _favShader = s;
+                    return _favShader;
+                }
+            }
+
+            // Last resort: steal the shader Unity puts on a primitive.
+            try
+            {
+                GameObject tmp = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                Renderer rend = tmp.GetComponent<Renderer>();
+                if (IsUnityAlive(rend) && IsUnityAlive(rend.sharedMaterial)
+                    && IsUnityAlive(rend.sharedMaterial.shader))
+                    _favShader = rend.sharedMaterial.shader;
+                UnityEngine.Object.Destroy(tmp);
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[ObjectPlacer] ResolveFavShader primitive: " + ex.Message);
+            }
+            return _favShader;
+        }
+
         private static Material CreateFavMaterial(Color col, Texture2D albedo)
         {
-            Shader shader = Shader.Find("Standard");
-            if ((object)shader == null) shader = Shader.Find("Legacy Shaders/Diffuse");
-            if ((object)shader == null) shader = Shader.Find("Diffuse");
-            if ((object)shader == null) shader = Shader.Find("Mobile/Diffuse");
-            if ((object)shader == null) return null;
+            Shader shader = ResolveFavShader();
+            if (!IsUnityAlive(shader))
+            {
+                ModLog.Warn("[ObjectPlacer] No usable shader for fav materials.");
+                return null;
+            }
 
             Material mat = new Material(shader);
             mat.hideFlags = HideFlags.DontUnloadUnusedAsset;
+            mat.name = "ObjectPlacer_Mat";
             if (mat.HasProperty("_Color")) mat.color = col;
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", col);
             if (IsUnityAlive(albedo))
             {
                 if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", albedo);
+                if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", albedo);
                 mat.mainTexture = albedo;
             }
             return mat;
@@ -1702,7 +1999,9 @@ namespace DescendersModMenu.Mods
                 template.transform.localRotation = Quaternion.identity;
 
                 DetachSharedMeshes(template);
-                if (!TemplateHasAlbedo(template))
+                BakeOwnedMaterials(template);
+                EnsureSolidColliders(template);
+                if (TemplateLooksBroken(template))
                 {
                     UnityEngine.Object.Destroy(template);
                     return;
@@ -1713,7 +2012,7 @@ namespace DescendersModMenu.Mods
                 p.Template = template;
                 _catalog[index] = p;
                 SaveFavToDisk(p);
-                ModLog.Feedback("[ObjectPlacer] Updated textures for " + p.Name);
+                ModLog.Feedback("[ObjectPlacer] Rebaked favourite " + p.Name);
             }
             catch (Exception ex)
             {

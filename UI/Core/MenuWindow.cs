@@ -1269,6 +1269,7 @@ namespace DescendersModMenu.UI
             if (pg22) pg22.SetActive(cur == 22);
             if (pg23) pg23.SetActive(cur == 23);
             if (pg24) pg24.SetActive(cur == 24);
+            if (cur != 24) ObjectPlacerPage.CancelRename();
             if (cur == 24) ObjectPlacerPage.RefreshAll();
             if (pg25) pg25.SetActive(cur == 25);
             if (cur == 25) InfoPage.RefreshCustomisePage();

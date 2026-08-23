@@ -197,6 +197,7 @@
     <Compile Include="Mods\System\PerkMenu.cs" />
     <Compile Include="Mods\System\PlayerCache.cs" />
     <Compile Include="Mods\System\AllModsSwitch.cs" />
+    <Compile Include="Mods\System\MenuBrakeHold.cs" />
     <Compile Include="Mods\System\ModLog.cs" />
     <Compile Include="Mods\System\LoadingBrand.cs" />
     <Compile Include="Mods\System\SlowMotion.cs" />
@@ -212,6 +213,8 @@
     <Compile Include="Mods\Fun\InvisiblePlayer.cs" />
     <Compile Include="Mods\Fun\MoonMode.cs" />
     <Compile Include="Mods\Fun\PlayerSize.cs" />
+    <Compile Include="Mods\Fun\CartoonSquash.cs" />
+    <Compile Include="Mods\Fun\RideOnWater.cs" />
     <Compile Include="Mods\Other\TrailPainter.cs" />
     <Compile Include="Mods\Other\ConfettiOnTrick.cs" />
     <Compile Include="Mods\Other\Airhorn.cs" />
@@ -272,6 +275,8 @@
     <Compile Include="UI\Core\GamepadCursor.cs" />
     <Compile Include="UI\Core\MenuWindow.cs" />
     <Compile Include="UI\Core\WindowDragHandler.cs" />
+    <Compile Include="UI\Core\MenuInputGuard.cs" />
+    <Compile Include="UI\Core\MenuToggleWatcher.cs" />
     <Compile Include="UI\Core\MenuUI.cs" />
     <Compile Include="UI\HUDs\WheelieHUD.cs" />
   </ItemGroup>

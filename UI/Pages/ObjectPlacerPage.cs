@@ -15,10 +15,14 @@ namespace DescendersModMenu.UI
         private static Image _autoTrack;
         private static RectTransform _autoKnob;
         private static Text _statusVal;
-        private static Image _moveBar, _rotBar, _liftBar, _camBar;
-        private static Text _moveVal, _rotVal, _liftVal, _camVal;
+        private static Image _moveBar, _rotBar, _liftBar, _camBar, _scaleBar;
+        private static Text _moveVal, _rotVal, _liftVal, _camVal, _scaleVal;
+        private static Text _renameText;
+        private static int _renamingIndex = -1;
+        private static string _renameBuffer = "";
 
         public static bool IsAnyActive => ObjectPlacer.IsAnyActive;
+        public static bool IsRenaming => _renamingIndex >= 0;
 
         public static GameObject CreatePage(Transform parent)
         {
@@ -86,6 +90,7 @@ namespace DescendersModMenu.UI
         public static void RebuildList()
         {
             if (!_listRoot) { _listRoot = null; return; }
+            _renameText = null;
             try
             {
                 while (_listRoot.childCount > 0)
@@ -130,6 +135,14 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(camr.transform, "-", () => { ObjectPlacer.BumpCamDistance(-1); RefreshHeader(); });
                 UIHelpers.SmallBtn(camr.transform, "+", () => { ObjectPlacer.BumpCamDistance(1); RefreshHeader(); });
 
+                var scR = UIHelpers.StatRow("Mesh Scale", c);
+                _scaleBar = UIHelpers.MakeBar("ScB", scR.transform, (ObjectPlacer.MeshScaleLevel - 1) / 9f);
+                _scaleVal = UIHelpers.Txt("ScV", scR.transform, ObjectPlacer.MeshScaleDisplay, 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+                _scaleVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 40;
+                UIHelpers.SmallBtn(scR.transform, "-", () => { ObjectPlacer.BumpMeshScale(-1); RefreshHeader(); });
+                UIHelpers.SmallBtn(scR.transform, "+", () => { ObjectPlacer.BumpMeshScale(1); RefreshHeader(); });
+
                 var lib = UIHelpers.StatRow("Library", c);
                 UIHelpers.ActionBtn(lib.transform, "Scan Map", () => { ObjectPlacer.ScanMap(); RebuildList(); }, 70);
                 UIHelpers.ActionBtnOrange(lib.transform, "Forget", () => { ObjectPlacer.ClearHarvested(); RebuildList(); }, 56);
@@ -138,7 +151,7 @@ namespace DescendersModMenu.UI
                     FontStyle.Italic, TextAnchor.MiddleLeft, UIHelpers.TextDim);
                 _statusVal.gameObject.AddComponent<LayoutElement>().preferredHeight = 18;
 
-                UIHelpers.InfoBox(c, "Scan a Bike Park, star objects you like, then place them. Favourites save across maps. Stick moves / place with A / exit with B.", Color.white);
+                UIHelpers.InfoBox(c, "Scan a Bike Park, star objects you like, then place them. Favourites save across maps. Mesh Scale is session-only (resets each map). Stick moves / place with A / exit with B.", Color.white);
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("FAVOURITES", c);
@@ -149,6 +162,10 @@ namespace DescendersModMenu.UI
                 }
                 else
                 {
+                    UIHelpers.InfoBox(c,
+                        "Click a favourite name to rename · Enter to save · Esc to cancel",
+                        Color.white);
+
                     int totalFavScan = ObjectPlacer.CatalogCount;
                     for (int i = 0; i < totalFavScan; i++)
                     {
@@ -225,28 +242,156 @@ namespace DescendersModMenu.UI
             bool selected = ObjectPlacer.SelectedIndex == index;
             bool fav = ObjectPlacer.IsFavAt(index);
             string label = ObjectPlacer.GetNameAt(index);
-            if (ObjectPlacer.IsHarvestedAt(index)) label = label + "  · map";
+            if (!fromFavBox && ObjectPlacer.IsHarvestedAt(index)) label = label + "  · map";
 
-            var row = UIHelpers.StatRow(label, c);
+            var row = UIHelpers.StatRow("", c);
+            StripEmptyStatLabel(row);
+
+            if (fromFavBox)
+            {
+                // Match star + Use width on the left so the name centres in the full row.
+                float sideW = 22f + 8f + 44f;
+                var leftPad = UIHelpers.Obj("FavPad" + index, row.transform);
+                leftPad.AddComponent<LayoutElement>().preferredWidth = sideW;
+                leftPad.transform.SetAsFirstSibling();
+
+                var nmObj = UIHelpers.Obj("FavNm" + index, row.transform);
+                var nmImg = nmObj.AddComponent<Image>();
+                nmImg.color = new Color(0, 0, 0, 0);
+                var nmLe = nmObj.AddComponent<LayoutElement>();
+                nmLe.flexibleWidth = 1;
+                nmLe.preferredHeight = UIHelpers.RowH;
+                var nmBtn = nmObj.AddComponent<Button>();
+                var nmCb = nmBtn.colors;
+                nmCb.normalColor = Color.white;
+                nmCb.highlightedColor = UIHelpers.AccentDim;
+                nmCb.pressedColor = UIHelpers.Accent;
+                nmCb.colorMultiplier = 1;
+                nmBtn.colors = nmCb;
+                nmBtn.onClick.AddListener(() => StartRename(captured));
+
+                var nmTxt = UIHelpers.Txt("FavNmT" + index, nmObj.transform, label, 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter,
+                    (_renamingIndex == captured) ? UIHelpers.Accent : UIHelpers.TextLight);
+                UIHelpers.Fill(UIHelpers.RT(nmTxt.gameObject));
+                nmTxt.raycastTarget = false;
+                if (_renamingIndex == captured)
+                {
+                    _renameText = nmTxt;
+                    nmTxt.text = UIHelpers.WithCaret(_renameBuffer, true);
+                }
+            }
+            else
+            {
+                var labelTxt = UIHelpers.Txt("ObjL" + index, row.transform, label, 12,
+                    FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextLight);
+                var lle = labelTxt.gameObject.AddComponent<LayoutElement>();
+                lle.flexibleWidth = 1;
+                lle.preferredHeight = UIHelpers.RowH;
+            }
+
             var star = UIHelpers.Btn("Fav" + (fromFavBox ? "F" : "G") + index, row.transform, "\u2605",
                 new Vector2(22, 22), 13,
-                () => { ObjectPlacer.ToggleFav(captured); RebuildList(); },
+                () =>
+                {
+                    if (IsRenaming) CancelRename();
+                    ObjectPlacer.ToggleFav(captured);
+                    RebuildList();
+                },
                 new Color(0, 0, 0, 0),
                 fav ? UIHelpers.Accent : UIHelpers.TextDim);
             var sle = star.gameObject.AddComponent<LayoutElement>();
             sle.preferredWidth = 22; sle.preferredHeight = 22;
             sle.minWidth = 22; sle.minHeight = 22;
 
-            var tag = UIHelpers.Txt("Sel" + (fromFavBox ? "F" : "G") + index, row.transform,
-                selected ? "USING" : "Use", 10,
-                FontStyle.Bold, TextAnchor.MiddleCenter,
-                selected ? UIHelpers.OnColor : UIHelpers.TextDim);
-            tag.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
             UIHelpers.ActionBtn(row.transform, selected ? "✓" : "Use", () =>
             {
+                if (IsRenaming) CancelRename();
                 ObjectPlacer.SetObject(captured);
                 RebuildList();
             }, 44);
+        }
+
+        public static void CancelRename()
+        {
+            _renamingIndex = -1;
+            _renameBuffer = "";
+            _renameText = null;
+        }
+
+        private static void StripEmptyStatLabel(GameObject row)
+        {
+            if ((object)row == null) return;
+            Transform t = row.transform;
+            for (int i = 0; i < t.childCount; i++)
+            {
+                Transform ch = t.GetChild(i);
+                if ((object)ch == null) continue;
+                Text txt = ch.GetComponent<Text>();
+                if ((object)txt == null) continue;
+                if (!string.IsNullOrEmpty(txt.text)) continue;
+                LayoutElement le = ch.GetComponent<LayoutElement>();
+                if ((object)le != null && le.flexibleWidth > 0f)
+                {
+                    UnityEngine.Object.DestroyImmediate(ch.gameObject);
+                    return;
+                }
+            }
+        }
+
+        private static void StartRename(int index)
+        {
+            if (!ObjectPlacer.IsFavAt(index)) return;
+            _renamingIndex = index;
+            _renameBuffer = ObjectPlacer.GetNameAt(index);
+            RebuildList();
+        }
+
+        public static void Tick()
+        {
+            if (_renamingIndex < 0) return;
+            TickRename();
+        }
+
+        private static void TickRename()
+        {
+            foreach (char ch in Input.inputString)
+            {
+                if (ch == '\b')
+                {
+                    if (_renameBuffer.Length > 0)
+                        _renameBuffer = _renameBuffer.Substring(0, _renameBuffer.Length - 1);
+                }
+                else if (ch == '\n' || ch == '\r')
+                {
+                    int idx = _renamingIndex;
+                    string name = _renameBuffer;
+                    CancelRename();
+                    if (name.Length > 0)
+                        ObjectPlacer.RenameFavAt(idx, name);
+                    RebuildList();
+                    return;
+                }
+                else if (ch == '\x1b')
+                {
+                    CancelRename();
+                    RebuildList();
+                    return;
+                }
+                else if (_renameBuffer.Length < 32)
+                {
+                    _renameBuffer += ch;
+                }
+            }
+
+            if (MenuInputGuard.GetKeyDown(KeyCode.Escape))
+            {
+                CancelRename();
+                RebuildList();
+                return;
+            }
+
+            if (_renameText) _renameText.text = UIHelpers.WithCaret(_renameBuffer, true);
         }
 
         private static string StatusLine()
@@ -274,10 +419,12 @@ namespace DescendersModMenu.UI
             UIHelpers.SetBar(_rotBar, (ObjectPlacer.RotateSpeedLevel - 1) / 9f);
             UIHelpers.SetBar(_liftBar, (ObjectPlacer.LiftSpeedLevel - 1) / 9f);
             UIHelpers.SetBar(_camBar, (ObjectPlacer.CamDistanceLevel - 1) / 9f);
+            UIHelpers.SetBar(_scaleBar, (ObjectPlacer.MeshScaleLevel - 1) / 9f);
             if (_moveVal) _moveVal.text = ObjectPlacer.MoveSpeedDisplay;
             if (_rotVal) _rotVal.text = ObjectPlacer.RotateSpeedDisplay;
             if (_liftVal) _liftVal.text = ObjectPlacer.LiftSpeedDisplay;
             if (_camVal) _camVal.text = ObjectPlacer.CamDistanceDisplay;
+            if (_scaleVal) _scaleVal.text = ObjectPlacer.MeshScaleDisplay;
         }
 
         public static void RefreshAll()
@@ -288,6 +435,7 @@ namespace DescendersModMenu.UI
 
         public static void ClearUiRefs()
         {
+            CancelRename();
             _listRoot = null;
             _placeVal = null;
             _placeTrack = null;
@@ -300,10 +448,12 @@ namespace DescendersModMenu.UI
             _rotBar = null;
             _liftBar = null;
             _camBar = null;
+            _scaleBar = null;
             _moveVal = null;
             _rotVal = null;
             _liftVal = null;
             _camVal = null;
+            _scaleVal = null;
         }
     }
 }

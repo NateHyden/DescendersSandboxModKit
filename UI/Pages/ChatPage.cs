@@ -175,13 +175,13 @@ namespace DescendersModMenu.UI
                 var itLe = _inputText.gameObject.AddComponent<LayoutElement>();
                 itLe.flexibleWidth = 1; itLe.minWidth = 0; itLe.minHeight = InputLineH;
 
-                _chatCursor = UIHelpers.Txt("ChCur", inputBg.transform, "●",
-                    10, FontStyle.Normal, TextAnchor.UpperRight, UIHelpers.OnColor);
+                _chatCursor = UIHelpers.Txt("ChCur", inputBg.transform, "|",
+                    12, FontStyle.Bold, TextAnchor.UpperRight, UIHelpers.Accent);
                 _chatCursor.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                 var ccRT = UIHelpers.RT(_chatCursor.gameObject);
                 ccRT.anchorMin = new Vector2(1, 1); ccRT.anchorMax = new Vector2(1, 1);
                 ccRT.pivot = new Vector2(1, 1);
-                ccRT.sizeDelta = new Vector2(14, 14);
+                ccRT.sizeDelta = new Vector2(10, 16);
                 ccRT.anchoredPosition = new Vector2(-4, -2);
                 _chatCursor.gameObject.SetActive(false);
 
@@ -239,17 +239,7 @@ namespace DescendersModMenu.UI
                     _chatFocused = false;
             }
 
-            if (_chatCursor)
-            {
-                _chatCursor.gameObject.SetActive(_chatFocused);
-                if (_chatFocused)
-                {
-                    float alpha = Mathf.Abs(Mathf.Sin(Time.unscaledTime * 4f));
-                    Color col = UIHelpers.OnColor;
-                    col.a = alpha;
-                    _chatCursor.color = col;
-                }
-            }
+            if (_chatCursor) _chatCursor.gameObject.SetActive(false);
 
             if (_statusText)
             {
@@ -285,12 +275,12 @@ namespace DescendersModMenu.UI
             }
             if (_inputBuffer.Length > 0)
             {
-                _inputText.text = SoftWrapForDisplay(_inputBuffer);
+                _inputText.text = SoftWrapForDisplay(UIHelpers.WithCaret(_inputBuffer, true));
                 _inputText.color = UIHelpers.TextLight;
             }
             else
             {
-                _inputText.text = "Type a message...";
+                _inputText.text = UIHelpers.WithCaret("Type a message...", true);
                 _inputText.color = UIHelpers.TextDim;
             }
             ResizeInputBox();

@@ -85,8 +85,13 @@ namespace DescendersModMenu.UI
         void Update()
         {
             if ((object)_cursorRT == null) return;
+            MenuInputGuard.ForceAllowInControl = true;
+            MenuInputGuard.BeginBypass();
             try
             {
+                // Menu close with controller bind is handled in ModEntry (WasPressed).
+                // Stick / A-click for UI only below.
+
                 InControl.InputDevice dev = InControl.InputManager.ActiveDevice;
                 float rawX = ((object)dev != null) ? (float)dev.LeftStick.X : 0f;
                 float rawY = ((object)dev != null) ? (float)dev.LeftStick.Y : 0f;
@@ -129,6 +134,11 @@ namespace DescendersModMenu.UI
                 if ((object)dev != null) HandleActionButton(dev);
             }
             catch (Exception ex) { MelonLogger.Error("[GamepadCursor] Update: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "GamepadCursor"); }
+            finally
+            {
+                MenuInputGuard.EndBypass();
+                MenuInputGuard.ForceAllowInControl = false;
+            }
         }
 
         private PointerEventData BuildPointerData()
@@ -189,6 +199,11 @@ namespace DescendersModMenu.UI
             }
 
             if (!dev.Action1.WasPressed) return;
+
+            // Menu-open bind on A: toggle already handled in ModEntry this frame.
+            if (KeyBindManager.MenuToggleThisFrame
+                && KeyBindManager.GetMenuOpenCode() == KeyBindManager.CtrlA)
+                return;
 
             GameObject rawHit = RaycastTopHit();
             if ((object)rawHit == null) return;

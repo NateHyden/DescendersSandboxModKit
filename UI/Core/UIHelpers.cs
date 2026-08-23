@@ -39,6 +39,19 @@ namespace DescendersModMenu.UI
         public static Color OnBg => UITheme.StateOnBg;
         public static Color OnBdr => UITheme.StateOnBdr;
 
+        /// <summary>Blinking caret on/off (~2.2 Hz), shared by all menu text fields.</summary>
+        public static bool CaretVisible
+        {
+            get { return ((int)(Time.unscaledTime * 2.2f) & 1) == 0; }
+        }
+
+        /// <summary>Append a PC-style blinking | caret when focused.</summary>
+        public static string WithCaret(string text, bool focused)
+        {
+            if (!focused) return text ?? "";
+            return (text ?? "") + (CaretVisible ? "|" : " ");
+        }
+
         /// <summary>
         /// Dial label where the stock/default level shows as 0%,
         /// below default goes negative, above goes positive (capped ±100%).
@@ -643,7 +656,9 @@ namespace DescendersModMenu.UI
                 midImg.color = UITheme.Accent;
                 midImg.raycastTarget = true;
 
-                var msb = handleGO.AddComponent<ManualScrollbar>();
+                // Script lives on the track so LateUpdate keeps running when the
+                // handle is hidden (e.g. after a binds Rebuild with few rows).
+                var msb = trackGO.AddComponent<ManualScrollbar>();
                 msb.Init(sr, trackRT, handleRT, inset);
             }
             catch (System.Exception ex)
@@ -738,13 +753,16 @@ namespace DescendersModMenu.UI
                 float norm = Mathf.Clamp01(_sr.verticalNormalizedPosition);
                 float topOff = (1f - norm) * maxOff;
 
+                bool show = ratio < 0.999f;
+                if (_handleRT.gameObject.activeSelf != show)
+                    _handleRT.gameObject.SetActive(show);
+                if (!show) return;
+
                 _handleRT.anchorMin = new Vector2(0f, 1f);
                 _handleRT.anchorMax = new Vector2(1f, 1f);
                 _handleRT.pivot = new Vector2(0.5f, 1f);
                 _handleRT.offsetMin = new Vector2(_inset, -topOff - handleH);
                 _handleRT.offsetMax = new Vector2(-_inset, -topOff);
-
-                gameObject.SetActive(ratio < 0.999f);
             }
             catch { }
         }

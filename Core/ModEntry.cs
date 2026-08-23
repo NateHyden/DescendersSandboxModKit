@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "2.0.0";
+        public const string Version = "2.1.0";
         public const string DownloadLink = null;
     }
 
@@ -41,6 +41,7 @@ namespace DescendersModMenu
         private bool _reapplyExplodingProps;
         private bool _reapplyHoverMode; private float _reapplyHoverHeight;
         private bool _reapplyBouncyBike; private int _reapplyBouncyLevel;
+        private bool _reapplyCartoonSquash; private int _reapplyCartoonSpeed; private int _reapplyCartoonAmount; private bool _reapplyCartoonJelly;
         private bool _reapplyBlizzardDial; private int _reapplyBlizzardSnow; private int _reapplyBlizzardSeason;
         private bool _reapplyDiscoMode; private int _reapplyDiscoSpeed;
         private bool _reapplyDiscoTorch;
@@ -80,6 +81,8 @@ namespace DescendersModMenu
             catch (System.Exception ex) { MelonLogger.Error("QuickBrake.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("QuickBrake", false, ex.Message);  Telemetry.ReportErrorAsync(ex, "QuickBrake"); }
             try { CutBrakes.ApplyPatch(harmony); DiagnosticsManager.Report("CutBrakes", true); }
             catch (System.Exception ex) { MelonLogger.Error("CutBrakes.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("CutBrakes", false, ex.Message);  Telemetry.ReportErrorAsync(ex, "CutBrakes"); }
+            try { MenuBrakeHold.ApplyPatch(harmony); DiagnosticsManager.Report("MenuBrakeHold", true); }
+            catch (System.Exception ex) { MelonLogger.Error("MenuBrakeHold.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("MenuBrakeHold", false, ex.Message); Telemetry.ReportErrorAsync(ex, "MenuBrakeHold"); }
             try { BrakeFade.ApplyPatch(harmony); DiagnosticsManager.Report("BrakeFade", true); }
             catch (System.Exception ex) { MelonLogger.Error("BrakeFade.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("BrakeFade", false, ex.Message);  Telemetry.ReportErrorAsync(ex, "BrakeFade"); }
             try { BikeDamage.ApplyPatch(harmony); DiagnosticsManager.Report("BikeDamage", true); }
@@ -92,6 +95,8 @@ namespace DescendersModMenu
             catch (System.Exception ex) { MelonLogger.Error("AutoBalance.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("AutoBalance", false, ex.Message);  Telemetry.ReportErrorAsync(ex, "AutoBalance"); }
             try { IceMode.ApplyPatch(harmony); DiagnosticsManager.Report("IceMode", true); }
             catch (System.Exception ex) { MelonLogger.Error("IceMode.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("IceMode", false, ex.Message);  Telemetry.ReportErrorAsync(ex, "IceMode"); }
+            try { RideOnWater.ApplyPatch(harmony); }
+            catch (System.Exception ex) { MelonLogger.Error("RideOnWater.ApplyPatch: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RideOnWater"); }
             try { BlizzardDial.ApplyPatch(harmony); }
             catch (System.Exception ex) { MelonLogger.Error("BlizzardDial.ApplyPatch: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BlizzardDial"); DiagnosticsManager.Report("BlizzardDial", false, ex.Message); }
             try { TyrePressure.ApplyPatch(harmony); DiagnosticsManager.Report("TyrePressure", true); }
@@ -168,6 +173,9 @@ namespace DescendersModMenu
             try { KeyBindManager.LoadBindings(); }
             catch (System.Exception ex) { ModLog.Warn("KeyBindManager.LoadBindings: " + ex.Message); }
 
+            try { UI.MenuToggleWatcher.Ensure(); }
+            catch (System.Exception ex) { ModLog.Warn("MenuToggleWatcher.Ensure: " + ex.Message); }
+
             try { UI.ColorSchemeManager.LoadAndApply(); }
             catch (System.Exception ex) { ModLog.Warn("ColorSchemeManager.LoadAndApply: " + ex.Message); }
 
@@ -192,6 +200,7 @@ namespace DescendersModMenu
             GhostReplay.OnSceneInitialized();
             MapChanger.OnSceneInitialized();
             ExplodingProps.OnSceneInitialized(sceneName);
+            try { RideOnWater.OnSceneInitialized(); } catch (System.Exception ex) { MelonLogger.Error("RideOnWater.OnSceneInitialized: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RideOnWater"); }
             if (buildindex == 1) MapChanger.BuildMapList();
             try { UI.SessionPage.RefreshAll(); } catch { }
 
@@ -224,6 +233,7 @@ namespace DescendersModMenu
             try { CompassAlwaysOn.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("CompassAlwaysOn.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CompassAlwaysOn"); }
             try { TimeOfDay.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("TimeOfDay.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TimeOfDay"); }
             try { PlayerCache.Clear(); } catch (System.Exception ex) { MelonLogger.Error("PlayerCache.Clear: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PlayerCache"); }
+            try { RideOnWater.OnSceneUnloaded(); } catch (System.Exception ex) { MelonLogger.Error("RideOnWater.OnSceneUnloaded: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RideOnWater"); }
 
             if (_pendingReapply)
             {
@@ -292,6 +302,11 @@ namespace DescendersModMenu
             float hoverHeight = HoverMode.HoverHeight;
             bool wasBouncyBike = BouncyBike.Enabled;
             int bouncyLv = BouncyBike.BouncinessLevel;
+            bool wasCartoonSquash = CartoonSquash.Enabled;
+            int cartoonSpeed = CartoonSquash.SpeedLevel;
+            int cartoonAmount = CartoonSquash.AmountLevel;
+            bool cartoonJelly = CartoonSquash.JellyMode;
+            bool wasCartoonAny = wasCartoonSquash || cartoonJelly;
             bool wasBlizzard = BlizzardDial.Enabled;
             int blizzardSnow = BlizzardDial.SnowLevel;
             int blizzardSeason = BlizzardDial.SeasonIndex;
@@ -354,6 +369,7 @@ namespace DescendersModMenu
             if (wasExploding) ModLog.Debug("[Reapply]   ExplodingProps");
             if (wasHoverMode) ModLog.Debug("[Reapply]   HoverMode h=" + hoverHeight);
             if (wasBouncyBike) ModLog.Debug("[Reapply]   BouncyBike lv=" + bouncyLv);
+            if (wasCartoonAny) ModLog.Debug("[Reapply]   CartoonSquash bounce=" + wasCartoonSquash + " jelly=" + cartoonJelly + " spd=" + cartoonSpeed + " amt=" + cartoonAmount);
             if (wasBlizzard) ModLog.Debug("[Reapply]   BlizzardDial snow=" + blizzardSnow + " season=" + blizzardSeason);
             if (wasDisco) ModLog.Debug("[Reapply]   DiscoMode spd=" + discoSpeed);
             if (wasDiscoTorch) ModLog.Debug("[Reapply]   DiscoTorch");
@@ -393,7 +409,7 @@ namespace DescendersModMenu
             SurvivalMode.Reset();
             LavaRising.Reset();
             SessionTrackers.Reset(); ExplodingProps.Reset();
-            Trees.Reset(); BouncyBike.Reset(); BlizzardDial.Reset(); DiscoMode.Reset();
+            Trees.Reset(); BouncyBike.Reset(); CartoonSquash.Reset(); BlizzardDial.Reset(); DiscoMode.Reset();
             ObjectPlacer.Reset();
             SuspensionHUD.ClearCache();
             BrakeFade.ClearCache(); BrakeFade_Patch.ClearCache();
@@ -449,6 +465,7 @@ namespace DescendersModMenu
             _reapplyExplodingProps = wasExploding;
             _reapplyHoverMode = wasHoverMode; _reapplyHoverHeight = hoverHeight;
             _reapplyBouncyBike = wasBouncyBike; _reapplyBouncyLevel = bouncyLv;
+            _reapplyCartoonSquash = wasCartoonAny; _reapplyCartoonSpeed = cartoonSpeed; _reapplyCartoonAmount = cartoonAmount; _reapplyCartoonJelly = cartoonJelly;
             _reapplyBlizzardDial = wasBlizzard; _reapplyBlizzardSnow = blizzardSnow; _reapplyBlizzardSeason = blizzardSeason;
             _reapplyDiscoMode = wasDisco; _reapplyDiscoSpeed = discoSpeed;
             _reapplyDiscoTorch = wasDiscoTorch;
@@ -476,7 +493,7 @@ namespace DescendersModMenu
                 wasFov || wasSpeedrunTimer || wasAcceleration || wasMaxSpeed ||
                 wasLandingImpact || wasMoveSpin || wasMoveHop || wasMoveWheelie || wasMoveLean ||
                 wasBikeTorch || wasCamShake || wasNearMiss || wasExploding ||
-                wasHoverMode || wasBouncyBike || wasBlizzard || wasDisco || wasDiscoTorch ||
+                wasHoverMode || wasBouncyBike || wasCartoonAny || wasBlizzard || wasDisco || wasDiscoTorch ||
                 comNeed || suspNeed || gameModneed || wasPedalWhileTweak ||
                 bikeScaleNeed || playerScaleNeed || wasInvisBike || wasInvisPlayer;
 
@@ -486,9 +503,31 @@ namespace DescendersModMenu
             finally { ModLog.SuppressUserFeedback = false; }
         }
 
+        private static void TryToggleMenuFromInput()
+        {
+            if (UI.BindsPage.IsListening) return;
+
+            // Controller bind is handled by MenuToggleWatcher (always-on LateUpdate).
+            // F6 only here.
+            MenuInputGuard.BeginBypass();
+            try
+            {
+                if (Input.GetKeyDown(KeyCode.F6)
+                    && !KeyBindManager.IsKeyBoundToMod(KeyCode.F6))
+                    MenuUI.ToggleMenu();
+            }
+            finally { MenuInputGuard.EndBypass(); }
+        }
+
         public override void OnUpdate()
         {
             try { LoadingBrand.Tick(); } catch (System.Exception ex) { MelonLogger.Error("LoadingBrand.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LoadingBrand"); }
+            try { RideOnWater.Tick(); } catch (System.Exception ex) { MelonLogger.Error("RideOnWater.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RideOnWater"); }
+
+            try { UI.MenuToggleWatcher.Ensure(); } catch { }
+
+            try { TryToggleMenuFromInput(); }
+            catch (System.Exception ex) { MelonLogger.Error("ToggleMenu: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ToggleMenu"); }
 
             if (_pendingModifierDump || _pendingAutoLoad || _pendingTelemetryPing || _pendingReapply)
             {
@@ -546,6 +585,7 @@ namespace DescendersModMenu
                     if (_reapplyExplodingProps) { _reapplyExplodingProps = false; try { ExplodingProps.Toggle(); ok++; ModLog.Debug("[Reapply]   + ExplodingProps"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! ExplodingProps: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! ExplodingProps"); } }
                     if (_reapplyHoverMode) { _reapplyHoverMode = false; try { HoverMode.SetHeight(_reapplyHoverHeight); HoverMode.Toggle(); ok++; ModLog.Debug("[Reapply]   + HoverMode"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! HoverMode: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! HoverMode"); } }
                     if (_reapplyBouncyBike) { _reapplyBouncyBike = false; try { BouncyBike.SetLevel(_reapplyBouncyLevel); BouncyBike.Toggle(); ok++; ModLog.Debug("[Reapply]   + BouncyBike"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! BouncyBike: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! BouncyBike"); } }
+                    if (_reapplyCartoonSquash) { _reapplyCartoonSquash = false; try { CartoonSquash.SpeedLevel = _reapplyCartoonSpeed; CartoonSquash.AmountLevel = _reapplyCartoonAmount; if (_reapplyCartoonJelly) CartoonSquash.SetJellyEnabled(true); else CartoonSquash.SetEnabled(true); ok++; ModLog.Debug("[Reapply]   + CartoonSquash"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! CartoonSquash: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! CartoonSquash"); } }
                     if (_reapplyBlizzardDial) { _reapplyBlizzardDial = false; try { BlizzardDial.SetSnowLevel(_reapplyBlizzardSnow); BlizzardDial.SetSeasonIndex(_reapplyBlizzardSeason); BlizzardDial.Toggle(); ok++; ModLog.Debug("[Reapply]   + BlizzardDial"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! BlizzardDial: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! BlizzardDial"); } }
                     if (_reapplyDiscoMode) { _reapplyDiscoMode = false; try { DiscoMode.SetSpeed(_reapplyDiscoSpeed); DiscoMode.Toggle(); ok++; ModLog.Debug("[Reapply]   + DiscoMode"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! DiscoMode: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! DiscoMode"); } }
                     if (_reapplyDiscoTorch) { _reapplyDiscoTorch = false; try { if (!BikeTorch.DiscoEnabled) BikeTorch.ToggleDisco(); ok++; ModLog.Debug("[Reapply]   + DiscoTorch"); } catch (System.Exception ex) { fail++; MelonLogger.Error("[Reapply]   ! DiscoTorch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "Reapply   ! DiscoTorch"); } }
@@ -629,16 +669,8 @@ namespace DescendersModMenu
                     _pendingRStickSave = false;
                     _lastRStickClick = -999f;
                 }
-                if (!UI.BindsPage.IsListening)
-                {
-                    bool menuKey = KeyBindManager.CheckMenuOpenPressed();
-                    if (!menuKey && Input.GetKeyDown(KeyCode.F6)
-                        && !KeyBindManager.IsKeyBoundToMod(KeyCode.F6))
-                        menuKey = true;
-                    if (menuKey) MenuUI.ToggleMenu();
-                }
             }
-            catch (System.Exception ex) { MelonLogger.Error("ToggleMenu: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ToggleMenu"); }
+            catch (System.Exception ex) { MelonLogger.Error("GhostReplay hotkeys: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostReplay"); }
             try { UI.BindsPage.CheckController(); } catch (System.Exception ex) { MelonLogger.Error("BindsPage.CheckController: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BindsPage.CheckController"); }
 
             try { SceneDumper.CheckHotkey(); } catch (System.Exception ex) { MelonLogger.Error("SceneDumper: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SceneDumper"); }
@@ -655,12 +687,15 @@ namespace DescendersModMenu
             try { SpectateMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SpectateMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SpectateMode"); }
             try { Trees.Tick(); } catch (System.Exception ex) { MelonLogger.Error("Trees.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "Trees"); }
             try { BouncyBike.Tick(); } catch (System.Exception ex) { MelonLogger.Error("BouncyBike.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BouncyBike"); }
+            try { CartoonSquash.Tick(); } catch (System.Exception ex) { MelonLogger.Error("CartoonSquash.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CartoonSquash"); }
             try { OutfitPage.Tick(); } catch (System.Exception ex) { MelonLogger.Error("OutfitPage.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OutfitPage"); }
+            try { ObjectPlacerPage.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ObjectPlacerPage.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ObjectPlacerPage"); }
+            try { BindsPage.Tick(); } catch (System.Exception ex) { MelonLogger.Error("BindsPage.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BindsPage"); }
             try { ChatPage.Tick(); } catch (System.Exception ex) { LogUiTickError("ChatPage.Tick", ex); }
             try { EspPage.Tick(); } catch (System.Exception ex) { LogUiTickError("EspPage.Tick", ex); }
             try { InfoPage.Tick(); } catch (System.Exception ex) { LogUiTickError("InfoPage.Tick", ex); }
             try { FavsPage.Tick(); } catch (System.Exception ex) { LogUiTickError("FavsPage.Tick", ex); }
-            if (!OutfitPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.SearchPage.IsQueryFocused)
+            if (!MenuUI.IsOpen && !OutfitPage.IsRenaming && !ObjectPlacerPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.SearchPage.IsQueryFocused && !UI.BindsPage.IsQueryFocused)
                 try { SessionTrackers.CheckpointTick(); } catch (System.Exception ex) { MelonLogger.Error("SessionTrackers.CheckpointTick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionTrackers"); }
             try { ModesPage.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ModesPage.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ModesPage"); }
             try { AvalancheMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("AvalancheMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "AvalancheMode"); }
@@ -692,7 +727,7 @@ namespace DescendersModMenu
             try { BikeTorch.TickDisco(); } catch (System.Exception ex) { MelonLogger.Error("BikeTorch.TickDisco: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BikeTorch.TickDisco"); }
             try { ModDetection.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ModDetection.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ModDetection"); }
             try { ModChat.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ModChat.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ModChat"); }
-            if (!OutfitPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.BindsPage.IsListening && !UI.SearchPage.IsQueryFocused)
+            if (!MenuUI.IsOpen && !OutfitPage.IsRenaming && !ObjectPlacerPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.BindsPage.IsListening && !UI.SearchPage.IsQueryFocused && !UI.BindsPage.IsQueryFocused)
                 try { KeyBindManager.CheckAll(); } catch (System.Exception ex) { MelonLogger.Error("KeyBindManager.CheckAll: " + ex.Message); Telemetry.ReportErrorAsync(ex, "KeyBindManager"); }
         }
 

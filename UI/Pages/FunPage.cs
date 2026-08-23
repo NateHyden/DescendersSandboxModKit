@@ -32,21 +32,33 @@ namespace DescendersModMenu.UI
         private static Text _moonTxt;
 
         private static GameObject _invisPlayerRow, _mirrorRow, _flyRow, _drunkRow;
+        private static GameObject _cartoonSquashRow;
+        private static Text _cartoonSquashVal, _cartoonSpeedVal, _cartoonAmountVal, _cartoonJellyVal;
+        private static Image _cartoonSquashTrack, _cartoonJellyTrack;
+        private static RectTransform _cartoonSquashKnob, _cartoonJellyKnob;
+        private static UnityEngine.UI.Button _cartoonSpeedMinus, _cartoonSpeedPlus;
+        private static UnityEngine.UI.Button _cartoonAmountMinus, _cartoonAmountPlus;
 
 
         public static void CaptureSceneDefaults()
         {
             PlayerSize.CaptureDefaults();
+            CartoonSquash.CaptureDefaults();
         }
 
         private static Text _hoverVal, _hoverHeightVal;
         private static Image _hoverTrack;
         private static RectTransform _hoverKnob;
 
+        private static Text _rideWaterVal;
+        private static Image _rideWaterTrack;
+        private static RectTransform _rideWaterKnob;
+
         public static bool IsAnyActive =>
             InvisiblePlayer.Enabled || MoonMode.IsActive || PlayerSize.IsModified ||
             MirrorMode.Enabled || FlyMode.Enabled || DrunkMode.Enabled ||
-            CameraShake.Enabled || HoverMode.Enabled;
+            CameraShake.Enabled || HoverMode.Enabled || CartoonSquash.IsActive ||
+            RideOnWater.Enabled;
 
         public static void GlobalReset()
         {
@@ -54,6 +66,7 @@ namespace DescendersModMenu.UI
             if (MoonMode.IsActive) MoonMode.Toggle();
             if (HoverMode.Enabled) HoverMode.Toggle();
             HoverMode.SetHeight(3f);
+            if (RideOnWater.Enabled) RideOnWater.SetEnabled(false);
             PlayerSize.ApplyLevel(10);
             if (MirrorMode.Enabled) MirrorMode.Toggle();
             if (FlyMode.Enabled) FlyMode.Toggle();
@@ -62,6 +75,7 @@ namespace DescendersModMenu.UI
             if (DrunkMode.Enabled) DrunkMode.Toggle();
             if (CameraShake.Enabled) CameraShake.Toggle();
             CameraShake.SetLevel(5);
+            CartoonSquash.GlobalReset();
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -118,6 +132,44 @@ namespace DescendersModMenu.UI
                     if (PlayerSize.Level < 20) { PlayerSize.Increase(); RefreshAll(); }
                 });
                 UIHelpers.InfoBox(pg9, "10 is normal. Lower = smaller rider, higher = bigger.");
+
+                UIHelpers.SectionHeader("CARTOON SQUASH", pg9);
+                _cartoonSquashRow = UIHelpers.StatRow("Squash & Stretch", pg9);
+                _cartoonSquashVal = UIHelpers.Txt("CsV", _cartoonSquashRow.transform, "OFF", 11,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _cartoonSquashVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(_cartoonSquashRow.transform, "CsT",
+                    () => { CartoonSquash.Toggle(); RefreshAll(); },
+                    out _cartoonSquashTrack, out _cartoonSquashKnob);
+
+                var csSpeedRow = UIHelpers.StatRow("Bounce Speed", pg9);
+                _cartoonSpeedMinus = UIHelpers.SmallBtn(csSpeedRow.transform, "-",
+                    () => { CartoonSquash.DecreaseSpeed(); RefreshAll(); });
+                _cartoonSpeedVal = UIHelpers.Txt("CsSpd", csSpeedRow.transform, CartoonSquash.SpeedDisplay, 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _cartoonSpeedVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 52;
+                _cartoonSpeedPlus = UIHelpers.SmallBtn(csSpeedRow.transform, "+",
+                    () => { CartoonSquash.IncreaseSpeed(); RefreshAll(); });
+
+                var csAmtRow = UIHelpers.StatRow("Squash Amount", pg9);
+                _cartoonAmountMinus = UIHelpers.SmallBtn(csAmtRow.transform, "-",
+                    () => { CartoonSquash.DecreaseAmount(); RefreshAll(); });
+                _cartoonAmountVal = UIHelpers.Txt("CsAmt", csAmtRow.transform, CartoonSquash.AmountLevel.ToString(), 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _cartoonAmountVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 32;
+                _cartoonAmountPlus = UIHelpers.SmallBtn(csAmtRow.transform, "+",
+                    () => { CartoonSquash.IncreaseAmount(); RefreshAll(); });
+
+                var csJellyRow = UIHelpers.StatRow("Jelly Mode", pg9);
+                _cartoonJellyVal = UIHelpers.Txt("CsJelV", csJellyRow.transform, "OFF", 11,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _cartoonJellyVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(csJellyRow.transform, "CsJelT",
+                    () => { CartoonSquash.ToggleJelly(); RefreshAll(); },
+                    out _cartoonJellyTrack, out _cartoonJellyKnob);
+
+                UIHelpers.InfoBox(pg9,
+                    "Pick one: Bounce = constant squash loop. Jelly = soft body on landings (harder landings squash more). They can't both be on.");
 
                 UIHelpers.Divider(pg9);
 
@@ -205,6 +257,12 @@ namespace DescendersModMenu.UI
                 UIHelpers.SmallBtn(hoverRow.transform, "+", () => { HoverMode.IncreaseHeight(); RefreshAll(); });
                 UIHelpers.InfoBox(pg9, "How high you float above the ground. Negative sinks you under it.");
 
+                var rideWaterRow = UIHelpers.StatRow("Ride On Water", pg9);
+                _rideWaterVal = UIHelpers.Txt("RoWV", rideWaterRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _rideWaterVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(rideWaterRow.transform, "RoWT", () => { RideOnWater.Toggle(); RefreshAll(); }, out _rideWaterTrack, out _rideWaterKnob);
+                UIHelpers.InfoBox(pg9, "Stops water (and other kill volumes) from auto-bailing, and makes them solid so you can ride on them.");
+
                 UIHelpers.Divider(pg9);
 
                 // ── CAMERA ────────────────────────────────────────────
@@ -244,8 +302,13 @@ namespace DescendersModMenu.UI
                 FavouritesManager.RegisterStarButton("FlyClimbSpeed", UIHelpers.StarBtn(flyClimbRow.transform, "FlyClimbSpeed", () => FavouritesManager.Toggle("FlyClimbSpeed")));
                 FavouritesManager.RegisterStarButton("MirrorMode", UIHelpers.StarBtn(_mirrorRow.transform, "MirrorMode", () => FavouritesManager.Toggle("MirrorMode")));
                 FavouritesManager.RegisterStarButton("HoverMode", UIHelpers.StarBtn(hoverRow.transform, "HoverMode", () => FavouritesManager.Toggle("HoverMode")));
+                FavouritesManager.RegisterStarButton("RideOnWater", UIHelpers.StarBtn(rideWaterRow.transform, "RideOnWater", () => FavouritesManager.Toggle("RideOnWater")));
                 FavouritesManager.RegisterStarButton("CameraShake", UIHelpers.StarBtn(csr.transform, "CameraShake", () => FavouritesManager.Toggle("CameraShake")));
                 FavouritesManager.RegisterStarButton("PlayerSize", UIHelpers.StarBtn(psr.transform, "PlayerSize", () => FavouritesManager.Toggle("PlayerSize")));
+                FavouritesManager.RegisterStarButton("CartoonSquash", UIHelpers.StarBtn(_cartoonSquashRow.transform, "CartoonSquash", () => FavouritesManager.Toggle("CartoonSquash")));
+                FavouritesManager.RegisterStarButton("CartoonSquashSpeed", UIHelpers.StarBtn(csSpeedRow.transform, "CartoonSquashSpeed", () => FavouritesManager.Toggle("CartoonSquashSpeed")));
+                FavouritesManager.RegisterStarButton("CartoonSquashAmount", UIHelpers.StarBtn(csAmtRow.transform, "CartoonSquashAmount", () => FavouritesManager.Toggle("CartoonSquashAmount")));
+                FavouritesManager.RegisterStarButton("CartoonSquashJelly", UIHelpers.StarBtn(csJellyRow.transform, "CartoonSquashJelly", () => FavouritesManager.Toggle("CartoonSquashJelly")));
                 FavouritesManager.RegisterStarButton("InvisiblePlayer", UIHelpers.StarBtn(_invisPlayerRow.transform, "InvisiblePlayer", () => FavouritesManager.Toggle("InvisiblePlayer")));
                 FavouritesManager.RegisterStarButton("MoonMode", UIHelpers.StarBtnAbs(mmtop.transform, "MoonMode", () => FavouritesManager.Toggle("MoonMode")));
 
@@ -313,6 +376,15 @@ namespace DescendersModMenu.UI
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
+                    Id = "RideOnWater",
+                    DisplayName = "Ride On Water",
+                    TabBadge = "FUN",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "RideOnWater", "Ride On Water",
+                        () => RideOnWater.Enabled, () => RideOnWater.Toggle(), () => RefreshAll()),
+                    IsActive = () => RideOnWater.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
                     Id = "CameraShake",
                     DisplayName = "Camera Shake",
                     TabBadge = "FUN",
@@ -322,6 +394,49 @@ namespace DescendersModMenu.UI
                         CameraShake.MaxLevel, () => (CameraShake.Level - 1) / (float)(CameraShake.MaxLevel - 1), () => RefreshAll(),
                         () => CameraShake.DisplayValue),
                     IsActive = () => CameraShake.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "CartoonSquash",
+                    DisplayName = "Cartoon Squash",
+                    TabBadge = "FUN",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "CartoonSquash", "Squash & Stretch",
+                        () => CartoonSquash.Enabled, () => CartoonSquash.Toggle(), () => RefreshAll()),
+                    IsActive = () => CartoonSquash.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "CartoonSquashSpeed",
+                    DisplayName = "Cartoon Squash: Speed",
+                    TabBadge = "FUN",
+                    BuildControls = (p) => FavsPage.BuildStepper(p, "CartoonSquashSpeed", "Bounce Speed",
+                        () => CartoonSquash.SpeedLevel,
+                        () => CartoonSquash.DecreaseSpeed(),
+                        () => CartoonSquash.IncreaseSpeed(),
+                        CartoonSquash.MinLevel, CartoonSquash.MaxLevel, () => RefreshAll(), 10,
+                        () => CartoonSquash.SpeedDisplay),
+                    IsActive = () => CartoonSquash.SpeedLevel != 10
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "CartoonSquashAmount",
+                    DisplayName = "Cartoon Squash: Amount",
+                    TabBadge = "FUN",
+                    BuildControls = (p) => FavsPage.BuildStepper(p, "CartoonSquashAmount", "Squash Amount",
+                        () => CartoonSquash.AmountLevel,
+                        () => CartoonSquash.DecreaseAmount(),
+                        () => CartoonSquash.IncreaseAmount(),
+                        CartoonSquash.MinLevel, CartoonSquash.MaxLevel, () => RefreshAll(), 10),
+                    IsActive = () => CartoonSquash.AmountLevel != 10
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "CartoonSquashJelly",
+                    DisplayName = "Cartoon Squash: Jelly",
+                    TabBadge = "FUN",
+                    BuildControls = (p) => FavsPage.BuildSimpleToggle(p, "CartoonSquashJelly", "Jelly Mode",
+                        () => CartoonSquash.JellyMode, () => CartoonSquash.ToggleJelly(), () => RefreshAll()),
+                    IsActive = () => CartoonSquash.JellyMode
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
@@ -369,6 +484,34 @@ namespace DescendersModMenu.UI
             if ((object)_playerSizeMinus != null && _playerSizeMinus) _playerSizeMinus.interactable = PlayerSize.Level > 1;
             if ((object)_playerSizePlus != null && _playerSizePlus) _playerSizePlus.interactable = PlayerSize.Level < 20;
 
+            bool csOn = CartoonSquash.Enabled;
+            if (_cartoonSquashVal)
+            {
+                _cartoonSquashVal.text = csOn ? "ON" : "OFF";
+                _cartoonSquashVal.color = csOn ? UIHelpers.OnColor : UIHelpers.OffColor;
+            }
+            if (_cartoonSquashTrack != null && _cartoonSquashKnob != null)
+                UIHelpers.SetToggle(_cartoonSquashTrack, _cartoonSquashKnob, csOn);
+            if (_cartoonSpeedVal) _cartoonSpeedVal.text = CartoonSquash.SpeedDisplay;
+            if ((object)_cartoonSpeedMinus != null && _cartoonSpeedMinus)
+                _cartoonSpeedMinus.interactable = CartoonSquash.SpeedLevel > CartoonSquash.MinLevel;
+            if ((object)_cartoonSpeedPlus != null && _cartoonSpeedPlus)
+                _cartoonSpeedPlus.interactable = CartoonSquash.SpeedLevel < CartoonSquash.MaxLevel;
+            if (_cartoonAmountVal) _cartoonAmountVal.text = CartoonSquash.AmountLevel.ToString();
+            if ((object)_cartoonAmountMinus != null && _cartoonAmountMinus)
+                _cartoonAmountMinus.interactable = CartoonSquash.AmountLevel > CartoonSquash.MinLevel;
+            if ((object)_cartoonAmountPlus != null && _cartoonAmountPlus)
+                _cartoonAmountPlus.interactable = CartoonSquash.AmountLevel < CartoonSquash.MaxLevel;
+
+            bool jellyOn = CartoonSquash.JellyMode;
+            if (_cartoonJellyVal)
+            {
+                _cartoonJellyVal.text = jellyOn ? "ON" : "OFF";
+                _cartoonJellyVal.color = jellyOn ? UIHelpers.OnColor : UIHelpers.OffColor;
+            }
+            if (_cartoonJellyTrack != null && _cartoonJellyKnob != null)
+                UIHelpers.SetToggle(_cartoonJellyTrack, _cartoonJellyKnob, jellyOn);
+
             if (_invisVal) { _invisVal.text = InvisiblePlayer.Enabled ? "ON" : "OFF"; _invisVal.color = InvisiblePlayer.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_invisTrack, _invisKnob, InvisiblePlayer.Enabled);
 
@@ -400,6 +543,10 @@ namespace DescendersModMenu.UI
             if (_hoverVal) { _hoverVal.text = hover ? "ON" : "OFF"; _hoverVal.color = hover ? UIHelpers.OnColor : UIHelpers.OffColor; }
             if (_hoverHeightVal) _hoverHeightVal.text = HoverMode.DisplayHeight;
             UIHelpers.SetToggle(_hoverTrack, _hoverKnob, hover);
+
+            bool rideWater = RideOnWater.Enabled;
+            if (_rideWaterVal) { _rideWaterVal.text = rideWater ? "ON" : "OFF"; _rideWaterVal.color = rideWater ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_rideWaterTrack, _rideWaterKnob, rideWater);
 
             bool shOn = CameraShake.Enabled;
             if (_shakeTogVal) { _shakeTogVal.text = shOn ? "ON" : "OFF"; _shakeTogVal.color = shOn ? UIHelpers.OnColor : UIHelpers.OffColor; }

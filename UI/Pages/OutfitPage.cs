@@ -15,7 +15,8 @@ namespace DescendersModMenu.UI
 
         private static int _renamingSlot = -1;
         private static string _renameBuffer = "";
-        private static Text _renameHint = null;
+        private const float CompactRowH = 28f;
+        private const float CompactBtnH = 22f;
 
         private static object _stateBeforeShed = null;
 
@@ -60,12 +61,20 @@ namespace DescendersModMenu.UI
                     int idx = i;
 
                     var row = UIHelpers.StatRow("", c);
+                    SlimRow(row, CompactRowH);
+                    StripEmptyStatLabel(row);
+
+                    // Balance right-side controls so the name sits in the visual centre.
+                    float sideW = 40f + 8f + 48f + 8f + 48f + 8f + 40f;
+                    var leftPad = UIHelpers.Obj("NmPad" + i, row.transform);
+                    leftPad.AddComponent<LayoutElement>().preferredWidth = sideW;
+                    leftPad.transform.SetAsFirstSibling();
 
                     var nmObj = UIHelpers.Obj("NmBtn" + i, row.transform);
                     var nmImg = nmObj.AddComponent<Image>();
                     nmImg.color = new Color(0, 0, 0, 0);
                     var nmLe = nmObj.AddComponent<LayoutElement>();
-                    nmLe.flexibleWidth = 1; nmLe.preferredHeight = UIHelpers.RowH;
+                    nmLe.flexibleWidth = 1; nmLe.preferredHeight = CompactRowH;
                     var nmBtn = nmObj.AddComponent<Button>();
                     var nmCb = nmBtn.colors;
                     nmCb.normalColor = Color.white; nmCb.highlightedColor = UIHelpers.AccentDim;
@@ -74,66 +83,67 @@ namespace DescendersModMenu.UI
                     nmBtn.onClick.AddListener(() => { StartRename(idx); });
 
                     _nameTexts[i] = UIHelpers.Txt("NmTxt" + i, nmObj.transform,
-                        OutfitPresets.GetName(i), 12, FontStyle.Bold,
-                        TextAnchor.MiddleLeft, UIHelpers.TextLight);
+                        OutfitPresets.GetName(i), 11, FontStyle.Bold,
+                        TextAnchor.MiddleCenter, UIHelpers.TextLight);
                     UIHelpers.Fill(UIHelpers.RT(_nameTexts[i].gameObject));
                     _nameTexts[i].raycastTarget = false;
 
                     _statusTexts[i] = UIHelpers.Txt("St" + i, row.transform,
-                        "EMPTY", 10, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
-                    _statusTexts[i].gameObject.AddComponent<LayoutElement>().preferredWidth = 48;
+                        "EMPTY", 9, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                    _statusTexts[i].gameObject.AddComponent<LayoutElement>().preferredWidth = 40;
 
                     var svBtn = UIHelpers.Btn("SvB" + i, row.transform, "SAVE",
-                        new Vector2(60, 30), 12,
+                        new Vector2(48, CompactBtnH), 11,
                         () => { OutfitPresets.Save(idx); RefreshAll(); },
                         UIHelpers.NeonBlue, Color.black);
                     var svLe = svBtn.gameObject.AddComponent<LayoutElement>();
-                    svLe.preferredWidth = 60; svLe.preferredHeight = 30;
+                    svLe.preferredWidth = 48; svLe.preferredHeight = CompactBtnH;
+                    svLe.minHeight = CompactBtnH;
 
                     _loadBtns[i] = UIHelpers.Btn("LdB" + i, row.transform, "LOAD",
-                        new Vector2(60, 30), 12,
+                        new Vector2(48, CompactBtnH), 11,
                         () => { OutfitPresets.Load(idx); RefreshAll(); },
                         UIHelpers.NeonBlue, Color.black);
                     var ldLe = _loadBtns[i].gameObject.AddComponent<LayoutElement>();
-                    ldLe.preferredWidth = 60; ldLe.preferredHeight = 30;
+                    ldLe.preferredWidth = 48; ldLe.preferredHeight = CompactBtnH;
+                    ldLe.minHeight = CompactBtnH;
 
                     _deleteBtns[i] = UIHelpers.Btn("DlB" + i, row.transform, "DEL",
-                        new Vector2(46, 30), 12,
+                        new Vector2(40, CompactBtnH), 11,
                         () => { OutfitPresets.Delete(idx); RefreshAll(); },
                         UIHelpers.Orange, Color.black);
                     var dlLe = _deleteBtns[i].gameObject.AddComponent<LayoutElement>();
-                    dlLe.preferredWidth = 46; dlLe.preferredHeight = 30;
+                    dlLe.preferredWidth = 40; dlLe.preferredHeight = CompactBtnH;
+                    dlLe.minHeight = CompactBtnH;
                 }
 
                 UIHelpers.Divider(c);
 
-                var hintRow = UIHelpers.StatRow("", c);
-                _renameHint = UIHelpers.Txt("RenHint", hintRow.transform,
-                    "Click a preset name to rename, then type + Enter",
-                    10, FontStyle.Italic, TextAnchor.MiddleLeft, UIHelpers.TextDim);
-                _renameHint.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                UIHelpers.InfoBox(c, "Click a preset name to rename, then type + Enter", Color.white);
 
                 UIHelpers.Divider(c);
 
                 UIHelpers.SectionHeader("QUICK ACTIONS", c);
 
                 var actRow = UIHelpers.StatRow("", c);
-                actRow.GetComponent<LayoutElement>().preferredHeight = 52;
-                actRow.GetComponent<LayoutElement>().minHeight = 52;
+                SlimRow(actRow, CompactRowH);
+                StripEmptyStatLabel(actRow);
 
                 var shedBtn = UIHelpers.Btn("ShedBtn", actRow.transform, "GO TO SHED",
-                    new Vector2(140, 44), 13,
+                    new Vector2(110, CompactBtnH), 11,
                     () => { GoToShed(); },
                     UIHelpers.NeonBlue, Color.black);
                 var shedLe = shedBtn.gameObject.AddComponent<LayoutElement>();
-                shedLe.preferredWidth = 140; shedLe.preferredHeight = 44; shedLe.minHeight = 44;
+                shedLe.preferredWidth = 110; shedLe.preferredHeight = CompactBtnH;
+                shedLe.minHeight = CompactBtnH;
 
                 var leaveBtn = UIHelpers.Btn("LeaveBtn", actRow.transform, "LEAVE SHED",
-                    new Vector2(140, 44), 13,
+                    new Vector2(110, CompactBtnH), 11,
                     () => { LeaveShed(); },
                     UIHelpers.Orange, Color.black);
                 var leaveLe = leaveBtn.gameObject.AddComponent<LayoutElement>();
-                leaveLe.preferredWidth = 140; leaveLe.preferredHeight = 44; leaveLe.minHeight = 44;
+                leaveLe.preferredWidth = 110; leaveLe.preferredHeight = CompactBtnH;
+                leaveLe.minHeight = CompactBtnH;
 
                 UIHelpers.Divider(c);
 
@@ -163,6 +173,7 @@ namespace DescendersModMenu.UI
                     () => { RiderCustomiser.IncreaseBodyType(); if (bodyTypeVal) bodyTypeVal.text = RiderCustomiser.BodyTypeLevel.ToString(); });
 
                 var riderResetRow = UIHelpers.StatRow("", c);
+                SlimRow(riderResetRow, CompactRowH);
                 UIHelpers.ActionBtnOrange(riderResetRow.transform, "Reset All", () =>
                 {
                     RiderCustomiser.ResetAll();
@@ -253,15 +264,25 @@ namespace DescendersModMenu.UI
             int currentLevel, UnityEngine.Events.UnityAction onMinus, UnityEngine.Events.UnityAction onPlus)
         {
             var row = UIHelpers.StatRow(label, parent);
+            SlimRow(row, CompactRowH);
             UIHelpers.SmallBtn(row.transform, "\u25C0", onMinus);
-            var val = UIHelpers.Txt("RCV_" + label, row.transform, currentLevel.ToString(), 13,
+            var val = UIHelpers.Txt("RCV_" + label, row.transform, currentLevel.ToString(), 12,
                 FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
             val.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.SmallBtn(row.transform, "\u25B6", onPlus);
             return val;
         }
 
-        private static void GoToShed()
+        private static void SlimRow(GameObject row, float h)
+        {
+            if ((object)row == null) return;
+            LayoutElement le = row.GetComponent<LayoutElement>();
+            if ((object)le == null) return;
+            le.preferredHeight = h;
+            le.minHeight = h;
+        }
+
+        public static void GoToShed()
         {
             try
             {
@@ -283,7 +304,7 @@ namespace DescendersModMenu.UI
             catch (System.Exception ex) { MelonLogger.Error("[Page11] GoToShed: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "OutfitPage"); }
         }
 
-        private static void LeaveShed()
+        public static void LeaveShed()
         {
             try
             {
@@ -322,6 +343,26 @@ namespace DescendersModMenu.UI
             _renameBuffer = "";
         }
 
+        private static void StripEmptyStatLabel(GameObject row)
+        {
+            if ((object)row == null) return;
+            Transform t = row.transform;
+            for (int i = 0; i < t.childCount; i++)
+            {
+                Transform ch = t.GetChild(i);
+                if ((object)ch == null) continue;
+                Text txt = ch.GetComponent<Text>();
+                if ((object)txt == null) continue;
+                if (!string.IsNullOrEmpty(txt.text)) continue;
+                LayoutElement le = ch.GetComponent<LayoutElement>();
+                if ((object)le != null && le.flexibleWidth > 0f)
+                {
+                    UnityEngine.Object.DestroyImmediate(ch.gameObject);
+                    return;
+                }
+            }
+        }
+
         private static void StartRename(int slot)
         {
             if (_renamingSlot >= 0 && _renamingSlot != slot)
@@ -329,7 +370,6 @@ namespace DescendersModMenu.UI
                     _nameTexts[_renamingSlot].color = UIHelpers.TextLight;
             _renamingSlot = slot;
             _renameBuffer = OutfitPresets.GetName(slot);
-            if (_renameHint) _renameHint.text = "Type new name then press Enter to confirm  ·  Esc to cancel";
             if (_nameTexts[slot]) _nameTexts[slot].color = UIHelpers.Accent;
         }
 
@@ -364,8 +404,8 @@ namespace DescendersModMenu.UI
 
             if (_renamingSlot >= 0)
             {
-                if (_nameTexts[_renamingSlot]) _nameTexts[_renamingSlot].text = _renameBuffer;
-                if (_renameHint) _renameHint.text = "Renaming: " + _renameBuffer + "  ·  Enter to confirm  Esc to cancel";
+                if (_nameTexts[_renamingSlot])
+                    _nameTexts[_renamingSlot].text = UIHelpers.WithCaret(_renameBuffer, true);
             }
         }
 
@@ -387,8 +427,6 @@ namespace DescendersModMenu.UI
                 if ((object)_loadBtns[i] != null) _loadBtns[i].interactable = has;
                 if ((object)_deleteBtns[i] != null) _deleteBtns[i].interactable = has;
             }
-            if (_renamingSlot < 0 && _renameHint)
-                _renameHint.text = "Click a preset name to rename, then type + Enter";
         }
     }
 }

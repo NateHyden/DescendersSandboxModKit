@@ -582,31 +582,50 @@ namespace DescendersModMenu.Mods
         }
 
         public static string GetCurrentLevelSeed() { return _cachedSeedString; }
-        public static void LoadFromSeed(string seed)
+
+        /// <summary>
+        /// Load a freeride world from a seed string. Returns false if the seed
+        /// is invalid / unknown (caller can show UI feedback).
+        /// </summary>
+        public static bool LoadFromSeed(string seed)
         {
             try
             {
-                if (!ResolveReflection()) return;
+                if (!ResolveReflection()) return false;
 
                 long seedNum;
                 string[] parts = seed.Split('-');
                 if (!long.TryParse(parts[0].Trim(), out seedNum))
-                { MelonLogger.Error("[MapChanger] LoadFromSeed: could not parse \"" + seed + "\" as a number."); Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: could not parse \"" + seed + "\" as a number."), "MapChanger"); return; }
+                {
+                    ModLog.Debug("[MapChanger] LoadFromSeed: not a number: \"" + seed + "\"");
+                    return false;
+                }
 
                 object levelInfo = _fmDOWdg.Invoke(null, new object[] { seedNum });
                 if ((object)levelInfo == null)
-                { MelonLogger.Error("[MapChanger] LoadFromSeed: FmDOWdg returned null for seed=" + seedNum); Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: FmDOWdg returned null for seed=" + seedNum), "MapChanger"); return; }
+                {
+                    ModLog.Debug("[MapChanger] LoadFromSeed: unknown seed=" + seedNum);
+                    return false;
+                }
 
                 System.Reflection.FieldInfo worldFld = levelInfo.GetType().GetField(
                     "g\u005ErFwSM", BindingFlags.Public | BindingFlags.Instance);
                 if ((object)worldFld == null)
-                { MelonLogger.Error("[MapChanger] LoadFromSeed: g^ErFwSM field not found."); Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: g^ErFwSM field not found."), "MapChanger"); return; }
+                {
+                    MelonLogger.Error("[MapChanger] LoadFromSeed: g^ErFwSM field not found.");
+                    Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: g^ErFwSM field not found."), "MapChanger");
+                    return false;
+                }
                 object world = worldFld.GetValue(levelInfo);
 
                 object smInstance = GetSingleton(typeof(SessionManager));
                 object stInstance = GetSingleton(typeof(StateMachine));
                 if ((object)smInstance == null || (object)stInstance == null)
-                { MelonLogger.Error("[MapChanger] LoadFromSeed: SessionManager or StateMachine null."); Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: SessionManager or StateMachine null."), "MapChanger"); return; }
+                {
+                    MelonLogger.Error("[MapChanger] LoadFromSeed: SessionManager or StateMachine null.");
+                    Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: SessionManager or StateMachine null."), "MapChanger");
+                    return false;
+                }
 
                 _suppressTimer = 5f;
                 SuppressInactivityWarning();
@@ -645,7 +664,11 @@ namespace DescendersModMenu.Mods
 
                 object sessionData = _sessionDataFld.GetValue(smInstance);
                 if ((object)sessionData == null)
-                { MelonLogger.Error("[MapChanger] LoadFromSeed: session data null after StartNewSession."); Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: session data null after StartNewSession."), "MapChanger"); return; }
+                {
+                    MelonLogger.Error("[MapChanger] LoadFromSeed: session data null after StartNewSession.");
+                    Telemetry.ReportErrorAsync(new System.Exception("[MapChanger] LoadFromSeed: session data null after StartNewSession."), "MapChanger");
+                    return false;
+                }
                 _currentLevelFld.SetValue(sessionData, levelInfo);
 
                 SuppressInactivityWarning();
@@ -654,9 +677,14 @@ namespace DescendersModMenu.Mods
 
                 LastLoadedSeed = seed;
                 ModLog.Debug("[MapChanger] LoadFromSeed: \"" + seed + "\" world=" + world + " (Sandbox/freeride)");
+                return true;
             }
             catch (System.Exception ex)
-            { MelonLogger.Error("[MapChanger] LoadFromSeed: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MapChanger"); }
+            {
+                MelonLogger.Error("[MapChanger] LoadFromSeed: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "MapChanger");
+                return false;
+            }
         }
 
     }

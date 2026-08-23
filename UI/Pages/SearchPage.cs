@@ -100,13 +100,13 @@ namespace DescendersModMenu.UI
                 _queryInputText.verticalOverflow = VerticalWrapMode.Truncate;
                 _queryInputText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
-                _queryCursor = UIHelpers.Txt("SrCur", searchBg.transform, "\u25CF",
-                    10, FontStyle.Normal, TextAnchor.MiddleCenter, UIHelpers.OnColor);
+                _queryCursor = UIHelpers.Txt("SrCur", searchBg.transform, "|",
+                    12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _queryCursor.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                 var scRT = UIHelpers.RT(_queryCursor.gameObject);
                 scRT.anchorMin = new Vector2(1, 0); scRT.anchorMax = new Vector2(1, 1);
                 scRT.pivot = new Vector2(1, 0.5f);
-                scRT.sizeDelta = new Vector2(14, 0);
+                scRT.sizeDelta = new Vector2(10, 0);
                 scRT.anchoredPosition = new Vector2(-6, 0);
                 _queryCursor.gameObject.SetActive(false);
 
@@ -227,16 +227,7 @@ namespace DescendersModMenu.UI
             }
 
             if ((object)_queryCursor != null)
-            {
-                _queryCursor.gameObject.SetActive(_queryFocused);
-                if (_queryFocused)
-                {
-                    float alpha = Mathf.Abs(Mathf.Sin(Time.unscaledTime * 4f));
-                    Color col = UIHelpers.OnColor;
-                    col.a = alpha;
-                    _queryCursor.color = col;
-                }
-            }
+                _queryCursor.gameObject.SetActive(false);
 
             if (!_queryFocused) return;
 
@@ -250,6 +241,20 @@ namespace DescendersModMenu.UI
                 else if (ch == '\n' || ch == '\r') { _queryFocused = false; }
                 else if (ch == (char)27) { _queryFocused = false; }
                 else if (_queryBuffer.Length < 40) { _queryBuffer += ch; changed = true; }
+            }
+
+            if ((object)_queryInputText != null)
+            {
+                if (_queryBuffer.Length > 0)
+                {
+                    _queryInputText.text = UIHelpers.WithCaret(_queryBuffer, true);
+                    _queryInputText.color = UIHelpers.TextLight;
+                }
+                else
+                {
+                    _queryInputText.text = UIHelpers.WithCaret("Type to search mods...", true);
+                    _queryInputText.color = UIHelpers.TextDim;
+                }
             }
 
             if (changed) RebuildList();

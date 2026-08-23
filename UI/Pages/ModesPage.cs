@@ -510,8 +510,9 @@ namespace DescendersModMenu.UI
 
             if (_taTargetInput)
             {
-                _taTargetInput.text = _taBuffer.Length > 0
+                string shown = _taBuffer.Length > 0
                     ? _taBuffer : TrickAttackMode.TargetScore.ToString();
+                _taTargetInput.text = UIHelpers.WithCaret(shown, true);
                 _taTargetInput.color = _taBuffer.Length > 0
                     ? UIHelpers.Accent : UIHelpers.TextDim;
             }

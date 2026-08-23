@@ -108,13 +108,13 @@ namespace DescendersModMenu.UI
                 _seedInputText.verticalOverflow = VerticalWrapMode.Truncate;
                 _seedInputText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
-                _seedCursor = UIHelpers.Txt("SdCur", seedBg.transform, "●",
-                    10, FontStyle.Normal, TextAnchor.MiddleCenter, UIHelpers.OnColor);
+                _seedCursor = UIHelpers.Txt("SdCur", seedBg.transform, "|",
+                    12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _seedCursor.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                 var scRT = UIHelpers.RT(_seedCursor.gameObject);
                 scRT.anchorMin = new Vector2(1, 0); scRT.anchorMax = new Vector2(1, 1);
                 scRT.pivot = new Vector2(1, 0.5f);
-                scRT.sizeDelta = new Vector2(14, 0);
+                scRT.sizeDelta = new Vector2(10, 0);
                 scRT.anchoredPosition = new Vector2(-6, 0);
                 _seedCursor.gameObject.SetActive(false);
 
@@ -125,15 +125,7 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.ActionBtn(seedInputRow.transform, "Load", () =>
                 {
-                    string s = _seedBuffer.Trim();
-                    if (!string.IsNullOrEmpty(s))
-                    {
-                        _seedBuffer = "";
-                        _seedFocused = false;
-                        if ((object)_seedInputText != null) { _seedInputText.text = "Enter seed number..."; _seedInputText.color = UIHelpers.TextDim; }
-                        ModLog.Debug("[MapChanger] Loading seed: " + s);
-                        MapChanger.LoadFromSeed(s);
-                    }
+                    TryLoadSeedFromBox();
                 }, 52);
 
                 UIHelpers.InfoBox(_listRoot, "Share this number so friends get the same world. Paste a seed and hit Load to ride it.");
@@ -283,17 +275,7 @@ namespace DescendersModMenu.UI
                     _seedFocused = false;
             }
 
-            if (_seedCursor)
-            {
-                _seedCursor.gameObject.SetActive(_seedFocused);
-                if (_seedFocused)
-                {
-                    float alpha = Mathf.Abs(Mathf.Sin(Time.unscaledTime * 4f));
-                    Color col = UIHelpers.OnColor;
-                    col.a = alpha;
-                    _seedCursor.color = col;
-                }
-            }
+            if (_seedCursor) _seedCursor.gameObject.SetActive(false);
 
             RefreshCurrentSeed();
 
@@ -304,15 +286,7 @@ namespace DescendersModMenu.UI
                 if (ch == '\b') { if (_seedBuffer.Length > 0) _seedBuffer = _seedBuffer.Substring(0, _seedBuffer.Length - 1); }
                 else if (ch == '\n' || ch == '\r')
                 {
-                    string s = _seedBuffer.Trim();
-                    if (!string.IsNullOrEmpty(s))
-                    {
-                        _seedBuffer = "";
-                        _seedFocused = false;
-                        if (_seedInputText) { _seedInputText.text = "Enter seed number..."; _seedInputText.color = UIHelpers.TextDim; }
-                        ModLog.Debug("[MapChanger] Loading seed via Enter: " + s);
-                        MapChanger.LoadFromSeed(s);
-                    }
+                    TryLoadSeedFromBox();
                     return;
                 }
                 else if (ch == (char)27) { _seedFocused = false; return; }
@@ -321,13 +295,35 @@ namespace DescendersModMenu.UI
 
             if (_seedBuffer.Length > 0)
             {
-                _seedInputText.text = _seedBuffer;
+                _seedInputText.text = UIHelpers.WithCaret(_seedBuffer, true);
                 _seedInputText.color = UIHelpers.TextLight;
             }
             else
             {
+                _seedInputText.text = UIHelpers.WithCaret("Enter seed number...", true);
+                _seedInputText.color = UIHelpers.TextDim;
+            }
+        }
+
+        private static void TryLoadSeedFromBox()
+        {
+            string s = _seedBuffer.Trim();
+            if (string.IsNullOrEmpty(s)) return;
+
+            _seedBuffer = "";
+            _seedFocused = false;
+            ModLog.Debug("[MapChanger] Loading seed: " + s);
+            bool ok = MapChanger.LoadFromSeed(s);
+            if ((object)_seedInputText == null) return;
+            if (ok)
+            {
                 _seedInputText.text = "Enter seed number...";
                 _seedInputText.color = UIHelpers.TextDim;
+            }
+            else
+            {
+                _seedInputText.text = "Unknown Seed";
+                _seedInputText.color = UIHelpers.Orange;
             }
         }
 

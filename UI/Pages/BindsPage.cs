@@ -12,10 +12,17 @@ namespace DescendersModMenu.UI
         private static int _listeningSlot = -1;
         private static int _conflictSlot  = -1;
         private static int _conflictWith  = -1;
+        private static int _conflictCode  = 0;
         private static KeyCode _conflictKey = KeyCode.None;
         private static bool _listeningMenuOpen = false;
 
+        private static string _queryBuffer = "";
+        private static bool _queryFocused = false;
+        private static Text _queryInputText;
+        private static RectTransform _queryBoxRect;
+
         public static bool IsListening { get { return _listeningSlot >= 0 || _conflictSlot >= 0 || _listeningMenuOpen; } }
+        public static bool IsQueryFocused => _queryFocused;
         public static bool IsAnyActive { get { return false; } }
 
         private static Transform _contentRoot;
@@ -73,6 +80,8 @@ namespace DescendersModMenu.UI
                 float savedScroll = (!_hasBuiltOnce || (object)_scrollRect == null)
                     ? 1f : _scrollRect.verticalNormalizedPosition;
                 _hasBuiltOnce = true;
+                _queryInputText = null;
+                _queryBoxRect = null;
 
                 for (int i = _contentRoot.childCount - 1; i >= 0; i--)
                     UnityEngine.Object.DestroyImmediate(_contentRoot.GetChild(i).gameObject);
@@ -82,26 +91,42 @@ namespace DescendersModMenu.UI
                 UIHelpers.Divider(_contentRoot);
 
                 UIHelpers.SectionHeader("KEY BINDINGS", _contentRoot);
+                BuildSearchRow();
 
                 var hint = UIHelpers.StatRow("", _contentRoot);
                 var hintTxt = UIHelpers.Txt("Hint", hint.transform,
-                    "Click BIND then press any key.  ESC cancels.",
+                    "Click BIND then press a keyboard key or controller button.  ESC cancels.",
                     9, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
                 hintTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
                 UIHelpers.Divider(_contentRoot);
 
+                string q = _queryBuffer.Trim();
+                int shown = 0;
                 int count = KeyBindManager.Count;
                 for (int i = 0; i < count; i++)
                 {
+                    string label = KeyBindManager.ModLabels[i];
+                    if (q.Length > 0
+                        && label.IndexOf(q, StringComparison.OrdinalIgnoreCase) < 0
+                        && KeyBindManager.ModIds[i].IndexOf(q, StringComparison.OrdinalIgnoreCase) < 0)
+                        continue;
+
                     int capturedSlot = i;
-                    KeyCode current = KeyBindManager.GetKeyCode(i);
                     bool isListening = (_listeningSlot == i);
                     bool isConflict  = (_conflictSlot  == i);
 
-                    if (isListening)       BuildListeningRow(KeyBindManager.ModLabels[i], capturedSlot);
-                    else if (isConflict)   BuildConflictRow(KeyBindManager.ModLabels[i], capturedSlot);
-                    else                   BuildNormalRow(KeyBindManager.ModLabels[i], capturedSlot, current);
+                    if (isListening)       BuildListeningRow(label, capturedSlot);
+                    else if (isConflict)   BuildConflictRow(label, capturedSlot);
+                    else                   BuildNormalRow(label, capturedSlot);
+                    shown++;
+                }
+
+                if (shown == 0)
+                {
+                    UIHelpers.InfoBox(_contentRoot,
+                        string.IsNullOrEmpty(q) ? "No bindable mods." : "No binds match \"" + q + "\".",
+                        Color.white);
                 }
 
                 UIHelpers.AddScrollForwarders(_contentRoot);
@@ -111,6 +136,53 @@ namespace DescendersModMenu.UI
                 if ((object)_scrollRect != null) _scrollRect.verticalNormalizedPosition = savedScroll;
             }
             catch (Exception ex) { MelonLogger.Error("[BindsPage] Rebuild: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "BindsPage"); }
+        }
+
+        private static void BuildSearchRow()
+        {
+            var searchRow = UIHelpers.Obj("SrRow", _contentRoot);
+            searchRow.AddComponent<LayoutElement>().preferredHeight = 28;
+            var sHlg = searchRow.AddComponent<HorizontalLayoutGroup>();
+            sHlg.spacing = 6;
+            sHlg.childAlignment = TextAnchor.MiddleCenter;
+            sHlg.childForceExpandWidth = false;
+            sHlg.childForceExpandHeight = true;
+            sHlg.childControlWidth = true;
+            sHlg.childControlHeight = true;
+
+            var searchBg = UIHelpers.Obj("SrBg", searchRow.transform);
+            searchBg.AddComponent<Image>().color = UIHelpers.WinOuter;
+            var sbgLe = searchBg.AddComponent<LayoutElement>();
+            sbgLe.flexibleWidth = 1; sbgLe.minHeight = 26; sbgLe.preferredHeight = 26;
+            var sbgHlg = searchBg.AddComponent<HorizontalLayoutGroup>();
+            sbgHlg.padding = new RectOffset(8, 8, 0, 0);
+            sbgHlg.childAlignment = TextAnchor.MiddleLeft;
+            sbgHlg.childForceExpandWidth = true;
+            sbgHlg.childForceExpandHeight = true;
+
+            string shown = string.IsNullOrEmpty(_queryBuffer)
+                ? (_queryFocused ? UIHelpers.WithCaret("Search binds...", true) : "Search binds...")
+                : (_queryFocused ? UIHelpers.WithCaret(_queryBuffer, true) : _queryBuffer);
+            _queryInputText = UIHelpers.Txt("SrIT", searchBg.transform, shown, 11,
+                FontStyle.Normal, TextAnchor.MiddleLeft,
+                string.IsNullOrEmpty(_queryBuffer) ? UIHelpers.TextDim : UIHelpers.TextLight);
+            _queryInputText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _queryInputText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+            _queryBoxRect = UIHelpers.RT(searchBg);
+            var focusBtn = searchBg.AddComponent<Button>();
+            focusBtn.targetGraphic = searchBg.GetComponent<Image>();
+            focusBtn.onClick.AddListener(() => { _queryFocused = true; });
+
+            if (!string.IsNullOrEmpty(_queryBuffer))
+            {
+                UIHelpers.SmallBtn(searchRow.transform, "\u2716", () =>
+                {
+                    _queryBuffer = "";
+                    _queryFocused = false;
+                    Rebuild();
+                });
+            }
         }
 
         private static void BuildMenuOpenRow()
@@ -134,26 +206,29 @@ namespace DescendersModMenu.UI
                 UIHelpers.ActionBtn(row.transform, "BIND", () =>
                 {
                     _listeningSlot = -1; ClearConflict();
+                    _queryFocused = false;
                     _listeningMenuOpen = true;
                     Rebuild();
                 }, 40);
             }
         }
 
-        private static void BuildNormalRow(string label, int slot, KeyCode current)
+        private static void BuildNormalRow(string label, int slot)
         {
             var row = UIHelpers.StatRow(label, _contentRoot);
-            bool hasBind = current != KeyCode.None;
-            string keyName = hasBind ? current.ToString() : "\u2014";
+            bool hasBind = KeyBindManager.HasBind(slot);
+            string keyName = KeyBindManager.GetBindDisplay(slot);
             Color keyCol = hasBind ? UIHelpers.Accent : UIHelpers.TextDim;
             var keyTxt = UIHelpers.Txt("KN_" + slot, row.transform, keyName,
                 11, hasBind ? FontStyle.Bold : FontStyle.Normal, TextAnchor.MiddleRight, keyCol);
-            keyTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 96;
+            keyTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 110;
 
             UIHelpers.ActionBtn(row.transform, "BIND", () =>
             {
                 _listeningMenuOpen = false;
-                _listeningSlot = slot; _conflictSlot = -1; _conflictWith = -1; _conflictKey = KeyCode.None;
+                _queryFocused = false;
+                _listeningSlot = slot; _conflictSlot = -1; _conflictWith = -1;
+                _conflictKey = KeyCode.None; _conflictCode = 0;
                 Rebuild();
             }, 40);
 
@@ -177,9 +252,9 @@ namespace DescendersModMenu.UI
         {
             var row = UIHelpers.StatRow(label, _contentRoot);
             UIHelpers.SetRowActive(row, true);
-            var promptTxt = UIHelpers.Txt("LP_" + slot, row.transform, "Press any key\u2026",
+            var promptTxt = UIHelpers.Txt("LP_" + slot, row.transform, "Key or controller\u2026",
                 11, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
-            promptTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 96;
+            promptTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 110;
             UIHelpers.ActionBtn(row.transform, "ESC", () => { CancelListen(); }, 40);
             var spacer = UIHelpers.Obj("SpL_" + slot, row.transform);
             spacer.AddComponent<LayoutElement>().preferredWidth = 24;
@@ -197,7 +272,8 @@ namespace DescendersModMenu.UI
             UIHelpers.ActionBtn(row.transform, "STEAL", () =>
             {
                 KeyBindManager.ClearKey(_conflictWith);
-                KeyBindManager.SetKey(_conflictSlot, _conflictKey);
+                if (_conflictCode < 0) KeyBindManager.SetCode(_conflictSlot, _conflictCode);
+                else KeyBindManager.SetKey(_conflictSlot, _conflictKey);
                 KeyBindManager.SaveBindings();
                 KeyBindManager.SkipNextCheck();
                 ClearConflict(); Rebuild();
@@ -205,17 +281,80 @@ namespace DescendersModMenu.UI
             UIHelpers.ActionBtnOrange(row.transform, "CANCEL", () => { ClearConflict(); Rebuild(); }, 52);
         }
 
+        public static void Tick()
+        {
+            if ((object)_queryInputText == null) return;
+
+            if (_queryFocused && Input.GetMouseButtonDown(0))
+            {
+                if ((object)_queryBoxRect != null
+                    && !RectTransformUtility.RectangleContainsScreenPoint(_queryBoxRect, Input.mousePosition, null))
+                    _queryFocused = false;
+            }
+
+            if (!_queryFocused)
+            {
+                if (!string.IsNullOrEmpty(_queryBuffer) && _queryInputText)
+                {
+                    _queryInputText.text = _queryBuffer;
+                    _queryInputText.color = UIHelpers.TextLight;
+                }
+                return;
+            }
+
+            bool changed = false;
+            foreach (char ch in Input.inputString)
+            {
+                if (ch == '\b')
+                {
+                    if (_queryBuffer.Length > 0) { _queryBuffer = _queryBuffer.Substring(0, _queryBuffer.Length - 1); changed = true; }
+                }
+                else if (ch == '\n' || ch == '\r' || ch == (char)27) { _queryFocused = false; }
+                else if (_queryBuffer.Length < 40) { _queryBuffer += ch; changed = true; }
+            }
+
+            if (_queryInputText)
+            {
+                if (_queryBuffer.Length > 0)
+                {
+                    _queryInputText.text = UIHelpers.WithCaret(_queryBuffer, true);
+                    _queryInputText.color = UIHelpers.TextLight;
+                }
+                else
+                {
+                    _queryInputText.text = UIHelpers.WithCaret("Search binds...", true);
+                    _queryInputText.color = UIHelpers.TextDim;
+                }
+            }
+
+            if (changed) Rebuild();
+        }
+
         public static void CheckController()
         {
-            if (!_listeningMenuOpen) return;
             int code;
             if (!KeyBindManager.AnyControllerPressed(out code)) return;
 
-            KeyBindManager.SetMenuOpenCode(code);
-            KeyBindManager.SaveBindings();
-            KeyBindManager.SkipMenuOpenCheck();
-            _listeningMenuOpen = false;
-            Rebuild();
+            if (_listeningMenuOpen)
+            {
+                KeyBindManager.SetMenuOpenCode(code);
+                KeyBindManager.SaveBindings();
+                KeyBindManager.SkipMenuOpenCheck();
+                _listeningMenuOpen = false;
+                Rebuild();
+                return;
+            }
+
+            if (_listeningSlot < 0) return;
+
+            // Don't bind the same button used to open the menu.
+            if (code == KeyBindManager.GetMenuOpenCode())
+            {
+                ModLog.Feedback("[Binds] That button opens the menu — pick another.");
+                return;
+            }
+
+            ApplyBindCode(code);
         }
 
         public static void OnGUI()
@@ -243,24 +382,35 @@ namespace DescendersModMenu.UI
                 return;
             }
             ev.Use();
+            ApplyBindCode((int)k);
+        }
 
-            int conflictSlot = KeyBindManager.FindConflict(k, _listeningSlot);
+        private static void ApplyBindCode(int code)
+        {
+            int conflictSlot = KeyBindManager.FindConflict(code, _listeningSlot);
             if (conflictSlot >= 0)
             {
-                _conflictSlot = _listeningSlot; _conflictWith = conflictSlot; _conflictKey = k;
-                _listeningSlot = -1; Rebuild();
+                _conflictSlot = _listeningSlot;
+                _conflictWith = conflictSlot;
+                _conflictCode = code;
+                _conflictKey = code < 0 ? KeyCode.None : (KeyCode)code;
+                _listeningSlot = -1;
+                Rebuild();
+                return;
             }
-            else
-            {
-                KeyBindManager.SetKey(_listeningSlot, k);
-                KeyBindManager.SaveBindings();
-                KeyBindManager.SkipNextCheck();
-                _listeningSlot = -1; Rebuild();
-            }
+
+            KeyBindManager.SetCode(_listeningSlot, code);
+            KeyBindManager.SaveBindings();
+            KeyBindManager.SkipNextCheck();
+            _listeningSlot = -1;
+            Rebuild();
         }
 
         private static void CancelListen() { _listeningSlot = -1; ClearConflict(); Rebuild(); }
-        private static void ClearConflict() { _conflictSlot = -1; _conflictWith = -1; _conflictKey = KeyCode.None; }
+        private static void ClearConflict()
+        {
+            _conflictSlot = -1; _conflictWith = -1;
+            _conflictKey = KeyCode.None; _conflictCode = 0;
+        }
     }
 }
-

@@ -47,6 +47,11 @@ namespace DescendersModMenu.Mods
                 S("DiscoTorch", () => BikeTorch.DiscoEnabled, BikeTorch.ToggleDisco),
                 S("BikeDamage", () => BikeDamage.Enabled, BikeDamage.Toggle),
                 S("BouncyBike", () => BouncyBike.Enabled, BouncyBike.Toggle),
+                S("CartoonSquash", () => CartoonSquash.IsActive, () =>
+                {
+                    if (CartoonSquash.JellyMode) CartoonSquash.ToggleJelly();
+                    else CartoonSquash.Toggle();
+                }),
                 S("InstantRespawn", () => InstantRespawn.Enabled, InstantRespawn.Toggle),
                 S("InvisibleBike", () => InvisibleBike.Enabled, InvisibleBike.Toggle),
                 S("InvisiblePlayer", () => InvisiblePlayer.Enabled, InvisiblePlayer.Toggle),
@@ -60,6 +65,7 @@ namespace DescendersModMenu.Mods
                 S("MirrorMode", () => MirrorMode.Enabled, MirrorMode.Toggle),
                 S("MoonMode", () => MoonMode.IsActive, MoonMode.Toggle),
                 S("CameraShake", () => CameraShake.Enabled, CameraShake.Toggle),
+                S("RideOnWater", () => RideOnWater.Enabled, RideOnWater.Toggle),
                 S("SpeedrunTimer", () => SpeedrunTimer.Enabled, SpeedrunTimer.Toggle),
                 S("SessionHUD", () => SessionHUD.Enabled, SessionHUD.Toggle),
                 S("TrickMultiplier", () => TrickMultiplier.Enabled, TrickMultiplier.Toggle),
