@@ -6,12 +6,7 @@ Park** sessions, letting you tweak bike physics, adjust world settings,
 drop in custom game modes like Earthquake, Police Chase, and Trick Attack,
 and — separately — edit your own career progression if you want to.
 
-> ⚠️ Features are intended for **Free Ride and Bike Park** sessions
-> Free Ride and Bike Park sessions only and will not work in online race lobbies — it's a sandbox for
-> messing around solo or with friends offline, not a competitive advantage
-> tool. The **Career** tools are the one exception: those are built
-> specifically to edit career-mode progression (missions, rep, sponsors,
-> unlocks) and only make sense there.
+> ⚠️ Features are intended for Free Ride and Bike Park sessions only and will not work in online race lobbies — it's a sandbox for messing around solo or with friends offline, not a competitive advantage tool. The Career tools are the one exception: those are built specifically to edit career-mode progression (missions, rep, sponsors, unlocks) and only make sense there.
 
 Press **F6 OR DPAD DOWN** in-game to open the menu (fully rebindable to
 any controller button — see Key Binds below). XBOX/GamesPass users can now access and download mod.io maps via the XboxWorkshop tab!
