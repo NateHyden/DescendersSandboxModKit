@@ -269,6 +269,40 @@ Not sure where your install is? In Steam, right-click Descenders â†’ **Manage â†
 
 ---
 
+## Privacy & Telemetry
+
+Telemetry is disabled by default and can be enabled in the Sandbox settings.
+
+When telemetry is enabled, diagnostic information such as the Sandbox version, platform, loaded mods, your Descenders/Photon player name, and relevant error or warning information may be sent to a private Discord channel to help me diagnose and fix bugs. Telemetry is only sent when an error or warning occurs, unless you explicitly submit feedback.
+
+No passwords, authentication tokens, browser data, or personal files are collected.
+
+## Why does the mod use PowerShell?
+
+The Xbox/Game Pass version of Descenders restricts the HTTP APIs normally available to mods. To keep the Steam and Xbox/Game Pass versions using the same codebase, the mod uses PowerShell for certain web requests.
+
+PowerShell is used for:
+
+Checking GitHub for available Sandbox updates.
+Retrieving the current Descenders player count from Steam.
+
+These requests do not download or execute code.
+
+**You are in control**
+
+You can simply leave telemetry disabled and no telemetry or error reports will be sent.
+
+If you encounter an error or warning and want to help me diagnose it:
+
+Enable telemetry in the Sandbox settings.
+Reproduce the error or warning.
+The relevant diagnostic information will be sent to me.
+Turn telemetry back off when you're finished.
+
+Telemetry exists purely to make it easier for me to find and fix bugs without requiring every issue to be manually reproduced on my own machine.
+
+I make this mod for the Descenders community, and it will always be free.
+
 ## Links
 
 - **Discord:** [discord.gg/rHvCrBdqaR](https://discord.gg/rHvCrBdqaR)
