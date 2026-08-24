@@ -188,19 +188,19 @@ tools for your own single-player career save.
 
 ### ℹ️ System
 - **Engine & mod info** — Unity version, MelonLoader version, mod version, at a glance
-- **Steam player count** — See how many steam players are playing Descenders right now
-- **Telemetry (opt-in)** — Disabled by default. When enabled, diagnostic reports containing limited mod/game information are sent to a private developer Discord channel when errors or warnings occur that I control. Feedback is only sent when you explicitly submit it. The exact data sent is explained in-menu.
+- **Steam player count** — See how many Steam players are playing Descenders right now.
+- **Telemetry (opt-in)** — Disabled by default. When enabled, diagnostic reports containing limited mod/game information are sent to a private Discord channel I control when errors or warnings occur. Feedback is only sent when you explicitly submit it. The exact data sent is explained in-menu.
 - **Feedback** — Send a bug report, feature request, or general feedback straight from the menu to Discord for viewing
 
 ## Network Activity
 
 Descenders Sandbox can make network requests for the following purposes:
 
-**GitHub** — checks for available mod updates.
-**Steam Web API** — retrieves the current Descenders player count.
-**Discord** — receives opt-in telemetry/error reports and manually submitted feedback.
-**Photon/Descenders networking** — used by the in-game Mod Chat and multiplayer-related features.
-**mod.io** — used to retrieve custom maps through the Xbox/Game Pass workshop integration.
+- **GitHub** — checks for available mod updates.
+- **Steam Web API** — retrieves the current Descenders player count.
+- **Discord** — receives opt-in telemetry/error reports and manually submitted feedback.
+- **Photon/Descenders networking** — used by the in-game Mod Chat and multiplayer-related features.
+- **mod.io** — used to retrieve custom maps through the Xbox/Game Pass workshop integration.
 
 ---
 
@@ -291,11 +291,14 @@ PowerShell is used for:
 Checking GitHub for available Sandbox updates.
 Retrieving the current Descenders player count from Steam.
 
-These requests do not download or execute code.
+The mod does not automatically update itself.
+
+The GitHub update check only checks for available releases and does not silently download, install, or execute a new version of the mod.
 
 **You are in control**
 
 You can simply leave telemetry disabled and no telemetry or error reports will be sent.
+Other network features, such as update checking, Steam player count, Mod Chat, and mod.io maps, operate independently of telemetry.
 
 If you encounter an error or warning and want to help me diagnose it:
 
