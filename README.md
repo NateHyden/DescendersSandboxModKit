@@ -1,8 +1,7 @@
 # Descenders Sandbox
 
-**Descenders Sandbox** is a free-ride physics sandbox and mod menu for
-**Descenders**, built with MelonLoader. It's not a cheat tool for
-competitive play — it's a client-side sandbox for **Free Ride and Bike
+**Descenders Sandbox** is a free-ride physics sandbox mod menu for
+**Descenders**, built with MelonLoader. It's a client-side sandbox for **Free Ride and Bike
 Park** sessions, letting you tweak bike physics, adjust world settings,
 drop in custom game modes like Earthquake, Police Chase, and Trick Attack,
 and — separately — edit your own career progression if you want to.
