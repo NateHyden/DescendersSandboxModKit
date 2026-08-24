@@ -9,7 +9,7 @@
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/rHvCrBdqaR)
 [![MelonLoader](https://img.shields.io/badge/MelonLoader-0.5.7-blue)](https://github.com/LavaGang/MelonLoader/releases)
 
-**Descenders Sandbox** is a free-ride physics sandbox mod menu for **Descenders**, built with MelonLoader. Tune bike physics, reshape the world, drop in custom game modes like Earthquake, Police Chase, and Trick Attack, and — separately — edit your own career progression if you want to.
+**Descenders Sandbox** is a free-ride physics sandbox mod menu for **Descenders**, built with MelonLoader. Tune bike physics, Place your own ramps, drop in custom game modes like Earthquake, Police Chase, and Trick Attack, and — separately — edit your own career progression if you want to.
 
 <p align="center">
   <img src="docs/screenshot-menu.png" alt="Descenders Sandbox menu" width="800">
