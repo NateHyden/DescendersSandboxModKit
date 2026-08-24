@@ -17,14 +17,14 @@
 
 > ⚠️ **Free Ride and Bike Park only.** Sandbox features will not work in online race lobbies — this is for messing around solo or with friends offline, not a competitive advantage tool. The one exception is the **Career** tools, which are built specifically for editing career-mode progression and only make sense there.
 
-**Press `F6` or `D-Pad Down`** in-game to open the menu — fully rebindable, see [Key Binds](#️-key-binds).
+**Press `F6` or `D-Pad Down`** in-game to open the menu — fully rebindable, see [Key Binds](#key-binds).
 
 ---
 
 ## Quick Install
 
 **Steam:** Install [MelonLoader 0.5.7](https://github.com/LavaGang/MelonLoader/releases) → drop `DescendersSandbox.dll` from [Releases](https://github.com/NateHyden/Descenders-Sandbox/releases) into `Descenders/Mods/` → launch.
-**Xbox / Game Pass:** needs a couple of extra steps — see the full [Xbox install guide](#installation--xbox-pc--game-pass) below.
+**Xbox / Game Pass:** needs a couple of extra steps — see the full [Xbox install guide](#installation-xbox) below.
 
 ---
 
@@ -32,10 +32,10 @@
 
 - [Features](#features)
 - [Requirements](#requirements)
-- [Installation — Steam](#installation--steam)
-- [Installation — Xbox PC / Game Pass](#installation--xbox-pc--game-pass)
+- [Installation — Steam](#installation-steam)
+- [Installation — Xbox PC / Game Pass](#installation-xbox)
 - [Building from Source](#building-from-source)
-- [Privacy, Telemetry & Network Activity](#privacy-telemetry--network-activity)
+- [Privacy, Telemetry & Network Activity](#privacy-telemetry-network)
 - [Links](#links)
 
 ---
@@ -44,13 +44,13 @@
 
 100+ tools across 25 categories. Jump to what you're after:
 
-`Object Placing` · `Bike Physics` · `Bike Setup` · `Movement & Controls` · `World` · `Map` · `Fun` · `Chaos & Extras` · `Outfit` · `Perks` · `Chat` · `Modes` · `Ghost Replay` · `Teleport` · `Screenshot` · `Session` · `Graphics` · `Favourites` · `Key Binds` · `Customise` · `Career Progression` · `System`
+[Object Placing](#object-placing) · [Bike Physics](#bike-physics) · [Bike Setup](#bike-setup) · [Movement & Controls](#movement-controls) · [World](#world) · [Map](#map) · [Fun](#fun) · [Chaos & Extras](#chaos-extras) · [Outfit](#outfit) · [Perks](#perks) · [Chat](#chat) · [Modes](#modes) · [Ghost Replay](#ghost-replay) · [Teleport](#teleport) · [Screenshot](#screenshot) · [Session](#session) · [Graphics](#graphics) · [Favourites](#favourites) · [Key Binds](#key-binds) · [Customise](#customise) · [Career Progression](#career-progression) · [System](#system)
 
 ### 🗺️ mod.io Custom Maps for Xbox / Game Pass
 
 Download and play mod.io custom maps on Xbox/Game Pass on PC.
 
-### 🏗️ Custom Object Placing
+### <a id="object-placing"></a>🏗️ Custom Object Placing
 
 Place down objects in the map, like ramps and walls.
 
@@ -62,7 +62,7 @@ Place down objects in the map, like ramps and walls.
 
 Does what it says on the tin — instantly pause every active mod, flip back to restore your set.
 
-### 🚲 Bike Physics
+### <a id="bike-physics"></a>🚲 Bike Physics
 
 Tune every aspect of how your bike handles.
 
@@ -80,7 +80,7 @@ Tune every aspect of how your bike handles.
 - **Ice Mode** — Minimal grip for a slidey, chaotic ride
 - **Cut Brakes** — Disable braking entirely
 
-### 🛠️ Bike Setup
+### <a id="bike-setup"></a>🛠️ Bike Setup
 
 - **Bike Switcher** — Change your bike type on the fly
 - **Trick Set Swap** — Borrow another bike's trick set
@@ -92,7 +92,7 @@ Tune every aspect of how your bike handles.
 - **Bike Torch** — Toggle the headlight
 - **Suspension HUD** — On-screen readout of live suspension compression
 
-### 🎮 Movement & Controls
+### <a id="movement-controls"></a>🎮 Movement & Controls
 
 - **Spin Force** — Amplify bar spins
 - **Hop Force** — Adjust bunny hop height
@@ -111,7 +111,7 @@ Tune every aspect of how your bike handles.
 - **Center of Mass** — Shift weight distribution on the bike
 - **Suspension** — Tune stiffness, damping, and travel
 
-### 🌍 World
+### <a id="world"></a>🌍 World
 
 - **Gravity** — Crank it up for moon physics or down for heavy riding
 - **Time of Day** — Scrub through the day/night cycle
@@ -125,12 +125,12 @@ Tune every aspect of how your bike handles.
 - **Headlights Only** — Kill all ambient/directional lighting so only your headlight illuminates the world
 - **Compass Always On** — Keep the finish-line direction indicator visible at all times
 
-### 🗺️ Map
+### <a id="map"></a>🗺️ Map
 
 - **Map Changer** — Load any base game map or bike park instantly
 - **Load from Seed** — Enter a seed number to load a specific procedural map
 
-### 🎭 Fun
+### <a id="fun"></a>🎭 Fun
 
 - **Player Size** — Scale your rider up or down
 - **Invisible Player** — Hide the rider mesh
@@ -143,7 +143,7 @@ Tune every aspect of how your bike handles.
 - **Camera Shake** — Add intensity to the camera
 - **FOV** — Adjust field of view
 
-### 🎪 Chaos & Extras
+### <a id="chaos-extras"></a>🎪 Chaos & Extras
 
 - **Trail Painter** — Leaves a coloured trail behind your bike, cycle through colours
 - **Confetti on Trick Landing** — Confetti burst every time you stick a trick
@@ -158,21 +158,21 @@ Tune every aspect of how your bike handles.
 - **Random Weather Roulette** — Cycles between Storm, Fog, Moon Mode, and Normal every 12–25 seconds instead of one fixed pick
 - **Music Toggle** — Turn the in-game soundtrack on or off
 
-### 👗 Outfit
+### <a id="outfit"></a>👗 Outfit
 
 - **Outfit Presets** — Save and load full rider outfit combinations
 - **Rider Customiser** — Live-edit skin, hair, and beard colour and style
 
-### ⭐ Perks
+### <a id="perks"></a>⭐ Perks
 
 - Instantly grant or remove any of the game's own crew-member perks, without having to earn them
 - **Clear All** — Strip every active perk in one click
 
-### 💬 Chat
+### <a id="chat"></a>💬 Chat
 
 - In-menu chat system for communicating with other Descenders Sandbox users nearby
 
-### 🎮 Modes
+### <a id="modes"></a>🎮 Modes
 
 Custom game modes you can run in free ride:
 
@@ -183,38 +183,38 @@ Custom game modes you can run in free ride:
 - **Survival Mode** — Stay on your bike and don't bail
 - **Avalanche Mode** — Outrun a rolling hazard chasing you down the mountain
 
-### 👻 Ghost Replay
+### <a id="ghost-replay"></a>👻 Ghost Replay
 
 Record a run and replay your ghost alongside you for self-competition.
 
-### 🎯 Teleport
+### <a id="teleport"></a>🎯 Teleport
 
 - **Visual Player Finder** — Spot nearby players with tracers and distance display
 - **World Object Finder** — Highlights collectibles, shortcuts, boost pads, hazards, and checkpoints
 - **Teleport to Player** — Jump to another player's position
 - **Teleport to Checkpoint** — Jump to any checkpoint in the map
 
-### 📸 Screenshot
+### <a id="screenshot"></a>📸 Screenshot
 
 - **Screenshot Mode** — Hide the HUD and UI for clean captures, triggered via D-Pad Up on controller or F11 on keyboard
 
-### 🖥️ Session
+### <a id="session"></a>🖥️ Session
 
 - **Session HUD** — On-screen tracker showing current run stats, top speed, longest airtime, peak G-force, bails, and session timer
 - **Speedrun Timer** — A clean on-screen timer for self-timed runs
 - **Spectate Mode** — Watch another connected player instead of riding yourself. Cycle between players, adjust the camera distance, turn on anytime while playing with others
 
-### 🎨 Graphics
+### <a id="graphics"></a>🎨 Graphics
 
 - **Bloom, Ambient Occlusion, Depth of Field, Vignette, Chromatic Aberration** — Toggle post processing effects individually
 - **Quality** — Switch render quality preset
 - **Hide Game HUD** — Remove the in-game interface
 
-### ⭐ Favourites
+### <a id="favourites"></a>⭐ Favourites
 
 Pin any setting to your Favourites tab for quick access without digging through menus. A dedicated Search tab lets you find any setting by name.
 
-### ⌨️ Key Binds
+### <a id="key-binds"></a>⌨️ Key Binds
 
 Bind any key on your keyboard to toggle mods or trigger actions without opening the menu.
 
@@ -225,7 +225,7 @@ Bind any key on your keyboard to toggle mods or trigger actions without opening 
 - Conflict detection — if a key is already in use, you'll be prompted to steal it or cancel
 - Bindings work whenever the menu is closed and no text field is focused
 
-### 🎛️ Customise
+### <a id="customise"></a>🎛️ Customise
 
 - **Position** — Centre, Top Left, or Top Right
 - **Scale** — Resize the whole menu
@@ -236,7 +236,7 @@ Bind any key on your keyboard to toggle mods or trigger actions without opening 
   <img src="docs/screenshot-customise.png" alt="Descenders Sandbox colour scheme customisation" width="800">
 </p>
 
-### 🏆 Career Progression
+### <a id="career-progression"></a>🏆 Career Progression
 
 Separate from the free-ride sandbox tools above — these are save-editing tools for your own single-player career save.
 
@@ -246,12 +246,12 @@ Separate from the free-ride sandbox tools above — these are save-editing tools
 - **Unlock All (Bikes + Gear)** — Unlock or lock every bike and gear item instantly
 - **Adjust Total Rep / In-Game Rep** — Manually add or subtract rep, with an adjustable step multiplier
 
-### ℹ️ System
+### <a id="system"></a>ℹ️ System
 
 - **Engine & mod info** — Unity version, MelonLoader version, mod version, at a glance
 - **Steam player count** — See how many Steam players are playing Descenders right now
 - **Update Checker** — Automatically checks GitHub for new Sandbox releases on launch
-- **Telemetry (opt-in)** — Disabled by default; see [Privacy, Telemetry & Network Activity](#privacy-telemetry--network-activity)
+- **Telemetry (opt-in)** — Disabled by default; see [Privacy, Telemetry & Network Activity](#privacy-telemetry-network)
 - **Feedback** — Send a bug report, feature request, or general feedback straight from the menu to Discord
 
 ---
@@ -263,7 +263,7 @@ Separate from the free-ride sandbox tools above — these are save-editing tools
 
 ---
 
-## Installation — Steam
+## <a id="installation-steam"></a>Installation — Steam
 
 1. Run the MelonLoader installer — it will auto-detect your Descenders installation. Select version **0.5.7** from the dropdown
 2. Launch the game once to let MelonLoader set up its folders, then close it
@@ -275,7 +275,7 @@ If updating from an older version, delete any previous `DescendersModMenu.dll`, 
 
 ---
 
-## Installation — Xbox PC / Game Pass
+## <a id="installation-xbox"></a>Installation — Xbox PC / Game Pass
 
 MelonLoader works on the Xbox PC (Game Pass) version but needs a couple of extra steps due to Windows App Store permissions.
 
@@ -335,7 +335,7 @@ Not sure where your install is? In Steam, right-click Descenders → **Manage �
 
 ---
 
-## Privacy, Telemetry & Network Activity
+## <a id="privacy-telemetry-network"></a>Privacy, Telemetry & Network Activity
 
 Descenders Sandbox can make network requests for the following purposes:
 
