@@ -304,6 +304,6 @@ Telemetry exists purely to make it easier for me to find and fix bugs without re
 I make this mod for the Descenders community, and it will always be free.
 
 ## Links
-
+- **VirusTotal:** [VirusTotal](https://www.virustotal.com/gui/file/98e44db68ebc2568ef7fdc47afa4d74c99d024c994d9b0ba61f55712b42db29f/detection)
 - **Discord:** [discord.gg/rHvCrBdqaR](https://discord.gg/rHvCrBdqaR)
 - **Nexus Mods:** [nexusmods.com/descenders/mods/8](https://www.nexusmods.com/descenders/mods/8)
