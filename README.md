@@ -7,7 +7,7 @@ drop in custom game modes like Earthquake, Police Chase, and Trick Attack,
 and — separately — edit your own career progression if you want to.
 
 > ⚠️ Features are intended for **Free Ride and Bike Park** sessions
-> only and will not work in online lobbies race lobbies — it's a sandbox for
+> Free Ride and Bike Park sessions only and will not work in online race lobbies — it's a sandbox for
 > messing around solo or with friends offline, not a competitive advantage
 > tool. The **Career** tools are the one exception: those are built
 > specifically to edit career-mode progression (missions, rep, sponsors,
@@ -194,8 +194,18 @@ tools for your own single-player career save.
 ### ℹ️ System
 - **Engine & mod info** — Unity version, MelonLoader version, mod version, at a glance
 - **Steam player count** — See how many steam players are playing Descenders right now
-- **Telemetry (opt-in)** — Used for bug reporting - Sends a small report to the developer's Discord when something breaks, to help find and fix bugs faster. Toggle on/off anytime; the exact data sent is explained in-menu - Nothing Personal
+- **Telemetry (opt-in)** — Disabled by default. When enabled, diagnostic reports containing limited mod/game information are sent to a private developer Discord channel when errors or warnings occur that I control. Feedback is only sent when you explicitly submit it. The exact data sent is explained in-menu.
 - **Feedback** — Send a bug report, feature request, or general feedback straight from the menu to Discord for viewing
+
+## Network Activity
+
+Descenders Sandbox can make network requests for the following purposes:
+
+**GitHub** — checks for available mod updates.
+**Steam Web API** — retrieves the current Descenders player count.
+**Discord** — receives opt-in telemetry/error reports and manually submitted feedback.
+**Photon/Descenders networking** — used by the in-game Mod Chat and multiplayer-related features.
+**mod.io** — used to retrieve custom maps through the Xbox/Game Pass workshop integration.
 
 ---
 
