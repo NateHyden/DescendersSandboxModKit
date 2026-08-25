@@ -1,5 +1,5 @@
 ﻿using DescendersModMenu;
-﻿using MelonLoader;
+using MelonLoader;
 using UnityEngine;
 using System.Reflection;
 using System.Collections.Generic;
@@ -58,38 +58,95 @@ namespace DescendersModMenu.Mods
 
             try
             {
-                object gd = GetSingleton(typeof(GameData));
-                if ((object)gd == null) { ModLog.Warn("[MapChanger] No GameData."); return; }
-
+                var seenSeeds = new HashSet<int>();
                 int found = 0;
 
-                System.Array fqv = GetPublicField<System.Array>(gd, "FqVmLOT");
-                if ((object)fqv != null && fqv.Length > 0)
+                object gd = GetSingleton(typeof(GameData));
+                if ((object)gd != null)
                 {
-                    foreach (var b in fqv)
+                    // Prefer every BonusLevelInfo[] on GameData (FqVmLOT + any twin arrays).
+                    FieldInfo[] fields = gd.GetType().GetFields(
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    for (int fi = 0; fi < fields.Length; fi++)
                     {
-                        if ((object)b == null) continue;
-                        string name = GetPublicField<string>(b, "levelName");
-                        int seed = GetPublicField<int>(b, "customSeed");
-                        object we = GetPublicField<object>(b, "world");
-                        int world = we != null ? (int)we : 0;
-                        if (string.IsNullOrEmpty(name) || seed == 0) continue;
-                        _maps.Add(new MapEntry
+                        FieldInfo f = fields[fi];
+                        if (!f.FieldType.IsArray) continue;
+                        if (!string.Equals(f.FieldType.GetElementType().Name, "BonusLevelInfo",
+                            System.StringComparison.Ordinal)) continue;
+
+                        System.Array arr = f.GetValue(gd) as System.Array;
+                        if ((object)arr == null) continue;
+                        found += AddBonusLevels(arr, seenSeeds);
+                    }
+
+                    // BikeParkCategory[].bikeParkList — same data the Freeride UI uses.
+                    for (int fi = 0; fi < fields.Length; fi++)
+                    {
+                        FieldInfo f = fields[fi];
+                        if (!f.FieldType.IsArray) continue;
+                        if (!string.Equals(f.FieldType.GetElementType().Name, "BikeParkCategory",
+                            System.StringComparison.Ordinal)) continue;
+
+                        System.Array cats = f.GetValue(gd) as System.Array;
+                        if ((object)cats == null) continue;
+                        for (int c = 0; c < cats.Length; c++)
                         {
-                            Name = PrettyName(name),
-                            CustomSeed = seed,
-                            WorldInt = world,
-                            IsBikePark = true
-                        });
-                        found++;
+                            object cat = cats.GetValue(c);
+                            if ((object)cat == null) continue;
+                            object listObj = GetPublicField<object>(cat, "bikeParkList");
+                            var list = listObj as System.Collections.IList;
+                            if ((object)list == null) continue;
+                            for (int j = 0; j < list.Count; j++)
+                            {
+                                if (TryAddBonusLevel(list[j], seenSeeds))
+                                    found++;
+                            }
+                        }
                     }
                 }
+
+                // Anything already loaded as a ScriptableObject (covers late-loaded parks).
+                BonusLevelInfo[] all = Resources.FindObjectsOfTypeAll<BonusLevelInfo>();
+                if ((object)all != null)
+                    found += AddBonusLevels(all, seenSeeds);
 
                 HasBikeParks = found > 0;
                 ModLog.Debug("[MapChanger] " + found + " bike parks + 10 base worlds = "
                     + _maps.Count + " total.");
             }
             catch (System.Exception ex) { MelonLogger.Error("[MapChanger] BuildMapList: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MapChanger"); }
+        }
+
+        private static int AddBonusLevels(System.Array arr, HashSet<int> seenSeeds)
+        {
+            int found = 0;
+            if ((object)arr == null) return 0;
+            for (int i = 0; i < arr.Length; i++)
+            {
+                if (TryAddBonusLevel(arr.GetValue(i), seenSeeds))
+                    found++;
+            }
+            return found;
+        }
+
+        private static bool TryAddBonusLevel(object b, HashSet<int> seenSeeds)
+        {
+            if ((object)b == null) return false;
+            string name = GetPublicField<string>(b, "levelName");
+            int seed = GetPublicField<int>(b, "customSeed");
+            object we = GetPublicField<object>(b, "world");
+            int world = we != null ? (int)we : 0;
+            if (string.IsNullOrEmpty(name) || seed == 0) return false;
+            if (seenSeeds != null && !seenSeeds.Add(seed)) return false;
+
+            _maps.Add(new MapEntry
+            {
+                Name = PrettyName(name),
+                CustomSeed = seed,
+                WorldInt = world,
+                IsBikePark = true
+            });
+            return true;
         }
 
         private static string PrettyName(string key)

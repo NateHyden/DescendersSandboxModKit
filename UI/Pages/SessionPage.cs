@@ -192,25 +192,17 @@ namespace DescendersModMenu.UI
                 _jumpStatusTxt.gameObject.AddComponent<LayoutElement>().preferredWidth = 130;
                 UIHelpers.ActionBtnOrange(jr.transform, "Jump", () =>
                 {
-                    try
+                    string err;
+                    if (!SessionCommands.TryJumpToFinish(out err))
                     {
-                        var fl = FinishLine.GetAFinishLine();
-                        if (!UnityNull.Alive(fl))
+                        if (_jumpStatusTxt)
                         {
-                            ModLog.Debug("[JumpToFinish] No FinishLine found on this level - nothing to jump to.");
-                            if (_jumpStatusTxt) { _jumpStatusTxt.text = "No finish line here"; _jumpStatusTxt.color = UIHelpers.Orange; }
-                            return;
+                            _jumpStatusTxt.text = string.IsNullOrEmpty(err) ? "Failed" : err;
+                            _jumpStatusTxt.color = UIHelpers.Orange;
                         }
-
-                        DevCommandsGameplay.JumpToFinish();
-                        if (_jumpStatusTxt) _jumpStatusTxt.text = "";
+                        return;
                     }
-                    catch (System.Exception ex)
-                    {
-                        MelonLogger.Error("[JumpToFinish]: " + ex.Message);
-                        Telemetry.ReportErrorAsync(ex, "SessionPage");
-                        if (_jumpStatusTxt) { _jumpStatusTxt.text = "Failed - see log"; _jumpStatusTxt.color = UIHelpers.Orange; }
-                    }
+                    if (_jumpStatusTxt) _jumpStatusTxt.text = "";
                 }, 60);
                 FavouritesManager.RegisterStarButton("JumpToFinish", UIHelpers.StarBtn(jr.transform, "JumpToFinish", () => FavouritesManager.Toggle("JumpToFinish")));
 
@@ -298,13 +290,8 @@ namespace DescendersModMenu.UI
                         var row = FavsPage.CompactStatRow("Jump to Finish", p);
                         UIHelpers.ActionBtnOrange(row.transform, "Jump", () =>
                         {
-                            try
-                            {
-                                var fl = FinishLine.GetAFinishLine();
-                                if (!UnityNull.Alive(fl)) return;
-                                DevCommandsGameplay.JumpToFinish();
-                            }
-                            catch (System.Exception ex) { MelonLogger.Error("[JumpToFinish]: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionPage"); }
+                            string err;
+                            SessionCommands.TryJumpToFinish(out err);
                         }, 60);
                     },
                     IsActive = () => false

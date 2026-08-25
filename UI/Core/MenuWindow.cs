@@ -79,6 +79,7 @@ namespace DescendersModMenu.UI
         private static int cur = 1;
 
         public static int PendingPage = -1;
+        public static int CurrentPage { get { return cur; } }
 
         private static readonly int[] PageOrder = { 17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22, 26 };
         private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info", "Customise", "General", "Object Placer", "Xbox Workshop", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "Ghost Replay", "Maps", "Find", "Screenshot", "Other", "Perks", "Career" };
@@ -1259,6 +1260,7 @@ namespace DescendersModMenu.UI
             if (cur != 11) OutfitPage.CancelRename(); if (pg12) pg12.SetActive(cur == 12);
             if (pg13) pg13.SetActive(cur == 13); if (pg14) pg14.SetActive(cur == 14);
             if (pg15) pg15.SetActive(cur == 15);
+            if (cur == 15 && _lastCur != 15) MapPage.RefreshAll();
             if (pg16) pg16.SetActive(cur == 16);
             if (pg17) pg17.SetActive(cur == 17);
             if (cur == 17) FavsPage.CheckDirty();

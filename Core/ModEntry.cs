@@ -13,13 +13,14 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "2.1.0";
+        public const string Version = "2.1.5";
         public const string DownloadLink = null;
     }
 
     public class DescendersModMenu : MelonMod
     {
         private HarmonyLib.Harmony harmony;
+
         private float _lastRStickClick = -999f;
         private bool _pendingRStickSave = false;
         private float _rStickSaveTime = 0f;
@@ -216,6 +217,7 @@ namespace DescendersModMenu
         // ================================================================
         public override void OnSceneWasUnloaded(int buildIndex, string sceneName)
         {
+            try { MenuUI.OnSceneUnloaded(); } catch (System.Exception ex) { MelonLogger.Error("MenuUI.OnSceneUnloaded: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MenuUI"); }
             try { FavouritesManager.ClearStarButtons(); } catch (System.Exception ex) { MelonLogger.Error("FavouritesManager.ClearStarButtons: " + ex.Message); Telemetry.ReportErrorAsync(ex, "FavouritesManager"); }
             try { ModChat.OnMapChanged(); } catch { }
             try { ModesPage.ClearUiRefs(); } catch { }
@@ -523,6 +525,8 @@ namespace DescendersModMenu
         {
             try { LoadingBrand.Tick(); } catch (System.Exception ex) { MelonLogger.Error("LoadingBrand.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LoadingBrand"); }
             try { RideOnWater.Tick(); } catch (System.Exception ex) { MelonLogger.Error("RideOnWater.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RideOnWater"); }
+            try { MenuUI.TryReopenAfterMapChange(); } catch (System.Exception ex) { MelonLogger.Error("MenuUI.TryReopenAfterMapChange: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MenuUI"); }
+            try { MenuUI.Tick(); } catch { }
 
             try { UI.MenuToggleWatcher.Ensure(); } catch { }
 

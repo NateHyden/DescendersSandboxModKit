@@ -65,19 +65,6 @@ namespace DescendersModMenu.UI
                 var tle = titleTxt.gameObject.AddComponent<LayoutElement>();
                 tle.preferredWidth = 76; tle.preferredHeight = 28;
 
-                var badge = UIHelpers.Panel("ExpBadge", hdrRow.transform,
-                    new Color(0.15f, 0.08f, 0.02f, 1f), UIHelpers.BtnSp);
-                var ble = badge.AddComponent<LayoutElement>();
-                ble.preferredWidth = 90; ble.preferredHeight = 18; ble.flexibleHeight = 0;
-                var bbdr = UIHelpers.Panel("BBdr", badge.transform,
-                    new Color(0.35f, 0.18f, 0.02f, 1f), UIHelpers.BtnSp);
-                bbdr.GetComponent<Image>().raycastTarget = false;
-                UIHelpers.Fill(UIHelpers.RT(bbdr));
-                bbdr.AddComponent<LayoutElement>().ignoreLayout = true;
-                var badgeTxt = UIHelpers.Txt("BT", badge.transform, "EXPERIMENTAL", 9,
-                    FontStyle.Bold, TextAnchor.MiddleCenter, new Color(1f, 0.55f, 0.1f, 1f));
-                UIHelpers.Fill(UIHelpers.RT(badgeTxt.gameObject));
-
                 var hdrSpacer = UIHelpers.Obj("HdrSp", hdrRow.transform);
                 hdrSpacer.AddComponent<LayoutElement>().flexibleWidth = 1;
 

@@ -72,6 +72,9 @@ namespace DescendersModMenu.UI
             if (!_listRoot) { _listRoot = null; return; }
             try
             {
+                // Rescan every rebuild — GameData may not have been ready at boot.
+                MapChanger.BuildMapList();
+
                 while (_listRoot.childCount > 0)
                     GameObject.DestroyImmediate(_listRoot.GetChild(0).gameObject);
 
@@ -138,22 +141,18 @@ namespace DescendersModMenu.UI
                 _statusText = UIHelpers.Txt("Status", statusRow.transform,
                     MapChanger.HasBikeParks
                         ? "Base + Bike Parks"
-                        : "Open Freeride to scan parks",
+                        : "Base maps only",
                     11, FontStyle.Normal, TextAnchor.MiddleRight,
                     MapChanger.HasBikeParks ? UIHelpers.OnColor : UIHelpers.TextDim);
                 _statusText.gameObject.AddComponent<LayoutElement>().preferredWidth = 150;
+                UIHelpers.ActionBtn(statusRow.transform, "Rescan", () => { RefreshAll(); }, 56);
 
                 UIHelpers.Divider(_listRoot);
 
                 if (!MapChanger.HasBikeParks)
                 {
-                    var hintRow = UIHelpers.Obj("HintRow", _listRoot);
-                    hintRow.AddComponent<LayoutElement>().minHeight = 28;
-                    var htxt = UIHelpers.Txt("HintTxt", hintRow.transform,
-                        "Go to  Ride \u2192 Bike Parks  once to load all parks into this list",
-                        10, FontStyle.Normal, TextAnchor.MiddleCenter, UIHelpers.TextDim);
-                    htxt.horizontalOverflow = HorizontalWrapMode.Wrap;
-                    UIHelpers.Fill(UIHelpers.RT(htxt.gameObject));
+                    UIHelpers.InfoBox(_listRoot,
+                        "Bike parks missing? Open the game menu \u2192 Ride \u2192 Bike Parks once, then hit Rescan. Most of the time this list fills automatically.");
                     UIHelpers.Divider(_listRoot);
                 }
 

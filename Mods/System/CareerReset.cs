@@ -447,6 +447,23 @@ namespace DescendersModMenu.Mods
         public static void IncreaseInGameRepMultiplier() { InGameRepMultiplierLevel = BumpRepMultiplier(InGameRepMultiplierLevel, 1); }
         public static void DecreaseInGameRepMultiplier() { InGameRepMultiplierLevel = BumpRepMultiplier(InGameRepMultiplierLevel, -1); }
 
+        /// <summary>Set total/lifetime rep to an exact value, typed directly rather than stepped with +/-.
+        /// Internally computed as a delta against the current live value and routed through AdjustRep
+        /// so it goes through the same clamp/save/feedback/live-HUD-sync path as the +/- buttons.</summary>
+        public static void SetRep(int newValue)
+        {
+            if (newValue < 0) newValue = 0;
+            AdjustRep(newValue - LiveRepValue);
+        }
+
+        /// <summary>Set this session's in-game rep to an exact value, typed directly rather than stepped.
+        /// Same delta-through-AdjustInGameRep approach as SetRep. Returns false if not in a session.</summary>
+        public static bool SetInGameRep(int newValue)
+        {
+            if (newValue < 0) newValue = 0;
+            return AdjustInGameRep(newValue - CurrentInGameRep);
+        }
+
         public static void AdjustRep(int amount)
         {
             try

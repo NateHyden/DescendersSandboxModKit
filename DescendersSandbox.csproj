@@ -196,6 +196,7 @@
     <Compile Include="Mods\System\CompassAlwaysOn.cs" />
     <Compile Include="Mods\System\PerkMenu.cs" />
     <Compile Include="Mods\System\PlayerCache.cs" />
+    <Compile Include="Mods\System\SessionCommands.cs" />
     <Compile Include="Mods\System\AllModsSwitch.cs" />
     <Compile Include="Mods\System\MenuBrakeHold.cs" />
     <Compile Include="Mods\System\ModLog.cs" />

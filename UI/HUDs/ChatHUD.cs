@@ -8,9 +8,10 @@ namespace DescendersModMenu.UI
     {
         public static bool Enabled { get; private set; } = true;
 
-        private const float DisplaySeconds = 5f;
+        private const float DisplaySeconds = 6f;
         private const int MaxVisible = 5;
         private const float BaseRes = 1080f;
+        private const string Ellipsis = "...";
 
         private static readonly Color BgCol = new Color(0.055f, 0.063f, 0.078f, 0.88f);
         private static readonly Color BorderCol = new Color(0.25f, 0.55f, 1f, 0.35f);
@@ -151,10 +152,37 @@ namespace DescendersModMenu.UI
 
                 float half = rowH * 0.5f;
                 GUI.Label(new Rect(textX, y + 2f * s, textW, half), t.PlayerName, nameStyle);
-                GUI.Label(new Rect(textX, y + half - 2f * s, textW, half), t.Text, msgStyle);
+                string shown = Ellipsize(t.Text, msgStyle, textW);
+                GUI.Label(new Rect(textX, y + half - 2f * s, textW, half), shown, msgStyle);
 
                 y += rowH + gap;
             }
+        }
+
+        private static string Ellipsize(string text, GUIStyle style, float maxWidth)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+            if (style.CalcSize(new GUIContent(text)).x <= maxWidth + 0.5f)
+                return text;
+
+            int lo = 0;
+            int hi = text.Length;
+            string best = Ellipsis;
+            while (lo < hi)
+            {
+                int mid = (lo + hi + 1) / 2;
+                string candidate = text.Substring(0, mid) + Ellipsis;
+                if (style.CalcSize(new GUIContent(candidate)).x <= maxWidth + 0.5f)
+                {
+                    best = candidate;
+                    lo = mid;
+                }
+                else
+                {
+                    hi = mid - 1;
+                }
+            }
+            return best;
         }
 
         private static void DrawRect(float rx, float ry, float rw, float rh, Color c)

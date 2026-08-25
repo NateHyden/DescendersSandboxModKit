@@ -535,20 +535,11 @@ namespace DescendersModMenu
 
         private static void DoJumpToFinish()
         {
-            try
+            string err;
+            if (!SessionCommands.TryJumpToFinish(out err))
             {
-                var fl = FinishLine.GetAFinishLine();
-                if (!UnityNull.Alive(fl))
-                {
-                    ModLog.Feedback("[JumpToFinish] No finish line on this level.");
-                    return;
-                }
-                DevCommandsGameplay.JumpToFinish();
-            }
-            catch (Exception ex)
-            {
-                MelonLogger.Error("[KeyBindManager] JumpToFinish: " + ex.Message);
-                Telemetry.ReportErrorAsync(ex, "KeyBindManager");
+                if (!string.IsNullOrEmpty(err))
+                    ModLog.Feedback("[JumpToFinish] " + err);
             }
         }
 

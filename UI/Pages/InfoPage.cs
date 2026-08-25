@@ -52,6 +52,17 @@ namespace DescendersModMenu.UI
         private static Text _inGameRepMultVal;
         private static GameObject _devDiagContent;
 
+        // ── Set-exact-rep inputs (text field + Set button) ──────────────
+        private static Text _repSetInputText, _repSetCursor;
+        private static RectTransform _repSetBoxRect;
+        private static bool _repSetFocused;
+        private static string _repSetBuffer = "";
+
+        private static Text _inGameRepSetInputText, _inGameRepSetCursor;
+        private static RectTransform _inGameRepSetBoxRect;
+        private static bool _inGameRepSetFocused;
+        private static string _inGameRepSetBuffer = "";
+
         // ── CreatePage ────────────────────────────────────────────────
         public static GameObject CreatePage(Transform parent)
         {
@@ -635,6 +646,53 @@ namespace DescendersModMenu.UI
             });
             UIHelpers.InfoBox(vlg.transform, "Adds or removes reputation. Use the multiplier for bigger jumps. Changes your total / lifetime rep.");
 
+            // ── Set Total Rep to an exact typed value ───────────────────
+            var repSetRow = UIHelpers.Obj("RepSetRow", vlg.transform);
+            repSetRow.AddComponent<Image>().color = UIHelpers.RowBg;
+            var rsrLe = repSetRow.AddComponent<LayoutElement>();
+            rsrLe.preferredHeight = 36; rsrLe.minHeight = 36;
+            var rsrHlg = repSetRow.AddComponent<HorizontalLayoutGroup>();
+            rsrHlg.padding = new RectOffset(8, 8, 4, 4);
+            rsrHlg.spacing = 6; rsrHlg.childAlignment = TextAnchor.MiddleLeft;
+            rsrHlg.childForceExpandHeight = true; rsrHlg.childForceExpandWidth = false;
+
+            var repSetBg = UIHelpers.Obj("RepSetBg", repSetRow.transform);
+            repSetBg.AddComponent<Image>().color = UIHelpers.WinOuter;
+            var rsbgLe = repSetBg.AddComponent<LayoutElement>();
+            rsbgLe.flexibleWidth = 1; rsbgLe.minHeight = 26; rsbgLe.preferredHeight = 26;
+            var rsbgHlg = repSetBg.AddComponent<HorizontalLayoutGroup>();
+            rsbgHlg.padding = new RectOffset(8, 8, 0, 0);
+            rsbgHlg.childAlignment = TextAnchor.MiddleLeft;
+            rsbgHlg.childForceExpandWidth = true; rsbgHlg.childForceExpandHeight = true;
+
+            _repSetInputText = UIHelpers.Txt("RepSetIT", repSetBg.transform, "Type exact rep value...",
+                11, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+            _repSetInputText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _repSetInputText.verticalOverflow = VerticalWrapMode.Truncate;
+            _repSetInputText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+            _repSetCursor = UIHelpers.Txt("RepSetCur", repSetBg.transform, "|",
+                12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            _repSetCursor.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            var rscRT = UIHelpers.RT(_repSetCursor.gameObject);
+            rscRT.anchorMin = new Vector2(1, 0); rscRT.anchorMax = new Vector2(1, 1);
+            rscRT.pivot = new Vector2(1, 0.5f);
+            rscRT.sizeDelta = new Vector2(10, 0);
+            rscRT.anchoredPosition = new Vector2(-6, 0);
+            _repSetCursor.gameObject.SetActive(false);
+
+            _repSetBoxRect = UIHelpers.RT(repSetBg);
+            var repSetFocusBtn = repSetBg.AddComponent<UnityEngine.UI.Button>();
+            repSetFocusBtn.targetGraphic = repSetBg.GetComponent<Image>();
+            repSetFocusBtn.onClick.AddListener(() => { _repSetFocused = true; });
+
+            UIHelpers.ActionBtn(repSetRow.transform, "Set", () =>
+            {
+                TrySetRepFromBox();
+            }, 52);
+            UIHelpers.InfoBox(vlg.transform, "Type a number and hit Set (or Enter) to jump straight to that total rep value.");
+            UIHelpers.InfoBox(vlg.transform, "Game limitation: a big jump upward may stop counting genuine rep earned afterwards. Prefer small changes close to your real total.", UIHelpers.Orange);
+
             var inGameRepRow = UIHelpers.StatRow("Adjust In-Game Rep", vlg.transform);
             _inGameRepMinus = UIHelpers.SmallBtn(inGameRepRow.transform, "\u25C0", () =>
             {
@@ -663,6 +721,53 @@ namespace DescendersModMenu.UI
                 RefreshCareerResult();
             });
             UIHelpers.InfoBox(vlg.transform, "Adds or removes this session's combo rep only. Resets each new session.");
+
+            // ── Set In-Game Rep to an exact typed value ──────────────────
+            var inGameRepSetRow = UIHelpers.Obj("InGameRepSetRow", vlg.transform);
+            inGameRepSetRow.AddComponent<Image>().color = UIHelpers.RowBg;
+            var igrsrLe = inGameRepSetRow.AddComponent<LayoutElement>();
+            igrsrLe.preferredHeight = 36; igrsrLe.minHeight = 36;
+            var igrsrHlg = inGameRepSetRow.AddComponent<HorizontalLayoutGroup>();
+            igrsrHlg.padding = new RectOffset(8, 8, 4, 4);
+            igrsrHlg.spacing = 6; igrsrHlg.childAlignment = TextAnchor.MiddleLeft;
+            igrsrHlg.childForceExpandHeight = true; igrsrHlg.childForceExpandWidth = false;
+
+            var inGameRepSetBg = UIHelpers.Obj("InGameRepSetBg", inGameRepSetRow.transform);
+            inGameRepSetBg.AddComponent<Image>().color = UIHelpers.WinOuter;
+            var igrsbgLe = inGameRepSetBg.AddComponent<LayoutElement>();
+            igrsbgLe.flexibleWidth = 1; igrsbgLe.minHeight = 26; igrsbgLe.preferredHeight = 26;
+            var igrsbgHlg = inGameRepSetBg.AddComponent<HorizontalLayoutGroup>();
+            igrsbgHlg.padding = new RectOffset(8, 8, 0, 0);
+            igrsbgHlg.childAlignment = TextAnchor.MiddleLeft;
+            igrsbgHlg.childForceExpandWidth = true; igrsbgHlg.childForceExpandHeight = true;
+
+            _inGameRepSetInputText = UIHelpers.Txt("IGRepSetIT", inGameRepSetBg.transform, "Type exact in-game rep value...",
+                11, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+            _inGameRepSetInputText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _inGameRepSetInputText.verticalOverflow = VerticalWrapMode.Truncate;
+            _inGameRepSetInputText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+            _inGameRepSetCursor = UIHelpers.Txt("IGRepSetCur", inGameRepSetBg.transform, "|",
+                12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+            _inGameRepSetCursor.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            var igrscRT = UIHelpers.RT(_inGameRepSetCursor.gameObject);
+            igrscRT.anchorMin = new Vector2(1, 0); igrscRT.anchorMax = new Vector2(1, 1);
+            igrscRT.pivot = new Vector2(1, 0.5f);
+            igrscRT.sizeDelta = new Vector2(10, 0);
+            igrscRT.anchoredPosition = new Vector2(-6, 0);
+            _inGameRepSetCursor.gameObject.SetActive(false);
+
+            _inGameRepSetBoxRect = UIHelpers.RT(inGameRepSetBg);
+            var inGameRepSetFocusBtn = inGameRepSetBg.AddComponent<UnityEngine.UI.Button>();
+            inGameRepSetFocusBtn.targetGraphic = inGameRepSetBg.GetComponent<Image>();
+            inGameRepSetFocusBtn.onClick.AddListener(() => { _inGameRepSetFocused = true; });
+
+            UIHelpers.ActionBtn(inGameRepSetRow.transform, "Set", () =>
+            {
+                TrySetInGameRepFromBox();
+            }, 52);
+            UIHelpers.InfoBox(vlg.transform, "Type a number and hit Set (or Enter) to jump straight to that in-game rep value.");
+            UIHelpers.InfoBox(vlg.transform, "Game limitation: a big jump upward may stop counting genuine rep earned afterwards. Prefer small changes close to your real total.", UIHelpers.Orange);
 
             var resultRow = UIHelpers.StatRow("Last Result", vlg.transform);
             _careerResultTxt = UIHelpers.Txt("CRResult", resultRow.transform, CareerReset.LastResult,
@@ -1161,6 +1266,125 @@ namespace DescendersModMenu.UI
             if (_verLatestTxt && UpdateChecker.CheckComplete
                 && (_verLatestTxt.text == "Checking..." || _verLatestTxt.text == "..."))
                 RefreshVersion();
+
+            RepSetTick();
+            InGameRepSetTick();
+        }
+
+        // ── Set-exact-rep digit input handling (mirrors MapPage.SeedTick, digits only) ──
+        private static void RepSetTick()
+        {
+            if (!_repSetInputText) return;
+
+            if (_repSetFocused && Input.GetMouseButtonDown(0))
+            {
+                if (_repSetBoxRect
+                    && !RectTransformUtility.RectangleContainsScreenPoint(_repSetBoxRect, Input.mousePosition, null))
+                    _repSetFocused = false;
+            }
+
+            if (_repSetCursor) _repSetCursor.gameObject.SetActive(false);
+
+            if (!_repSetFocused) return;
+
+            foreach (char ch in Input.inputString)
+            {
+                if (ch == '\b') { if (_repSetBuffer.Length > 0) _repSetBuffer = _repSetBuffer.Substring(0, _repSetBuffer.Length - 1); }
+                else if (ch == '\n' || ch == '\r') { TrySetRepFromBox(); return; }
+                else if (ch == (char)27) { _repSetFocused = false; return; }
+                else if (char.IsDigit(ch) && _repSetBuffer.Length < 10) _repSetBuffer += ch;
+            }
+
+            if (_repSetBuffer.Length > 0)
+            {
+                _repSetInputText.text = UIHelpers.WithCaret(_repSetBuffer, true);
+                _repSetInputText.color = UIHelpers.TextLight;
+            }
+            else
+            {
+                _repSetInputText.text = UIHelpers.WithCaret("Type exact rep value...", true);
+                _repSetInputText.color = UIHelpers.TextDim;
+            }
+        }
+
+        private static void TrySetRepFromBox()
+        {
+            string s = _repSetBuffer.Trim();
+            _repSetBuffer = "";
+            _repSetFocused = false;
+            if ((object)_repSetInputText != null)
+            {
+                _repSetInputText.text = "Type exact rep value...";
+                _repSetInputText.color = UIHelpers.TextDim;
+            }
+            if (string.IsNullOrEmpty(s)) return;
+
+            int target;
+            if (!int.TryParse(s, out target)) return;
+
+            ModLog.Debug("[CareerReset] Setting total rep to: " + target);
+            CareerReset.SetRep(target);
+            RefreshCareerResult();
+        }
+
+        private static void InGameRepSetTick()
+        {
+            if (!_inGameRepSetInputText) return;
+
+            if (_inGameRepSetFocused && Input.GetMouseButtonDown(0))
+            {
+                if (_inGameRepSetBoxRect
+                    && !RectTransformUtility.RectangleContainsScreenPoint(_inGameRepSetBoxRect, Input.mousePosition, null))
+                    _inGameRepSetFocused = false;
+            }
+
+            if (_inGameRepSetCursor) _inGameRepSetCursor.gameObject.SetActive(false);
+
+            if (!_inGameRepSetFocused) return;
+
+            foreach (char ch in Input.inputString)
+            {
+                if (ch == '\b') { if (_inGameRepSetBuffer.Length > 0) _inGameRepSetBuffer = _inGameRepSetBuffer.Substring(0, _inGameRepSetBuffer.Length - 1); }
+                else if (ch == '\n' || ch == '\r') { TrySetInGameRepFromBox(); return; }
+                else if (ch == (char)27) { _inGameRepSetFocused = false; return; }
+                else if (char.IsDigit(ch) && _inGameRepSetBuffer.Length < 10) _inGameRepSetBuffer += ch;
+            }
+
+            if (_inGameRepSetBuffer.Length > 0)
+            {
+                _inGameRepSetInputText.text = UIHelpers.WithCaret(_inGameRepSetBuffer, true);
+                _inGameRepSetInputText.color = UIHelpers.TextLight;
+            }
+            else
+            {
+                _inGameRepSetInputText.text = UIHelpers.WithCaret("Type exact in-game rep value...", true);
+                _inGameRepSetInputText.color = UIHelpers.TextDim;
+            }
+        }
+
+        private static void TrySetInGameRepFromBox()
+        {
+            string s = _inGameRepSetBuffer.Trim();
+            _inGameRepSetBuffer = "";
+            _inGameRepSetFocused = false;
+            if ((object)_inGameRepSetInputText != null)
+            {
+                _inGameRepSetInputText.text = "Type exact in-game rep value...";
+                _inGameRepSetInputText.color = UIHelpers.TextDim;
+            }
+            if (string.IsNullOrEmpty(s)) return;
+
+            int target;
+            if (!int.TryParse(s, out target)) return;
+
+            ModLog.Debug("[CareerReset] Setting in-game rep to: " + target);
+            bool ok = CareerReset.SetInGameRep(target);
+            if (!ok && (object)_inGameRepSetInputText != null)
+            {
+                _inGameRepSetInputText.text = "Not in a session";
+                _inGameRepSetInputText.color = UIHelpers.Orange;
+            }
+            RefreshCareerResult();
         }
 
         public static void ClearUiRefs()
@@ -1175,6 +1399,10 @@ namespace DescendersModMenu.UI
             _verLatestTxt = null;
             _verStatusTxt = null;
             _pgVersion = null;
+            _repSetInputText = null; _repSetCursor = null; _repSetBoxRect = null;
+            _repSetFocused = false; _repSetBuffer = "";
+            _inGameRepSetInputText = null; _inGameRepSetCursor = null; _inGameRepSetBoxRect = null;
+            _inGameRepSetFocused = false; _inGameRepSetBuffer = "";
         }
 
         // ── Refresh / Rebuild ─────────────────────────────────────────
