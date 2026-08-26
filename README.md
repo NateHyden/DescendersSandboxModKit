@@ -259,13 +259,13 @@ Separate from the free-ride sandbox tools above — these are save-editing tools
 ## Requirements
 
 - **Descenders** (Steam or Xbox PC / Game Pass)
-- **MelonLoader 0.5.7** — [github.com/LavaGang/MelonLoader/releases](https://github.com/LavaGang/MelonLoader/releases) — select version **0.5.7** specifically, other versions will not work
+- **MelonLoader Latest** — [github.com/LavaGang/MelonLoader/releases](https://github.com/LavaGang/MelonLoader/releases) — Get **the newest** version
 
 ---
 
 ## <a id="installation-steam"></a>Installation — Steam
 
-1. Run the MelonLoader installer — it will auto-detect your Descenders installation. Select version **0.5.7** from the dropdown
+1. Run the MelonLoader installer — it will auto-detect your Descenders installation. Select version **0.5.7** from the dropdown and hit installl
 
 <p align="center">
   <img src="docs/MelonLoader correct config.png" alt="Correct MelonLoader installer configuration" width="500">
@@ -305,9 +305,9 @@ If you're stuck in the default WindowsApps location, right-click the folder → 
 
 **Installing MelonLoader**
 
-1. Run the [MelonLoader 0.5.7](https://github.com/LavaGang/MelonLoader/releases) installer
-2. MelonLoader won't auto-detect the Xbox version — click **Add Game** and navigate to `Descenders.exe` manually
-3. Make sure version **0.5.7** is selected, then install *(same installer screen as pictured in the [Steam instructions](#installation-steam) above)*
+1. Run the [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) installer
+2. MelonLoader won't auto-detect the Xbox version — click **Add Game** and navigate to your xbox install location for `Descenders.exe` manually
+3. Make sure version **0.5.7** is selected from the drop down menu, then install *(same installer screen as pictured in the [Steam instructions](#installation-steam) above)*
 4. Launch the game once to populate MelonLoader's folders, then close it
 5. Download `DescendersSandbox.dll` from the [Releases page](https://github.com/NateHyden/Descenders-Sandbox/releases) and drop it into the `Mods` folder
 6. Launch the game and press **F6**
