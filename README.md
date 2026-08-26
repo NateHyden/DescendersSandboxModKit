@@ -23,7 +23,7 @@
 
 ## Quick Install
 
-**Steam:** Install [MelonLoader 0.5.7](https://github.com/LavaGang/MelonLoader/releases) → drop `DescendersSandbox.dll` from [Releases](https://github.com/NateHyden/Descenders-Sandbox/releases) into `Descenders/Mods/` → launch.
+**Steam:** Install [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) → Select version **0.5.7** from the drop down menu → drop `DescendersSandbox.dll` from [Releases](https://github.com/NateHyden/Descenders-Sandbox/releases) into `Descenders/Mods/` → launch. [Full Steam Installation](#installation-steam)
 **Xbox / Game Pass:** needs a couple of extra steps — see the full [Xbox install guide](#installation-xbox) below.
 
 ---
