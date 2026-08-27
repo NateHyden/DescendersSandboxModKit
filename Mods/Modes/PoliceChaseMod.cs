@@ -1,5 +1,6 @@
 ﻿using MelonLoader;
 using DescendersModMenu;
+using DescendersModMenu.BikeStats;
 using UnityEngine;
 
 namespace DescendersModMenu.Mods
@@ -31,6 +32,22 @@ namespace DescendersModMenu.Mods
         public static bool WaitingForReset { get; private set; } = false;
         public static bool IsBursting { get; private set; } = false;
 
+        /// <summary>Seconds survived this chase (not counting countdown / wait).</summary>
+        public static float CurrentRunTime { get; private set; } = 0f;
+        public static float BestTimeEasy { get; private set; } = 0f;
+        public static float BestTimeMedium { get; private set; } = 0f;
+        public static float BestTimeHard { get; private set; } = 0f;
+
+        public static float BestTimeForDifficulty
+        {
+            get
+            {
+                if (Difficulty == 0) return BestTimeEasy;
+                if (Difficulty == 2) return BestTimeHard;
+                return BestTimeMedium;
+            }
+        }
+
         private static float _stuckTimer = 0f;
         private static float _progressTimer = 0f;
         private static float _lastDistToPlayer = 999f;
@@ -54,9 +71,11 @@ namespace DescendersModMenu.Mods
         private static Material _ballMat = null;
         private static float _flashTimer = 0f;
         private static bool _flashRed = true;
+        private static AudioSource _sirenSrc = null;
+        private static AudioClip _sirenClip = null;
 
-        private static readonly Color ColRed = new Color(1f, 0.04f, 0.04f, 1f);
-        private static readonly Color ColBlue = new Color(0.08f, 0.2f, 1f, 1f);
+        private static readonly Color ColRed = new Color(1f, 0f, 0f, 1f);
+        private static readonly Color ColBlue = new Color(0f, 0.25f, 1f, 1f);
 
         // ── Player cache ──────────────────────────────────────────────
         private static GameObject _player = null;
@@ -108,6 +127,7 @@ namespace DescendersModMenu.Mods
                 CaughtCount = 0;
                 IsCaught = false;
                 WaitingForReset = false;
+                CurrentRunTime = 0f;
                 IsCountingDown = true;
                 CountdownRemaining = CountdownDuration;
                 _hasLastPos = false;
@@ -117,6 +137,7 @@ namespace DescendersModMenu.Mods
             else
             {
                 IsCountingDown = false;
+                StopSiren();
                 DestroyBall();
                 _player = null;
                 _playerRb = null;
@@ -136,11 +157,31 @@ namespace DescendersModMenu.Mods
         {
             if (!Enabled) return;
             WaitingForReset = false;
+            IsCaught = false;
+            CurrentRunTime = 0f;
             _bailCooldown = 0f;
             _stuckTimer = 0f;
             _progressTimer = 0f;
             _lastDistToPlayer = 999f;
+            IsCountingDown = true;
+            CountdownRemaining = CountdownDuration;
             ResetBallBehindPlayer();
+            EnsureSiren();
+        }
+
+        public static void ApplyBestTimes(float easy, float medium, float hard)
+        {
+            BestTimeEasy = Mathf.Max(0f, easy);
+            BestTimeMedium = Mathf.Max(0f, medium);
+            BestTimeHard = Mathf.Max(0f, hard);
+        }
+
+        public static string FormatTime(float seconds)
+        {
+            if (seconds <= 0.01f) return "--:--.--";
+            int m = (int)(seconds / 60f);
+            float s = seconds - m * 60f;
+            return m.ToString("D2") + ":" + s.ToString("00.00");
         }
 
         // ── Tick — OnUpdate ───────────────────────────────────────────
@@ -150,8 +191,17 @@ namespace DescendersModMenu.Mods
 
             float dt = Time.deltaTime;
 
-            if (WaitingForReset && Input.GetKeyDown(KeyCode.F5))
-                ManualReset();
+            if (WaitingForReset)
+            {
+                bool stickReset = false;
+                try { stickReset = Input.GetKeyDown(KeyCode.JoystickButton8); } catch { }
+                if (Input.GetKeyDown(KeyCode.F5) || stickReset)
+                    ManualReset();
+            }
+            else if (!IsCountingDown && !IsCaught)
+            {
+                CurrentRunTime += dt;
+            }
 
             if (!UnityNull.Alive(_player))
             {
@@ -192,8 +242,10 @@ namespace DescendersModMenu.Mods
                 if (CountdownRemaining <= 0f)
                 {
                     IsCountingDown = false;
+                    CurrentRunTime = 0f;
                     ModLog.Debug("[PoliceChase] GO!");
                 }
+                UpdateSiren(999f);
                 return;
             }
 
@@ -214,18 +266,16 @@ namespace DescendersModMenu.Mods
             _flashTimer -= dt;
             if (_flashTimer <= 0f)
             {
-                _flashTimer = 0.35f;
+                _flashTimer = 0.28f;
                 _flashRed = !_flashRed;
-                if ((object)_ballMat != null)
-                {
-                    Color c = _flashRed ? ColRed : ColBlue;
-                    _ballMat.color = c;
-                    _ballMat.SetColor("_EmissionColor", c * 0.8f);
-                }
+                ApplyBallColor(_flashRed ? ColRed : ColBlue);
             }
 
+            float distToPlayer = Vector3.Distance(pos, _ball.transform.position);
+            UpdateSiren(WaitingForReset ? 999f : distToPlayer);
+
             if (!WaitingForReset && _bailCooldown <= 0f
-                && Vector3.Distance(pos, _ball.transform.position) <= ActiveCatchDist)
+                && distToPlayer <= ActiveCatchDist)
             {
                 TriggerCaught();
             }
@@ -385,6 +435,21 @@ namespace DescendersModMenu.Mods
             _bailCooldown = BailCooldownDur;
             WaitingForReset = true;
 
+            float run = CurrentRunTime;
+            bool newBest = false;
+            if (Difficulty == 0 && run > BestTimeEasy) { BestTimeEasy = run; newBest = true; }
+            else if (Difficulty == 2 && run > BestTimeHard) { BestTimeHard = run; newBest = true; }
+            else if (Difficulty == 1 && run > BestTimeMedium) { BestTimeMedium = run; newBest = true; }
+
+            if (newBest)
+            {
+                ModLog.Feedback("[PoliceChase] New best (" + DifficultyName + "): " + FormatTime(run));
+                PersistBestTimes();
+            }
+            else
+                ModLog.Feedback("[PoliceChase] Caught at " + FormatTime(run)
+                    + " — F5 / LS Click to restart");
+
             if (UnityNull.Alive(_cyclist))
             {
                 try { _cyclist.Bail(); }
@@ -395,7 +460,105 @@ namespace DescendersModMenu.Mods
             if (UnityNull.Alive(_playerRb))
                 _playerRb.velocity = Vector3.zero;
 
-            ModLog.Debug("[PoliceChase] CAUGHT! Total=" + CaughtCount);
+            UpdateSiren(999f);
+        }
+
+        private static void ApplyBallColor(Color c)
+        {
+            if ((object)_ballMat == null) return;
+            _ballMat.color = c;
+            _ballMat.SetColor("_Color", c);
+            _ballMat.SetColor("_EmissionColor", c * 2.2f);
+            _ballMat.EnableKeyword("_EMISSION");
+        }
+
+        private static void EnsureSiren()
+        {
+            try
+            {
+                if (!UnityNull.Alive(_ball)) return;
+                if ((object)_sirenClip == null) _sirenClip = BuildSirenClip();
+                if (!UnityNull.Alive(_sirenSrc))
+                {
+                    _sirenSrc = _ball.GetComponent<AudioSource>();
+                    if ((object)_sirenSrc == null)
+                        _sirenSrc = _ball.AddComponent<AudioSource>();
+                }
+                _sirenSrc.clip = _sirenClip;
+                _sirenSrc.loop = true;
+                _sirenSrc.playOnAwake = false;
+                _sirenSrc.spatialBlend = 0f;
+                _sirenSrc.volume = 0f;
+                if (!_sirenSrc.isPlaying) _sirenSrc.Play();
+            }
+            catch (System.Exception ex)
+            { ModLog.Warn("[PoliceChase] Siren: " + ex.Message); }
+        }
+
+        private static void UpdateSiren(float dist)
+        {
+            try
+            {
+                EnsureSiren();
+                if (!UnityNull.Alive(_sirenSrc)) return;
+                if (WaitingForReset || IsCountingDown || dist > 80f)
+                {
+                    _sirenSrc.volume = Mathf.MoveTowards(_sirenSrc.volume, 0f, Time.deltaTime * 1.5f);
+                    return;
+                }
+                // Louder as it closes — ~0 at 70m, full near catch range.
+                float t = 1f - Mathf.Clamp01((dist - ActiveCatchDist) / 65f);
+                float target = Mathf.Lerp(0.08f, 0.85f, t * t);
+                _sirenSrc.volume = Mathf.MoveTowards(_sirenSrc.volume, target, Time.deltaTime * 2f);
+            }
+            catch { }
+        }
+
+        private static void StopSiren()
+        {
+            try
+            {
+                if (UnityNull.Alive(_sirenSrc))
+                {
+                    _sirenSrc.Stop();
+                    _sirenSrc.volume = 0f;
+                }
+            }
+            catch { }
+            _sirenSrc = null;
+        }
+
+        private static AudioClip BuildSirenClip()
+        {
+            const int sampleRate = 22050;
+            const float duration = 1.2f;
+            int samples = (int)(sampleRate * duration);
+            float[] data = new float[samples];
+            for (int i = 0; i < samples; i++)
+            {
+                float t = (float)i / sampleRate;
+                // Two-tone wail (hi-lo) like a basic siren.
+                float phase = (t % 1.2f) / 1.2f;
+                float freq = phase < 0.5f
+                    ? Mathf.Lerp(680f, 920f, phase * 2f)
+                    : Mathf.Lerp(920f, 680f, (phase - 0.5f) * 2f);
+                float env = 0.55f;
+                data[i] = Mathf.Sin(2f * Mathf.PI * freq * t) * env * 0.45f;
+            }
+            AudioClip clip = AudioClip.Create("PoliceSiren", samples, 1, sampleRate, false);
+            clip.SetData(data, 0);
+            return clip;
+        }
+
+        private static void PersistBestTimes()
+        {
+            try
+            {
+                StatsManager.PersistPoliceBestTimes(
+                    BestTimeEasy, BestTimeMedium, BestTimeHard);
+            }
+            catch (System.Exception ex)
+            { ModLog.Warn("[PoliceChase] PersistBestTimes: " + ex.Message); }
         }
 
         // ── Ball spawning ─────────────────────────────────────────────
@@ -404,6 +567,7 @@ namespace DescendersModMenu.Mods
             if (UnityNull.Alive(_ball)) return;
             _ball = null;
             _ballRb = null;
+            _sirenSrc = null;
 
             _ball = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             _ball.name = "PolicePursuer";
@@ -429,10 +593,10 @@ namespace DescendersModMenu.Mods
             _ballRb.angularDrag = 0.8f;
             _ballRb.constraints = RigidbodyConstraints.None;
 
-            _ballMat = new Material(Shader.Find("Standard"));
-            _ballMat.color = ColRed;
-            _ballMat.EnableKeyword("_EMISSION");
-            _ballMat.SetColor("_EmissionColor", ColRed * 0.8f);
+            Shader sh = Shader.Find("Unlit/Color");
+            if ((object)sh == null) sh = Shader.Find("Standard");
+            _ballMat = new Material(sh);
+            ApplyBallColor(ColRed);
             var mr = _ball.GetComponent<MeshRenderer>();
             if ((object)mr != null) mr.material = _ballMat;
 
@@ -442,6 +606,7 @@ namespace DescendersModMenu.Mods
             _burstCooldown = Random.Range(5f, 12f);
 
             ResetBallBehindPlayer();
+            EnsureSiren();
         }
 
         private static void ResetBallBehindPlayer()
@@ -464,6 +629,7 @@ namespace DescendersModMenu.Mods
 
         private static void DestroyBall()
         {
+            StopSiren();
             if ((object)_ball != null)
             {
                 UnityEngine.Object.Destroy(_ball);
@@ -482,6 +648,7 @@ namespace DescendersModMenu.Mods
             IsBursting = false;
             IsCountingDown = false;
             CountdownRemaining = 0f;
+            CurrentRunTime = 0f;
             _caughtTimer = 0f;
             _flashTimer = 0f;
             _bailCooldown = 0f;

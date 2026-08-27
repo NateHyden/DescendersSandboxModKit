@@ -207,6 +207,71 @@ namespace DescendersModMenu.Mods
             }
         }
 
+        public static string FormatAllPlayerPropsDump()
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            try
+            {
+                if (!ModChat.InRoom)
+                {
+                    sb.AppendLine("(not in Photon room)");
+                    return sb.ToString();
+                }
+                if (!Resolve() || (object)_allPlayersProp == null)
+                {
+                    sb.AppendLine("(Photon resolve failed)");
+                    return sb.ToString();
+                }
+
+                object playersObj = _allPlayersProp.GetValue(null, null);
+                Array players = playersObj as Array;
+                if ((object)players == null)
+                {
+                    sb.AppendLine("(no player array)");
+                    return sb.ToString();
+                }
+
+                sb.AppendLine("players=" + players.Length);
+                for (int i = 0; i < players.Length; i++)
+                {
+                    object player = players.GetValue(i);
+                    if ((object)player == null) continue;
+                    Type pType = player.GetType();
+                    string name = GetPlayerName(player, pType);
+                    sb.AppendLine("--- " + name + " ---");
+
+                    try
+                    {
+                        PropertyInfo pp = _propsProp;
+                        if ((object)pp == null)
+                            pp = pType.GetProperty(CustomPropsName, BindingFlags.Public | BindingFlags.Instance);
+                        object props = (object)pp != null ? pp.GetValue(player, null) : null;
+                        IDictionary dict = props as IDictionary;
+                        if ((object)dict == null || dict.Count == 0)
+                        {
+                            sb.AppendLine("  (no custom props)");
+                            continue;
+                        }
+                        foreach (DictionaryEntry e in dict)
+                        {
+                            string k = (object)e.Key != null ? e.Key.ToString() : "null";
+                            string v = (object)e.Value != null ? e.Value.ToString() : "null";
+                            sb.AppendLine("  " + k + " = " + v);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        sb.AppendLine("  err: " + ex.Message);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine("dump failed: " + ex.Message);
+            }
+            return sb.ToString();
+        }
+
         public static void Tick()
         {
             TagLocalPlayer();

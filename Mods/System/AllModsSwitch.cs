@@ -22,6 +22,7 @@ namespace DescendersModMenu.Mods
                 S("Acceleration", () => Acceleration.Enabled, Acceleration.Toggle),
                 S("MaxSpeed", () => MaxSpeedMultiplier.Enabled, MaxSpeedMultiplier.Toggle),
                 S("NoSpeedCap", () => NoSpeedCap.Enabled, NoSpeedCap.Toggle),
+                S("SpeedLimiter", () => SpeedLimiter.Enabled, SpeedLimiter.Toggle),
                 S("LandingImpact", () => LandingImpact.Enabled, LandingImpact.Toggle),
                 S("NoBail", () => NoBail.Enabled, NoBail.Toggle),
                 S("AutoBalance", () => AutoBalance.Enabled, AutoBalance.Toggle),
@@ -56,6 +57,7 @@ namespace DescendersModMenu.Mods
                 S("InvisibleBike", () => InvisibleBike.Enabled, InvisibleBike.Toggle),
                 S("InvisiblePlayer", () => InvisiblePlayer.Enabled, InvisiblePlayer.Toggle),
                 S("TrickSetSwap", () => TrickSetSwap.Enabled, TrickSetSwap.Toggle),
+                S("TrickSpeed", () => TrickSpeed.IsModified, () => { if (TrickSpeed.IsModified) TrickSpeed.Reset(); }),
                 S("Spin", () => Movement.SpinEnabled, Movement.ToggleSpin),
                 S("Hop", () => Movement.HopEnabled, Movement.ToggleHop),
                 S("Wheelie", () => Movement.WheelieEnabled, Movement.ToggleWheelie),
@@ -68,6 +70,7 @@ namespace DescendersModMenu.Mods
                 S("RideOnWater", () => RideOnWater.Enabled, RideOnWater.Toggle),
                 S("SpeedrunTimer", () => SpeedrunTimer.Enabled, SpeedrunTimer.Toggle),
                 S("SessionHUD", () => SessionHUD.Enabled, SessionHUD.Toggle),
+                S("ModUsersHUD", () => ModUsersHUD.Enabled, ModUsersHUD.Toggle),
                 S("TrickMultiplier", () => TrickMultiplier.Enabled, TrickMultiplier.Toggle),
                 S("ESP", () => ESP.Enabled, ESP.Toggle),
                 S("GhostReplay", () => GhostReplay.Enabled, GhostReplay.Toggle),
@@ -135,7 +138,7 @@ namespace DescendersModMenu.Mods
             finally { ModLog.SuppressUserFeedback = false; }
 
             Enabled = false;
-            ModLog.Feedback("[All Mods] -> OFF (" + n + " paused)");
+            ModLog.Feedback("[Mods Master] -> OFF (" + n + " paused)");
             RefreshUi();
         }
 
@@ -144,7 +147,7 @@ namespace DescendersModMenu.Mods
             if (_snap == null)
             {
                 Enabled = true;
-                ModLog.Feedback("[All Mods] -> ON");
+                ModLog.Feedback("[Mods Master] -> ON");
                 RefreshUi();
                 return;
             }
@@ -176,7 +179,7 @@ namespace DescendersModMenu.Mods
 
             _snap = null;
             Enabled = true;
-            ModLog.Feedback("[All Mods] -> ON (restored " + n + ")");
+            ModLog.Feedback("[Mods Master] -> ON (restored " + n + ")");
             RefreshUi();
         }
 

@@ -65,6 +65,9 @@ namespace DescendersModMenu.UI
         private static Text _tssSrcVal, _tssTogVal;
         private static Image _tssTrack;
         private static RectTransform _tssKnob;
+        private static Text _trickSpeedVal;
+        private static Image _trickSpeedBar;
+        private static GameObject _trickSpeedRow;
 
         // ── Cut Brakes ────────────────────────────────────────────────
         private static Image _cutBrakesTrack; private static RectTransform _cutBrakesKnob;
@@ -106,7 +109,7 @@ namespace DescendersModMenu.UI
             ReverseSteering.Enabled || RubberBandSteering.Enabled || CutBrakes.Enabled ||
             BikeTorch.Enabled || BikeTorch.DiscoEnabled || SuspensionHUD.Enabled || BrakeFade.Enabled ||
             BrakeFade.BalanceLevel != 6 ||
-            TyrePressure.Enabled || BikeDamage.Enabled || TrickSetSwap.Enabled;
+            TyrePressure.Enabled || BikeDamage.Enabled || TrickSetSwap.Enabled || TrickSpeed.IsModified;
 
         public static void GlobalReset()
         {
@@ -118,6 +121,7 @@ namespace DescendersModMenu.UI
             BikeSize.ResetToDefault();
             BikeSize.Level = 10;
             if (TrickSetSwap.Enabled) TrickSetSwap.Disable();
+            TrickSpeed.Reset();
             RubberBandSteering.Reset();
         }
 
@@ -192,6 +196,16 @@ namespace DescendersModMenu.UI
                 _tssTogVal = UIHelpers.Txt("TSTV", tssR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
                 _tssTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(tssR.transform, "TST", () => { TrickSetSwap.Toggle(); RefreshAll(); }, out _tssTrack, out _tssKnob);
+
+                _trickSpeedRow = UIHelpers.StatRow("Trick Speed", pg8);
+                var tsSpeed = _trickSpeedRow;
+                _trickSpeedBar = UIHelpers.MakeBar("TsSpB", tsSpeed.transform, (TrickSpeed.Level - 1) / 9f);
+                _trickSpeedVal = UIHelpers.Txt("TsSpV", tsSpeed.transform, TrickSpeed.LevelDisplay, 12,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                _trickSpeedVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 40;
+                UIHelpers.SmallBtn(tsSpeed.transform, "-", () => { TrickSpeed.Decrease(); RefreshAll(); });
+                UIHelpers.SmallBtn(tsSpeed.transform, "+", () => { TrickSpeed.Increase(); RefreshAll(); });
+                UIHelpers.InfoBox(pg8, "How fast tricks play (tail whips, etc.). 1.0x is normal.");
 
                 UIHelpers.Divider(pg8);
 
@@ -461,6 +475,7 @@ namespace DescendersModMenu.UI
                     FavouritesManager.RegisterStarButton("Suspension", UIHelpers.StarBtnAbs(suspHdr, "Suspension", () => FavouritesManager.Toggle("Suspension")));
                 FavouritesManager.RegisterStarButton("SpiderBike", UIHelpers.StarBtn(_spiderRow.transform, "SpiderBike", () => FavouritesManager.Toggle("SpiderBike")));
                 FavouritesManager.RegisterStarButton("BikeSwitcher", UIHelpers.StarBtn(br.transform, "BikeSwitcher", () => FavouritesManager.Toggle("BikeSwitcher")));
+                FavouritesManager.RegisterStarButton("TrickSpeed", UIHelpers.StarBtn(_trickSpeedRow.transform, "TrickSpeed", () => FavouritesManager.Toggle("TrickSpeed")));
                 FavouritesManager.RegisterStarButton("BikeSize", UIHelpers.StarBtn(szr.transform, "BikeSize", () => FavouritesManager.Toggle("BikeSize")));
                 FavouritesManager.RegisterStarButton("BouncyBike", UIHelpers.StarBtn(_bbRow2.transform, "BouncyBike", () => FavouritesManager.Toggle("BouncyBike")));
                 FavouritesManager.RegisterStarButton("InvisibleBike", UIHelpers.StarBtn(_invisBikeRow.transform, "InvisibleBike", () => FavouritesManager.Toggle("InvisibleBike")));
@@ -533,6 +548,21 @@ namespace DescendersModMenu.UI
                         });
                     },
                     IsActive = () => TrickSetSwap.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
+                    Id = "TrickSpeed",
+                    DisplayName = "Trick Speed",
+                    TabBadge = "BIKE",
+                    BuildControls = (p) => FavsPage.BuildSliderOnly(p, "TrickSpeed", "Trick Speed",
+                        () => TrickSpeed.Level,
+                        () => TrickSpeed.Increase(),
+                        () => TrickSpeed.Decrease(),
+                        () => (TrickSpeed.Level - 1) / 9f,
+                        () => RefreshAll(),
+                        () => TrickSpeed.LevelDisplay,
+                        () => TrickSpeed.IsModified),
+                    IsActive = () => TrickSpeed.IsModified
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
@@ -775,6 +805,7 @@ namespace DescendersModMenu.UI
             if (ReverseSteering.Enabled) ReverseSteering.Toggle();
             RubberBandSteering.Reset();
             if (TrickSetSwap.Enabled) TrickSetSwap.Disable();
+            TrickSpeed.Reset();
             if (CutBrakes.Enabled) CutBrakes.Toggle();
             if (BikeTorch.DiscoEnabled) BikeTorch.ToggleDisco();
             if (BikeTorch.Enabled) BikeTorch.Toggle();
@@ -895,6 +926,9 @@ namespace DescendersModMenu.UI
             bool tssOn = TrickSetSwap.Enabled;
             if (_tssTogVal) { _tssTogVal.text = tssOn ? "ON" : "OFF"; _tssTogVal.color = tssOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_tssTrack, _tssKnob, tssOn);
+
+            if (_trickSpeedVal) _trickSpeedVal.text = TrickSpeed.LevelDisplay;
+            UIHelpers.SetBar(_trickSpeedBar, (TrickSpeed.Level - 1) / 9f);
         }
 
         public static void ClearUiRefs()
@@ -922,6 +956,7 @@ namespace DescendersModMenu.UI
             _revSteerTrack = null; _revSteerKnob = null; _revSteerVal = null;
             _rubberTrack = null; _rubberKnob = null; _rubberVal = _rubberLvlVal = null;
             _bikeVal = null; _tssSrcVal = _tssTogVal = null; _tssTrack = null; _tssKnob = null;
+            _trickSpeedVal = null; _trickSpeedBar = null; _trickSpeedRow = null;
             _cutBrakesTrack = null; _cutBrakesKnob = null; _cutBrakesVal = null;
             _torchVal = _torchIntLbl = _torchDiscoVal = null;
             _torchTrack = _torchDiscoTrack = null; _torchKnob = _torchDiscoKnob = null;

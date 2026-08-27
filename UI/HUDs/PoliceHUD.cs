@@ -105,10 +105,14 @@ namespace DescendersModMenu.UI
 
             float dist = PoliceChaseMode.PursuerDistance;
             string distTxt = dist >= 0f ? dist.ToString("F0") + "m" : "?m";
-            string stateTxt = PoliceChaseMode.IsBursting ? "  ⚡ BURSTING" : "";
+            string stateTxt = PoliceChaseMode.IsBursting ? "  BURST" : "";
+            string timeTxt = PoliceChaseMode.FormatTime(PoliceChaseMode.CurrentRunTime);
+            string bestTxt = PoliceChaseMode.FormatTime(PoliceChaseMode.BestTimeForDifficulty);
             string infoTxt = PoliceChaseMode.DifficultyName
+                + "   Time: " + timeTxt
+                + "   Best: " + bestTxt
                 + "   Caught: " + PoliceChaseMode.CaughtCount
-                + "   Pursuer: " + distTxt + stateTxt;
+                + "   " + distTxt + stateTxt;
 
             _infoStyle.fontSize = Mathf.RoundToInt(sh * 0.016f);
             GUIContent infoContent = new GUIContent(infoTxt);
@@ -156,7 +160,7 @@ namespace DescendersModMenu.UI
             if (PoliceChaseMode.WaitingForReset)
             {
                 _promptStyle.fontSize = Mathf.RoundToInt(sh * 0.022f);
-                string promptTxt = "Press F5 to reset pursuer";
+                string promptTxt = "F5 / LS Click to restart";
                 GUIContent pc = new GUIContent(promptTxt);
                 Vector2 ps = _promptStyle.CalcSize(pc);
                 float pY = sh * 0.6f;

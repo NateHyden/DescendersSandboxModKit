@@ -57,8 +57,9 @@ namespace DescendersModMenu.UI
                     StateNavigator.PushGameState(StateNavigator.State_FreerideWorkshop, "Workshop");
                 }, 90);
 
-                UIHelpers.InfoBox(c, "Game Pass hides Workshop in the normal menu. This opens it anyway.");
-                UIHelpers.InfoBox(c, "Use this from the pause menu on Mount Palumbo (Starting Map).");
+                UIHelpers.InfoBoxBullets(c,
+                    "When clicking mod browser it is normal for the game to freeze sometimes - Just leave it and it will come back.",
+                    "Use this from the pause menu on Mount Palumbo (Starting Map).");
 
                 UIHelpers.AddScrollForwarders(c);
             }

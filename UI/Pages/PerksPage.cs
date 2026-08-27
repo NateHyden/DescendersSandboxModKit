@@ -73,12 +73,34 @@ namespace DescendersModMenu.UI
                 for (int i = _contentRoot.childCount - 1; i >= 0; i--)
                     UnityEngine.Object.DestroyImmediate(_contentRoot.GetChild(i).gameObject);
 
-                UIHelpers.SectionHeader("CREW MEMBER PERKS", _contentRoot);
-                var hint = UIHelpers.StatRow("", _contentRoot);
-                var hintTxt = UIHelpers.Txt("Hint", hint.transform,
+                var crewHdr = UIHelpers.Obj("CrewPerksH", _contentRoot);
+                var crewHdrLe = crewHdr.AddComponent<LayoutElement>();
+                crewHdrLe.preferredHeight = 28; crewHdrLe.minHeight = 28; crewHdrLe.flexibleHeight = 0;
+
+                var crewHint = UIHelpers.Txt("CrewHint", crewHdr.transform,
                     "Click a badge to grant or remove it. Be loaded into Career or a Bike Park.",
-                    9, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
-                hintTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                    9, FontStyle.Normal, TextAnchor.MiddleCenter, Color.white);
+                UIHelpers.Fill(UIHelpers.RT(crewHint.gameObject));
+                crewHint.raycastTarget = false;
+                crewHint.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+                var crewBar = UIHelpers.Panel("Bar", crewHdr.transform, UIHelpers.Accent);
+                var crewBarRt = UIHelpers.RT(crewBar);
+                crewBarRt.anchorMin = new Vector2(0f, 0.5f); crewBarRt.anchorMax = new Vector2(0f, 0.5f);
+                crewBarRt.pivot = new Vector2(0f, 0.5f);
+                crewBarRt.sizeDelta = new Vector2(3f, 14f);
+                crewBarRt.anchoredPosition = Vector2.zero;
+                crewBar.AddComponent<LayoutElement>().ignoreLayout = true;
+
+                var crewTitle = UIHelpers.Txt("CrewT", crewHdr.transform, "CREW MEMBER PERKS", 11,
+                    FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.Accent);
+                var crewTitleRt = UIHelpers.RT(crewTitle.gameObject);
+                crewTitleRt.anchorMin = new Vector2(0f, 0f); crewTitleRt.anchorMax = new Vector2(0f, 1f);
+                crewTitleRt.pivot = new Vector2(0f, 0.5f);
+                crewTitleRt.sizeDelta = new Vector2(160f, 0f);
+                crewTitleRt.anchoredPosition = new Vector2(10f, 0f);
+                crewTitle.raycastTarget = false;
+                crewTitle.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
                 var clearRow = UIHelpers.StatRow("Clear All Active Perks", _contentRoot);
                 UIHelpers.ActionBtnOrange(clearRow.transform, "Clear All", () =>

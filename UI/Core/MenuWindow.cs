@@ -16,6 +16,14 @@ namespace DescendersModMenu.UI
         private static Text msVal, msTogVal;
         private static Image msBar, msTrack;
         private static RectTransform msKnob;
+        private static Text _speedLimTogVal;
+        private static Image _speedLimTrack;
+        private static RectTransform _speedLimKnob;
+        private static Text _speedLimInputText;
+        private static RectTransform _speedLimBoxRect;
+        private static string _speedLimBuffer = "";
+        private static bool _speedLimFocused;
+        public static bool IsSpeedLimiterFocused => _speedLimFocused;
         private static Text landTogVal;
         private static Image landTrack;
         private static RectTransform landKnob;
@@ -76,13 +84,15 @@ namespace DescendersModMenu.UI
         private static RectTransform _treesKnob;
         // ── Pages ─────────────────────────────────────────────────────
         private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22, pg23, pg24, pg25, pg26;
+        private static readonly bool[] _pageBuilt = new bool[32];
+        private static object _pageWarmRoutine;
         private static int cur = 1;
 
         public static int PendingPage = -1;
         public static int CurrentPage { get { return cur; } }
 
         private static readonly int[] PageOrder = { 17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22, 26 };
-        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info", "Customise", "General", "Object Placer", "Xbox Workshop", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "Ghost Replay", "Maps", "Find", "Screenshot", "Other", "Perks", "Career" };
+        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info", "Customise", "General", "Object Placer", "Xbox Mod.io Maps", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "Ghost Replay", "Maps", "Find", "Screenshot", "Other", "Perks", "Career" };
         private static readonly string[] GroupLabels = { null, null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
 
         private static Image[] _navBars = new Image[24];
@@ -108,6 +118,7 @@ namespace DescendersModMenu.UI
         private static Text _allModsTxt;
         private static Image _allModsTrack;
         private static RectTransform _allModsKnob;
+        private static GameObject _allModsRow;
         private static ScrollRect _sibScroll;
         private static CanvasGroup _sibMoreHint;
         private static CanvasGroup _sibMoreHintTop;
@@ -193,25 +204,42 @@ namespace DescendersModMenu.UI
                 var verTxt = UIHelpers.Txt("VT", verBadge.transform, "v" + BuildInfo.Version, 10, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 UIHelpers.Fill(UIHelpers.RT(verTxt.gameObject));
 
-                var allLbl = UIHelpers.Txt("AllLbl", hdr.transform, "All Mods", 9, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextMid);
-                var allLblRt = UIHelpers.RT(allLbl.gameObject);
-                allLblRt.anchorMin = new Vector2(0, 0.5f); allLblRt.anchorMax = new Vector2(0, 0.5f);
-                allLblRt.pivot = new Vector2(0, 0.5f);
-                allLblRt.sizeDelta = new Vector2(54, 16);
-                allLblRt.anchoredPosition = new Vector2(16, -26);
-                allLbl.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                _allModsRow = UIHelpers.Panel("AllModsWrap", hdr.transform, UIHelpers.RowBg, UIHelpers.ChipSp);
+                var allWrapRt = UIHelpers.RT(_allModsRow);
+                allWrapRt.anchorMin = new Vector2(0, 0.5f); allWrapRt.anchorMax = new Vector2(0, 0.5f);
+                allWrapRt.pivot = new Vector2(0, 0.5f);
+                allWrapRt.sizeDelta = new Vector2(208, 26);
+                allWrapRt.anchoredPosition = new Vector2(12, -26);
+                _allModsRow.AddComponent<LayoutElement>().ignoreLayout = true;
 
-                _allModsTxt = UIHelpers.Txt("AllState", hdr.transform, "ON", 9, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.OnColor);
-                var allStateRt = UIHelpers.RT(_allModsTxt.gameObject);
-                allStateRt.anchorMin = new Vector2(0, 0.5f); allStateRt.anchorMax = new Vector2(0, 0.5f);
-                allStateRt.pivot = new Vector2(0, 0.5f);
-                allStateRt.sizeDelta = new Vector2(26, 16);
-                allStateRt.anchoredPosition = new Vector2(70, -26);
-                _allModsTxt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                var allHlg = _allModsRow.AddComponent<HorizontalLayoutGroup>();
+                allHlg.spacing = 6;
+                allHlg.padding = new RectOffset(8, 8, 0, 0);
+                allHlg.childAlignment = TextAnchor.MiddleCenter;
+                allHlg.childForceExpandWidth = false;
+                allHlg.childForceExpandHeight = false;
 
-                BuildHeaderToggle(hdr.transform, "AllSwitch", new Vector2(98, -27),
-                    new Vector2(0, 0.5f), () => { AllModsSwitch.Toggle(); },
+                var allBd = UIHelpers.Panel("Bd", _allModsRow.transform, UIHelpers.RowBorder, UIHelpers.ChipSp);
+                allBd.GetComponent<Image>().raycastTarget = false;
+                UIHelpers.Fill(UIHelpers.RT(allBd));
+                allBd.AddComponent<LayoutElement>().ignoreLayout = true;
+
+                var allLbl = UIHelpers.Txt("AllLbl", _allModsRow.transform, "Mods Master Switch", 10, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextLight);
+                var allLblLe = allLbl.gameObject.AddComponent<LayoutElement>();
+                allLblLe.flexibleWidth = 1;
+                allLblLe.preferredHeight = 26;
+
+                _allModsTxt = UIHelpers.Txt("AllState", _allModsRow.transform, "ON", 10, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
+                var allStateLe = _allModsTxt.gameObject.AddComponent<LayoutElement>();
+                allStateLe.preferredWidth = 26;
+                allStateLe.preferredHeight = 26;
+
+                UIHelpers.Toggle(_allModsRow.transform, "AllSwitch", () => { AllModsSwitch.Toggle(); },
                     out _allModsTrack, out _allModsKnob);
+                var allTogLe = _allModsTrack.GetComponent<LayoutElement>();
+                allTogLe.preferredWidth = 32; allTogLe.minWidth = 32;
+                allTogLe.preferredHeight = 16; allTogLe.minHeight = 16;
+                _allModsKnob.sizeDelta = new Vector2(11, 11);
                 RefreshAllModsSwitch();
 
                 var byTxt = UIHelpers.Txt("By", hdr.transform, "Created by NateHyden", 9, FontStyle.Normal, TextAnchor.UpperRight, UIHelpers.TextMid);
@@ -221,6 +249,11 @@ namespace DescendersModMenu.UI
                 byrt.sizeDelta = new Vector2(280, 14);
                 byrt.anchoredPosition = new Vector2(-8, -3);
                 byrt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                byTxt.raycastTarget = true;
+                var byBtn = byTxt.gameObject.AddComponent<Button>();
+                byBtn.targetGraphic = byTxt;
+                byBtn.transition = Selectable.Transition.None;
+                byBtn.onClick.AddListener(InfoPage.OnHeaderCreditTap);
 
                 var usTxt = UIHelpers.Txt("UST", hdr.transform,
                     "checking...", 10, FontStyle.Bold, TextAnchor.UpperRight, UIHelpers.TextDim);
@@ -461,7 +494,9 @@ namespace DescendersModMenu.UI
                         _infoTabDot = infoDotImg;
                         var idrt = UIHelpers.RT(infoDotObj);
                         idrt.anchorMin = new Vector2(1f, 0.5f); idrt.anchorMax = new Vector2(1f, 0.5f);
-                        idrt.pivot = new Vector2(1f, 0.5f); idrt.sizeDelta = new Vector2(7, 7); idrt.anchoredPosition = new Vector2(-10, 0);
+                        idrt.pivot = new Vector2(1f, 0.5f);
+                        idrt.sizeDelta = new Vector2(6, 6);
+                        idrt.anchoredPosition = new Vector2(-8, 0);
                         infoDotObj.AddComponent<LayoutElement>().ignoreLayout = true;
                     }
                     if (pageNum == 12)
@@ -492,49 +527,129 @@ namespace DescendersModMenu.UI
                 crt.anchorMin = Vector2.zero; crt.anchorMax = Vector2.one;
                 crt.offsetMin = new Vector2(UIHelpers.SidebarW, 0); crt.offsetMax = Vector2.zero;
 
-                pg1 = UIHelpers.Obj("P1", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg1)); BuildPage1(pg1.transform);
-                pg2 = UIHelpers.Obj("P2", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg2));
-                try { EspPage.CreatePage(pg2.transform); }
-                catch (System.Exception espEx) { MelonLogger.Error("CreateMenu: EspPage failed - " + espEx);  Telemetry.ReportErrorAsync(espEx, "MenuWindow"); }
-                pg3 = UIHelpers.Obj("P3", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg3));
-                try { InfoPage.CreatePage(pg3.transform); }
-                catch (System.Exception infoEx) { MelonLogger.Error("CreateMenu: InfoPage failed - " + infoEx);  Telemetry.ReportErrorAsync(infoEx, "MenuWindow"); }
-                pg25 = UIHelpers.Obj("P25", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg25));
-                try { InfoPage.CreateCustomisePage(pg25.transform); }
-                catch (System.Exception custEx) { MelonLogger.Error("CreateMenu: CustomisePage failed - " + custEx); Telemetry.ReportErrorAsync(custEx, "MenuWindow"); }
-                pg26 = UIHelpers.Obj("P26", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg26));
-                try { InfoPage.CreateCareerPage(pg26.transform); }
-                catch (System.Exception carEx) { MelonLogger.Error("CreateMenu: CareerPage failed - " + carEx); Telemetry.ReportErrorAsync(carEx, "MenuWindow"); }
-                pg6 = UIHelpers.Obj("P6", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg6)); MovePage.CreatePage(pg6.transform);
-                pg7 = UIHelpers.Obj("P7", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg7)); WorldPage.CreatePage(pg7.transform);
-                pg8 = UIHelpers.Obj("P8", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg8)); BikePage.CreatePage(pg8.transform);
-                pg9 = UIHelpers.Obj("P9", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg9)); FunPage.CreatePage(pg9.transform);
-                pg10 = UIHelpers.Obj("P10", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg10)); GraphicsPage.CreatePage(pg10.transform);
-                pg11 = UIHelpers.Obj("P11", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg11));
-                try { OutfitPage.CreatePage(pg11.transform); }
-                catch (System.Exception outfitEx) { MelonLogger.Error("CreateMenu: OutfitPage failed - " + outfitEx);  Telemetry.ReportErrorAsync(outfitEx, "MenuWindow"); }
-                pg12 = UIHelpers.Obj("P12", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg12)); ChatPage.CreatePage(pg12.transform);
-                pg13 = UIHelpers.Obj("P13", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg13)); ModesPage.CreatePage(pg13.transform);
-                pg14 = UIHelpers.Obj("P14", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg14)); GhostPage.CreatePage(pg14.transform);
-                pg15 = UIHelpers.Obj("P15", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg15)); MapPage.CreatePage(pg15.transform);
+                for (int i = 0; i < _pageBuilt.Length; i++) _pageBuilt[i] = false;
+                StopPageWarm();
 
-                pg16 = UIHelpers.Obj("P16", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg16)); SessionPage.CreatePage(pg16.transform);
+                pg1 = MakePageRoot("P1", cont.transform);
+                pg2 = MakePageRoot("P2", cont.transform);
+                pg3 = MakePageRoot("P3", cont.transform);
+                pg25 = MakePageRoot("P25", cont.transform);
+                pg26 = MakePageRoot("P26", cont.transform);
+                pg6 = MakePageRoot("P6", cont.transform);
+                pg7 = MakePageRoot("P7", cont.transform);
+                pg8 = MakePageRoot("P8", cont.transform);
+                pg9 = MakePageRoot("P9", cont.transform);
+                pg10 = MakePageRoot("P10", cont.transform);
+                pg11 = MakePageRoot("P11", cont.transform);
+                pg12 = MakePageRoot("P12", cont.transform);
+                pg13 = MakePageRoot("P13", cont.transform);
+                pg14 = MakePageRoot("P14", cont.transform);
+                pg15 = MakePageRoot("P15", cont.transform);
+                pg16 = MakePageRoot("P16", cont.transform);
+                pg17 = MakePageRoot("P17", cont.transform);
+                pg20 = MakePageRoot("P20", cont.transform);
+                pg18 = MakePageRoot("P18", cont.transform);
+                pg19 = MakePageRoot("P19", cont.transform);
+                pg21 = MakePageRoot("P21", cont.transform);
+                pg22 = MakePageRoot("P22", cont.transform);
+                pg23 = MakePageRoot("P23", cont.transform);
+                pg24 = MakePageRoot("P24", cont.transform);
 
-                pg17 = UIHelpers.Obj("P17", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg17)); FavsPage.CreatePage(pg17.transform);
-                pg20 = UIHelpers.Obj("P20", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg20)); SearchPage.CreatePage(pg20.transform);
-                pg18 = UIHelpers.Obj("P18", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg18)); ScreenshotPage.CreatePage(pg18.transform);
-                pg19 = UIHelpers.Obj("P19", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg19)); BindsPage.CreatePage(pg19.transform);
-                pg21 = UIHelpers.Obj("P21", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg21)); OtherPage.CreatePage(pg21.transform);
-                pg22 = UIHelpers.Obj("P22", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg22)); PerksPage.CreatePage(pg22.transform);
-                pg23 = UIHelpers.Obj("P23", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg23)); XboxWorkshopPage.CreatePage(pg23.transform);
-                pg24 = UIHelpers.Obj("P24", cont.transform); UIHelpers.Fill(UIHelpers.RT(pg24)); ObjectPlacerPage.CreatePage(pg24.transform);
-
+                // Build every tab in this same frame — one hitch beat drip-feed stutter.
+                BuildAllPagesNow();
                 RefreshAll(); RefreshTabs();
                 Mods.MenuCustomiser.LoadFromFile();
                 cv.SetActive(false);
                 return cv;
             }
             catch (System.Exception ex) { MelonLogger.Error("CreateMenu: " + ex); Telemetry.ReportErrorAsync(ex, "MenuWindow"); return null; }
+        }
+
+        private static GameObject MakePageRoot(string name, Transform cont)
+        {
+            var go = UIHelpers.Obj(name, cont);
+            UIHelpers.Fill(UIHelpers.RT(go));
+            go.SetActive(false);
+            return go;
+        }
+
+        private static GameObject PageRoot(int pg)
+        {
+            switch (pg)
+            {
+                case 1: return pg1; case 2: return pg2; case 3: return pg3;
+                case 6: return pg6; case 7: return pg7; case 8: return pg8;
+                case 9: return pg9; case 10: return pg10; case 11: return pg11;
+                case 12: return pg12; case 13: return pg13; case 14: return pg14;
+                case 15: return pg15; case 16: return pg16; case 17: return pg17;
+                case 18: return pg18; case 19: return pg19; case 20: return pg20;
+                case 21: return pg21; case 22: return pg22; case 23: return pg23;
+                case 24: return pg24; case 25: return pg25; case 26: return pg26;
+                default: return null;
+            }
+        }
+
+        private static void EnsurePageBuilt(int pg)
+        {
+            if (pg < 0 || pg >= _pageBuilt.Length || _pageBuilt[pg]) return;
+            var root = PageRoot(pg);
+            if ((object)root == null || !root) return;
+
+            try
+            {
+                switch (pg)
+                {
+                    case 1: BuildPage1(root.transform); break;
+                    case 2: EspPage.CreatePage(root.transform); break;
+                    case 3: InfoPage.CreatePage(root.transform); break;
+                    case 6: MovePage.CreatePage(root.transform); break;
+                    case 7: WorldPage.CreatePage(root.transform); break;
+                    case 8: BikePage.CreatePage(root.transform); break;
+                    case 9: FunPage.CreatePage(root.transform); break;
+                    case 10: GraphicsPage.CreatePage(root.transform); break;
+                    case 11: OutfitPage.CreatePage(root.transform); break;
+                    case 12: ChatPage.CreatePage(root.transform); break;
+                    case 13: ModesPage.CreatePage(root.transform); break;
+                    case 14: GhostPage.CreatePage(root.transform); break;
+                    case 15: MapPage.CreatePage(root.transform); break;
+                    case 16: SessionPage.CreatePage(root.transform); break;
+                    case 17: FavsPage.CreatePage(root.transform); break;
+                    case 18: ScreenshotPage.CreatePage(root.transform); break;
+                    case 19: BindsPage.CreatePage(root.transform); break;
+                    case 20: SearchPage.CreatePage(root.transform); break;
+                    case 21: OtherPage.CreatePage(root.transform); break;
+                    case 22: PerksPage.CreatePage(root.transform); break;
+                    case 23: XboxWorkshopPage.CreatePage(root.transform); break;
+                    case 24: ObjectPlacerPage.CreatePage(root.transform); break;
+                    case 25: InfoPage.CreateCustomisePage(root.transform); break;
+                    case 26: InfoPage.CreateCareerPage(root.transform); break;
+                    default: return;
+                }
+                _pageBuilt[pg] = true;
+            }
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("EnsurePageBuilt(" + pg + "): " + ex);
+                Telemetry.ReportErrorAsync(ex, "MenuWindow.EnsurePageBuilt");
+            }
+        }
+
+        public static void BuildAllPagesNow()
+        {
+            StopPageWarm();
+            int[] order = new int[]
+            {
+                17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22, 26
+            };
+            for (int i = 0; i < order.Length; i++)
+                EnsurePageBuilt(order[i]);
+        }
+
+        public static void StopPageWarm()
+        {
+            if (_pageWarmRoutine == null) return;
+            try { MelonCoroutines.Stop(_pageWarmRoutine); } catch { }
+            _pageWarmRoutine = null;
         }
 
         // ── Page 1 (General) ──────────────────────────────────────────
@@ -623,6 +738,37 @@ namespace DescendersModMenu.UI
             capTxt = UIHelpers.Txt("CT", cap.transform, "REMOVE SPEED CAP", 11, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0, 0, 0, 1));
             capTxt.horizontalOverflow = HorizontalWrapMode.Overflow;
             UIHelpers.Fill(UIHelpers.RT(capTxt.gameObject));
+
+            // ── Speed Limiter ─────────────────────────────────────────
+            var slr = UIHelpers.StatRow("Speed Limiter", pg);
+            _speedLimTogVal = UIHelpers.Txt("SLTV", slr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _speedLimTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(slr.transform, "SLT", () => { SpeedLimiter.Toggle(); RefreshAll(); }, out _speedLimTrack, out _speedLimKnob);
+
+            var slBox = UIHelpers.Panel("SLBox", slr.transform, UIHelpers.RowBg, UIHelpers.BtnSp);
+            var slBoxLe = slBox.AddComponent<LayoutElement>();
+            slBoxLe.preferredWidth = 72; slBoxLe.minWidth = 72;
+            slBoxLe.preferredHeight = 26; slBoxLe.minHeight = 26;
+            var slBoxBd = UIHelpers.Panel("Bd", slBox.transform, UIHelpers.RowBorder, UIHelpers.BtnSp);
+            slBoxBd.GetComponent<Image>().raycastTarget = false;
+            UIHelpers.Fill(UIHelpers.RT(slBoxBd));
+            slBoxBd.AddComponent<LayoutElement>().ignoreLayout = true;
+            _speedLimBoxRect = UIHelpers.RT(slBox);
+            _speedLimInputText = UIHelpers.Txt("SLIT", slBox.transform, SpeedLimiter.DisplayLimit, 12,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextLight);
+            UIHelpers.Fill(UIHelpers.RT(_speedLimInputText.gameObject), 4, 4, 0, 0);
+            _speedLimInputText.raycastTarget = true;
+            var slFocusBtn = slBox.AddComponent<Button>();
+            slFocusBtn.targetGraphic = slBox.GetComponent<Image>();
+            slFocusBtn.transition = Selectable.Transition.None;
+            slFocusBtn.onClick.AddListener(() =>
+            {
+                _speedLimFocused = true;
+                _speedLimBuffer = SpeedLimiter.DisplayLimit;
+            });
+            var slUnit = UIHelpers.Txt("SLU", slr.transform, "km/h", 11, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+            slUnit.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
+            UIHelpers.InfoBox(pg, "Caps bike speed to the km/h you type (same units as the speedo). Click the box, type, Enter to apply.");
 
             // ── Landing Impact ────────────────────────────────────────
             var lr = UIHelpers.StatRow("Landing Impact", pg);
@@ -816,6 +962,7 @@ namespace DescendersModMenu.UI
             FavouritesManager.RegisterStarButton("Acceleration", UIHelpers.StarBtn(ar.transform, "Acceleration", () => FavouritesManager.Toggle("Acceleration")));
             FavouritesManager.RegisterStarButton("MaxSpeed", UIHelpers.StarBtn(mst.transform, "MaxSpeed", () => FavouritesManager.Toggle("MaxSpeed")));
             FavouritesManager.RegisterStarButton("NoSpeedCap", UIHelpers.StarBtnAbs(cap.transform, "NoSpeedCap", () => FavouritesManager.Toggle("NoSpeedCap")));
+            FavouritesManager.RegisterStarButton("SpeedLimiter", UIHelpers.StarBtn(slr.transform, "SpeedLimiter", () => FavouritesManager.Toggle("SpeedLimiter")));
             FavouritesManager.RegisterStarButton("LandingImpact", UIHelpers.StarBtn(lr.transform, "LandingImpact", () => FavouritesManager.Toggle("LandingImpact")));
             FavouritesManager.RegisterStarButton("NoBail", UIHelpers.StarBtn(nr.transform, "NoBail", () => FavouritesManager.Toggle("NoBail")));
             FavouritesManager.RegisterStarButton("AutoBalance", UIHelpers.StarBtn(abTogRow.transform, "AutoBalance", () => FavouritesManager.Toggle("AutoBalance")));
@@ -866,6 +1013,15 @@ namespace DescendersModMenu.UI
                 BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "NoSpeedCap", "No Speed Cap",
                     () => Mods.NoSpeedCap.Enabled, () => Mods.NoSpeedCap.Toggle(), () => RefreshAll()),
                 IsActive = () => Mods.NoSpeedCap.Enabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
+                Id = "SpeedLimiter",
+                DisplayName = "Speed Limiter",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "SpeedLimiter", "Speed Limiter",
+                    () => Mods.SpeedLimiter.Enabled, () => Mods.SpeedLimiter.Toggle(), () => RefreshAll()),
+                IsActive = () => Mods.SpeedLimiter.Enabled
             });
             FavouritesManager.Register(new ModFavEntry
             {
@@ -1106,16 +1262,19 @@ namespace DescendersModMenu.UI
             var rt = UIHelpers.RT(g);
             rt.anchorMin = corner; rt.anchorMax = corner;
             rt.pivot = corner;
-            rt.sizeDelta = new Vector2(34, 16);
+            // 2:1 matches CapsuleTex — keeps a real pill at small size.
+            rt.sizeDelta = new Vector2(34, 17);
             rt.anchoredPosition = pos;
             g.AddComponent<LayoutElement>().ignoreLayout = true;
 
             track = g.AddComponent<Image>();
-            track.sprite = UIHelpers.TogSp; track.type = Image.Type.Sliced;
+            track.sprite = UIHelpers.TogSp; track.type = Image.Type.Simple;
             track.color = UIHelpers.TogOffTrack;
 
             var tbdr = UIHelpers.Panel("TBdr", g.transform, UIHelpers.RowBorder, UIHelpers.TogSp);
-            tbdr.GetComponent<Image>().raycastTarget = false;
+            var tbdrImg = tbdr.GetComponent<Image>();
+            tbdrImg.raycastTarget = false;
+            tbdrImg.type = Image.Type.Simple;
             UIHelpers.Fill(UIHelpers.RT(tbdr));
             tbdr.AddComponent<LayoutElement>().ignoreLayout = true;
 
@@ -1129,13 +1288,13 @@ namespace DescendersModMenu.UI
 
             var k = UIHelpers.Obj("K", g.transform);
             var ki = k.AddComponent<Image>();
-            ki.sprite = UIHelpers.KnobSp; ki.type = Image.Type.Sliced;
+            ki.sprite = UIHelpers.KnobSp; ki.type = Image.Type.Simple;
             ki.color = UIHelpers.TogKnobOff;
             ki.raycastTarget = false;
             knob = UIHelpers.RT(k);
             knob.anchorMin = new Vector2(0, 0.5f); knob.anchorMax = new Vector2(0, 0.5f);
             knob.pivot = new Vector2(0, 0.5f);
-            knob.sizeDelta = new Vector2(10, 10);
+            knob.sizeDelta = new Vector2(11, 11);
             knob.anchoredPosition = new Vector2(3, 0);
         }
 
@@ -1150,7 +1309,7 @@ namespace DescendersModMenu.UI
             }
             if (knob)
             {
-                knob.anchoredPosition = new Vector2(on ? 21f : 3f, 0f);
+                knob.anchoredPosition = new Vector2(on ? 20f : 3f, 0f);
                 var ki = knob.GetComponent<Image>();
                 if (ki) ki.color = on ? UIHelpers.TogKnobOn : UIHelpers.TogKnobOff;
             }
@@ -1163,6 +1322,9 @@ namespace DescendersModMenu.UI
             _allModsTxt.text = on ? "ON" : "OFF";
             _allModsTxt.color = on ? UIHelpers.OnColor : UIHelpers.OffColor;
             SetHeaderToggle(_allModsTrack, _allModsKnob, on);
+            if (_allModsKnob)
+                _allModsKnob.anchoredPosition = new Vector2(on ? 18f : 3f, 0f);
+            UIHelpers.SetRowActive(_allModsRow, on);
         }
 
         private static void RefreshTelemetryLabel()
@@ -1195,7 +1357,7 @@ namespace DescendersModMenu.UI
                 {
                     case 1:
                         return Mods.Acceleration.Enabled || Mods.MaxSpeedMultiplier.Enabled ||
-                                    Mods.NoSpeedCap.Enabled || Mods.LandingImpact.Enabled ||
+                                    Mods.NoSpeedCap.Enabled || Mods.SpeedLimiter.Enabled || Mods.LandingImpact.Enabled ||
                                     Mods.QuickBrake.Enabled || Mods.NoBail.Enabled ||
                                     Mods.AutoBalance.Enabled ||
                                     Mods.GameModifierMods.NoSpeedWobblesEnabled ||
@@ -1249,6 +1411,8 @@ namespace DescendersModMenu.UI
 
         private static void RefreshTabs()
         {
+            EnsurePageBuilt(cur);
+
             if (_lastCur == 26 && cur != 26)
                 InfoPage.OnCareerTabClosed();
 
@@ -1340,6 +1504,16 @@ namespace DescendersModMenu.UI
             if (capTxt) { capTxt.text = cap2 ? "SPEED CAP REMOVED" : "REMOVE SPEED CAP"; capTxt.color = new Color(0, 0, 0, 1); }
             if (capBg) capBg.color = cap2 ? UIHelpers.OnColor : UIHelpers.NeonBlue;
             if (capBdr) capBdr.color = cap2 ? UIHelpers.OnColor : UIHelpers.NeonBlue;
+
+            // ── Speed Limiter ─────────────────────────────────────────
+            bool slOn = SpeedLimiter.Enabled;
+            if (_speedLimTogVal) { _speedLimTogVal.text = slOn ? "ON" : "OFF"; _speedLimTogVal.color = slOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_speedLimTrack, _speedLimKnob, slOn);
+            if (_speedLimInputText && !_speedLimFocused)
+            {
+                _speedLimInputText.text = SpeedLimiter.DisplayLimit;
+                _speedLimInputText.color = UIHelpers.TextLight;
+            }
 
             // ── Landing Impact ────────────────────────────────────────
             bool liOn = LandingImpact.Enabled;
@@ -1439,16 +1613,16 @@ namespace DescendersModMenu.UI
             if (_treesVal) { _treesVal.text = !Trees.Enabled ? "ON" : "OFF"; _treesVal.color = !Trees.Enabled ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_treesTrack, _treesKnob, !Trees.Enabled);
 
-            SessionPage.RefreshAll();
-            try { BikePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("BikePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "BikePage.RefreshAll"); }
-            try { MovePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("MovePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "MovePage.RefreshAll"); }
-            try { FunPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("FunPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "FunPage.RefreshAll"); }
-            try { WorldPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("WorldPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "WorldPage.RefreshAll"); }
-            try { OtherPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("OtherPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "OtherPage.RefreshAll"); }
-            try { ModesPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("ModesPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "ModesPage.RefreshAll"); }
+            if (_pageBuilt[16]) SessionPage.RefreshAll();
+            if (_pageBuilt[8]) try { BikePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("BikePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "BikePage.RefreshAll"); }
+            if (_pageBuilt[6]) try { MovePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("MovePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "MovePage.RefreshAll"); }
+            if (_pageBuilt[9]) try { FunPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("FunPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "FunPage.RefreshAll"); }
+            if (_pageBuilt[7]) try { WorldPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("WorldPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "WorldPage.RefreshAll"); }
+            if (_pageBuilt[21]) try { OtherPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("OtherPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "OtherPage.RefreshAll"); }
+            if (_pageBuilt[13]) try { ModesPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("ModesPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "ModesPage.RefreshAll"); }
 
             // ── Favourites sync ───────────────────────────────────────
-            try { FavsPage.RefreshFavourites(); } catch (System.Exception ex) { MelonLogger.Error("FavsPage.RefreshFavourites: " + ex); Telemetry.ReportErrorAsync(ex, "FavsPage.RefreshFavourites"); }
+            if (_pageBuilt[17]) try { FavsPage.RefreshFavourites(); } catch (System.Exception ex) { MelonLogger.Error("FavsPage.RefreshFavourites: " + ex); Telemetry.ReportErrorAsync(ex, "FavsPage.RefreshFavourites"); }
             try { FavouritesManager.RefreshAllStars(); } catch (System.Exception ex) { MelonLogger.Error("FavouritesManager.RefreshAllStars: " + ex); Telemetry.ReportErrorAsync(ex, "FavouritesManager.RefreshAllStars"); }
             try { RefreshTabs(); } catch { }
         }
@@ -1463,9 +1637,78 @@ namespace DescendersModMenu.UI
             img.color = UIHelpers.OnColor;
         }
 
+        public static void SpeedLimiterInputTick()
+        {
+            if (!_speedLimInputText) return;
+
+            if (_speedLimFocused && Input.GetMouseButtonDown(0))
+            {
+                if (_speedLimBoxRect
+                    && !RectTransformUtility.RectangleContainsScreenPoint(_speedLimBoxRect, Input.mousePosition, null))
+                {
+                    ApplySpeedLimiterFromBuffer();
+                }
+            }
+
+            if (!_speedLimFocused) return;
+
+            foreach (char ch in Input.inputString)
+            {
+                if (ch == '\b')
+                {
+                    if (_speedLimBuffer.Length > 0)
+                        _speedLimBuffer = _speedLimBuffer.Substring(0, _speedLimBuffer.Length - 1);
+                }
+                else if (ch == '\n' || ch == '\r')
+                {
+                    ApplySpeedLimiterFromBuffer();
+                    return;
+                }
+                else if (ch == (char)27)
+                {
+                    _speedLimFocused = false;
+                    _speedLimBuffer = "";
+                    if (_speedLimInputText)
+                    {
+                        _speedLimInputText.text = SpeedLimiter.DisplayLimit;
+                        _speedLimInputText.color = UIHelpers.TextLight;
+                    }
+                    return;
+                }
+                else if (char.IsDigit(ch) && _speedLimBuffer.Length < 4)
+                    _speedLimBuffer += ch;
+            }
+
+            if (_speedLimBuffer.Length > 0)
+            {
+                _speedLimInputText.text = UIHelpers.WithCaret(_speedLimBuffer, true);
+                _speedLimInputText.color = UIHelpers.TextLight;
+            }
+            else
+            {
+                _speedLimInputText.text = UIHelpers.WithCaret("km/h", true);
+                _speedLimInputText.color = UIHelpers.TextDim;
+            }
+        }
+
+        private static void ApplySpeedLimiterFromBuffer()
+        {
+            string s = _speedLimBuffer.Trim();
+            _speedLimFocused = false;
+            _speedLimBuffer = "";
+            if (!string.IsNullOrEmpty(s))
+                SpeedLimiter.TrySetLimitFromText(s);
+            if (_speedLimInputText)
+            {
+                _speedLimInputText.text = SpeedLimiter.DisplayLimit;
+                _speedLimInputText.color = UIHelpers.TextLight;
+            }
+            RefreshAll();
+        }
+
         public static void TickLive()
         {
-            if (MenuUI.IsOpen) SessionPage.TickLive();
+            if (MenuUI.IsOpen && _pageBuilt[16]) SessionPage.TickLive();
 
             if (!UnityNull.Alive(_updateStatusText))
             {

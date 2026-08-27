@@ -23,7 +23,7 @@ namespace DescendersModMenu.UI
         private static Image _taTrack;
         private static RectTransform _taKnob;
         private static string _taBuffer = "";
-        private static Text _pcTogVal, _pcStatusTxt;
+        private static Text _pcTogVal, _pcStatusTxt, _pcCurrentTxt, _pcBestTxt;
         private static Image _pcTrack;
         private static RectTransform _pcKnob;
 
@@ -146,9 +146,8 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.SectionHeader("EARTHQUAKE MODE", c);
 
-                UIHelpers.InfoBox(c,
-                    "Shakes the ground and throws your bike around in bursts.");
-                UIHelpers.InfoBox(c,
+                UIHelpers.InfoBoxBullets(c,
+                    "Shakes the ground and throws your bike around in bursts.",
                     "Intensity = how hard. Frequency = how often. Duration = how long each quake lasts.");
 
                 UIHelpers.Divider(c);
@@ -278,12 +277,10 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.SectionHeader("POLICE CHASE MODE", c);
 
-                UIHelpers.InfoBox(c,
-                    "A pursuer spawns behind you and chases you down the mountain.");
-                UIHelpers.InfoBox(c,
-                    "If it gets close you bail and the catch counter goes up. Then the chase starts again.");
-                UIHelpers.InfoBox(c,
-                    "Look for the flashing red/blue ball — that's who's chasing you.");
+                UIHelpers.InfoBoxBullets(c,
+                    "A pursuer spawns behind you and chases you down the mountain.",
+                    "Survive as long as you can. When caught, press F5 or LS Click to start again.",
+                    "Flashing red/blue ball + siren (louder when closer).");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("DIFFICULTY", c);
@@ -298,6 +295,19 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.InfoBox(c,
                     "Easy = slower than you. Medium = almost as fast. Hard = faster than you on straights.");
+
+                UIHelpers.Divider(c);
+                UIHelpers.SectionHeader("TIMES", c);
+
+                var curRow = UIHelpers.StatRow("Current", c);
+                _pcCurrentTxt = UIHelpers.Txt("PcCur", curRow.transform, "--:--.--", 12,
+                    FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
+                _pcCurrentTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+                var bestRow = UIHelpers.StatRow("Best (this difficulty)", c);
+                _pcBestTxt = UIHelpers.Txt("PcBest", bestRow.transform, "--:--.--", 12,
+                    FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.OnColor);
+                _pcBestTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("CONTROLS", c);
@@ -317,7 +327,7 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
                 UIHelpers.InfoBox(c,
-                    "Flashing red and blue lights. Don't use if flashing lights bother you.");
+                    "Flashing red and blue lights + siren. Don't use if that bothers you.");
 
                 UIHelpers.AddScrollForwarders(c);
                 RefreshPoliceChase();
@@ -334,6 +344,10 @@ namespace DescendersModMenu.UI
             bool on = PoliceChaseMode.Enabled;
             if (_pcTogVal) { _pcTogVal.text = on ? "ON" : "OFF"; _pcTogVal.color = on ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_pcTrack, _pcKnob, on);
+            if (_pcBestTxt)
+                _pcBestTxt.text = PoliceChaseMode.FormatTime(PoliceChaseMode.BestTimeForDifficulty);
+            if (_pcCurrentTxt && !on)
+                _pcCurrentTxt.text = "--:--.--";
         }
 
         // ── Trick Attack page ─────────────────────────────────────────
@@ -375,9 +389,8 @@ namespace DescendersModMenu.UI
                 var c = content.transform;
 
                 UIHelpers.SectionHeader("TRICK ATTACK MODE", c);
-                UIHelpers.InfoBox(c,
-                    "Set a score goal, ride to your spot, then click the left stick to start the timer. Score as many tricks as you can.");
-                UIHelpers.InfoBox(c,
+                UIHelpers.InfoBoxBullets(c,
+                    "Set a score goal, ride to your spot, then click the left stick to start the timer. Score as many tricks as you can.",
                     "Hit the goal before time runs out to win. Miss it and you fail.");
 
                 UIHelpers.Divider(c);
@@ -561,9 +574,10 @@ namespace DescendersModMenu.UI
                 var c = content.transform;
 
                 UIHelpers.SectionHeader("BOULDER DODGE MODE", c);
-                UIHelpers.InfoBox(c, "Boulders fall from the sky into your path.");
-                UIHelpers.InfoBox(c, "Rocks land ahead of you and stick in place.");
-                UIHelpers.InfoBox(c, "Rocks disappear once you're far away.");
+                UIHelpers.InfoBoxBullets(c,
+                    "Boulders fall from the sky into your path.",
+                    "Rocks land ahead of you and stick in place.",
+                    "Rocks disappear once you're far away.");
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("SETTINGS", c);
 
@@ -647,8 +661,9 @@ namespace DescendersModMenu.UI
                 var c = content.transform;
 
                 UIHelpers.SectionHeader("SURVIVAL MODE", c);
-                UIHelpers.InfoBox(c, "You start with 100 HP. Crashes hurt you. Standing still drains HP. Land tricks to heal.");
-                UIHelpers.InfoBox(c, "Hit 0 HP and it's game over. Press D-Pad Up to restart.");
+                UIHelpers.InfoBoxBullets(c,
+                    "You start with 100 HP. Crashes hurt you. Standing still drains HP. Land tricks to heal.",
+                    "Hit 0 HP and it's game over. LS Click restarts.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("SETTINGS", c);
@@ -664,7 +679,7 @@ namespace DescendersModMenu.UI
                 _svBleedLbl = UIHelpers.Txt("SvBleedV", bleedRow.transform, SurvivalMode.BleedDisplay, 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
                 _svBleedLbl.gameObject.AddComponent<LayoutElement>().preferredWidth = 52;
                 UIHelpers.SmallBtn(bleedRow.transform, "\u25B6", () => { SurvivalMode.NextBleed(); RefreshSurvival(); });
-                UIHelpers.InfoBox(c, "HP lost per second while standing still. Set to None to turn that off.");
+                UIHelpers.InfoBox(c, "HP lost per second while nearly stopped. Set to None to turn that off.");
 
                 var healRow = UIHelpers.StatRow("Trick Heal", c);
                 UIHelpers.SmallBtn(healRow.transform, "\u25C0", () => { SurvivalMode.PrevHeal(); RefreshSurvival(); });
@@ -685,7 +700,7 @@ namespace DescendersModMenu.UI
                 _svHPLbl = UIHelpers.Txt("SvHP", hpRow.transform, "—", 12, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextDim);
                 _svHPLbl.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
-                UIHelpers.InfoBox(c, "D-Pad Up restarts after a game over.");
+                UIHelpers.InfoBox(c, "LS Click restarts after a game over.");
 
                 UIHelpers.AddScrollForwarders(c);
                 RefreshSurvival();
@@ -808,9 +823,14 @@ namespace DescendersModMenu.UI
                 _pcStatusTxt.text = "Starting in " + secs + "...";
                 _pcStatusTxt.color = UIHelpers.OnColor;
             }
+            else if (PoliceChaseMode.WaitingForReset)
+            {
+                _pcStatusTxt.text = "Caught — F5 / LS Click to restart";
+                _pcStatusTxt.color = UIHelpers.OffColor;
+            }
             else if (PoliceChaseMode.Enabled)
             {
-                _pcStatusTxt.text = "Active — " + PoliceChaseMode.CaughtCount + " caught";
+                _pcStatusTxt.text = "Chasing — " + PoliceChaseMode.CaughtCount + " caught";
                 _pcStatusTxt.color = UIHelpers.Accent;
             }
             else
@@ -818,6 +838,15 @@ namespace DescendersModMenu.UI
                 _pcStatusTxt.text = "—";
                 _pcStatusTxt.color = UIHelpers.TextDim;
             }
+
+            if (_pcCurrentTxt)
+            {
+                _pcCurrentTxt.text = PoliceChaseMode.Enabled
+                    ? PoliceChaseMode.FormatTime(PoliceChaseMode.CurrentRunTime)
+                    : "--:--.--";
+            }
+            if (_pcBestTxt)
+                _pcBestTxt.text = PoliceChaseMode.FormatTime(PoliceChaseMode.BestTimeForDifficulty);
         }
 
         public static void RefreshAll()
@@ -839,7 +868,7 @@ namespace DescendersModMenu.UI
             _eqFreqRow = null;
             _taTogVal = null; _taTargetInput = null; _taTimeLbl = null;
             _taTrack = null; _taKnob = null; _taInputRect = null;
-            _pcTogVal = null; _pcStatusTxt = null;
+            _pcTogVal = null; _pcStatusTxt = null; _pcCurrentTxt = null; _pcBestTxt = null;
             _pcTrack = null; _pcKnob = null;
             _bdTogVal = null; _bdIntervalLbl = null; _bdSizeLbl = null; _bdForwardLbl = null; _bdCountLbl = null;
             _bdTrack = null; _bdKnob = null;

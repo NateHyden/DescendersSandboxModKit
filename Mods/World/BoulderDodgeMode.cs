@@ -28,18 +28,22 @@ namespace DescendersModMenu.Mods
         public static string ForwardDisplay  => ForwardLabels[ForwardIndex];
 
         // ── Constants ─────────────────────────────────────────────────
-        private const float SpawnHeight     = 20f;
+        private const float SpawnHeight     = 10f;
         private const float SpawnJitter     = 2f;
-        private const float ExtraGravity    = 60f;
+        private const float ExtraGravity    = 220f;
         private const float LockVelThresh   = 0.6f;
-        private const float LockConfirmTime = 0.4f;
-        private const float MinFallTime     = 1.2f;
-        private const float ForceLockAfter  = 8f;
+        private const float LockConfirmTime = 0.25f;
+        private const float MinFallTime     = 0.35f;
+        private const float ForceLockAfter  = 3.5f;
         private const float CleanupDist     = 200f;
         private const int   HardCap         = 25;
+        private const float WarnLeadTime    = 0.55f;
 
         // ── Internal ──────────────────────────────────────────────────
         private static float _spawnTimer = 0f;
+        private static float _warnTimer = -1f;
+        private static Vector3 _warnXZ = Vector3.zero;
+        private static GameObject _warnMarker = null;
 
         private class BoulderEntry
         {
@@ -59,6 +63,7 @@ namespace DescendersModMenu.Mods
             if (Enabled)
             {
                 _spawnTimer = IntervalValues[IntervalIndex];
+                _warnTimer = -1f;
                 ModLog.Debug("[BoulderDodge] ON");
             }
             else
@@ -88,7 +93,31 @@ namespace DescendersModMenu.Mods
             if (!Enabled) return;
 
             _spawnTimer += Time.deltaTime;
-            if (_spawnTimer >= IntervalValues[IntervalIndex])
+            float interval = IntervalValues[IntervalIndex];
+
+            // Place warning shortly before the drop.
+            if (_warnTimer < 0f && _spawnTimer >= interval - WarnLeadTime && _boulders.Count < HardCap)
+            {
+                if (TryPickImpactPoint(out _warnXZ))
+                {
+                    _warnTimer = WarnLeadTime;
+                    ShowWarning(_warnXZ);
+                }
+            }
+
+            if (_warnTimer >= 0f)
+            {
+                _warnTimer -= Time.deltaTime;
+                PulseWarning();
+                if (_warnTimer <= 0f)
+                {
+                    _warnTimer = -1f;
+                    _spawnTimer = 0f;
+                    SpawnAt(_warnXZ);
+                    ClearWarning();
+                }
+            }
+            else if (_spawnTimer >= interval)
             {
                 _spawnTimer = 0f;
                 TrySpawn();
@@ -157,12 +186,19 @@ namespace DescendersModMenu.Mods
                 return;
             }
 
+            Vector3 xz;
+            if (!TryPickImpactPoint(out xz)) return;
+            SpawnAt(xz);
+        }
+
+        private static bool TryPickImpactPoint(out Vector3 xz)
+        {
+            xz = Vector3.zero;
             GameObject player = GameObject.Find("Player_Human");
-            if (!UnityNull.Alive(player)) return;
+            if (!UnityNull.Alive(player)) return false;
 
             Vector3 playerPos = player.transform.position;
 
-            // ── Direction prediction ──────────────────────────────────
             Vector3 predictedDir = player.transform.forward;
             predictedDir.y = 0f;
             if (predictedDir.sqrMagnitude < 0.01f) predictedDir = Vector3.forward;
@@ -176,23 +212,31 @@ namespace DescendersModMenu.Mods
                     predictedDir = hVel.normalized;
             }
 
-            // ── Spawn position ────────────────────────────────────────
             float forwardDist = ForwardValues[ForwardIndex];
-            Vector3 targetXZ = playerPos + predictedDir * forwardDist;
+            xz = playerPos + predictedDir * forwardDist;
+            xz.x += Random.Range(-SpawnJitter, SpawnJitter);
+            xz.z += Random.Range(-SpawnJitter, SpawnJitter);
+            xz.y = 0f;
+            return true;
+        }
 
-            targetXZ.x += Random.Range(-SpawnJitter, SpawnJitter);
-            targetXZ.z += Random.Range(-SpawnJitter, SpawnJitter);
+        private static void SpawnAt(Vector3 targetXZ)
+        {
+            if (_boulders.Count >= HardCap) return;
 
             float groundY = GetGroundHeight(targetXZ);
             Vector3 spawnPos = new Vector3(targetXZ.x, groundY + SpawnHeight, targetXZ.z);
 
-            // ── Create boulder ────────────────────────────────────────
             GameObject boulder = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             boulder.name = "BoulderDodgeRock";
 
             float size = SizeValues[SizeIndex];
             boulder.transform.position = spawnPos;
-            boulder.transform.localScale = Vector3.one * size;
+            // Slightly irregular so they read less like bowling balls.
+            boulder.transform.localScale = new Vector3(
+                size * Random.Range(0.9f, 1.15f),
+                size * Random.Range(0.85f, 1.1f),
+                size * Random.Range(0.9f, 1.15f));
 
             var rend = boulder.GetComponent<Renderer>();
             if ((object)rend != null)
@@ -220,21 +264,61 @@ namespace DescendersModMenu.Mods
             boulderRb.useGravity            = true;
             boulderRb.interpolation         = RigidbodyInterpolation.Interpolate;
             boulderRb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            boulderRb.velocity = Vector3.down * 35f;
+            boulderRb.angularVelocity = new Vector3(
+                Random.Range(-2f, 2f), Random.Range(-1f, 1f), Random.Range(-2f, 2f));
 
-            var entry = new BoulderEntry
+            _boulders.Add(new BoulderEntry
             {
                 Go          = boulder,
                 Rb          = boulderRb,
                 Age         = 0f,
                 LowVelTimer = 0f,
                 Locked      = false,
-            };
-
-            _boulders.Add(entry);
+            });
             ModLog.Debug("[BoulderDodge] Spawned at " + spawnPos
-                + " dir=" + predictedDir
                 + " size=" + size
                 + " active=" + _boulders.Count);
+        }
+
+        private static void ShowWarning(Vector3 xz)
+        {
+            ClearWarning();
+            float groundY = GetGroundHeight(xz);
+            float size = SizeValues[SizeIndex];
+
+            _warnMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            _warnMarker.name = "BoulderDodgeWarn";
+            Object.Destroy(_warnMarker.GetComponent<Collider>());
+            _warnMarker.transform.position = new Vector3(xz.x, groundY + 0.05f, xz.z);
+            _warnMarker.transform.localScale = new Vector3(size * 1.1f, 0.04f, size * 1.1f);
+
+            var rend = _warnMarker.GetComponent<Renderer>();
+            if ((object)rend != null)
+            {
+                var mat = new Material(Shader.Find("Standard"));
+                mat.color = new Color(1f, 0.25f, 0.05f, 0.55f);
+                mat.EnableKeyword("_EMISSION");
+                mat.SetColor("_EmissionColor", new Color(1f, 0.2f, 0f) * 0.6f);
+                rend.material = mat;
+            }
+        }
+
+        private static void PulseWarning()
+        {
+            if (!UnityNull.Alive(_warnMarker)) return;
+            float pulse = 0.75f + 0.25f * Mathf.Sin(Time.time * 12f);
+            float size = SizeValues[SizeIndex] * pulse;
+            Vector3 p = _warnMarker.transform.position;
+            _warnMarker.transform.localScale = new Vector3(size * 1.1f, 0.04f, size * 1.1f);
+            _warnMarker.transform.position = p;
+        }
+
+        private static void ClearWarning()
+        {
+            if ((object)_warnMarker != null)
+                Object.Destroy(_warnMarker);
+            _warnMarker = null;
         }
 
         // ── Lock boulder in place ─────────────────────────────────────
@@ -280,9 +364,10 @@ namespace DescendersModMenu.Mods
                     GameObject.Destroy(_boulders[i].Go);
             _boulders.Clear();
             _spawnTimer = 0f;
+            _warnTimer = -1f;
+            ClearWarning();
         }
 
         public static int ActiveCount => _boulders.Count;
     }
 }
-

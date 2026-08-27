@@ -10,6 +10,8 @@ namespace DescendersModMenu.BikeStats
         public bool AccelerationEnabled = false;
         public int MaxSpeedLevel = 1;
         public bool MaxSpeedEnabled = false;
+        public bool SpeedLimiterEnabled = false;
+        public float SpeedLimiterKmh = 80f;
         public int LandingImpactLevel = 1;
         public bool LandingImpactEnabled = false;
         public bool NoBailEnabled = false;
@@ -89,6 +91,7 @@ namespace DescendersModMenu.BikeStats
         public bool EspEnabled = false;
         public bool SpeedrunTimerEnabled = false;
         public bool SessionHUDEnabled = false;
+        public bool ModUsersHUDEnabled = false;
         public int TrickMultiplierLevel = 0;
         public bool SlowMoOnBailEnabled = false;
         public bool BlackDeathEnabled = false;
@@ -163,6 +166,9 @@ namespace DescendersModMenu.BikeStats
         public bool TrickSetSwapEnabled = false;
         public string TrickSetSwapSourceName = "";
 
+        // ── Trick Speed ────────────────────────────────────────────────
+        public int TrickSpeedLevel = 5;
+
         // ── Tyre Pressure ──────────────────────────────────────────────
         public bool TyrePressureEnabled = false;
         public int TyrePressureLevel = 5;
@@ -189,6 +195,11 @@ namespace DescendersModMenu.BikeStats
         public bool RubberBandSteeringEnabled = false;
         public int RubberBandSteeringLevel = 5;
         public bool PedalWhileTweakEnabled = false;
+
+        // ── Police Chase best times (seconds) ──────────────────────────
+        public float PoliceBestTimeEasy = 0f;
+        public float PoliceBestTimeMedium = 0f;
+        public float PoliceBestTimeHard = 0f;
     }
 }
 

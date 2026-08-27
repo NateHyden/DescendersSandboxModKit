@@ -1,4 +1,5 @@
-﻿using DescendersModMenu.Mods;
+﻿using System.Collections.Generic;
+using DescendersModMenu.Mods;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -122,10 +123,51 @@ namespace DescendersModMenu.UI
                 SpriteMeshType.FullRect, new Vector4(r, r, r, r));
         }
 
-        private static Sprite _rowSp, _btnSp, _winSp, _togSp, _knobSp, _barSp, _dotSp;
+        /// <summary>
+        /// True stadium/pill sprite for toggles. Squashing RoundSprite into a short wide
+        /// rect makes an eye shape — this keeps semicircle ends via 9-slice.
+        /// </summary>
+        public static Texture2D CapsuleTex(int w, int h, Color fill)
+        {
+            var tex = new Texture2D(w, h, TextureFormat.ARGB32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            int r = h / 2;
+            float cxL = r, cxR = w - 1 - r, cy = (h - 1) * 0.5f;
+            var px = new Color[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float a;
+                    if (x >= r && x <= w - 1 - r)
+                        a = 1f;
+                    else
+                    {
+                        float cx = x < r ? cxL : cxR;
+                        float dx = x - cx, dy = y - cy;
+                        float d = Mathf.Sqrt(dx * dx + dy * dy);
+                        a = Mathf.Clamp01((float)r + 0.5f - d);
+                    }
+                    px[y * w + x] = new Color(fill.r, fill.g, fill.b, fill.a * a);
+                }
+            tex.SetPixels(px); tex.Apply();
+            return tex;
+        }
+
+        public static Sprite CapsuleSprite(int w, int h, Color fill)
+        {
+            int r = h / 2;
+            var tex = CapsuleTex(w, h, fill);
+            // Only L/R are caps — T/B must stay tiny or 9-slice squashes into an oval/eye.
+            return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect, new Vector4(r, 1, r, 1));
+        }
+
+        private static Sprite _rowSp, _btnSp, _winSp, _togSp, _knobSp, _barSp, _dotSp, _chipSp;
         public static Sprite RowSp { get { if (_rowSp == null) _rowSp = RoundSprite(128, 8, Color.white); return _rowSp; } }
         public static Sprite BtnSp { get { if (_btnSp == null) _btnSp = RoundSprite(128, 10, Color.white); return _btnSp; } }
         public static Sprite WinSp { get { if (_winSp == null) _winSp = RoundSprite(128, 20, Color.white); return _winSp; } }
+        /// <summary>Light corner radius for compact chips (sharper than RowSp).</summary>
+        public static Sprite ChipSp { get { if (_chipSp == null) _chipSp = RoundSprite(128, 6, Color.white); return _chipSp; } }
         private static Sprite _navSp;
         public static Sprite NavSp { get { if (_navSp == null) _navSp = RoundSprite(128, 12, Color.white); return _navSp; } }
         public static Texture2D FrameTex(int sz, int r, int thick)
@@ -169,7 +211,7 @@ namespace DescendersModMenu.UI
         }
 
 
-        public static Sprite TogSp { get { if (_togSp == null) _togSp = RoundSprite(128, 11, Color.white); return _togSp; } }
+        public static Sprite TogSp { get { if (_togSp == null) _togSp = CapsuleSprite(128, 64, Color.white); return _togSp; } }
         public static Sprite KnobSp { get { if (_knobSp == null) _knobSp = RoundSprite(64, 32, Color.white); return _knobSp; } }
         public static Sprite BarSp { get { if (_barSp == null) _barSp = RoundSprite(64, 3, Color.white); return _barSp; } }
         public static Sprite DotSp
@@ -392,11 +434,14 @@ namespace DescendersModMenu.UI
         {
             var g = Obj(n, p);
             track = g.AddComponent<Image>();
-            track.sprite = TogSp; track.type = Image.Type.Sliced;
+            // Simple + 2:1 size keeps CapsuleTex a stadium; Sliced was turning it into an oval.
+            track.sprite = TogSp; track.type = Image.Type.Simple;
             track.color = TogOffTrack;
 
             var tbdr = Panel("TBdr", g.transform, RowBorder, TogSp);
-            tbdr.GetComponent<Image>().raycastTarget = false;
+            var tbdrImg = tbdr.GetComponent<Image>();
+            tbdrImg.raycastTarget = false;
+            tbdrImg.type = Image.Type.Simple;
             Fill(RT(tbdr));
             tbdr.AddComponent<LayoutElement>().ignoreLayout = true;
 
@@ -407,12 +452,12 @@ namespace DescendersModMenu.UI
             b.colors = cb;
 
             var le = g.AddComponent<LayoutElement>();
-            le.preferredWidth = 44; le.preferredHeight = 24;
-            le.minWidth = 44; le.minHeight = 24; le.flexibleHeight = 0;
+            le.preferredWidth = 44; le.preferredHeight = 22;
+            le.minWidth = 44; le.minHeight = 22; le.flexibleHeight = 0;
 
             var k = Obj("K", g.transform);
             var ki = k.AddComponent<Image>();
-            ki.sprite = KnobSp; ki.type = Image.Type.Sliced;
+            ki.sprite = KnobSp; ki.type = Image.Type.Simple;
             ki.color = TogKnobOff;
             ki.raycastTarget = false;
 
@@ -502,42 +547,42 @@ namespace DescendersModMenu.UI
 
         public static void InfoBox(Transform p, string txt) => InfoBox(p, txt, InfoText);
 
-        // Near-white so hints stay readable on dark rows (TextDim is too faint).
-        private static readonly Color InfoText = new Color(0.90f, 0.90f, 0.92f, 1f);
-        private static readonly Color InfoAccent = new Color(0.72f, 0.72f, 0.76f, 1f);
+        /// <summary>One info card with bullet lines instead of stacked single-note boxes.</summary>
+        public static void InfoBoxBullets(Transform p, params string[] bullets)
+        {
+            InfoBoxBullets(p, InfoText, bullets);
+        }
+
+        public static void InfoBoxBullets(Transform p, Color textColor, params string[] bullets)
+        {
+            if (bullets == null || bullets.Length == 0) return;
+            if (bullets.Length == 1)
+            {
+                InfoBox(p, bullets[0], textColor);
+                return;
+            }
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < bullets.Length; i++)
+            {
+                if (i > 0) sb.Append('\n');
+                sb.Append("\u2022 ").Append(bullets[i] ?? "");
+            }
+            InfoBox(p, sb.ToString(), textColor);
+        }
+
+        // Free-floating hint text (no panel) — white italic on the menu surface.
+        private static readonly Color InfoText = Color.white;
 
         public static void InfoBox(Transform p, string txt, Color textColor)
         {
-            int lines = 1;
-            if (!string.IsNullOrEmpty(txt))
-            {
-                for (int i = 0; i < txt.Length; i++)
-                    if (txt[i] == '\n') lines++;
-            }
-            float h = Mathf.Max(20f, 6f + lines * 13f);
-
-            var bx = Panel("Inf", p, RowBg, RowSp);
-            var le = bx.AddComponent<LayoutElement>();
-            le.preferredHeight = h;
-            le.minHeight = h;
-            le.flexibleHeight = 0;
-
-            var bd = Panel("Bd", bx.transform, RowBorder, RowSp);
-            bd.GetComponent<Image>().raycastTarget = false; Fill(RT(bd));
-            bd.AddComponent<LayoutElement>().ignoreLayout = true;
-
-            var lbar = Panel("LBar", bx.transform, InfoAccent);
-            var lbRT = RT(lbar);
-            lbRT.anchorMin = Vector2.zero; lbRT.anchorMax = new Vector2(0, 1);
-            lbRT.pivot = new Vector2(0, 0.5f);
-            lbRT.sizeDelta = new Vector2(2, 0); lbRT.offsetMin = new Vector2(0, 3);
-            lbRT.offsetMax = new Vector2(2, -3);
-            lbar.AddComponent<LayoutElement>().ignoreLayout = true;
-
-            var t = Txt("IT", bx.transform, txt, 10, FontStyle.Normal, TextAnchor.MiddleLeft, textColor);
+            var t = Txt("Inf", p, txt ?? "", 10, FontStyle.Italic, TextAnchor.UpperLeft, textColor);
             t.horizontalOverflow = HorizontalWrapMode.Wrap;
-            t.verticalOverflow = VerticalWrapMode.Truncate;
-            Fill(RT(t.gameObject), 12, 10, 2, 2);
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            var le = t.gameObject.AddComponent<LayoutElement>();
+            le.flexibleWidth = 1;
+            le.minHeight = 16;
+            t.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
         }
 
         public static void HotkeyRow(Transform p, string desc, string key)
@@ -552,7 +597,7 @@ namespace DescendersModMenu.UI
             bd.GetComponent<Image>().raycastTarget = false; Fill(RT(bd));
             bd.AddComponent<LayoutElement>().ignoreLayout = true;
 
-            var dt = Txt("D", row.transform, desc, 11, FontStyle.Normal, TextAnchor.MiddleLeft, TextMid);
+            var dt = Txt("D", row.transform, desc, 11, FontStyle.Normal, TextAnchor.MiddleLeft, Color.white);
             var dle = dt.gameObject.AddComponent<LayoutElement>();
             dle.flexibleWidth = 1; dle.preferredHeight = 30;
 
@@ -570,24 +615,49 @@ namespace DescendersModMenu.UI
             Fill(RT(kt.gameObject));
         }
 
+        private static readonly Dictionary<int, Sprite> _circleCache = new Dictionary<int, Sprite>();
+
         private static Sprite CreateCircleSprite(int worldDiameter)
         {
+            if (worldDiameter < 1) worldDiameter = 1;
+            Sprite cached;
+            if (_circleCache.TryGetValue(worldDiameter, out cached) && (object)cached != null)
+                return cached;
+
             int scale = 8;
             int px = worldDiameter * scale;
             var tex = new Texture2D(px, px, TextureFormat.ARGB32, false);
             tex.filterMode = FilterMode.Bilinear;
             float r = px * 0.5f;
             float cx = r, cy = r;
+            var pixels = new Color[px * px];
             for (int y = 0; y < px; y++)
                 for (int x = 0; x < px; x++)
                 {
                     float dx = x - cx + 0.5f, dy = y - cy + 0.5f;
                     float a = Mathf.Clamp01(r - Mathf.Sqrt(dx * dx + dy * dy) + 0.5f);
-                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+                    pixels[y * px + x] = new Color(1f, 1f, 1f, a);
                 }
+            tex.SetPixels(pixels);
             tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, px, px),
+            cached = Sprite.Create(tex, new Rect(0, 0, px, px),
                 new Vector2(0.5f, 0.5f), (float)scale);
+            _circleCache[worldDiameter] = cached;
+            return cached;
+        }
+
+        /// <summary>Touch shared UI sprites so first menu open does not hitch on texture gen.</summary>
+        public static void Prewarm()
+        {
+            try
+            {
+                GetFont();
+                var touch = RowSp; touch = BtnSp; touch = WinSp; touch = NavSp;
+                touch = TogSp; touch = KnobSp; touch = BarSp; touch = DotSp; touch = FrameSp;
+                for (int d = 2; d <= 8; d++)
+                    CreateCircleSprite(d);
+            }
+            catch { }
         }
 
         public static void AddScrollbar(ScrollRect sr)

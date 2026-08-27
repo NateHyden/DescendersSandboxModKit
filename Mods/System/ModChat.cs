@@ -137,6 +137,15 @@ namespace DescendersModMenu.Mods
             }
         }
 
+        public static string LocalPlayerName
+        {
+            get
+            {
+                try { return GetLocalPlayerName(); }
+                catch { return "Unknown"; }
+            }
+        }
+
         private static Delegate _handlerDelegate = null;
 
         // ── Init ──────────────────────────────────────────────────────────
@@ -343,6 +352,7 @@ namespace DescendersModMenu.Mods
                 string name = ht["n"] as string;
                 string msg = ht["m"] as string;
                 if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(msg)) return;
+                if (string.Equals(msg, "__probe__", StringComparison.Ordinal)) return;
 
                 var cm = new ChatMessage
                 {
@@ -391,50 +401,7 @@ namespace DescendersModMenu.Mods
                 if (!inRoom)
                     return true;
 
-                System.Collections.IDictionary ht = null;
-                try
-                {
-                    if ((object)_photonHashtable != null)
-                        ht = System.Activator.CreateInstance(_photonHashtable) as System.Collections.IDictionary;
-                }
-                catch (Exception htEx)
-                {
-                    MelonLogger.Error("[ModChat] Photon Hashtable: " + htEx.Message);
-                    Telemetry.ReportErrorAsync(htEx, "ModChat");
-                }
-
-                if ((object)ht == null)
-                {
-                    MelonLogger.Error("[ModChat] Could not create Photon Hashtable.");
-                    Telemetry.ReportErrorAsync(new Exception("Photon Hashtable create failed"), "ModChat");
-                    return true;
-                }
-                ht["n"] = playerName;
-                ht["m"] = message;
-
-                object result = null;
-                try
-                {
-                    result = _raiseEvent.Invoke(null,
-                        new object[] { (byte)EventCode, (object)ht, true, _defaultOptions });
-                }
-                catch (System.Reflection.TargetInvocationException tie)
-                {
-                    Exception inner = tie.InnerException;
-                    MelonLogger.Error("[ModChat] Send TargetInvocationException: "
-                        + ((object)inner != null ? inner.GetType().Name + ": " + inner.Message : "null inner"));
-                    Telemetry.ReportErrorAsync(tie, "ModChat");
-                    return true;
-                }
-
-                bool sent = result is bool && (bool)result;
-                if (!sent)
-                {
-                    MelonLogger.Error("[ModChat] RaiseEvent returned false (inRoom=" + InRoom
-                        + " state=" + ConnectionStateLabel + ")");
-                    Telemetry.ReportErrorAsync(new Exception("RaiseEvent returned false"), "ModChat");
-                }
-                return true;
+                return RaiseChatEvent(playerName, message);
             }
             catch (Exception ex)
             {
@@ -444,10 +411,85 @@ namespace DescendersModMenu.Mods
             }
         }
 
+        /// <summary>Dev-only RaiseEvent probe — does not add a chat message.</summary>
+        public static string ProbeRaiseEvent()
+        {
+            try
+            {
+                if (!_photonAccessEnabled) EnablePhotonAccess();
+                if (!Resolve()) return "FAIL resolve";
+                if ((object)_raiseEvent == null) return "FAIL RaiseEvent null";
+                if (!InRoom) return "SKIP not in room (state=" + ConnectionStateLabel + ")";
+
+                string playerName = GetLocalPlayerName();
+                bool ok = RaiseChatEvent(playerName, "__probe__");
+                return ok
+                    ? "OK RaiseEvent true (state=" + ConnectionStateLabel + ")"
+                    : "FAIL RaiseEvent false (state=" + ConnectionStateLabel + ")";
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[ModChat] Probe: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "ModChat.Probe");
+                return "ERR " + ex.Message;
+            }
+        }
+
+        private static bool RaiseChatEvent(string playerName, string message)
+        {
+            System.Collections.IDictionary ht = null;
+            try
+            {
+                if ((object)_photonHashtable != null)
+                    ht = System.Activator.CreateInstance(_photonHashtable) as System.Collections.IDictionary;
+            }
+            catch (Exception htEx)
+            {
+                MelonLogger.Error("[ModChat] Photon Hashtable: " + htEx.Message);
+                Telemetry.ReportErrorAsync(htEx, "ModChat");
+            }
+
+            if ((object)ht == null)
+            {
+                MelonLogger.Error("[ModChat] Could not create Photon Hashtable.");
+                Telemetry.ReportErrorAsync(new Exception("Photon Hashtable create failed"), "ModChat");
+                return false;
+            }
+            ht["n"] = playerName;
+            ht["m"] = message;
+
+            object result = null;
+            try
+            {
+                result = _raiseEvent.Invoke(null,
+                    new object[] { (byte)EventCode, (object)ht, true, _defaultOptions });
+            }
+            catch (System.Reflection.TargetInvocationException tie)
+            {
+                Exception inner = tie.InnerException;
+                MelonLogger.Error("[ModChat] Send TargetInvocationException: "
+                    + ((object)inner != null ? inner.GetType().Name + ": " + inner.Message : "null inner"));
+                Telemetry.ReportErrorAsync(tie, "ModChat");
+                return false;
+            }
+
+            bool sent = result is bool && (bool)result;
+            if (!sent)
+            {
+                MelonLogger.Error("[ModChat] RaiseEvent returned false (inRoom=" + InRoom
+                    + " state=" + ConnectionStateLabel + ")");
+                Telemetry.ReportErrorAsync(new Exception("RaiseEvent returned false"), "ModChat");
+            }
+            return sent;
+        }
+
         private static string GetLocalPlayerName()
         {
             try
             {
+                if (SandboxDevTools.NameSpoofEnabled && !string.IsNullOrEmpty(SandboxDevTools.SpoofedName))
+                    return SandboxDevTools.SpoofedName;
+
                 if ((object)_localPlayer != null)
                 {
                     object player = _localPlayer.GetValue(null, null);

@@ -17,6 +17,7 @@ namespace DescendersModMenu.Mods
 
         private const int MinLevel = 1;
         private const int MaxLevel = 10;
+        private const float ForeshadowLead = 1.6f;
 
         // ── Derived values ────────────────────────────────────────────
         private static float ImpulseForce =>
@@ -34,14 +35,48 @@ namespace DescendersModMenu.Mods
             Mathf.Lerp(80f, 400f, (IntensityLevel - 1) / 9f);
 
         private const float DefaultShake = 30f;
+        private static float ForeshadowShake =>
+            Mathf.Lerp(40f, 120f, (IntensityLevel - 1) / 9f);
 
         // ── State ─────────────────────────────────────────────────────
         private static float _quakeRemaining = 0f;
         private static float _intervalTimer = 0f;
         private static float _impulseTimer = 0f;
+        private static bool _foreshadowed = false;
 
         private static Rigidbody _rb = null;
         private static FieldInfo _caFld = null;
+
+        // ── HUD accessors ─────────────────────────────────────────────
+        public static bool IsQuaking
+        {
+            get { return Enabled && (FrequencyMode == 2 || _quakeRemaining > 0f); }
+        }
+
+        public static bool IsForeshadowing
+        {
+            get
+            {
+                return Enabled && FrequencyMode != 2 && _quakeRemaining <= 0f
+                    && _intervalTimer > 0f && _intervalTimer <= ForeshadowLead;
+            }
+        }
+
+        public static float NextQuakeIn
+        {
+            get
+            {
+                if (!Enabled) return -1f;
+                if (FrequencyMode == 2) return 0f;
+                if (_quakeRemaining > 0f) return 0f;
+                return Mathf.Max(0f, _intervalTimer);
+            }
+        }
+
+        public static float QuakeRemaining
+        {
+            get { return FrequencyMode == 2 ? -1f : Mathf.Max(0f, _quakeRemaining); }
+        }
 
         // ── Display ───────────────────────────────────────────────────
         public static string IntensityDisplay => IntensityLevel.ToString();
@@ -66,7 +101,15 @@ namespace DescendersModMenu.Mods
                 _quakeRemaining = 0f;
                 _intervalTimer = 0f;
                 _impulseTimer = 0f;
+                _foreshadowed = false;
                 ApplyCameraShake(DefaultShake);
+            }
+            else
+            {
+                _intervalTimer = FrequencyMode == 1
+                    ? Random.Range(2f, 8f)
+                    : TimedInterval;
+                _foreshadowed = false;
             }
             ModLog.Debug("[EarthquakeMode] " + (Enabled ? "ON" : "OFF"));
         }
@@ -115,8 +158,9 @@ namespace DescendersModMenu.Mods
                 if (_quakeRemaining <= 0f)
                 {
                     _quakeRemaining = 0f;
+                    _foreshadowed = false;
                     if (FrequencyMode == 1)
-                        _intervalTimer = Random.Range(0f, 30f);
+                        _intervalTimer = Random.Range(3f, 30f);
                     else
                         _intervalTimer = TimedInterval;
                     ApplyCameraShake(DefaultShake);
@@ -127,10 +171,22 @@ namespace DescendersModMenu.Mods
             else
             {
                 _intervalTimer -= dt;
+
+                if (_intervalTimer <= ForeshadowLead && _intervalTimer > 0f)
+                {
+                    ApplyCameraShake(ForeshadowShake);
+                    if (!_foreshadowed)
+                    {
+                        _foreshadowed = true;
+                        ModLog.Debug("[EarthquakeMode] Foreshadow...");
+                    }
+                }
+
                 if (_intervalTimer <= 0f)
                 {
                     _quakeRemaining = EventDuration;
                     _impulseTimer = 0f;
+                    _foreshadowed = false;
                     ModLog.Debug("[EarthquakeMode] Event started! dur="
                         + EventDuration.ToString("F1") + "s force="
                         + ImpulseForce.ToString("F1"));
@@ -150,9 +206,10 @@ namespace DescendersModMenu.Mods
             if (!UnityNull.Alive(_rb)) return;
 
             float f = ImpulseForce;
+            // Mostly lateral — keep you on the ground more than yeeting airborne.
             Vector3 impulse = new Vector3(
                 Random.Range(-f, f),
-                Random.Range(-f * 0.05f, f * 0.05f),
+                Random.Range(-f * 0.02f, f * 0.02f),
                 Random.Range(-f, f)
             );
             _rb.AddForce(impulse, ForceMode.Impulse);
@@ -199,10 +256,10 @@ namespace DescendersModMenu.Mods
             _quakeRemaining = 0f;
             _intervalTimer = 0f;
             _impulseTimer = 0f;
+            _foreshadowed = false;
             _rb = null;
             _caFld = null;
             ApplyCameraShake(DefaultShake);
         }
     }
 }
-

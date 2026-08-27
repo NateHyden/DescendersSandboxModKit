@@ -7,6 +7,9 @@ namespace DescendersModMenu.UI
     {
         public static bool Enabled = false;
 
+        /// <summary>Height of the last drawn panel (0 if not drawn this frame).</summary>
+        public static float LastDrawnHeight { get; private set; }
+
         public static void Toggle()
         {
             Enabled = !Enabled;
@@ -49,6 +52,7 @@ namespace DescendersModMenu.UI
 
         public static void Draw()
         {
+            LastDrawnHeight = 0f;
             if (!Enabled) return;
 
             float sh = Screen.height;
@@ -79,6 +83,8 @@ namespace DescendersModMenu.UI
                 + rowH
                 + rowH
                 + pad * 0.5f;
+
+            LastDrawnHeight = totalH;
 
             float x = sw - panelW - marginX;
             float y = marginY;

@@ -246,10 +246,10 @@ namespace DescendersModMenu.UI
                 new Vector2(52, 30), 12,
                 () =>
                 {
-                    SetStatus("LOADING " + MapChanger.GetName(idx) + "...", UIHelpers.Orange);
+                    SetStatus("LOADING " + MapChanger.GetName(idx) + "...", UIHelpers.OnColor);
                     MapChanger.GoToMap(idx);
                 },
-                UIHelpers.Orange, Color.black);
+                UIHelpers.OnColor, Color.black);
 
             var le = goBtn.gameObject.AddComponent<LayoutElement>();
             le.preferredWidth = 52; le.minWidth = 52;

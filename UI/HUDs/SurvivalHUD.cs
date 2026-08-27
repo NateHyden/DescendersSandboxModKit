@@ -61,7 +61,7 @@ namespace DescendersModMenu.UI
                 string timeStr = FormatTime(Mods.SurvivalMode.TimeAlive);
                 GUI.Label(new Rect(0, statsY, sw, 36), "Time Survived:  " + timeStr, statsStyle);
                 GUI.Label(new Rect(0, statsY + 42, sw, 36), "Bails Taken:    " + Mods.SurvivalMode.BailsTaken, statsStyle);
-                GUI.Label(new Rect(0, statsY + 84, sw, 36), "Tricks Landed:  " + Mods.SurvivalMode.TricksLanded, statsStyle);
+                GUI.Label(new Rect(0, statsY + 84, sw, 36), "Landings:       " + Mods.SurvivalMode.TricksLanded, statsStyle);
 
                 return;
             }

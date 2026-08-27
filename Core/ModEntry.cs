@@ -1,4 +1,4 @@
-﻿using DescendersModMenu.Mods;
+using DescendersModMenu.Mods;
 using DescendersModMenu.BikeStats;
 using DescendersModMenu.UI;
 using HarmonyLib;
@@ -13,7 +13,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "2.1.5";
+        public const string Version = "2.2.0";
         public const string DownloadLink = null;
     }
 
@@ -56,10 +56,13 @@ namespace DescendersModMenu
         private bool _reapplyInvisibleBike;
         private bool _reapplyInvisiblePlayer;
         private bool _reapplyBrakeFade;
+        private int _reapplyTrickSpeedLevel; private bool _reapplyTrickSpeedNeeded;
 
         public override void OnInitializeMelon()
         {
             MelonLogger.Msg("Starting Descenders Sandbox");
+            try { UIHelpers.Prewarm(); }
+            catch (System.Exception ex) { ModLog.Warn("UI prewarm failed: " + ex.Message); }
             try { CodeStage.AntiCheat.Detectors.InjectionDetector.Dispose(); }
             catch (System.Exception ex) { ModLog.Warn("AntiCheat dispose failed (InjectionDetector): " + ex.Message); }
             try { CodeStage.AntiCheat.Detectors.ObscuredCheatingDetector.Dispose(); }
@@ -204,6 +207,7 @@ namespace DescendersModMenu
             try { RideOnWater.OnSceneInitialized(); } catch (System.Exception ex) { MelonLogger.Error("RideOnWater.OnSceneInitialized: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RideOnWater"); }
             if (buildindex == 1) MapChanger.BuildMapList();
             try { UI.SessionPage.RefreshAll(); } catch { }
+            try { SandboxDevTools.OnSceneChanged(sceneName); } catch { }
 
             if (buildindex > 0)
             {
@@ -317,6 +321,8 @@ namespace DescendersModMenu
             bool wasDiscoTorch = BikeTorch.DiscoEnabled;
             bool wasTrickMult = TrickMultiplier.Enabled;
             int trickMultLv = TrickMultiplier.Level;
+            int trickSpeedLv = TrickSpeed.Level;
+            bool trickSpeedNeed = TrickSpeed.IsModified;
             bool wasSuspHUD = SuspensionHUD.Enabled;
             bool wasScreenshot = ScreenshotMode.Enabled;
             float cx = CenterOfMass.OffsetLR, cy = CenterOfMass.OffsetUD, cz = CenterOfMass.OffsetFB;
@@ -330,7 +336,7 @@ namespace DescendersModMenu
             bool playerScaleNeed = playerScale != 1f;
             bool wasInvisBike = InvisibleBike.Enabled;
             bool wasInvisPlayer = InvisiblePlayer.Enabled;
-            // Wheel Size / Wide Tyres: intentionally not snapshotted — reset to 0% each scene.
+            // Wheel Size / Wide Tyres: intentionally not snapshotted ? reset to 0% each scene.
             bool wasBrakeFade = BrakeFade.Enabled;
             int brakeBalanceLv = BrakeFade.BalanceLevel;
 
@@ -416,12 +422,14 @@ namespace DescendersModMenu
             SuspensionHUD.ClearCache();
             BrakeFade.ClearCache(); BrakeFade_Patch.ClearCache();
             TrickMultiplier.Reset();
+            TrickSpeed.Reset();
             BikeDamage.ClearBoneCache();
             HeadlightsOnly.ClearCache();
             UIRemover.ClearCache();
             TrailPainter.ClearCache();
             BigHeadMode.ClearCache();
             TopSpeed.ClearCache();
+            SpeedLimiter.ClearCache();
             try { ESP.ClearCache(); } catch (System.Exception ex) { MelonLogger.Error("ESP.ClearCache: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ESP"); }
             if (ESP.Enabled) ESP.Toggle();
 
@@ -472,6 +480,7 @@ namespace DescendersModMenu
             _reapplyDiscoMode = wasDisco; _reapplyDiscoSpeed = discoSpeed;
             _reapplyDiscoTorch = wasDiscoTorch;
             _reapplyTrickMultiplier = wasTrickMult; _reapplyTrickMultiplierLevel = trickMultLv;
+            _reapplyTrickSpeedLevel = trickSpeedLv; _reapplyTrickSpeedNeeded = trickSpeedNeed;
             _reapplySuspensionHUD = wasSuspHUD;
             _reapplyScreenshotMode = wasScreenshot;
             _reapplyCOMx = cx; _reapplyCOMy = cy; _reapplyCOMz = cz; _reapplyCOMNeeded = comNeed;
@@ -490,6 +499,7 @@ namespace DescendersModMenu
             if (_reapplySuspensionHUD) { _reapplySuspensionHUD = false; if (!SuspensionHUD.Enabled) SuspensionHUD.Toggle(); ModLog.Debug("[Reapply] IMM SuspensionHUD -> " + SuspensionHUD.Enabled); }
             if (_reapplyScreenshotMode) { _reapplyScreenshotMode = false; ScreenshotMode.Toggle(); ModLog.Debug("[Reapply] IMM ScreenshotMode -> " + ScreenshotMode.Enabled); }
             if (_reapplyTrickMultiplier) { _reapplyTrickMultiplier = false; TrickMultiplier.SetLevel(_reapplyTrickMultiplierLevel); ModLog.Debug("[Reapply] IMM TrickMultiplier lv=" + _reapplyTrickMultiplierLevel); }
+            if (_reapplyTrickSpeedNeeded) { _reapplyTrickSpeedNeeded = false; TrickSpeed.SetLevel(_reapplyTrickSpeedLevel); ModLog.Debug("[Reapply] IMM TrickSpeed lv=" + _reapplyTrickSpeedLevel); }
 
             _pendingReapply = wasFlyMode || wasDrunkMode || wasMirrorMode ||
                 wasFov || wasSpeedrunTimer || wasAcceleration || wasMaxSpeed ||
@@ -499,7 +509,7 @@ namespace DescendersModMenu
                 comNeed || suspNeed || gameModneed || wasPedalWhileTweak ||
                 bikeScaleNeed || playerScaleNeed || wasInvisBike || wasInvisPlayer;
 
-            if (_pendingReapply) ModLog.Debug("[Reapply] Deferred queued — waiting for Player_Human...");
+            if (_pendingReapply) ModLog.Debug("[Reapply] Deferred queued ? waiting for Player_Human...");
             else ModLog.Debug("[Reapply] No deferred mods to reapply.");
             }
             finally { ModLog.SuppressUserFeedback = false; }
@@ -526,6 +536,7 @@ namespace DescendersModMenu
             try { LoadingBrand.Tick(); } catch (System.Exception ex) { MelonLogger.Error("LoadingBrand.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LoadingBrand"); }
             try { RideOnWater.Tick(); } catch (System.Exception ex) { MelonLogger.Error("RideOnWater.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RideOnWater"); }
             try { MenuUI.TryReopenAfterMapChange(); } catch (System.Exception ex) { MelonLogger.Error("MenuUI.TryReopenAfterMapChange: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MenuUI"); }
+            try { MenuUI.TryPrebuild(); } catch { }
             try { MenuUI.Tick(); } catch { }
 
             try { UI.MenuToggleWatcher.Ensure(); } catch { }
@@ -547,7 +558,7 @@ namespace DescendersModMenu
                 if (_pendingAutoLoad && hasPlayer)
                 {
                     _pendingAutoLoad = false;
-                    ModLog.Debug("[AutoLoad] Player_Human found — loading saved settings...");
+                    ModLog.Debug("[AutoLoad] Player_Human found ? loading saved settings...");
                     ModLog.SuppressUserFeedback = true;
                     try { StatsManager.LoadStats(); }
                     catch (System.Exception ex) { ModLog.Warn("[AutoLoad] " + ex.Message); }
@@ -565,7 +576,7 @@ namespace DescendersModMenu
 
                 if (_pendingReapply && hasPlayer)
                 {
-                    ModLog.Debug("[Reapply] === Player_Human found — APPLYING ===");
+                    ModLog.Debug("[Reapply] === Player_Human found ? APPLYING ===");
                     _pendingReapply = false;
                     int ok = 0, fail = 0;
                     ModLog.SuppressUserFeedback = true;
@@ -720,6 +731,7 @@ namespace DescendersModMenu
             try { GhostReplay.Tick(); } catch (System.Exception ex) { MelonLogger.Error("GhostReplay.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostReplay"); }
             try { MapChanger.Tick(); } catch (System.Exception ex) { MelonLogger.Error("MapChanger.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MapChanger"); }
             try { MapPage.SeedTick(); } catch (System.Exception ex) { LogUiTickError("MapPage.SeedTick", ex); }
+            try { MenuWindow.SpeedLimiterInputTick(); } catch (System.Exception ex) { LogUiTickError("MenuWindow.SpeedLimiterInputTick", ex); }
             try { UI.SearchPage.SearchTick(); } catch { }
             try { GhostPage.Tick(); } catch (System.Exception ex) { MelonLogger.Error("GhostPage.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostPage"); }
             try { SlowMoOnBail.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SlowMoOnBail.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SlowMoOnBail"); }
@@ -731,6 +743,7 @@ namespace DescendersModMenu
             try { BikeTorch.TickDisco(); } catch (System.Exception ex) { MelonLogger.Error("BikeTorch.TickDisco: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BikeTorch.TickDisco"); }
             try { ModDetection.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ModDetection.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ModDetection"); }
             try { ModChat.Tick(); } catch (System.Exception ex) { MelonLogger.Error("ModChat.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ModChat"); }
+            try { SandboxDevTools.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SandboxDevTools.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "DevTools"); }
             if (!MenuUI.IsOpen && !OutfitPage.IsRenaming && !ObjectPlacerPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.BindsPage.IsListening && !UI.SearchPage.IsQueryFocused && !UI.BindsPage.IsQueryFocused)
                 try { KeyBindManager.CheckAll(); } catch (System.Exception ex) { MelonLogger.Error("KeyBindManager.CheckAll: " + ex.Message); Telemetry.ReportErrorAsync(ex, "KeyBindManager"); }
         }
@@ -771,7 +784,11 @@ namespace DescendersModMenu
             try { RandomBikeSwitch.Tick(); } catch (System.Exception ex) { MelonLogger.Error("RandomBikeSwitch.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RandomBikeSwitch"); }
             try { Acceleration.Tick(); } catch (System.Exception ex) { MelonLogger.Error("Acceleration.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "Acceleration"); }
             try { MaxSpeedMultiplier.Tick(); } catch (System.Exception ex) { MelonLogger.Error("MaxSpeedMultiplier.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MaxSpeedMultiplier"); }
+            try { SpeedLimiter.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SpeedLimiter.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SpeedLimiter"); }
             try { LandingImpact.Tick(); } catch (System.Exception ex) { MelonLogger.Error("LandingImpact.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LandingImpact"); }
+            try { TrickSpeed.Tick(); } catch (System.Exception ex) { MelonLogger.Error("TrickSpeed.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TrickSpeed"); }
+            // After map hop the game re-hides the cursor in LateUpdate — win that fight.
+            try { MenuUI.Tick(); } catch { }
         }
 
         private static void LogUiTickError(string where, System.Exception ex)
@@ -786,12 +803,16 @@ namespace DescendersModMenu
         public override void OnGUI()
         {
             try { ESP.OnGUI(); } catch (System.Exception ex) { MelonLogger.Error("ESP.OnGUI: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ESP"); }
+            try { AvalancheHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("AvalancheHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "AvalancheHUD"); }
+            try { EarthquakeHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("EarthquakeHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "EarthquakeHUD"); }
             try { GhostHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("GhostHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostHUD"); }
             try { PoliceHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("PoliceHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "PoliceHUD"); }
             try { LavaRisingHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("LavaRisingHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LavaRisingHUD"); }
             try { TrickAttackHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("TrickAttackHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "TrickAttackHUD"); }
             try { SurvivalHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("SurvivalHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SurvivalHUD"); }
             try { SessionHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("SessionHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SessionHUD"); }
+            try { ModUsersHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("ModUsersHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ModUsersHUD"); }
+            try { SandboxDevTools.DrawPerfOverlay(); } catch (System.Exception ex) { MelonLogger.Error("SandboxDevTools.DrawPerfOverlay: " + ex.Message); Telemetry.ReportErrorAsync(ex, "DevTools"); }
             try { ChatHUD.Draw(); } catch (System.Exception ex) { MelonLogger.Error("ChatHUD.Draw: " + ex.Message); Telemetry.ReportErrorAsync(ex, "ChatHUD"); }
             try { SuspensionHUD.OnGUI(); } catch (System.Exception ex) { MelonLogger.Error("SuspensionHUD.OnGUI: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SuspensionHUD"); }
             try { BrakeFade.OnGUI(); } catch (System.Exception ex) { MelonLogger.Error("BrakeFade.OnGUI: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BrakeFade"); }

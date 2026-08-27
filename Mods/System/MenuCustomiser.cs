@@ -49,6 +49,7 @@ namespace DescendersModMenu.Mods
         public static string ScaleDisplay => ScaleLabels[ScaleLevel];
         public static string OpacityDisplay => OpacityLabels[OpacityLevel];
         public static float CurrentOpacity => OpacityValues[OpacityLevel];
+        public static float CurrentScale => ScaleValues[ScaleLevel];
         public static bool ShowSavedIndicator => Time.realtimeSinceStartup - _savedTime < 5f;
 
         private static float _savedTime = -999f;

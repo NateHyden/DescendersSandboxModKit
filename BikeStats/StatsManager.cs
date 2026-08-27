@@ -73,6 +73,7 @@ namespace DescendersModMenu.BikeStats
                     HoverModeHeight = HoverMode.HoverHeight,
                     SpeedrunTimerEnabled = SpeedrunTimer.Enabled,
                     SessionHUDEnabled = SessionHUD.Enabled,
+                    ModUsersHUDEnabled = ModUsersHUD.Enabled,
                     TrickMultiplierLevel = TrickMultiplier.Level,
                     SlowMoOnBailEnabled = SlowMoOnBail.Enabled,
                     BlackDeathEnabled = BlackDeath.Enabled,
@@ -84,6 +85,8 @@ namespace DescendersModMenu.BikeStats
 
                     AccelerationEnabled = Acceleration.Enabled,
                     MaxSpeedEnabled = MaxSpeedMultiplier.Enabled,
+                    SpeedLimiterEnabled = SpeedLimiter.Enabled,
+                    SpeedLimiterKmh = SpeedLimiter.LimitKmh,
                     LandingImpactEnabled = LandingImpact.Enabled,
                     FovEnabled = FOV.Enabled,
                     AutoBalanceEnabled = AutoBalance.Enabled,
@@ -153,6 +156,7 @@ namespace DescendersModMenu.BikeStats
 
                     TrickSetSwapEnabled = TrickSetSwap.Enabled,
                     TrickSetSwapSourceName = TrickSetSwap.CurrentSourceName,
+                    TrickSpeedLevel = TrickSpeed.Level,
 
                     LavaDifficultyLevel = LavaRising.DifficultyLevel,
                     LavaHeightRecords = LavaRising.ExportRecords(),
@@ -163,11 +167,14 @@ namespace DescendersModMenu.BikeStats
                     RubberBandSteeringEnabled = RubberBandSteering.Enabled,
                     RubberBandSteeringLevel = RubberBandSteering.Level,
                     PedalWhileTweakEnabled = PedalWhileTweak.Enabled,
+                    PoliceBestTimeEasy = PoliceChaseMode.BestTimeEasy,
+                    PoliceBestTimeMedium = PoliceChaseMode.BestTimeMedium,
+                    PoliceBestTimeHard = PoliceChaseMode.BestTimeHard,
                 };
 
                 string json = JsonUtility.ToJson(data, true);
                 File.WriteAllText(SaveFile, json);
-                ModLog.Debug("[StatsManager] Saved to: " + SaveFile);
+                ModLog.Feedback("[Stats] Saved active mods.");
             }
             catch (Exception ex) { MelonLogger.Error("[StatsManager] SaveStats: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "StatsManager"); }
         }
@@ -176,13 +183,13 @@ namespace DescendersModMenu.BikeStats
         // ══════════════════════════════════════════════════════════════
         public static void LoadStats()
         {
-            try { ResetStats(); }
+            try { ResetStats(false); }
             catch (System.Exception ex) { ModLog.Warn("[StatsManager] Pre-load reset: " + ex.Message); }
 
             try
             {
                 if (!File.Exists(SaveFile))
-                { ModLog.Warn("[StatsManager] No save file found: " + SaveFile); return; }
+                { ModLog.Warn("[Stats] No save file to load."); return; }
 
                 string json = File.ReadAllText(SaveFile);
                 BikeStatsData data = JsonUtility.FromJson<BikeStatsData>(json);
@@ -232,6 +239,7 @@ namespace DescendersModMenu.BikeStats
                 if (data.HoverModeEnabled && !HoverMode.Enabled) HoverMode.Toggle();
                 if (data.SpeedrunTimerEnabled && !SpeedrunTimer.Enabled) SpeedrunTimer.Toggle();
                 if (data.SessionHUDEnabled && !SessionHUD.Enabled) SessionHUD.Toggle();
+                if (data.ModUsersHUDEnabled && !ModUsersHUD.Enabled) ModUsersHUD.Toggle();
                 TrickMultiplier.SetLevel(data.TrickMultiplierLevel);
                 if (data.SlowMoOnBailEnabled && !SlowMoOnBail.Enabled) SlowMoOnBail.Toggle();
                 if (data.BlackDeathEnabled && !BlackDeath.Enabled) BlackDeath.Toggle();
@@ -243,6 +251,8 @@ namespace DescendersModMenu.BikeStats
 
                 if (data.AccelerationEnabled && !Acceleration.Enabled) Acceleration.Toggle();
                 if (data.MaxSpeedEnabled && !MaxSpeedMultiplier.Enabled) MaxSpeedMultiplier.Toggle();
+                SpeedLimiter.SetLimitKmh(data.SpeedLimiterKmh > 0f ? data.SpeedLimiterKmh : 80f);
+                if (data.SpeedLimiterEnabled && !SpeedLimiter.Enabled) SpeedLimiter.Toggle();
                 if (data.LandingImpactEnabled && !LandingImpact.Enabled) LandingImpact.Toggle();
                 if (data.FovEnabled && !FOV.Enabled) FOV.Toggle();
                 AutoBalance.SetStrengthLevel(data.AutoBalanceStrengthLevel);
@@ -316,6 +326,10 @@ namespace DescendersModMenu.BikeStats
                     TrickSetSwap.SetSourceByName(data.TrickSetSwapSourceName);
                 if (data.TrickSetSwapEnabled && !TrickSetSwap.Enabled) TrickSetSwap.Toggle();
 
+                int trickSpeedLv = data.TrickSpeedLevel;
+                if (trickSpeedLv < 1 || trickSpeedLv > 10) trickSpeedLv = 5;
+                TrickSpeed.SetLevel(trickSpeedLv);
+
                 int lavaLv = data.LavaDifficultyLevel;
                 if (lavaLv < 1 || lavaLv > 4) lavaLv = 2;
                 LavaRising.SetDifficulty(lavaLv);
@@ -330,8 +344,10 @@ namespace DescendersModMenu.BikeStats
                 RubberBandSteering.SetLevel(rbLevel);
                 if (data.RubberBandSteeringEnabled && !RubberBandSteering.Enabled) RubberBandSteering.Toggle();
                 if (data.PedalWhileTweakEnabled && !PedalWhileTweak.Enabled) PedalWhileTweak.Toggle();
+                PoliceChaseMode.ApplyBestTimes(
+                    data.PoliceBestTimeEasy, data.PoliceBestTimeMedium, data.PoliceBestTimeHard);
 
-                ModLog.Debug("[StatsManager] Loaded from: " + SaveFile);
+                ModLog.Feedback("[Stats] Loaded active mods.");
             }
             catch (Exception ex) { MelonLogger.Error("[StatsManager] LoadStats: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "StatsManager"); }
 
@@ -348,7 +364,7 @@ namespace DescendersModMenu.BikeStats
 
         // ══════════════════════════════════════════════════════════════
         // ══════════════════════════════════════════════════════════════
-        public static void ResetStats()
+        public static void ResetStats(bool announce = true)
         {
             try
             {
@@ -409,6 +425,8 @@ namespace DescendersModMenu.BikeStats
 
                 if (Acceleration.Enabled) Acceleration.Toggle();
                 if (MaxSpeedMultiplier.Enabled) MaxSpeedMultiplier.Toggle();
+                if (SpeedLimiter.Enabled) SpeedLimiter.Toggle();
+                SpeedLimiter.SetLimitKmh(80f);
                 if (LandingImpact.Enabled) LandingImpact.Toggle();
                 if (FOV.Enabled) FOV.Toggle();
                 if (AutoBalance.Enabled) AutoBalance.Toggle();
@@ -464,6 +482,7 @@ namespace DescendersModMenu.BikeStats
                 DiscoMode.Reset();
 
                 SessionHUD.Enabled = false;
+                if (ModUsersHUD.Enabled) ModUsersHUD.Toggle();
                 if (SuspensionHUD.Enabled) SuspensionHUD.Toggle();
                 if (BrakeFade.Enabled) BrakeFade.Toggle();
                 BrakeFade.SetBalanceLevel(6);
@@ -475,6 +494,7 @@ namespace DescendersModMenu.BikeStats
                 if (UIRemover.Enabled) UIRemover.Toggle();
                 if (WheelieHUD.Enabled) WheelieHUD.Toggle();
                 if (TrickSetSwap.Enabled) TrickSetSwap.Disable();
+                TrickSpeed.Reset();
 
                 if (AvalancheMode.Enabled) AvalancheMode.Reset();
                 if (EarthquakeMode.Enabled) EarthquakeMode.Reset();
@@ -488,6 +508,7 @@ namespace DescendersModMenu.BikeStats
                 PersistClearedLavaRecords();
 
                 ModLog.Debug("[StatsManager] Reset to defaults.");
+                if (announce) ModLog.Feedback("[Stats] Reset active mods.");
             }
             catch (Exception ex) { MelonLogger.Error("[StatsManager] ResetStats: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "StatsManager"); }
 
@@ -521,6 +542,28 @@ namespace DescendersModMenu.BikeStats
                 File.WriteAllText(SaveFile, JsonUtility.ToJson(data, true));
             }
             catch (Exception ex) { ModLog.Warn("[StatsManager] PersistClearedLavaRecords: " + ex.Message); }
+        }
+
+        public static void PersistPoliceBestTimes(float easy, float medium, float hard)
+        {
+            try
+            {
+                EnsureSaveFolder();
+                BikeStatsData data;
+                if (File.Exists(SaveFile))
+                {
+                    data = JsonUtility.FromJson<BikeStatsData>(File.ReadAllText(SaveFile));
+                    if (data == null) data = new BikeStatsData();
+                }
+                else
+                    data = new BikeStatsData();
+
+                data.PoliceBestTimeEasy = easy;
+                data.PoliceBestTimeMedium = medium;
+                data.PoliceBestTimeHard = hard;
+                File.WriteAllText(SaveFile, JsonUtility.ToJson(data, true));
+            }
+            catch (Exception ex) { ModLog.Warn("[StatsManager] PersistPoliceBestTimes: " + ex.Message); }
         }
     }
 }

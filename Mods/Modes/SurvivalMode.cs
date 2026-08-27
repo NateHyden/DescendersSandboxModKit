@@ -51,6 +51,8 @@ namespace DescendersModMenu.Mods
         private static float _prevVelY = 0f;
 
         private static Rigidbody _rb = null;
+        private static float _bailBleedPause = 0f;
+        private const float IdleSpeedThreshold = 2.5f;
 
         // ── Toggle / Reset ────────────────────────────────────────────
         public static void Toggle()
@@ -71,6 +73,7 @@ namespace DescendersModMenu.Mods
             _wasAirborne = false;
             _airtimeAccum = 0f;
             _prevVelY = 0f;
+            _bailBleedPause = 0f;
             ModLog.Debug("[Survival] Run reset.");
         }
 
@@ -97,13 +100,20 @@ namespace DescendersModMenu.Mods
                 int newBails = currentBails - _prevBailCount;
                 HP -= BailPenaltyValues[BailPenaltyIndex] * newBails;
                 BailsTaken += newBails;
+                _bailBleedPause = 2f;
             }
             _prevBailCount = currentBails;
 
-            // ── Continuous bleed ──────────────────────────────────────
+            // ── Speed bleed (only while nearly stopped) ───────────────
             float bleedRate = BleedValues[BleedIndex];
-            if (bleedRate > 0f)
-                HP -= bleedRate * Time.deltaTime;
+            if (bleedRate > 0f && _bailBleedPause <= 0f)
+            {
+                float hSpeed = GetHorizontalSpeed();
+                if (hSpeed < IdleSpeedThreshold)
+                    HP -= bleedRate * Time.deltaTime;
+            }
+            if (_bailBleedPause > 0f)
+                _bailBleedPause -= Time.deltaTime;
 
             float velY = GetVerticalVelocity();
 
@@ -153,22 +163,37 @@ namespace DescendersModMenu.Mods
             }
         }
 
-        // ── Get vertical velocity ─────────────────────────────────────
+        // ── Velocity helpers ──────────────────────────────────────────
+        private static float GetHorizontalSpeed()
+        {
+            try
+            {
+                EnsureRb();
+                if (!UnityNull.Alive(_rb)) return 0f;
+                Vector3 v = _rb.velocity;
+                return new Vector2(v.x, v.z).magnitude;
+            }
+            catch { _rb = null; return 0f; }
+        }
+
         private static float GetVerticalVelocity()
         {
             try
             {
-                if (!UnityNull.Alive(_rb))
-                {
-                    _rb = null;
-                    GameObject player = GameObject.Find("Player_Human");
-                    if ((object)player == null) return 0f;
-                    _rb = player.GetComponentInChildren<Rigidbody>();
-                }
+                EnsureRb();
                 if (!UnityNull.Alive(_rb)) return 0f;
                 return _rb.velocity.y;
             }
             catch { _rb = null; return 0f; }
+        }
+
+        private static void EnsureRb()
+        {
+            if (UnityNull.Alive(_rb)) return;
+            _rb = null;
+            GameObject player = GameObject.Find("Player_Human");
+            if ((object)player == null) return;
+            _rb = player.GetComponentInChildren<Rigidbody>();
         }
     }
 }

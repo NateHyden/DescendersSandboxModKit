@@ -81,16 +81,15 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("HOW TO USE", c);
-                UIHelpers.InfoBox(c,
-                    "1. Enable Screenshot Mode using the toggle above." +
-                    "\n2. Press DPad Up on your Xbox controller, or F11 on keyboard." +
-                    "\n3. The menu disappears for a clean shot, then returns automatically." +
-                    "\n4. Screenshots are saved at 2x your display resolution.");
-                UIHelpers.InfoBox(c, "Save location:\n" + ScreenshotMode.SaveFolder);
-                UIHelpers.InfoBox(c,
-                    "Resolution: 2x your current display (1080p -> 4K)." +
-                    "\nFilenames: screenshot_yyyyMMdd_HHmmss_fff.png (keeps every shot)." +
-                    "\nNothing is overwritten — old screenshots stay in the folder.");
+                UIHelpers.InfoBoxBullets(c,
+                    "1. Enable Screenshot Mode using the toggle above.",
+                    "2. Press DPad Up on your Xbox controller, or F11 on keyboard.",
+                    "3. The menu disappears for a clean shot, then returns automatically.",
+                    "4. Screenshots are saved at 2x your display resolution.",
+                    "Save location: " + ScreenshotMode.SaveFolder,
+                    "Resolution: 2x your current display (1080p -> 4K).",
+                    "Filenames: screenshot_yyyyMMdd_HHmmss_fff.png (keeps every shot).",
+                    "Nothing is overwritten — old screenshots stay in the folder.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("LAST SCREENSHOT", c);

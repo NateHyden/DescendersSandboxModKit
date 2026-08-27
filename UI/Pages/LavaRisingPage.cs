@@ -53,9 +53,8 @@ namespace DescendersModMenu.UI
                 var c = content.transform;
 
                 UIHelpers.SectionHeader("THE FLOOR IS LAVA", c);
-                UIHelpers.InfoBox(c,
-                    "Teleports you to a low spot. Climb 10m and lava rises under you — keep going up.");
-                UIHelpers.InfoBox(c,
+                UIHelpers.InfoBoxBullets(c,
+                    "Teleports you to a low spot. Climb 10m and lava rises under you — keep going up.",
                     "Getting caught or reaching the top ends the run. Harder difficulties climb faster.");
 
                 UIHelpers.Divider(c);

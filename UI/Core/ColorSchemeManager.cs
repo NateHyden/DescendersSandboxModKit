@@ -45,6 +45,22 @@ namespace DescendersModMenu.UI
             new ColorScheme("Voltage",     new Color(1.000f, 0.950f, 0.050f), new Color(1.000f, 0.950f, 0.050f)),
             new ColorScheme("Frostbite",   new Color(0.400f, 0.560f, 0.780f), new Color(0.400f, 0.560f, 0.780f)),
             new ColorScheme("Blackout",    new Color(0.850f, 0.850f, 0.870f), new Color(0.850f, 0.850f, 0.870f), 0.15f),
+            // Neon / extra accents (kept distinct from the set above)
+            new ColorScheme("Plasma",      new Color(1.000f, 0.120f, 0.550f), new Color(1.000f, 0.120f, 0.550f)),
+            new ColorScheme("Laser",       new Color(0.050f, 1.000f, 0.450f), new Color(0.050f, 1.000f, 0.450f)),
+            new ColorScheme("Cobalt",      new Color(0.100f, 0.350f, 1.000f), new Color(0.100f, 0.350f, 1.000f)),
+            new ColorScheme("Coral",       new Color(1.000f, 0.380f, 0.420f), new Color(1.000f, 0.380f, 0.420f)),
+            new ColorScheme("Ultraviolet", new Color(0.620f, 0.050f, 1.000f), new Color(0.620f, 0.050f, 1.000f)),
+            new ColorScheme("Toxic Teal",  new Color(0.000f, 0.920f, 0.720f), new Color(0.000f, 0.920f, 0.720f)),
+            new ColorScheme("Amber",       new Color(1.000f, 0.620f, 0.050f), new Color(1.000f, 0.620f, 0.050f)),
+            new ColorScheme("Mint",        new Color(0.450f, 1.000f, 0.720f), new Color(0.450f, 1.000f, 0.720f)),
+            new ColorScheme("Crimson",     new Color(0.820f, 0.050f, 0.180f), new Color(0.820f, 0.050f, 0.180f)),
+            new ColorScheme("Aqua Neon",   new Color(0.050f, 0.850f, 1.000f), new Color(0.050f, 0.850f, 1.000f)),
+            new ColorScheme("Hot Magenta", new Color(1.000f, 0.000f, 0.600f), new Color(1.000f, 0.000f, 0.600f)),
+            new ColorScheme("Chartreuse",  new Color(0.550f, 1.000f, 0.050f), new Color(0.550f, 1.000f, 0.050f)),
+            new ColorScheme("Sapphire",    new Color(0.150f, 0.220f, 0.950f), new Color(0.150f, 0.220f, 0.950f)),
+            new ColorScheme("Peach Neon",  new Color(1.000f, 0.550f, 0.400f), new Color(1.000f, 0.550f, 0.400f)),
+            new ColorScheme("Acid",        new Color(0.850f, 1.000f, 0.200f), new Color(0.850f, 1.000f, 0.200f)),
         };
 
         public static int CurrentIndex { get; private set; } = 0;

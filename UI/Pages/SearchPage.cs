@@ -95,7 +95,7 @@ namespace DescendersModMenu.UI
                 _queryInputText = UIHelpers.Txt("SrIT", searchBg.transform,
                     string.IsNullOrEmpty(_queryBuffer) ? "Type to search mods..." : _queryBuffer, 11,
                     FontStyle.Normal, TextAnchor.MiddleLeft,
-                    string.IsNullOrEmpty(_queryBuffer) ? UIHelpers.TextDim : UIHelpers.TextLight);
+                    string.IsNullOrEmpty(_queryBuffer) ? Color.white : UIHelpers.TextLight);
                 _queryInputText.horizontalOverflow = HorizontalWrapMode.Overflow;
                 _queryInputText.verticalOverflow = VerticalWrapMode.Truncate;
                 _queryInputText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
@@ -134,7 +134,7 @@ namespace DescendersModMenu.UI
                     hintRow.AddComponent<LayoutElement>().minHeight = 40;
                     var htxt = UIHelpers.Txt("HintTxt", hintRow.transform,
                         "Start typing to find any mod by name", 11,
-                        FontStyle.Normal, TextAnchor.MiddleCenter, UIHelpers.TextDim);
+                        FontStyle.Normal, TextAnchor.MiddleCenter, Color.white);
                     UIHelpers.Fill(UIHelpers.RT(htxt.gameObject));
                     UIHelpers.AddScrollForwarders(_listRoot);
                     return;
@@ -253,7 +253,7 @@ namespace DescendersModMenu.UI
                 else
                 {
                     _queryInputText.text = UIHelpers.WithCaret("Type to search mods...", true);
-                    _queryInputText.color = UIHelpers.TextDim;
+                    _queryInputText.color = Color.white;
                 }
             }
 

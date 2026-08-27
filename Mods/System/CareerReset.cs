@@ -67,6 +67,401 @@ namespace DescendersModMenu.Mods
             LastResult = combined;
         }
 
+        /// <summary>
+        /// Completes every Grand Tour challenge (Developer Tour + Encore Tour and any
+        /// other Tour on GameData._tours), claims mission/group rewards, unlocks tour
+        /// outfit rewards, and clears category padlocks (they unlock when prereq groups
+        /// hit the 5-complete threshold — finishing everything clears them all).
+        /// </summary>
+        public static void CompleteGrandTour()
+        {
+            try
+            {
+                MissionsManager mm = UnityEngine.Object.FindObjectOfType<MissionsManager>();
+                if ((object)mm == null)
+                {
+                    ModLog.Warn("[CareerReset] CompleteGrandTour: MissionsManager not found.");
+                    LastResult = "MissionsManager not found - open Grand Tour once?";
+                    return;
+                }
+
+                if (mm.GetTourCount() <= 0)
+                {
+                    ModLog.Warn("[CareerReset] CompleteGrandTour: GetTourCount()=0 - tours not loaded yet.");
+                    LastResult = "Tours not loaded - open The Grand Tour menu once";
+                    return;
+                }
+
+                MissionGroup[] groups = GetMissionGroups(mm);
+                if (groups == null || groups.Length == 0)
+                {
+                    ModLog.Warn("[CareerReset] CompleteGrandTour: no MissionGroup[] on MissionsManager.");
+                    LastResult = "No tour groups loaded";
+                    return;
+                }
+
+                if (!ResolveMissionSaveLists(mm))
+                {
+                    LastResult = "Could not resolve mission save lists - see log";
+                    return;
+                }
+
+                int completed = 0, alreadyDone = 0, missionClaims = 0, groupClaims = 0;
+                int tourRewardSets = 0, seenMarks = 0;
+
+                for (int g = 0; g < groups.Length; g++)
+                {
+                    MissionGroup group = groups[g];
+                    if ((object)group == null) continue;
+
+                    MissionData[] missions = group.Missions;
+                    if (missions == null) continue;
+
+                    for (int i = 0; i < missions.Length; i++)
+                    {
+                        MissionData md = missions[i];
+                        if ((object)md == null) continue;
+
+                        if (md.IsComplete || mm.IsMissionComplete(md.Id))
+                        {
+                            alreadyDone++;
+                        }
+                        else
+                        {
+                            try
+                            {
+                                mm.SetMissionComplete(md);
+                                completed++;
+                            }
+                            catch (Exception ex)
+                            {
+                                ModLog.Warn("[CareerReset] GrandTour SetMissionComplete '"
+                                    + SafeId(md) + "': " + ex.Message);
+                            }
+                        }
+                    }
+                }
+
+                for (int g = 0; g < groups.Length; g++)
+                {
+                    MissionGroup group = groups[g];
+                    if ((object)group == null) continue;
+
+                    MissionData[] missions = group.Missions;
+                    if (missions != null)
+                    {
+                        for (int i = 0; i < missions.Length; i++)
+                        {
+                            MissionData md = missions[i];
+                            if ((object)md == null || !md.IsComplete) continue;
+                            if (mm.CheckIfRewardClaimed(md)) continue;
+
+                            try
+                            {
+                                mm.SetRewardClaimed(md);
+                                CustomizationItem[] rewards = md.MissionRewards;
+                                if ((object)rewards != null && rewards.Length > 0)
+                                    mm.ClaimMissionCompleteRewards(md);
+                                else
+                                    mm.ClaimRandomItemReward(md);
+                                missionClaims++;
+                            }
+                            catch (Exception ex)
+                            {
+                                ModLog.Warn("[CareerReset] GrandTour claim mission '"
+                                    + SafeId(md) + "': " + ex.Message);
+                            }
+                        }
+                    }
+
+                    if (!mm.IsMissionGroupComplete(group)) continue;
+
+                    try
+                    {
+                        EnsureGroupRegistered(mm, group);
+                        if (!mm.CheckIfRewardClaimed(group))
+                        {
+                            mm.SetRewardClaimed(group);
+                            mm.ClaimGroupCompleteRewards(group);
+                            groupClaims++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ModLog.Warn("[CareerReset] GrandTour claim group '"
+                            + SafeGroupId(group) + "': " + ex.Message);
+                    }
+
+                    try
+                    {
+                        string gid = group.Id;
+                        if (!string.IsNullOrEmpty(gid) && mm.IsMissionGroupUnseen(gid))
+                        {
+                            mm.MarkMissionGroupAsSeen(gid);
+                            seenMarks++;
+                        }
+                    }
+                    catch { }
+                }
+
+                try { mm.TryClaimCompletedTourOneReward(); }
+                catch (Exception ex)
+                {
+                    ModLog.Warn("[CareerReset] GrandTour TryClaimCompletedTourOneReward: " + ex.Message);
+                }
+
+                CustomizationManager cm = UnityEngine.Object.FindObjectOfType<CustomizationManager>();
+                int tourCount = mm.GetTourCount();
+                for (int t = 0; t < tourCount; t++)
+                {
+                    Tour tour = null;
+                    try { tour = mm.GetTour(t); } catch { }
+                    if ((object)tour == null) continue;
+                    if (!IsTourFullyComplete(mm, tour)) continue;
+
+                    CustomizationItem[] tourRewards = tour.Rewards;
+                    if ((object)tourRewards == null || tourRewards.Length == 0) continue;
+                    if ((object)cm == null) continue;
+
+                    try
+                    {
+                        cm.UnlockItems(tourRewards, true, true);
+                        tourRewardSets++;
+                        ModLog.Debug("[CareerReset] GrandTour unlocked Rewards for tour \""
+                            + tour.TourName + "\" (" + tourRewards.Length + " item(s)).");
+                    }
+                    catch (Exception ex)
+                    {
+                        ModLog.Warn("[CareerReset] GrandTour UnlockItems tour \""
+                            + tour.TourName + "\": " + ex.Message);
+                    }
+                }
+
+                string msg = "Grand Tour: +" + completed + " complete (" + alreadyDone
+                    + " already), " + missionClaims + " mission reward(s), "
+                    + groupClaims + " group reward(s), " + tourRewardSets
+                    + " tour reward set(s)";
+                if (seenMarks > 0) msg += ", " + seenMarks + " seen";
+                ModLog.Feedback("[CareerReset] " + msg);
+                LastResult = msg;
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[CareerReset] CompleteGrandTour: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
+                LastResult = "Error - see log";
+            }
+        }
+
+        private static FieldInfo _missionSaveListField;
+        private static FieldInfo _groupSaveListField;
+        private static bool _saveListsResolved;
+
+        private static bool ResolveMissionSaveLists(MissionsManager mm)
+        {
+            if (_saveListsResolved
+                && (object)_missionSaveListField != null
+                && (object)_groupSaveListField != null)
+                return true;
+
+            _saveListsResolved = true;
+            try
+            {
+                FieldInfo[] fields = typeof(MissionsManager).GetFields(
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                System.Collections.Generic.List<FieldInfo> listFields =
+                    new System.Collections.Generic.List<FieldInfo>();
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    if (fields[i].FieldType.Equals(typeof(System.Collections.Generic.List<MissionsSaveData>)))
+                        listFields.Add(fields[i]);
+                }
+
+                if (listFields.Count < 2)
+                {
+                    ModLog.Warn("[CareerReset] Expected 2 List<MissionsSaveData> fields, found "
+                        + listFields.Count);
+                    return false;
+                }
+
+                // Prefer matching MissionGroup.Id entries → group list; mission Ids → mission list.
+                MissionGroup[] groups = GetMissionGroups(mm);
+                FieldInfo groupField = null;
+                FieldInfo missionField = null;
+
+                if ((object)groups != null)
+                {
+                    for (int li = 0; li < listFields.Count; li++)
+                    {
+                        System.Collections.Generic.List<MissionsSaveData> list =
+                            listFields[li].GetValue(mm) as System.Collections.Generic.List<MissionsSaveData>;
+                        if ((object)list == null || list.Count == 0) continue;
+
+                        int groupHits = 0, missionHits = 0;
+                        for (int g = 0; g < groups.Length; g++)
+                        {
+                            MissionGroup grp = groups[g];
+                            if ((object)grp == null || string.IsNullOrEmpty(grp.Id)) continue;
+                            for (int e = 0; e < list.Count; e++)
+                            {
+                                if ((object)list[e] == null) continue;
+                                if (string.Equals(list[e].Id, grp.Id, StringComparison.Ordinal))
+                                    groupHits++;
+                            }
+
+                            MissionData[] mds = grp.Missions;
+                            if (mds == null) continue;
+                            for (int mi = 0; mi < mds.Length; mi++)
+                            {
+                                if ((object)mds[mi] == null || string.IsNullOrEmpty(mds[mi].Id)) continue;
+                                for (int e = 0; e < list.Count; e++)
+                                {
+                                    if ((object)list[e] == null) continue;
+                                    if (string.Equals(list[e].Id, mds[mi].Id, StringComparison.Ordinal))
+                                        missionHits++;
+                                }
+                            }
+                        }
+
+                        if (groupHits > missionHits && (object)groupField == null)
+                            groupField = listFields[li];
+                        if (missionHits > groupHits && (object)missionField == null)
+                            missionField = listFields[li];
+                    }
+                }
+
+                // Fallback: complete one incomplete mission and see which list grows.
+                if ((object)groupField == null || (object)missionField == null)
+                {
+                    int c0 = CountSaveList(listFields[0].GetValue(mm));
+                    int c1 = CountSaveList(listFields[1].GetValue(mm));
+                    MissionData probe = FindIncompleteMission(groups);
+                    if ((object)probe != null)
+                    {
+                        mm.SetMissionComplete(probe);
+                        int n0 = CountSaveList(listFields[0].GetValue(mm));
+                        int n1 = CountSaveList(listFields[1].GetValue(mm));
+                        if (n0 > c0)
+                        {
+                            missionField = listFields[0];
+                            groupField = listFields[1];
+                        }
+                        else if (n1 > c1)
+                        {
+                            missionField = listFields[1];
+                            groupField = listFields[0];
+                        }
+                    }
+                }
+
+                if ((object)groupField == null || (object)missionField == null)
+                {
+                    // Last resort: SetMissionComplete writes Hi~yQqh first in field order
+                    // is unreliable — assign uniquely remaining.
+                    if ((object)missionField == null && (object)groupField != null)
+                    {
+                        for (int i = 0; i < listFields.Count; i++)
+                            if ((object)listFields[i] != (object)groupField)
+                            { missionField = listFields[i]; break; }
+                    }
+                    if ((object)groupField == null && (object)missionField != null)
+                    {
+                        for (int i = 0; i < listFields.Count; i++)
+                            if ((object)listFields[i] != (object)missionField)
+                            { groupField = listFields[i]; break; }
+                    }
+                    if ((object)groupField == null)
+                    {
+                        missionField = listFields[0];
+                        groupField = listFields[1];
+                        ModLog.Warn("[CareerReset] GrandTour save-list identity uncertain — using field order.");
+                    }
+                }
+
+                _missionSaveListField = missionField;
+                _groupSaveListField = groupField;
+                ModLog.Debug("[CareerReset] GrandTour lists: missions='" + missionField.Name
+                    + "' groups='" + groupField.Name + "'");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("[CareerReset] ResolveMissionSaveLists: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "CareerReset");
+                return false;
+            }
+        }
+
+        private static int CountSaveList(object listObj)
+        {
+            System.Collections.Generic.List<MissionsSaveData> list =
+                listObj as System.Collections.Generic.List<MissionsSaveData>;
+            return (object)list != null ? list.Count : -1;
+        }
+
+        private static MissionData FindIncompleteMission(MissionGroup[] groups)
+        {
+            if ((object)groups == null) return null;
+            for (int g = 0; g < groups.Length; g++)
+            {
+                if ((object)groups[g] == null || groups[g].Missions == null) continue;
+                MissionData[] mds = groups[g].Missions;
+                for (int i = 0; i < mds.Length; i++)
+                {
+                    if ((object)mds[i] != null && !mds[i].IsComplete)
+                        return mds[i];
+                }
+            }
+            return null;
+        }
+
+        private static void EnsureGroupRegistered(MissionsManager mm, MissionGroup group)
+        {
+            if ((object)_groupSaveListField == null || (object)group == null) return;
+            string id = group.Id;
+            if (string.IsNullOrEmpty(id)) return;
+
+            System.Collections.Generic.List<MissionsSaveData> list =
+                _groupSaveListField.GetValue(mm) as System.Collections.Generic.List<MissionsSaveData>;
+            if ((object)list == null) return;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if ((object)list[i] != null
+                    && string.Equals(list[i].Id, id, StringComparison.Ordinal))
+                    return;
+            }
+
+            MissionsSaveData entry = new MissionsSaveData();
+            entry.Id = id;
+            entry.RewardClaimed = false;
+            list.Add(entry);
+        }
+
+        private static bool IsTourFullyComplete(MissionsManager mm, Tour tour)
+        {
+            if ((object)tour == null) return false;
+            MissionGroup[] tGroups = tour.MissionGroups;
+            if ((object)tGroups == null || tGroups.Length == 0) return false;
+            for (int i = 0; i < tGroups.Length; i++)
+            {
+                if ((object)tGroups[i] == null) continue;
+                if (!mm.IsMissionGroupComplete(tGroups[i])) return false;
+            }
+            return true;
+        }
+
+        private static string SafeGroupId(MissionGroup group)
+        {
+            try
+            {
+                if ((object)group == null) return "?";
+                string id = group.Id;
+                return string.IsNullOrEmpty(id) ? "?" : id;
+            }
+            catch { return "?"; }
+        }
+
         /// <summary>Legacy MissionsManager/MissionGroup/MissionData path. Returns a short status
         /// string, or null if MissionsManager wasn't found or held no groups. On the live build
         /// this comes back empty - see TryCompleteViaProgressNodes for the system that's actually

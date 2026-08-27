@@ -55,7 +55,7 @@ namespace DescendersModMenu
             "BoulderDodge",    "SurvivalMode",    "TrickAttack",      "SpiderBike",
             "AvalancheFail",
             // ── Career ────────────────────────────────────────────────────
-            "CompleteMissions","LevelReset",      "SponsorReset",     "MaxSponsorLevel",
+            "CompleteMissions","CompleteGrandTour","LevelReset",      "SponsorReset",     "MaxSponsorLevel",
             "UnlockAll"
         };
 
@@ -91,13 +91,13 @@ namespace DescendersModMenu
             "Super Launch",      "Teleport to Checkpoint",  "Jump to Finish",     "Respawn at Start",
             "Skip Song",         "Airhorn",                 "Clear All Perks",    "Clear Saved Ghost",
             "Reset Top Speed",   "Spectate: Next",          "Spectate: Previous", "Trail Painter Colour",
-            "Go To Shed",        "Leave Shed",              "All Mods Switch",
+            "Go To Shed",        "Leave Shed",              "Mods Master Switch",
             // ── Modes ─────────────────────────────────────────────────────
             "The floor is LAVA", "Avalanche Mode",        "Earthquake Mode",     "Police Chase",
             "Boulder Dodge",     "Survival Mode",         "Trick Attack",        "Spider Bike",
             "Avalanche Instant Fail",
             // ── Career ────────────────────────────────────────────────────
-            "Complete All Missions", "Reset Level Progress", "Reset Sponsor Progress", "Max Sponsor Level",
+            "Complete All Missions", "Complete Grand Tour", "Reset Level Progress", "Reset Sponsor Progress", "Max Sponsor Level",
             "Unlock All"
         };
 
@@ -511,6 +511,7 @@ namespace DescendersModMenu
                         ModLog.Feedback("[Avalanche] Instant Fail -> " + (AvalancheMode.InstantFail ? "ON" : "OFF"));
                         break;
                     case "CompleteMissions":   CareerReset.CompleteAllMissions();                  break;
+                    case "CompleteGrandTour":  CareerReset.CompleteGrandTour();                   break;
                     case "LevelReset":         CareerReset.ResetLevelProgress();                  break;
                     case "SponsorReset":       CareerReset.ResetSponsorProgress();                break;
                     case "MaxSponsorLevel":    CareerReset.MaxSponsorLevel();                     break;

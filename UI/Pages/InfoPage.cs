@@ -1,4 +1,4 @@
-﻿using DescendersModMenu.Mods;
+using DescendersModMenu.Mods;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,19 +8,20 @@ namespace DescendersModMenu.UI
 {
     public static class InfoPage
     {
-        // ── Sub-tab state ─────────────────────────────────────────────
+        // -- Sub-tab state ---------------------------------------------
         private static int _activeTab = 0;
 
-        private static readonly string[] TabLabels = { "System", "Hotkeys", "Version Update Check" };
+        private static readonly string[] TabLabels = { "System", "Hotkeys", "Version Update Check", "Feedback/ Bug Report" };
 
-        private static Image[] _tabBgs = new Image[3];
-        private static Text[] _tabTxts = new Text[3];
+        private static Image[] _tabBgs = new Image[4];
+        private static Text[] _tabTxts = new Text[4];
 
         private static GameObject _pgSystem;
         private static GameObject _pgHotkeys;
         private static GameObject _pgCustomise;
         private static GameObject _pgCareer;
         private static GameObject _pgVersion;
+        private static GameObject _pgFeedback;
         private static Text _verInstalledTxt;
         private static Text _verLatestTxt;
         private static Text _verStatusTxt;
@@ -51,8 +52,36 @@ namespace DescendersModMenu.UI
         private static UnityEngine.UI.Button _inGameRepMinus, _inGameRepPlus;
         private static Text _inGameRepMultVal;
         private static GameObject _devDiagContent;
+        private static Text _devPhotonStateTxt;
+        private static Text _devPhotonRoomTxt;
+        private static Text _devPhotonPlayersTxt;
+        private static Text _devPhotonLocalTxt;
+        private static Text _devPhotonOfflineTxt;
+        private static Text _devModUsersTxt;
+        private static Text _devSceneTxt;
+        private static Text _devPerfTxt;
+        private static Text _devProbeTxt;
+        private static Text _devResultTxt;
+        private static Text _devRoomLogTxt;
+        private static Text _devPatchTxt;
+        private static Text _devModsTxt;
+        private static Text _devPropsTxt;
+        private static Text _devFindResultTxt;
+        private static Text _devFindInputText;
+        private static RectTransform _devFindBoxRect;
+        private static bool _devFindFocused;
+        private static string _devFindBuffer = "";
+        private static Text _devNameInputText;
+        private static RectTransform _devNameBoxRect;
+        private static bool _devNameFocused;
+        private static string _devNameBuffer = "";
+        private static Text _devNameStatusTxt;
+        private static Text _devPerfHudVal;
+        private static Image _devPerfHudTrk;
+        private static RectTransform _devPerfHudKnb;
+        private static float _nextDevRefresh;
 
-        // ── Set-exact-rep inputs (text field + Set button) ──────────────
+        // -- Set-exact-rep inputs (text field + Set button) --------------
         private static Text _repSetInputText, _repSetCursor;
         private static RectTransform _repSetBoxRect;
         private static bool _repSetFocused;
@@ -63,7 +92,7 @@ namespace DescendersModMenu.UI
         private static bool _inGameRepSetFocused;
         private static string _inGameRepSetBuffer = "";
 
-        // ── CreatePage ────────────────────────────────────────────────
+        // -- CreatePage ------------------------------------------------
         public static GameObject CreatePage(Transform parent)
         {
             GameObject pg = null;
@@ -78,7 +107,7 @@ namespace DescendersModMenu.UI
                 rootVlg.childForceExpandWidth = true;
                 rootVlg.childForceExpandHeight = false;
 
-                // ── Sub-tab bar ───────────────────────────────────────
+                // -- Sub-tab bar ---------------------------------------
                 var tabBar = UIHelpers.Obj("TabBar", pg.transform);
                 tabBar.AddComponent<Image>().color = UIHelpers.WinOuter;
                 var tbLE = tabBar.AddComponent<LayoutElement>();
@@ -108,7 +137,7 @@ namespace DescendersModMenu.UI
                     tabHlg.childForceExpandHeight = true;
 
                     var tabTxt = UIHelpers.Txt("T" + i, tab.transform, TabLabels[i], 11,
-                        FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextDim);
+                        FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
                     _tabTxts[i] = tabTxt;
 
                     var btn = tab.AddComponent<Button>();
@@ -121,18 +150,18 @@ namespace DescendersModMenu.UI
                     btn.onClick.AddListener(() => SwitchTab(idx));
                 }
 
-                // ── Content area ──────────────────────────────────────
+                // -- Content area --------------------------------------
                 var contentArea = UIHelpers.Obj("Content", pg.transform);
                 var caLE = contentArea.AddComponent<LayoutElement>();
                 caLE.flexibleHeight = 1; caLE.flexibleWidth = 1;
                 UIHelpers.Fill(UIHelpers.RT(contentArea));
 
-                // ── System page ───────────────────────────────────────
+                // -- System page ---------------------------------------
                 _pgSystem = UIHelpers.Obj("PgSystem", contentArea.transform);
                 UIHelpers.Fill(UIHelpers.RT(_pgSystem));
                 BuildSystemPage(_pgSystem.transform);
 
-                // ── Hotkeys page ──────────────────────────────────────
+                // -- Hotkeys page --------------------------------------
                 _pgHotkeys = UIHelpers.Obj("PgHotkeys", contentArea.transform);
                 UIHelpers.Fill(UIHelpers.RT(_pgHotkeys));
                 BuildHotkeysPage(_pgHotkeys.transform);
@@ -140,6 +169,10 @@ namespace DescendersModMenu.UI
                 _pgVersion = UIHelpers.Obj("PgVersion", contentArea.transform);
                 UIHelpers.Fill(UIHelpers.RT(_pgVersion));
                 BuildVersionPage(_pgVersion.transform);
+
+                _pgFeedback = UIHelpers.Obj("PgFeedback", contentArea.transform);
+                UIHelpers.Fill(UIHelpers.RT(_pgFeedback));
+                BuildFeedbackPage(_pgFeedback.transform);
 
                 SwitchTab(0);
                 PendingSubTab = -1;
@@ -302,14 +335,15 @@ namespace DescendersModMenu.UI
             return gate;
         }
 
-        // ── Tab switching ─────────────────────────────────────────────
+        // -- Tab switching ---------------------------------------------
         private static void SwitchTab(int idx)
         {
             _activeTab = idx;
             if ((object)_pgSystem != null) _pgSystem.SetActive(idx == 0);
             if ((object)_pgHotkeys != null) _pgHotkeys.SetActive(idx == 1);
             if ((object)_pgVersion != null) _pgVersion.SetActive(idx == 2);
-            if (idx == 2) Refresh();
+            if ((object)_pgFeedback != null) _pgFeedback.SetActive(idx == 3);
+            if (idx == 2 || idx == 3) Refresh();
 
             for (int i = 0; i < TabLabels.Length; i++)
             {
@@ -317,11 +351,11 @@ namespace DescendersModMenu.UI
                 if ((object)_tabBgs[i] != null)
                     _tabBgs[i].color = active ? UIHelpers.RowBg : new Color(0, 0, 0, 0);
                 if ((object)_tabTxts[i] != null)
-                    _tabTxts[i].color = active ? UIHelpers.Accent : UIHelpers.TextDim;
+                    _tabTxts[i].color = active ? UIHelpers.Accent : Color.white;
             }
         }
 
-        // ── System page ───────────────────────────────────────────────
+        // -- System page -----------------------------------------------
         private static void BuildSystemPage(Transform p)
         {
             var scrollObj = UIHelpers.Obj("SysScroll", p);
@@ -366,12 +400,13 @@ namespace DescendersModMenu.UI
             UIHelpers.SectionHeader("COMMUNITY", vlg.transform);
             _steamPlayerTxt = MakeInfoRow("Steam Players Online", vlg.transform);
 
-            // ── Telemetry ────────────────────────────────────────────
+            // -- Telemetry --------------------------------------------
             UIHelpers.Divider(vlg.transform);
             UIHelpers.SectionHeader("TELEMETRY", vlg.transform);
             _telemetryStatusTxt = MakeInfoRow("Status", vlg.transform);
-            UIHelpers.InfoBox(vlg.transform, "Helps me find bugs faster. Sends a small report to Discord if something goes wrong.", Color.white);
-            UIHelpers.InfoBox(vlg.transform, "Sends mod version, platform, MelonLoader version, loaded mods, and error details if something breaks.", Color.white);
+            UIHelpers.InfoBoxBullets(vlg.transform, Color.white,
+                "Helps me find bugs faster. Sends a small report to Discord if something goes wrong.",
+                "Sends mod version, platform, MelonLoader version, loaded mods, and error details if something breaks.");
 
             var telOffRow = UIHelpers.Obj("TelOffNotice", vlg.transform);
             var telOffLe = telOffRow.AddComponent<LayoutElement>();
@@ -386,115 +421,6 @@ namespace DescendersModMenu.UI
             UIHelpers.InfoBox(vlg.transform, "Tip: click the small X next to the header hint to hide it for good.", Color.white);
 
             UIHelpers.Divider(vlg.transform);
-            UIHelpers.SectionHeader("FEEDBACK", vlg.transform);
-            UIHelpers.InfoBox(vlg.transform, "Report a bug, request a feature, or send feedback to Discord.", Color.white);
-
-            var catRow = UIHelpers.Obj("FeedbackCatRow", vlg.transform);
-            var catLe = catRow.AddComponent<LayoutElement>();
-            catLe.preferredHeight = 28; catLe.minHeight = 28; catLe.flexibleHeight = 0;
-            var catHlg = catRow.AddComponent<HorizontalLayoutGroup>();
-            catHlg.spacing = 6; catHlg.childForceExpandWidth = true; catHlg.childForceExpandHeight = true;
-
-            for (int c = 0; c < 3; c++)
-            {
-                int idx = c;
-                var catBtnGo = UIHelpers.Obj("Cat" + c, catRow.transform);
-                var catImg = catBtnGo.AddComponent<Image>();
-                catImg.sprite = UIHelpers.BtnSp; catImg.type = Image.Type.Sliced;
-                _feedbackCatBgs[c] = catImg;
-                var catBtn = catBtnGo.AddComponent<Button>();
-                catBtn.targetGraphic = catImg;
-                catBtn.onClick.AddListener(() => { _feedbackCategory = idx; RefreshFeedbackCategoryButtons(); });
-                var catTxt = UIHelpers.Txt("T", catBtnGo.transform, _feedbackCatNames[c], 10,
-                    FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
-                UIHelpers.Fill(UIHelpers.RT(catTxt.gameObject));
-            }
-
-            var inputGo = UIHelpers.Obj("FeedbackInputBox", vlg.transform);
-            var inputImg = inputGo.AddComponent<Image>();
-            inputImg.sprite = UIHelpers.RowSp; inputImg.type = Image.Type.Sliced; inputImg.color = UIHelpers.RowBg;
-            var inputLe = inputGo.AddComponent<LayoutElement>();
-            inputLe.preferredHeight = 70; inputLe.minHeight = 70; inputLe.flexibleHeight = 0;
-
-            var inputBd = UIHelpers.Panel("Bd", inputGo.transform, UIHelpers.RowBorder, UIHelpers.RowSp);
-            inputBd.GetComponent<Image>().raycastTarget = false;
-            UIHelpers.Fill(UIHelpers.RT(inputBd));
-            inputBd.AddComponent<LayoutElement>().ignoreLayout = true;
-
-            _feedbackInput = inputGo.AddComponent<InputField>();
-            _feedbackInput.lineType = InputField.LineType.MultiLineNewline;
-            _feedbackInput.characterLimit = 500;
-
-            var inputTextGo = UIHelpers.Obj("Text", inputGo.transform);
-            var inputTextComp = inputTextGo.AddComponent<Text>();
-            inputTextComp.font = UIHelpers.GetFont();
-            inputTextComp.fontSize = 12;
-            inputTextComp.color = Color.white;
-            inputTextComp.supportRichText = false;
-            inputTextComp.alignment = TextAnchor.UpperLeft;
-            inputTextComp.horizontalOverflow = HorizontalWrapMode.Wrap;
-            inputTextComp.verticalOverflow = VerticalWrapMode.Overflow;
-            UIHelpers.Fill(UIHelpers.RT(inputTextGo), 20, 8, 6, 6);
-            _feedbackInput.textComponent = inputTextComp;
-
-            var placeholderGo = UIHelpers.Obj("Placeholder", inputGo.transform);
-            var placeholderComp = placeholderGo.AddComponent<Text>();
-            placeholderComp.font = UIHelpers.GetFont();
-            placeholderComp.fontSize = 12;
-            placeholderComp.fontStyle = FontStyle.Italic;
-            placeholderComp.color = UIHelpers.TextDim;
-            placeholderComp.text = "Type your message here...";
-            placeholderComp.alignment = TextAnchor.UpperLeft;
-            placeholderComp.horizontalOverflow = HorizontalWrapMode.Wrap;
-            placeholderComp.verticalOverflow = VerticalWrapMode.Overflow;
-            UIHelpers.Fill(UIHelpers.RT(placeholderGo), 20, 8, 6, 6);
-            _feedbackInput.placeholder = placeholderComp;
-
-            _feedbackInput.customCaretColor = true;
-            _feedbackInput.caretColor = Color.white;
-            _feedbackInput.caretWidth = 2;
-            _feedbackInput.caretBlinkRate = 0.85f;
-            _feedbackInput.selectionColor = new Color(UIHelpers.Accent.r, UIHelpers.Accent.g, UIHelpers.Accent.b, 0.4f);
-
-            var caretDotGo = UIHelpers.Obj("CaretBlink", inputGo.transform);
-            var caretDotImg = caretDotGo.AddComponent<Image>();
-            caretDotImg.sprite = UIHelpers.DotSp;
-            caretDotImg.color = UIHelpers.OnColor;
-            caretDotImg.raycastTarget = false;
-            caretDotImg.enabled = false;
-            var caretDotRt = UIHelpers.RT(caretDotGo);
-            caretDotRt.anchorMin = new Vector2(0, 1); caretDotRt.anchorMax = new Vector2(0, 1);
-            caretDotRt.pivot = new Vector2(0, 1);
-            caretDotRt.sizeDelta = new Vector2(8, 8);
-            caretDotRt.anchoredPosition = new Vector2(6, -10);
-            caretDotGo.AddComponent<LayoutElement>().ignoreLayout = true;
-
-            var sendRow = UIHelpers.Obj("FeedbackSendRow", vlg.transform);
-            var sendLe = sendRow.AddComponent<LayoutElement>();
-            sendLe.preferredHeight = 30; sendLe.minHeight = 30; sendLe.flexibleHeight = 0;
-            var sendHlg = sendRow.AddComponent<HorizontalLayoutGroup>();
-            sendHlg.spacing = 8; sendHlg.childAlignment = TextAnchor.MiddleLeft;
-            sendHlg.childForceExpandWidth = false; sendHlg.childForceExpandHeight = true;
-
-            var sendBtn = UIHelpers.Btn("SendBtn", sendRow.transform, "SEND", new Vector2(80, 28), 11,
-                OnFeedbackSendClicked, UIHelpers.Accent, Color.black);
-            var sendBtnLe = sendBtn.gameObject.AddComponent<LayoutElement>();
-            sendBtnLe.preferredWidth = 80; sendBtnLe.preferredHeight = 28; sendBtnLe.flexibleHeight = 0;
-
-            _feedbackStatusTxt = UIHelpers.Txt("FeedbackStatus", sendRow.transform, "", 10,
-                FontStyle.Italic, TextAnchor.MiddleLeft, UIHelpers.TextDim);
-            var statusLe = _feedbackStatusTxt.gameObject.AddComponent<LayoutElement>();
-            statusLe.flexibleWidth = 1; statusLe.preferredHeight = 28;
-
-            var updater = sendRow.gameObject.AddComponent<FeedbackPanelUpdater>();
-            updater.InputField = _feedbackInput;
-            updater.CaretDot = caretDotImg;
-            updater.StatusText = _feedbackStatusTxt;
-
-            RefreshFeedbackCategoryButtons();
-
-            UIHelpers.Divider(vlg.transform);
-            UIHelpers.SectionHeaderButton("DEVELOPER DIAGNOSTICS", vlg.transform, HandleDevDiagTap);
 
             _devDiagContent = UIHelpers.Obj("DevDiagContent", vlg.transform);
             var dcLe = _devDiagContent.AddComponent<LayoutElement>();
@@ -507,25 +433,132 @@ namespace DescendersModMenu.UI
             dcFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             Transform ddc = _devDiagContent.transform;
 
+            UIHelpers.SectionHeader("INTERNAL", ddc);
+
+            UIHelpers.SectionHeader("NETWORK", ddc);
+            _devPhotonStateTxt = MakeInfoRow("Photon State", ddc);
+            _devPhotonRoomTxt = MakeInfoRow("Room", ddc);
+            _devPhotonPlayersTxt = MakeInfoRow("Players", ddc);
+            _devPhotonLocalTxt = MakeInfoRow("Local Nick", ddc);
+            _devPhotonOfflineTxt = MakeInfoRow("Offline Mode", ddc);
+            _devModUsersTxt = MakeInfoRow("Mod Users", ddc);
+
+            var netRow = UIHelpers.StatRow("Network Actions", ddc);
+            UIHelpers.ActionBtn(netRow.transform, "Retag", OnDevRetag, 56);
+            UIHelpers.ActionBtn(netRow.transform, "Scan", OnDevScan, 52);
+            UIHelpers.ActionBtn(netRow.transform, "Props", OnDevProps, 56);
+            UIHelpers.ActionBtn(netRow.transform, "Probe", OnDevProbe, 56);
+
+            _devProbeTxt = MakeInfoRow("Last Probe", ddc);
+            _devPropsTxt = MakeDevBlock(ddc, "(props dump appears here)", 90);
+
+            UIHelpers.Divider(ddc);
+            UIHelpers.SectionHeader("NAME SPOOF", ddc);
+            var nameRow = UIHelpers.StatRow("Photon Nick", ddc);
+            var nameBox = UIHelpers.Panel("DevNameBox", nameRow.transform, UIHelpers.WinOuter, UIHelpers.BtnSp);
+            var nameBoxLe = nameBox.AddComponent<LayoutElement>();
+            nameBoxLe.flexibleWidth = 1; nameBoxLe.preferredHeight = 26; nameBoxLe.minHeight = 26;
+            _devNameBoxRect = UIHelpers.RT(nameBox);
+            _devNameInputText = UIHelpers.Txt("DevNameIn", nameBox.transform, "spoofed name...", 11,
+                FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+            UIHelpers.Fill(UIHelpers.RT(_devNameInputText.gameObject), 6, 4, 0, 0);
+            var nameFocusBtn = nameBox.AddComponent<UnityEngine.UI.Button>();
+            nameFocusBtn.targetGraphic = nameBox.GetComponent<Image>();
+            nameFocusBtn.onClick.AddListener(OnDevNameFocus);
+            UIHelpers.ActionBtn(nameRow.transform, "Apply", OnDevNameApply, 56);
+            UIHelpers.ActionBtn(nameRow.transform, "Clear", OnDevNameClear, 56);
+            _devNameStatusTxt = MakeInfoRow("Spoof Status", ddc);
+
+            UIHelpers.Divider(ddc);
+            UIHelpers.SectionHeader("ROOM LOG", ddc);
+            _devRoomLogTxt = MakeDevBlock(ddc, "(no events yet)", 110);
+
+            UIHelpers.Divider(ddc);
+            UIHelpers.SectionHeader("RUNTIME", ddc);
+            _devSceneTxt = MakeInfoRow("Scene / DDOL", ddc);
+            _devPerfTxt = MakeInfoRow("Perf", ddc);
+
+            var perfRow = UIHelpers.StatRow("Perf Overlay", ddc);
+            _devPerfHudVal = UIHelpers.Txt("DevPerfV", perfRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            var dpvLe = _devPerfHudVal.gameObject.AddComponent<LayoutElement>(); dpvLe.preferredWidth = 28; dpvLe.preferredHeight = 18; dpvLe.flexibleHeight = 0;
+            UIHelpers.Toggle(perfRow.transform, "DevPerfT", OnDevPerfToggle, out _devPerfHudTrk, out _devPerfHudKnb);
+
+            var rtRow = UIHelpers.StatRow("Memory", ddc);
+            UIHelpers.ActionBtn(rtRow.transform, "GC", OnDevGc, 48);
+            UIHelpers.ActionBtn(rtRow.transform, "Unload", OnDevUnload, 64);
+
+            UIHelpers.Divider(ddc);
+            UIHelpers.SectionHeader("FORENSICS", ddc);
+
+            var snapRow = UIHelpers.StatRow("Session Snapshot", ddc);
+            UIHelpers.ActionBtn(snapRow.transform, "Copy", OnDevSnapshot, 56);
+
             var dumpRow = UIHelpers.StatRow("Scene Dump", ddc);
-            UIHelpers.ActionBtn(dumpRow.transform, "Dump Now", () =>
-            {
-                SceneDumper.DumpCurrentScene();
-            }, 90);
-            UIHelpers.InfoBox(ddc, "Saves debug dump files next to the game. Same as pressing # in-game.");
+            UIHelpers.ActionBtn(dumpRow.transform, "Dump Now", OnDevSceneDump, 90);
 
             var bikeUnlockDumpRow = UIHelpers.StatRow("Bike Unlock Status", ddc);
-            UIHelpers.ActionBtn(bikeUnlockDumpRow.transform, "Dump Now", () =>
-            {
-                CareerReset.DumpBikeUnlockStatus();
-                RefreshCareerResult();
-            }, 90);
-            UIHelpers.InfoBox(ddc, "Logs unlock status for every bike and gear item. Check MelonLoader/Latest.log after clicking.");
+            UIHelpers.ActionBtn(bikeUnlockDumpRow.transform, "Dump Now", OnDevBikeUnlockDump, 90);
+
+            UIHelpers.SectionHeader("PATCH STATUS", ddc);
+            _devPatchTxt = MakeDevBlock(ddc, "...", 80);
+
+            UIHelpers.SectionHeader("LOADED MODS", ddc);
+            _devModsTxt = MakeDevBlock(ddc, "...", 70);
+
+            UIHelpers.SectionHeader("COMPONENT FINDER", ddc);
+            var findRow = UIHelpers.StatRow("Type Name", ddc);
+            var findBox = UIHelpers.Panel("DevFindBox", findRow.transform, UIHelpers.WinOuter, UIHelpers.BtnSp);
+            var findBoxLe = findBox.AddComponent<LayoutElement>();
+            findBoxLe.flexibleWidth = 1; findBoxLe.preferredHeight = 26; findBoxLe.minHeight = 26;
+            _devFindBoxRect = UIHelpers.RT(findBox);
+            _devFindInputText = UIHelpers.Txt("DevFindIn", findBox.transform, "e.g. FinishLine", 11,
+                FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+            UIHelpers.Fill(UIHelpers.RT(_devFindInputText.gameObject), 6, 4, 0, 0);
+            var findBtn = findBox.AddComponent<UnityEngine.UI.Button>();
+            findBtn.targetGraphic = findBox.GetComponent<Image>();
+            findBtn.onClick.AddListener(OnDevFindFocus);
+            UIHelpers.ActionBtn(findRow.transform, "Find", OnDevFindSubmit, 52);
+            _devFindResultTxt = MakeDevBlock(ddc, "(results appear here)", 100);
+
+            _devResultTxt = MakeInfoRow("Last Action", ddc);
 
             _devDiagContent.SetActive(DevLock.IsUnlocked);
+            if (DevLock.IsUnlocked) RefreshDevLive(true);
 
             UIHelpers.AddScrollbar(sr);
             UIHelpers.AddScrollForwarders(vlg.transform);
+        }
+
+        private static Text MakeDevBlock(Transform parent, string placeholder, float height)
+        {
+            var go = UIHelpers.Obj("DevBlock", parent);
+            var le = go.AddComponent<LayoutElement>();
+            le.preferredHeight = height; le.minHeight = height; le.flexibleWidth = 1;
+            var bg = go.AddComponent<Image>();
+            bg.color = new Color(0.04f, 0.05f, 0.07f, 0.9f);
+            var txt = UIHelpers.Txt("DevBlockT", go.transform, placeholder, 10,
+                FontStyle.Normal, TextAnchor.UpperLeft, UIHelpers.TextMid);
+            txt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            txt.verticalOverflow = VerticalWrapMode.Truncate;
+            UIHelpers.Fill(UIHelpers.RT(txt.gameObject), 6, 6, 4, 4);
+            return txt;
+        }
+
+        private static string TrimBlock(string text, int maxLines)
+        {
+            if (string.IsNullOrEmpty(text)) return "(empty)";
+            string[] lines = text.Replace("\r\n", "\n").Split('\n');
+            // Avoid parameterless TrimEnd() ? modern Roslyn emits Array.Empty<char>(),
+            // which Unity 2017 Mono's mscorlib does not have.
+            if (lines.Length <= maxLines) return text.TrimEnd('\r', '\n', ' ', '\t');
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            for (int i = 0; i < maxLines; i++)
+            {
+                if (i > 0) sb.Append('\n');
+                sb.Append(lines[i]);
+            }
+            sb.Append("\n... (").Append(lines.Length - maxLines).Append(" more lines in log)");
+            return sb.ToString();
         }
 
         private static void BuildCareerPage(Transform p)
@@ -565,6 +598,14 @@ namespace DescendersModMenu.UI
                 RefreshCareerResult();
             }, 100);
 
+            var grandTourRow = UIHelpers.StatRow("Complete Grand Tour", vlg.transform);
+            UIHelpers.ActionBtnOrange(grandTourRow.transform, "Complete All", () =>
+            {
+                CareerReset.CompleteGrandTour();
+                RefreshCareerResult();
+            }, 100);
+            UIHelpers.InfoBox(vlg.transform, "Developer Tour + Encore Tour challenges, rewards, and unlocks.");
+
             var levelRow = UIHelpers.StatRow("Level Reset", vlg.transform);
             UIHelpers.ActionBtnOrange(levelRow.transform, "Wipe Progress", () =>
             {
@@ -586,7 +627,7 @@ namespace DescendersModMenu.UI
                 RefreshCareerResult();
             }, 100);
 
-            // ── Switch Sponsor ────────────────────────────────────────
+            // -- Switch Sponsor ----------------------------------------
             var switchSponsorRow = UIHelpers.StatRow("Current Sponsor", vlg.transform);
             UIHelpers.SmallBtn(switchSponsorRow.transform, "\u25C0", () =>
             {
@@ -616,7 +657,7 @@ namespace DescendersModMenu.UI
             }, 90);
             UIHelpers.InfoBox(vlg.transform, "Unlocks or locks every bike and gear item straight away.");
 
-            // ── Adjust Rep (+/-) ──────────────────────────────────────
+            // -- Adjust Rep (+/-) --------------------------------------
             var repRow = UIHelpers.StatRow("Adjust Total Rep", vlg.transform);
             _repMinus = UIHelpers.SmallBtn(repRow.transform, "\u25C0", () =>
             {
@@ -646,7 +687,7 @@ namespace DescendersModMenu.UI
             });
             UIHelpers.InfoBox(vlg.transform, "Adds or removes reputation. Use the multiplier for bigger jumps. Changes your total / lifetime rep.");
 
-            // ── Set Total Rep to an exact typed value ───────────────────
+            // -- Set Total Rep to an exact typed value -------------------
             var repSetRow = UIHelpers.Obj("RepSetRow", vlg.transform);
             repSetRow.AddComponent<Image>().color = UIHelpers.RowBg;
             var rsrLe = repSetRow.AddComponent<LayoutElement>();
@@ -690,8 +731,9 @@ namespace DescendersModMenu.UI
             {
                 TrySetRepFromBox();
             }, 52);
-            UIHelpers.InfoBox(vlg.transform, "Type a number and hit Set (or Enter) to jump straight to that total rep value.");
-            UIHelpers.InfoBox(vlg.transform, "Game limitation: a big jump upward may stop counting genuine rep earned afterwards. Prefer small changes close to your real total.", UIHelpers.Orange);
+            UIHelpers.InfoBoxBullets(vlg.transform, UIHelpers.Orange,
+                "Type a number and hit Set (or Enter) to jump straight to that total rep value.",
+                "Game limitation: a big jump upward may stop counting genuine rep earned afterwards. Prefer small changes close to your real total.");
 
             var inGameRepRow = UIHelpers.StatRow("Adjust In-Game Rep", vlg.transform);
             _inGameRepMinus = UIHelpers.SmallBtn(inGameRepRow.transform, "\u25C0", () =>
@@ -722,7 +764,7 @@ namespace DescendersModMenu.UI
             });
             UIHelpers.InfoBox(vlg.transform, "Adds or removes this session's combo rep only. Resets each new session.");
 
-            // ── Set In-Game Rep to an exact typed value ──────────────────
+            // -- Set In-Game Rep to an exact typed value ------------------
             var inGameRepSetRow = UIHelpers.Obj("InGameRepSetRow", vlg.transform);
             inGameRepSetRow.AddComponent<Image>().color = UIHelpers.RowBg;
             var igrsrLe = inGameRepSetRow.AddComponent<LayoutElement>();
@@ -766,8 +808,9 @@ namespace DescendersModMenu.UI
             {
                 TrySetInGameRepFromBox();
             }, 52);
-            UIHelpers.InfoBox(vlg.transform, "Type a number and hit Set (or Enter) to jump straight to that in-game rep value.");
-            UIHelpers.InfoBox(vlg.transform, "Game limitation: a big jump upward may stop counting genuine rep earned afterwards. Prefer small changes close to your real total.", UIHelpers.Orange);
+            UIHelpers.InfoBoxBullets(vlg.transform, UIHelpers.Orange,
+                "Type a number and hit Set (or Enter) to jump straight to that in-game rep value.",
+                "Game limitation: a big jump upward may stop counting genuine rep earned afterwards. Prefer small changes close to your real total.");
 
             var resultRow = UIHelpers.StatRow("Last Result", vlg.transform);
             _careerResultTxt = UIHelpers.Txt("CRResult", resultRow.transform, CareerReset.LastResult,
@@ -775,6 +818,7 @@ namespace DescendersModMenu.UI
             _careerResultTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
             FavouritesManager.RegisterStarButton("CompleteMissions", UIHelpers.StarBtn(completeRow.transform, "CompleteMissions", () => FavouritesManager.Toggle("CompleteMissions")));
+            FavouritesManager.RegisterStarButton("CompleteGrandTour", UIHelpers.StarBtn(grandTourRow.transform, "CompleteGrandTour", () => FavouritesManager.Toggle("CompleteGrandTour")));
             FavouritesManager.RegisterStarButton("LevelReset", UIHelpers.StarBtn(levelRow.transform, "LevelReset", () => FavouritesManager.Toggle("LevelReset")));
             FavouritesManager.RegisterStarButton("SponsorReset", UIHelpers.StarBtn(sponsorRow.transform, "SponsorReset", () => FavouritesManager.Toggle("SponsorReset")));
             FavouritesManager.RegisterStarButton("MaxSponsorLevel", UIHelpers.StarBtn(maxTierRow.transform, "MaxSponsorLevel", () => FavouritesManager.Toggle("MaxSponsorLevel")));
@@ -854,6 +898,15 @@ namespace DescendersModMenu.UI
             });
             FavouritesManager.Register(new ModFavEntry
             {
+                Id = "CompleteGrandTour",
+                DisplayName = "Complete Grand Tour",
+                TabBadge = "INFO",
+                BuildControls = (fp) => FavsPage.BuildActionButton(fp, "CompleteGrandTour", "Complete Grand Tour",
+                    "Complete All", () => CareerReset.CompleteGrandTour(), null, () => CareerReset.LastResult),
+                IsActive = () => false
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
                 Id = "LevelReset",
                 DisplayName = "Level Reset",
                 TabBadge = "INFO",
@@ -885,7 +938,7 @@ namespace DescendersModMenu.UI
             RefreshCareerResult();
         }
 
-        // ── Feedback panel handlers ────────────────────────────────────
+        // -- Feedback panel handlers ------------------------------------
         private static void RefreshFeedbackCategoryButtons()
         {
             for (int i = 0; i < 3; i++)
@@ -893,7 +946,7 @@ namespace DescendersModMenu.UI
                 if (!_feedbackCatBgs[i]) continue;
                 _feedbackCatBgs[i].color = (i == _feedbackCategory) ? UIHelpers.Accent : UIHelpers.RowBg;
                 var txt = _feedbackCatBgs[i].GetComponentInChildren<Text>();
-                if (txt) txt.color = (i == _feedbackCategory) ? Color.black : UIHelpers.TextMid;
+                if (txt) txt.color = (i == _feedbackCategory) ? Color.black : Color.white;
             }
         }
 
@@ -913,13 +966,211 @@ namespace DescendersModMenu.UI
             }
             Telemetry.SendFeedbackAsync(_feedbackCatNames[_feedbackCategory], msg);
             _feedbackInput.text = "";
-            if (_feedbackStatusTxt) { _feedbackStatusTxt.text = "Sending..."; _feedbackStatusTxt.color = UIHelpers.TextDim; }
+            if (_feedbackStatusTxt) { _feedbackStatusTxt.text = "Sending..."; _feedbackStatusTxt.color = Color.white; }
         }
 
-        private static void HandleDevDiagTap()
+        public static void OnHeaderCreditTap()
         {
+            bool was = DevLock.IsUnlocked;
             DevLock.RegisterTap();
             if (_devDiagContent) _devDiagContent.SetActive(DevLock.IsUnlocked);
+            if (DevLock.IsUnlocked && !was) RefreshDevLive(true);
+        }
+
+        private static void RefreshDevLive(bool force = false)
+        {
+            if (!DevLock.IsUnlocked) return;
+            if (!_devDiagContent || !_devDiagContent.activeInHierarchy) return;
+
+            float now = Time.unscaledTime;
+            if (!force && now < _nextDevRefresh) return;
+            _nextDevRefresh = now + 0.5f;
+
+            try
+            {
+                if (_devPhotonStateTxt)
+                    _devPhotonStateTxt.text = ModChat.InRoom ? "InRoom / " + ModChat.ConnectionStateLabel : ModChat.ConnectionStateLabel;
+                if (_devPhotonRoomTxt)
+                    _devPhotonRoomTxt.text = string.IsNullOrEmpty(ModChat.RoomName) ? "(none)" : ModChat.RoomName;
+                if (_devPhotonPlayersTxt)
+                    _devPhotonPlayersTxt.text = ModChat.PlayerListCount.ToString();
+                if (_devPhotonLocalTxt)
+                    _devPhotonLocalTxt.text = ModChat.LocalPlayerName;
+                if (_devPhotonOfflineTxt)
+                {
+                    _devPhotonOfflineTxt.text = ModChat.OfflineMode ? "YES" : "NO";
+                    _devPhotonOfflineTxt.color = ModChat.OfflineMode ? UIHelpers.OffColor : UIHelpers.OnColor;
+                }
+                if (_devModUsersTxt)
+                {
+                    int n = ModDetection.ModUsers != null ? ModDetection.ModUsers.Count : 0;
+                    _devModUsersTxt.text = n.ToString();
+                }
+                if (_devSceneTxt) _devSceneTxt.text = SandboxDevTools.GetSceneInfo();
+                if (_devPerfTxt) _devPerfTxt.text = SandboxDevTools.PerfPanelText();
+                if (_devProbeTxt)
+                    _devProbeTxt.text = string.IsNullOrEmpty(SandboxDevTools.LastProbeResult) ? "-" : SandboxDevTools.LastProbeResult;
+                if (_devResultTxt)
+                    _devResultTxt.text = string.IsNullOrEmpty(SandboxDevTools.LastActionResult) ? "-" : SandboxDevTools.LastActionResult;
+                if (_devRoomLogTxt) _devRoomLogTxt.text = SandboxDevTools.FormatRoomLog();
+                if (_devPatchTxt) _devPatchTxt.text = SandboxDevTools.GetPatchStatusText();
+                if (_devModsTxt) _devModsTxt.text = SandboxDevTools.GetLoadedModsText();
+                if (_devNameStatusTxt)
+                {
+                    if (SandboxDevTools.NameSpoofEnabled)
+                    {
+                        _devNameStatusTxt.text = "ON \"" + SandboxDevTools.SpoofedName + "\"";
+                        _devNameStatusTxt.color = UIHelpers.OnColor;
+                    }
+                    else
+                    {
+                        _devNameStatusTxt.text = "OFF";
+                        _devNameStatusTxt.color = UIHelpers.OffColor;
+                    }
+                }
+
+                if (_devPerfHudVal)
+                {
+                    _devPerfHudVal.text = SandboxDevTools.PerfOverlayEnabled ? "ON" : "OFF";
+                    _devPerfHudVal.color = SandboxDevTools.PerfOverlayEnabled ? UIHelpers.OnColor : UIHelpers.OffColor;
+                }
+                UIHelpers.SetToggle(_devPerfHudTrk, _devPerfHudKnb, SandboxDevTools.PerfOverlayEnabled);
+            }
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("InfoPage.RefreshDevLive: " + ex.Message);
+            }
+        }
+
+        private static void DevFindTick()
+        {
+            if (!DevLock.IsUnlocked) return;
+            TickDevTextField(ref _devFindFocused, ref _devFindBuffer, _devFindInputText, _devFindBoxRect,
+                "e.g. FinishLine", 64, true);
+            TickDevTextField(ref _devNameFocused, ref _devNameBuffer, _devNameInputText, _devNameBoxRect,
+                "spoofed name...", 32, false);
+        }
+
+        private static void TickDevTextField(
+            ref bool focused, ref string buffer, Text inputText, RectTransform boxRect,
+            string placeholder, int maxLen, bool isFindBox)
+        {
+            if (!inputText) return;
+
+            if (focused && Input.GetMouseButtonDown(0))
+            {
+                if (boxRect
+                    && !RectTransformUtility.RectangleContainsScreenPoint(boxRect, Input.mousePosition, null))
+                    focused = false;
+            }
+
+            if (!focused)
+            {
+                if (buffer.Length == 0)
+                {
+                    inputText.text = placeholder;
+                    inputText.color = UIHelpers.TextDim;
+                }
+                else
+                {
+                    inputText.text = buffer;
+                    inputText.color = UIHelpers.TextLight;
+                }
+                return;
+            }
+
+            string incoming = Input.inputString;
+            if (!string.IsNullOrEmpty(incoming))
+            {
+                for (int i = 0; i < incoming.Length; i++)
+                {
+                    char ch = incoming[i];
+                    if (ch == '\b')
+                    {
+                        if (buffer.Length > 0)
+                            buffer = buffer.Substring(0, buffer.Length - 1);
+                    }
+                    else if (ch == '\n' || ch == '\r')
+                    {
+                        if (isFindBox) OnDevFindSubmit();
+                        else OnDevNameSubmit();
+                        focused = false;
+                        return;
+                    }
+                    else if (ch == (char)27)
+                    {
+                        focused = false;
+                        return;
+                    }
+                    else if (!char.IsControl(ch) && buffer.Length < maxLen)
+                        buffer += ch;
+                }
+            }
+
+            inputText.text = UIHelpers.WithCaret(buffer, true);
+            inputText.color = UIHelpers.TextLight;
+        }
+
+        private static void OnDevFindSubmit()
+        {
+            string q = _devFindBuffer;
+            if (string.IsNullOrEmpty(q) && _devFindInputText
+                && _devFindInputText.color != UIHelpers.TextDim)
+                q = _devFindInputText.text;
+            if (_devFindResultTxt) _devFindResultTxt.text = SandboxDevTools.FindComponents(q);
+            RefreshDevLive(true);
+        }
+
+        private static void OnDevNameSubmit()
+        {
+            SandboxDevTools.ApplyNameSpoof(_devNameBuffer);
+            RefreshDevLive(true);
+        }
+
+        private static void OnDevNameFocus()
+        {
+            _devNameFocused = true;
+            _devFindFocused = false;
+        }
+
+        private static void OnDevFindFocus()
+        {
+            _devFindFocused = true;
+            _devNameFocused = false;
+        }
+
+        private static void OnDevRetag() { SandboxDevTools.RetagLocal(); RefreshDevLive(true); }
+        private static void OnDevScan() { SandboxDevTools.ForceScan(); RefreshDevLive(true); }
+        private static void OnDevProps()
+        {
+            string dump = SandboxDevTools.DumpPlayerProps();
+            if (_devPropsTxt) _devPropsTxt.text = TrimBlock(dump, 18);
+            RefreshDevLive(true);
+        }
+        private static void OnDevProbe() { SandboxDevTools.ProbeChat(); RefreshDevLive(true); }
+        private static void OnDevNameApply() { SandboxDevTools.ApplyNameSpoof(_devNameBuffer); RefreshDevLive(true); }
+        private static void OnDevNameClear()
+        {
+            SandboxDevTools.ClearNameSpoof();
+            _devNameBuffer = "";
+            RefreshDevLive(true);
+        }
+        private static void OnDevPerfToggle() { SandboxDevTools.TogglePerfOverlay(); RefreshDevLive(true); }
+        private static void OnDevGc() { SandboxDevTools.ForceGc(); RefreshDevLive(true); }
+        private static void OnDevUnload() { SandboxDevTools.UnloadUnused(); RefreshDevLive(true); }
+        private static void OnDevSnapshot() { SandboxDevTools.CopySessionSnapshot(); RefreshDevLive(true); }
+        private static void OnDevSceneDump()
+        {
+            SceneDumper.DumpCurrentScene();
+            SandboxDevTools.LastActionResult = "Scene dump started";
+            RefreshDevLive(true);
+        }
+        private static void OnDevBikeUnlockDump()
+        {
+            CareerReset.DumpBikeUnlockStatus();
+            RefreshCareerResult();
+            SandboxDevTools.LastActionResult = "Bike unlock dump written to log";
+            RefreshDevLive(true);
         }
 
         private static void RefreshCareerResult()
@@ -935,7 +1186,7 @@ namespace DescendersModMenu.UI
             if (_inGameRepMultVal) _inGameRepMultVal.text = "x" + CareerReset.InGameRepMultiplierLevel;
         }
 
-        // ── Hotkeys page ──────────────────────────────────────────────
+        // -- Hotkeys page ----------------------------------------------
         private static void BuildHotkeysPage(Transform p)
         {
             var vlg = UIHelpers.Obj("HkVlg", p);
@@ -951,9 +1202,9 @@ namespace DescendersModMenu.UI
 
             UIHelpers.SectionHeader("GAMEPLAY", vlg.transform);
             UIHelpers.HotkeyRow(vlg.transform, "Toggle slow motion", "F2");
-            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay — toggle", "F3 / RS Dbl Click");
-            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay — save run", "F4 / RS Click");
-            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay — set spawn", "LS Click");
+            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay ? toggle", "F3 / RS Dbl Click");
+            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay ? save run", "F4 / RS Click");
+            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay ? set spawn", "LS Click");
 
         }
 
@@ -995,6 +1246,125 @@ namespace DescendersModMenu.UI
             RefreshVersion();
         }
 
+        private static void BuildFeedbackPage(Transform p)
+        {
+            var vlg = UIHelpers.Obj("FbVlg", p);
+            UIHelpers.Fill(UIHelpers.RT(vlg));
+            var v = vlg.AddComponent<VerticalLayoutGroup>();
+            v.spacing = UIHelpers.RowGap;
+            v.padding = new RectOffset((int)UIHelpers.ContentPad, (int)UIHelpers.ContentPad, 8, 8);
+            v.childAlignment = TextAnchor.UpperCenter;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = false;
+
+            UIHelpers.SectionHeader("FEEDBACK / BUG REPORT", vlg.transform);
+            UIHelpers.InfoBox(vlg.transform, "Report a bug, request a feature, or send feedback to Discord.", Color.white);
+
+            var catRow = UIHelpers.Obj("FeedbackCatRow", vlg.transform);
+            var catLe = catRow.AddComponent<LayoutElement>();
+            catLe.preferredHeight = 28; catLe.minHeight = 28; catLe.flexibleHeight = 0;
+            var catHlg = catRow.AddComponent<HorizontalLayoutGroup>();
+            catHlg.spacing = 6; catHlg.childForceExpandWidth = true; catHlg.childForceExpandHeight = true;
+
+            for (int c = 0; c < 3; c++)
+            {
+                int idx = c;
+                var catBtnGo = UIHelpers.Obj("Cat" + c, catRow.transform);
+                var catImg = catBtnGo.AddComponent<Image>();
+                catImg.sprite = UIHelpers.BtnSp; catImg.type = Image.Type.Sliced;
+                _feedbackCatBgs[c] = catImg;
+                var catBtn = catBtnGo.AddComponent<Button>();
+                catBtn.targetGraphic = catImg;
+                catBtn.onClick.AddListener(() => { _feedbackCategory = idx; RefreshFeedbackCategoryButtons(); });
+                var catTxt = UIHelpers.Txt("T", catBtnGo.transform, _feedbackCatNames[c], 10,
+                    FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
+                UIHelpers.Fill(UIHelpers.RT(catTxt.gameObject));
+            }
+
+            var inputGo = UIHelpers.Obj("FeedbackInputBox", vlg.transform);
+            var inputImg = inputGo.AddComponent<Image>();
+            inputImg.sprite = UIHelpers.RowSp; inputImg.type = Image.Type.Sliced; inputImg.color = UIHelpers.RowBg;
+            var inputLe = inputGo.AddComponent<LayoutElement>();
+            inputLe.preferredHeight = 70; inputLe.minHeight = 70; inputLe.flexibleHeight = 0;
+
+            var inputBd = UIHelpers.Panel("Bd", inputGo.transform, UIHelpers.RowBorder, UIHelpers.RowSp);
+            inputBd.GetComponent<Image>().raycastTarget = false;
+            UIHelpers.Fill(UIHelpers.RT(inputBd));
+            inputBd.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            _feedbackInput = inputGo.AddComponent<InputField>();
+            _feedbackInput.lineType = InputField.LineType.MultiLineNewline;
+            _feedbackInput.characterLimit = 500;
+
+            var inputTextGo = UIHelpers.Obj("Text", inputGo.transform);
+            var inputTextComp = inputTextGo.AddComponent<Text>();
+            inputTextComp.font = UIHelpers.GetFont();
+            inputTextComp.fontSize = 12;
+            inputTextComp.color = Color.white;
+            inputTextComp.supportRichText = false;
+            inputTextComp.alignment = TextAnchor.UpperLeft;
+            inputTextComp.horizontalOverflow = HorizontalWrapMode.Wrap;
+            inputTextComp.verticalOverflow = VerticalWrapMode.Overflow;
+            UIHelpers.Fill(UIHelpers.RT(inputTextGo), 20, 8, 6, 6);
+            _feedbackInput.textComponent = inputTextComp;
+
+            var placeholderGo = UIHelpers.Obj("Placeholder", inputGo.transform);
+            var placeholderComp = placeholderGo.AddComponent<Text>();
+            placeholderComp.font = UIHelpers.GetFont();
+            placeholderComp.fontSize = 12;
+            placeholderComp.fontStyle = FontStyle.Italic;
+            placeholderComp.color = Color.white;
+            placeholderComp.text = "Type your message here...";
+            placeholderComp.alignment = TextAnchor.UpperLeft;
+            placeholderComp.horizontalOverflow = HorizontalWrapMode.Wrap;
+            placeholderComp.verticalOverflow = VerticalWrapMode.Overflow;
+            UIHelpers.Fill(UIHelpers.RT(placeholderGo), 20, 8, 6, 6);
+            _feedbackInput.placeholder = placeholderComp;
+
+            _feedbackInput.customCaretColor = true;
+            _feedbackInput.caretColor = Color.white;
+            _feedbackInput.caretWidth = 2;
+            _feedbackInput.caretBlinkRate = 0.85f;
+            _feedbackInput.selectionColor = new Color(UIHelpers.Accent.r, UIHelpers.Accent.g, UIHelpers.Accent.b, 0.4f);
+
+            var caretDotGo = UIHelpers.Obj("CaretBlink", inputGo.transform);
+            var caretDotImg = caretDotGo.AddComponent<Image>();
+            caretDotImg.sprite = UIHelpers.DotSp;
+            caretDotImg.color = UIHelpers.OnColor;
+            caretDotImg.raycastTarget = false;
+            caretDotImg.enabled = false;
+            var caretDotRt = UIHelpers.RT(caretDotGo);
+            caretDotRt.anchorMin = new Vector2(0, 1); caretDotRt.anchorMax = new Vector2(0, 1);
+            caretDotRt.pivot = new Vector2(0, 1);
+            caretDotRt.sizeDelta = new Vector2(8, 8);
+            caretDotRt.anchoredPosition = new Vector2(6, -10);
+            caretDotGo.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            var sendRow = UIHelpers.Obj("FeedbackSendRow", vlg.transform);
+            var sendLe = sendRow.AddComponent<LayoutElement>();
+            sendLe.preferredHeight = 30; sendLe.minHeight = 30; sendLe.flexibleHeight = 0;
+            var sendHlg = sendRow.AddComponent<HorizontalLayoutGroup>();
+            sendHlg.spacing = 8; sendHlg.childAlignment = TextAnchor.MiddleLeft;
+            sendHlg.childForceExpandWidth = false; sendHlg.childForceExpandHeight = true;
+
+            var sendBtn = UIHelpers.Btn("SendBtn", sendRow.transform, "SEND", new Vector2(80, 28), 11,
+                OnFeedbackSendClicked, UIHelpers.Accent, Color.black);
+            var sendBtnLe = sendBtn.gameObject.AddComponent<LayoutElement>();
+            sendBtnLe.preferredWidth = 80; sendBtnLe.preferredHeight = 28; sendBtnLe.flexibleHeight = 0;
+
+            _feedbackStatusTxt = UIHelpers.Txt("FeedbackStatus", sendRow.transform, "", 10,
+                FontStyle.Italic, TextAnchor.MiddleLeft, Color.white);
+            var statusLe = _feedbackStatusTxt.gameObject.AddComponent<LayoutElement>();
+            statusLe.flexibleWidth = 1; statusLe.preferredHeight = 28;
+
+            var updater = sendRow.gameObject.AddComponent<FeedbackPanelUpdater>();
+            updater.InputField = _feedbackInput;
+            updater.CaretDot = caretDotImg;
+            updater.StatusText = _feedbackStatusTxt;
+
+            RefreshFeedbackCategoryButtons();
+        }
+
         private static void RefreshVersion()
         {
             if (_verInstalledTxt)
@@ -1016,7 +1386,7 @@ namespace DescendersModMenu.UI
                 if (!UpdateChecker.CheckComplete)
                 {
                     _verStatusTxt.text = "Checking...";
-                    _verStatusTxt.color = UIHelpers.TextDim;
+                    _verStatusTxt.color = Color.white;
                 }
                 else if (string.IsNullOrEmpty(UpdateChecker.LatestVersion))
                 {
@@ -1036,10 +1406,10 @@ namespace DescendersModMenu.UI
             }
         }
 
-        // ── Credits page ──────────────────────────────────────────────
+        // -- Credits page ----------------------------------------------
 
-        // ── Customise page ────────────────────────────────────────────
-        // ── Scanner page ──────────────────────────────────────────────
+        // -- Customise page --------------------------------------------
+        // -- Scanner page ----------------------------------------------
 
         private static void BuildCustomisePage(Transform p)
         {
@@ -1053,7 +1423,7 @@ namespace DescendersModMenu.UI
 
             var c = vlg.transform;
 
-            // ── Position ──────────────────────────────────────────────
+            // -- Position ----------------------------------------------
             UIHelpers.SectionHeader("POSITION", c);
 
             var posRow = UIHelpers.StatRow("Position", c);
@@ -1070,7 +1440,7 @@ namespace DescendersModMenu.UI
 
             UIHelpers.Divider(c);
 
-            // ── Scale ─────────────────────────────────────────────────
+            // -- Scale -------------------------------------------------
             UIHelpers.SectionHeader("SCALE", c);
 
             var scaleRow = UIHelpers.StatRow("Scale", c);
@@ -1085,7 +1455,7 @@ namespace DescendersModMenu.UI
 
             UIHelpers.Divider(c);
 
-            // ── Opacity ───────────────────────────────────────────────
+            // -- Opacity -----------------------------------------------
             UIHelpers.SectionHeader("OPACITY", c);
 
             var opacityRow = UIHelpers.StatRow("Opacity", c);
@@ -1102,14 +1472,14 @@ namespace DescendersModMenu.UI
 
             UIHelpers.Divider(c);
 
-            // ── Colour Scheme ────────────────────────────────────────
+            // -- Colour Scheme ----------------------------------------
             UIHelpers.SectionHeader("COLOUR SCHEME", c);
             UIHelpers.InfoBox(c, "Pick an accent colour. Saves straight away.");
             BuildSchemeSwatches(c);
 
             UIHelpers.Divider(c);
 
-            // ── Save / Reset buttons ──────────────────────────────────
+            // -- Save / Reset buttons ----------------------------------
             var btnRow = UIHelpers.StatRow("", c);
             UIHelpers.ActionBtn(btnRow.transform, "Save Now",
                 () => { Mods.MenuCustomiser.SaveToFile(); }, 72);
@@ -1139,7 +1509,7 @@ namespace DescendersModMenu.UI
             RefreshCustomise();
         }
 
-        // ── Colour scheme swatches ───────────────────────────────────
+        // -- Colour scheme swatches -----------------------------------
         private static void BuildSchemeSwatches(Transform c)
         {
             var schemes = ColorSchemeManager.Presets;
@@ -1184,7 +1554,7 @@ namespace DescendersModMenu.UI
                 _custOpacityLbl.text = Mods.MenuCustomiser.OpacityDisplay;
         }
 
-        // ── Helpers ───────────────────────────────────────────────────
+        // -- Helpers ---------------------------------------------------
         private static Text MakeInfoRow(string label, Transform parent)
         {
             var row = UIHelpers.Panel(label + "R", parent, UIHelpers.RowBg, UIHelpers.RowSp);
@@ -1203,7 +1573,7 @@ namespace DescendersModMenu.UI
                 FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextLight);
             lbl.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
             var val = UIHelpers.Txt(label + "V", row.transform, "...", 11,
-                FontStyle.Normal, TextAnchor.MiddleRight, UIHelpers.TextMid);
+                FontStyle.Normal, TextAnchor.MiddleRight, Color.white);
             val.gameObject.AddComponent<LayoutElement>().preferredWidth = 200;
             return val;
         }
@@ -1227,7 +1597,7 @@ namespace DescendersModMenu.UI
                 FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextLight);
             lbl.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
             var val = UIHelpers.Txt(label + "V", row.transform, value, 11,
-                FontStyle.Normal, TextAnchor.MiddleRight, valueColor ?? UIHelpers.TextMid);
+                FontStyle.Normal, TextAnchor.MiddleRight, valueColor ?? Color.white);
             val.gameObject.AddComponent<LayoutElement>().preferredWidth = 200;
         }
 
@@ -1253,7 +1623,7 @@ namespace DescendersModMenu.UI
             val.gameObject.AddComponent<LayoutElement>().preferredWidth = 280;
         }
 
-        // ── Tick ──────────────────────────────────────────────────────
+        // -- Tick ------------------------------------------------------
         public static void Tick()
         {
             if (_custSavedRow)
@@ -1269,9 +1639,11 @@ namespace DescendersModMenu.UI
 
             RepSetTick();
             InGameRepSetTick();
+            DevFindTick();
+            RefreshDevLive(false);
         }
 
-        // ── Set-exact-rep digit input handling (mirrors MapPage.SeedTick, digits only) ──
+        // -- Set-exact-rep digit input handling (mirrors MapPage.SeedTick, digits only) --
         private static void RepSetTick()
         {
             if (!_repSetInputText) return;
@@ -1399,13 +1771,27 @@ namespace DescendersModMenu.UI
             _verLatestTxt = null;
             _verStatusTxt = null;
             _pgVersion = null;
+            _pgFeedback = null;
+            _feedbackInput = null;
+            _feedbackStatusTxt = null;
+            _feedbackCatBgs = new Image[3];
             _repSetInputText = null; _repSetCursor = null; _repSetBoxRect = null;
             _repSetFocused = false; _repSetBuffer = "";
             _inGameRepSetInputText = null; _inGameRepSetCursor = null; _inGameRepSetBoxRect = null;
             _inGameRepSetFocused = false; _inGameRepSetBuffer = "";
+            _devDiagContent = null;
+            _devPhotonStateTxt = _devPhotonRoomTxt = _devPhotonPlayersTxt = null;
+            _devPhotonLocalTxt = _devPhotonOfflineTxt = _devModUsersTxt = null;
+            _devSceneTxt = _devPerfTxt = _devProbeTxt = _devResultTxt = null;
+            _devRoomLogTxt = _devPatchTxt = _devModsTxt = _devPropsTxt = _devFindResultTxt = null;
+            _devFindInputText = null; _devFindBoxRect = null;
+            _devFindFocused = false; _devFindBuffer = "";
+            _devNameInputText = null; _devNameBoxRect = null; _devNameStatusTxt = null;
+            _devNameFocused = false; _devNameBuffer = "";
+            _devPerfHudVal = null; _devPerfHudTrk = null; _devPerfHudKnb = null;
         }
 
-        // ── Refresh / Rebuild ─────────────────────────────────────────
+        // -- Refresh / Rebuild -----------------------------------------
         public static void Refresh()
         {
             try

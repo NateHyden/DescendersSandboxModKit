@@ -15,6 +15,9 @@ namespace DescendersModMenu.UI
         private static Image worldTrk;
         private static RectTransform worldKnb;
         private static Text _modUsersText;
+        private static Text _modUsersHudVal;
+        private static Image _modUsersHudTrk;
+        private static RectTransform _modUsersHudKnb;
         private static int _cpIndex = 0;
         private static Text _cpIndexText = null;
 
@@ -145,12 +148,18 @@ namespace DescendersModMenu.UI
                 }, 76);
 
                 UIHelpers.Divider(pg.transform);
-                UIHelpers.SectionHeader("MOD USERS", pg.transform);
+                UIHelpers.SectionHeader("SANDBOX USERS", pg.transform);
 
-                var mdr = UIHelpers.StatRow("Detect Mod Users", pg.transform);
+                var mdr = UIHelpers.StatRow("Detect Sandbox Users", pg.transform);
                 UIHelpers.ActionBtn(mdr.transform, "Scan", () => { ModDetection.Scan(); RefreshModUsers(); }, 52);
 
-                _modUsersText = UIHelpers.Txt("MUT", pg.transform, "Scanning lobby for mod users...", 11,
+                var muHud = UIHelpers.StatRow("Sandbox Users HUD", pg.transform);
+                _modUsersHudVal = UIHelpers.Txt("MUHV", muHud.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                var muhvLe = _modUsersHudVal.gameObject.AddComponent<LayoutElement>(); muhvLe.preferredWidth = 28; muhvLe.preferredHeight = 18; muhvLe.flexibleHeight = 0;
+                UIHelpers.Toggle(muHud.transform, "MUHT", () => { ModUsersHUD.Toggle(); RefreshTexts(); }, out _modUsersHudTrk, out _modUsersHudKnb);
+                UIHelpers.InfoBox(pg.transform, "Top-right counter of Sandbox users in the lobby. Updates automatically.");
+
+                _modUsersText = UIHelpers.Txt("MUT", pg.transform, "Scanning lobby for Sandbox users...", 11,
                     FontStyle.Normal, TextAnchor.UpperLeft, UIHelpers.TextMid);
                 _modUsersText.horizontalOverflow = HorizontalWrapMode.Wrap;
                 _modUsersText.verticalOverflow = VerticalWrapMode.Truncate;
@@ -214,6 +223,7 @@ namespace DescendersModMenu.UI
             Upd(distVal, distTrk, distKnb, ESP.ShowDistance);
             Upd(tracVal, tracTrk, tracKnb, ESP.ShowTracers);
             Upd(worldVal, worldTrk, worldKnb, ESP.ShowWorldObjects);
+            Upd(_modUsersHudVal, _modUsersHudTrk, _modUsersHudKnb, ModUsersHUD.Enabled);
             RefreshCpIndex();
             RefreshModUsers();
         }
@@ -226,9 +236,9 @@ namespace DescendersModMenu.UI
 
         public static void ClearUiRefs()
         {
-            espVal = distVal = tracVal = worldVal = null;
-            espTrk = distTrk = tracTrk = worldTrk = null;
-            espKnb = distKnb = tracKnb = worldKnb = null;
+            espVal = distVal = tracVal = worldVal = _modUsersHudVal = null;
+            espTrk = distTrk = tracTrk = worldTrk = _modUsersHudTrk = null;
+            espKnb = distKnb = tracKnb = worldKnb = _modUsersHudKnb = null;
             _modUsersText = null;
             _cpIndexText = null;
         }
@@ -239,7 +249,7 @@ namespace DescendersModMenu.UI
             var users = ModDetection.ModUsers;
             if (users.Count == 0)
             {
-                _modUsersText.text = "No mod users found in lobby";
+                _modUsersText.text = "No Sandbox users found in lobby";
                 _modUsersText.color = UIHelpers.TextDim;
                 return;
             }

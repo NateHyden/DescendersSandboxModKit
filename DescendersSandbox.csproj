@@ -138,6 +138,7 @@
     <Compile Include="Mods\Bike\Movement.cs" />
     <Compile Include="Mods\Bike\NoBail.cs" />
     <Compile Include="Mods\Bike\NoSpeedCap.cs" />
+    <Compile Include="Mods\Bike\SpeedLimiter.cs" />
     <Compile Include="Mods\Bike\QuickBrake.cs" />
     <Compile Include="Mods\Bike\ReverseSteering.cs" />
     <Compile Include="Mods\Bike\SpiderBike.cs" />
@@ -146,6 +147,7 @@
     <Compile Include="Mods\Bike\BouncyBike.cs" />
     <Compile Include="Mods\Bike\TrickMultiplier.cs" />
     <Compile Include="Mods\Bike\TrickSetSwap.cs" />
+    <Compile Include="Mods\Bike\TrickSpeed.cs" />
     <Compile Include="Mods\Bike\TyrePressure.cs" />
     <Compile Include="Mods\Bike\WheelieAngleLimit.cs" />
     <Compile Include="Mods\Bike\WideTyres.cs" />
@@ -183,6 +185,7 @@
     <Compile Include="Mods\System\AssemblyScanner.cs" />
     <Compile Include="Mods\System\CareerReset.cs" />
     <Compile Include="Mods\System\DevLock.cs" />
+    <Compile Include="Mods\System\SandboxDevTools.cs" />
     <Compile Include="Mods\System\StateNavigator.cs" />
     <Compile Include="Mods\System\DiagnosticsManager.cs" />
     <Compile Include="Mods\System\GameModifiers.cs" />
@@ -244,7 +247,10 @@
     <Compile Include="UI\Pages\OtherPage.cs" />
     <Compile Include="UI\Pages\XboxWorkshopPage.cs" />
     <Compile Include="UI\Pages\ObjectPlacerPage.cs" />
+    <Compile Include="UI\HUDs\AvalancheHUD.cs" />
     <Compile Include="UI\HUDs\ChatHUD.cs" />
+    <Compile Include="UI\HUDs\EarthquakeHUD.cs" />
+    <Compile Include="UI\HUDs\ModUsersHUD.cs" />
     <Compile Include="UI\HUDs\GhostHUD.cs" />
     <Compile Include="UI\Pages\AvalanchePage.cs" />
     <Compile Include="UI\Pages\BikePage.cs" />

@@ -148,10 +148,10 @@ namespace DescendersModMenu.UI
                 UIHelpers.ActionBtnOrange(lib.transform, "Forget", () => { ObjectPlacer.ClearHarvested(); RebuildList(); }, 56);
 
                 _statusVal = UIHelpers.Txt("OpSt", c, StatusLine(), 10,
-                    FontStyle.Italic, TextAnchor.MiddleLeft, UIHelpers.TextDim);
+                    FontStyle.Italic, TextAnchor.MiddleLeft, Color.white);
                 _statusVal.gameObject.AddComponent<LayoutElement>().preferredHeight = 18;
 
-                UIHelpers.InfoBox(c, "Scan a Bike Park, star objects you like, then place them. Favourites save across maps. Mesh Scale is session-only (resets each map). Stick moves / place with A / exit with B.", Color.white);
+                UIHelpers.InfoBox(c, "Scan a Bike Park, star objects you like, then place them. Favourites save across maps. Mesh Scale is session-only (resets each map). Stick moves / place with A / exit with B.");
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("FAVOURITES", c);
@@ -162,9 +162,7 @@ namespace DescendersModMenu.UI
                 }
                 else
                 {
-                    UIHelpers.InfoBox(c,
-                        "Click a favourite name to rename · Enter to save · Esc to cancel",
-                        Color.white);
+                    UIHelpers.InfoBox(c, "Click a favourite name to rename · Enter to save · Esc to cancel");
 
                     int totalFavScan = ObjectPlacer.CatalogCount;
                     for (int i = 0; i < totalFavScan; i++)

@@ -90,14 +90,36 @@ namespace DescendersModMenu.UI
                 BuildMenuOpenRow();
                 UIHelpers.Divider(_contentRoot);
 
-                UIHelpers.SectionHeader("KEY BINDINGS", _contentRoot);
-                BuildSearchRow();
+                var bindsHdr = UIHelpers.Obj("KeyBindsH", _contentRoot);
+                var bindsHdrLe = bindsHdr.AddComponent<LayoutElement>();
+                bindsHdrLe.preferredHeight = 28; bindsHdrLe.minHeight = 28; bindsHdrLe.flexibleHeight = 0;
 
-                var hint = UIHelpers.StatRow("", _contentRoot);
-                var hintTxt = UIHelpers.Txt("Hint", hint.transform,
+                var bindsHint = UIHelpers.Txt("BindsHint", bindsHdr.transform,
                     "Click BIND then press a keyboard key or controller button.  ESC cancels.",
-                    9, FontStyle.Normal, TextAnchor.MiddleLeft, UIHelpers.TextDim);
-                hintTxt.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                    9, FontStyle.Normal, TextAnchor.MiddleCenter, Color.white);
+                UIHelpers.Fill(UIHelpers.RT(bindsHint.gameObject));
+                bindsHint.raycastTarget = false;
+                bindsHint.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+                var bindsBar = UIHelpers.Panel("Bar", bindsHdr.transform, UIHelpers.Accent);
+                var bindsBarRt = UIHelpers.RT(bindsBar);
+                bindsBarRt.anchorMin = new Vector2(0f, 0.5f); bindsBarRt.anchorMax = new Vector2(0f, 0.5f);
+                bindsBarRt.pivot = new Vector2(0f, 0.5f);
+                bindsBarRt.sizeDelta = new Vector2(3f, 14f);
+                bindsBarRt.anchoredPosition = Vector2.zero;
+                bindsBar.AddComponent<LayoutElement>().ignoreLayout = true;
+
+                var bindsTitle = UIHelpers.Txt("BindsT", bindsHdr.transform, "KEY BINDINGS", 11,
+                    FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.Accent);
+                var bindsTitleRt = UIHelpers.RT(bindsTitle.gameObject);
+                bindsTitleRt.anchorMin = new Vector2(0f, 0f); bindsTitleRt.anchorMax = new Vector2(0f, 1f);
+                bindsTitleRt.pivot = new Vector2(0f, 0.5f);
+                bindsTitleRt.sizeDelta = new Vector2(120f, 0f);
+                bindsTitleRt.anchoredPosition = new Vector2(10f, 0f);
+                bindsTitle.raycastTarget = false;
+                bindsTitle.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+                BuildSearchRow();
 
                 UIHelpers.Divider(_contentRoot);
 
@@ -165,7 +187,7 @@ namespace DescendersModMenu.UI
                 : (_queryFocused ? UIHelpers.WithCaret(_queryBuffer, true) : _queryBuffer);
             _queryInputText = UIHelpers.Txt("SrIT", searchBg.transform, shown, 11,
                 FontStyle.Normal, TextAnchor.MiddleLeft,
-                string.IsNullOrEmpty(_queryBuffer) ? UIHelpers.TextDim : UIHelpers.TextLight);
+                string.IsNullOrEmpty(_queryBuffer) ? Color.white : UIHelpers.TextLight);
             _queryInputText.horizontalOverflow = HorizontalWrapMode.Overflow;
             _queryInputText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
@@ -323,7 +345,7 @@ namespace DescendersModMenu.UI
                 else
                 {
                     _queryInputText.text = UIHelpers.WithCaret("Search binds...", true);
-                    _queryInputText.color = UIHelpers.TextDim;
+                    _queryInputText.color = Color.white;
                 }
             }
 
