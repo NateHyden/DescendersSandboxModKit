@@ -7,7 +7,7 @@
 [![Latest Release](https://img.shields.io/github/v/release/NateHyden/Descenders-Sandbox?label=latest)](https://github.com/NateHyden/Descenders-Sandbox/releases)
 [![Downloads](https://img.shields.io/github/downloads/NateHyden/Descenders-Sandbox/total)](https://github.com/NateHyden/Descenders-Sandbox/releases)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/rHvCrBdqaR)
-[![MelonLoader](https://img.shields.io/badge/MelonLoader-0.5.7-blue)](https://github.com/LavaGang/MelonLoader/releases)
+[![MelonLoader](https://img.shields.io/badge/MelonLoader-blue)](https://github.com/LavaGang/MelonLoader/releases)
 
 **Descenders Sandbox** is a free-ride physics sandbox mod menu for **Descenders**, built with MelonLoader. Take control of your ride and the world around you with a huge collection of physics tweaks, custom game modes, map tools, gameplay modifiers, and more — all designed to let you play Descenders your way.
 
