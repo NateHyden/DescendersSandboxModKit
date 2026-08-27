@@ -35,7 +35,6 @@
 - [Requirements](#requirements)
 - [Installation — Steam](#installation-steam)
 - [Installation — Xbox PC / Game Pass](#installation-xbox)
-- [Building from Source](#building-from-source)
 - [Privacy, Telemetry & Network Activity](#privacy-telemetry-network)
 - [Links](#links)
 
@@ -317,29 +316,6 @@ If you're stuck in the default WindowsApps location, right-click the folder → 
 
 ---
 
-## Building from Source
-
-<details>
-<summary><strong>For contributors / developers</strong></summary>
-
-1. Clone this repository
-2. Open `GamePath.props` in the project root and set `<DescendersPath>` to your Descenders install folder
-3. Open `DescendersSandbox.sln` in Visual Studio
-4. Build — the DLL copies to your `Mods` folder automatically
-
-**Common install locations**
-
-| Platform | Path |
-|---|---|
-| Steam (default) | `C:\Program Files (x86)\Steam\steamapps\common\Descenders` |
-| Steam (custom library) | `D:\SteamLibrary\steamapps\common\Descenders` |
-| Xbox / Game Pass | `C:\XboxGames\Descenders\Content` |
-
-Not sure where your install is? In Steam, right-click Descenders → **Manage → Browse local files** and copy the path from Explorer.
-
-</details>
-
----
 
 ## <a id="privacy-telemetry-network"></a>Privacy, Telemetry & Network Activity
 
