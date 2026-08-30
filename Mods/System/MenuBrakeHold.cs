@@ -7,8 +7,9 @@ using DescendersModMenu.UI;
 namespace DescendersModMenu.Mods
 {
     /// <summary>
-    /// Holds the brake while the mod menu is open so the bike does not roll away
-    /// on slopes (keyboard, mouse, or controller menu open).
+    /// While the mod menu is open, gently decelerate the local bike to a stop,
+    /// then pin it so it does not roll away on slopes. Avoids the emergency-stop
+    /// bail that full brake + huge drag caused at speed.
     /// </summary>
     public static class MenuBrakeHold
     {
@@ -37,6 +38,11 @@ namespace DescendersModMenu.Mods
                 Telemetry.ReportErrorAsync(ex, "MenuBrakeHold");
             }
         }
+
+        public static void ClearCache()
+        {
+            MenuBrakeHold_Patch.ClearCache();
+        }
     }
 
     public static class MenuBrakeHold_Patch
@@ -46,25 +52,45 @@ namespace DescendersModMenu.Mods
         private static float _savedDrag;
         private static bool _appliedHold;
 
+        private static VehicleController _localVc;
+        private static float _nextLocalFind;
+
+        // Soft stop: ~2s from a fast run, no slam that tips you off.
+        private const float Decel = 14f;          // m/s² linear
+        private const float AngDecel = 8f;       // rad/s²
+        private const float PinSpeedSq = 0.36f;  // ~0.6 m/s — then freeze
+        private const float LightBrake = 0.35f;  // visual brake, not full lock
+
+        private static bool IsLocalController(VehicleController vc)
+        {
+            if (!UnityNull.Alive(_localVc))
+            {
+                float now = Time.unscaledTime;
+                if (now < _nextLocalFind) return false;
+                _nextLocalFind = now + 1f;
+                GameObject go = GameObject.Find("Player_Human");
+                _localVc = UnityNull.Alive(go) ? go.GetComponent<VehicleController>() : null;
+                if (!UnityNull.Alive(_localVc) && UnityNull.Alive(go))
+                    _localVc = go.GetComponentInChildren<VehicleController>();
+            }
+            return (object)vc == (object)_localVc;
+        }
+
         public static void Postfix(VehicleController __instance)
         {
             if (!MenuUI.IsOpen)
             {
-                RestoreDrag();
+                if (_appliedHold) RestoreDrag();
                 return;
             }
             if (FlyMode.Enabled || SpectateMode.Enabled) return;
             if ((object)__instance == null) return;
+            if (!IsLocalController(__instance)) return;
 
             try
             {
                 Vehicle vehicle = GetVehicle(__instance);
                 if (!UnityNull.Alive(vehicle)) return;
-                if (!string.Equals(vehicle.gameObject.name, "Player_Human", System.StringComparison.Ordinal))
-                    return;
-
-                vehicle.NYsPlot = 1f;
-
                 if (!EnsureRigidbody(vehicle)) return;
 
                 if (!_appliedHold)
@@ -73,15 +99,34 @@ namespace DescendersModMenu.Mods
                     _appliedHold = true;
                 }
 
-                if (_rb.velocity.sqrMagnitude <= 0.25f)
+                float dt = Time.fixedDeltaTime;
+                if (dt < 0.0001f) dt = 0.02f;
+
+                Vector3 vel = _rb.velocity;
+                float speedSq = vel.sqrMagnitude;
+
+                if (speedSq <= PinSpeedSq)
                 {
+                    // Fully stopped — pin so slopes don't take you away.
+                    vehicle.NYsPlot = 1f;
                     _rb.velocity = Vector3.zero;
                     _rb.angularVelocity = Vector3.zero;
+                    _rb.drag = Mathf.Max(_savedDrag, 40f);
+                    return;
                 }
+
+                // Soft decelerate toward a hold (no full brake / no drag spike).
+                vehicle.NYsPlot = LightBrake;
+
+                float speed = Mathf.Sqrt(speedSq);
+                float newSpeed = Mathf.MoveTowards(speed, 0f, Decel * dt);
+                if (newSpeed <= 0.001f)
+                    _rb.velocity = Vector3.zero;
                 else
-                {
-                    _rb.drag = Mathf.Max(_savedDrag, 80f);
-                }
+                    _rb.velocity = vel * (newSpeed / speed);
+
+                _rb.angularVelocity = Vector3.MoveTowards(
+                    _rb.angularVelocity, Vector3.zero, AngDecel * dt);
             }
             catch (System.Exception ex)
             {
@@ -89,6 +134,7 @@ namespace DescendersModMenu.Mods
                 Telemetry.ReportErrorAsync(ex, "MenuBrakeHold");
                 _vehicleField = null;
                 _rb = null;
+                _localVc = null;
                 _appliedHold = false;
             }
         }
@@ -140,10 +186,7 @@ namespace DescendersModMenu.Mods
                 }
             }
 
-            if (UnityNull.Alive(_rb))
-                return true;
-
-            return false;
+            return UnityNull.Alive(_rb);
         }
 
         public static void ClearCache()
@@ -151,6 +194,7 @@ namespace DescendersModMenu.Mods
             RestoreDrag();
             _vehicleField = null;
             _rb = null;
+            _localVc = null;
             _savedDrag = 0f;
         }
     }

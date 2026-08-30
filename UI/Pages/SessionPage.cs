@@ -15,6 +15,9 @@ namespace DescendersModMenu.UI
         private static Text _airtimeVal;
         private static Text _gforceVal;
         private static Text _peakGforceVal;
+        private static Text _sessionTimeTogVal, _topSpeedTogVal, _bailTogVal, _cpTogVal, _airTogVal, _gforceTogVal;
+        private static Image _sessionTimeTrack, _topSpeedTrack, _bailTrack, _cpTrack, _airTrack, _gforceTrack;
+        private static RectTransform _sessionTimeKnob, _topSpeedKnob, _bailKnob, _cpKnob, _airKnob, _gforceKnob;
         private static Text _srtVal;
         private static Image _srtTrack;
         private static RectTransform _srtKnob;
@@ -128,11 +131,27 @@ namespace DescendersModMenu.UI
                 _sessionTimeVal = UIHelpers.Txt("StV", str.transform, SessionTrackers.SessionTimeDisplay,
                     12, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
                 _sessionTimeVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                _sessionTimeTogVal = UIHelpers.Txt("StTV", str.transform, "OFF", 11, FontStyle.Bold,
+                    TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _sessionTimeTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(str.transform, "StT", () =>
+                {
+                    SessionTrackers.ToggleTrackSessionTime();
+                    RefreshAll();
+                }, out _sessionTimeTrack, out _sessionTimeKnob);
 
                 var tsr = UIHelpers.StatRow("Top Speed", c);
                 _topSpeedVal = UIHelpers.Txt("TSV", tsr.transform, TopSpeed.DisplayValue,
                     12, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
                 _topSpeedVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                _topSpeedTogVal = UIHelpers.Txt("TsTV", tsr.transform, "OFF", 11, FontStyle.Bold,
+                    TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _topSpeedTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(tsr.transform, "TsT", () =>
+                {
+                    TopSpeed.Toggle();
+                    RefreshAll();
+                }, out _topSpeedTrack, out _topSpeedKnob);
                 UIHelpers.ActionBtn(tsr.transform, "Reset", () => { TopSpeed.ResetSession(); RefreshAll(); }, 52);
 
                 var srtr = UIHelpers.StatRow("Speedrun Timer", c);
@@ -156,6 +175,14 @@ namespace DescendersModMenu.UI
                 _bailCountVal = UIHelpers.Txt("BcV", bcr.transform, SessionTrackers.BailCountDisplay,
                     12, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
                 _bailCountVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                _bailTogVal = UIHelpers.Txt("BcTV", bcr.transform, "OFF", 11, FontStyle.Bold,
+                    TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _bailTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(bcr.transform, "BcT", () =>
+                {
+                    SessionTrackers.ToggleTrackBails();
+                    RefreshAll();
+                }, out _bailTrack, out _bailKnob);
                 UIHelpers.ActionBtn(bcr.transform, "Reset", () => { SessionTrackers.ResetBails(); RefreshAll(); }, 52);
 
                 var cpcr = UIHelpers.StatRow("Checkpoints", c);
@@ -163,18 +190,42 @@ namespace DescendersModMenu.UI
                     SessionTrackers.CheckpointCountDisplay, 12, FontStyle.Bold,
                     TextAnchor.MiddleRight, UIHelpers.Accent);
                 _checkpointCountVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                _cpTogVal = UIHelpers.Txt("CpTV", cpcr.transform, "OFF", 11, FontStyle.Bold,
+                    TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _cpTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(cpcr.transform, "CpT", () =>
+                {
+                    SessionTrackers.ToggleTrackCheckpoints();
+                    RefreshAll();
+                }, out _cpTrack, out _cpKnob);
                 UIHelpers.ActionBtn(cpcr.transform, "Reset", () => { SessionTrackers.ResetCheckpoints(); RefreshAll(); });
 
                 var atr = UIHelpers.StatRow("Longest Airtime", c);
                 _airtimeVal = UIHelpers.Txt("AtV", atr.transform, SessionTrackers.AirtimeDisplay,
                     12, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
                 _airtimeVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                _airTogVal = UIHelpers.Txt("AtTV", atr.transform, "OFF", 11, FontStyle.Bold,
+                    TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _airTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(atr.transform, "AtT", () =>
+                {
+                    SessionTrackers.ToggleTrackAirtime();
+                    RefreshAll();
+                }, out _airTrack, out _airKnob);
                 UIHelpers.ActionBtn(atr.transform, "Reset", () => { SessionTrackers.ResetAirtime(); RefreshAll(); }, 52);
 
                 var gfr = UIHelpers.StatRow("G-Force", c);
                 _gforceVal = UIHelpers.Txt("GfV", gfr.transform, SessionTrackers.GForceDisplay,
                     12, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
                 _gforceVal.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                _gforceTogVal = UIHelpers.Txt("GfTV", gfr.transform, "OFF", 11, FontStyle.Bold,
+                    TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _gforceTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                UIHelpers.Toggle(gfr.transform, "GfT", () =>
+                {
+                    SessionTrackers.ToggleTrackGForce();
+                    RefreshAll();
+                }, out _gforceTrack, out _gforceKnob);
 
                 var pgfr = UIHelpers.StatRow("Peak G-Force", c);
                 _peakGforceVal = UIHelpers.Txt("PgV", pgfr.transform, SessionTrackers.PeakGForceDisplay,
@@ -357,6 +408,30 @@ namespace DescendersModMenu.UI
             if (_gforceVal) _gforceVal.text = SessionTrackers.GForceDisplay;
             if (_peakGforceVal) _peakGforceVal.text = SessionTrackers.PeakGForceDisplay;
 
+            bool st = SessionTrackers.TrackSessionTime;
+            if (_sessionTimeTogVal) { _sessionTimeTogVal.text = st ? "ON" : "OFF"; _sessionTimeTogVal.color = st ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_sessionTimeTrack, _sessionTimeKnob, st);
+
+            bool ts = TopSpeed.Enabled;
+            if (_topSpeedTogVal) { _topSpeedTogVal.text = ts ? "ON" : "OFF"; _topSpeedTogVal.color = ts ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_topSpeedTrack, _topSpeedKnob, ts);
+
+            bool bc = SessionTrackers.TrackBails;
+            if (_bailTogVal) { _bailTogVal.text = bc ? "ON" : "OFF"; _bailTogVal.color = bc ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_bailTrack, _bailKnob, bc);
+
+            bool cp = SessionTrackers.TrackCheckpoints;
+            if (_cpTogVal) { _cpTogVal.text = cp ? "ON" : "OFF"; _cpTogVal.color = cp ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_cpTrack, _cpKnob, cp);
+
+            bool air = SessionTrackers.TrackAirtime;
+            if (_airTogVal) { _airTogVal.text = air ? "ON" : "OFF"; _airTogVal.color = air ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_airTrack, _airKnob, air);
+
+            bool gf = SessionTrackers.TrackGForce;
+            if (_gforceTogVal) { _gforceTogVal.text = gf ? "ON" : "OFF"; _gforceTogVal.color = gf ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_gforceTrack, _gforceKnob, gf);
+
             bool srt = SpeedrunTimer.Enabled;
             if (_srtVal) { _srtVal.text = srt ? "ON" : "OFF"; _srtVal.color = srt ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_srtTrack, _srtKnob, srt);
@@ -385,6 +460,24 @@ namespace DescendersModMenu.UI
             _airtimeVal = null;
             _gforceVal = null;
             _peakGforceVal = null;
+            _sessionTimeTogVal = null;
+            _topSpeedTogVal = null;
+            _bailTogVal = null;
+            _cpTogVal = null;
+            _airTogVal = null;
+            _gforceTogVal = null;
+            _sessionTimeTrack = null;
+            _topSpeedTrack = null;
+            _bailTrack = null;
+            _cpTrack = null;
+            _airTrack = null;
+            _gforceTrack = null;
+            _sessionTimeKnob = null;
+            _topSpeedKnob = null;
+            _bailKnob = null;
+            _cpKnob = null;
+            _airKnob = null;
+            _gforceKnob = null;
             _srtVal = null;
             _srtTrack = null;
             _srtKnob = null;

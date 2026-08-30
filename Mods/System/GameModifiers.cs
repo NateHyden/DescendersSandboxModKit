@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
@@ -248,6 +249,27 @@ namespace DescendersModMenu.Mods
             catch (System.Exception ex) { MelonLogger.Error("[GameMod] NoSpeedWobbles BikeCamera patch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
         }
 
+        private static FieldInfo _activeListField;
+        private static readonly Dictionary<string, float> _stockPercentage =
+            new Dictionary<string, float>();
+
+        private static void RememberStockPercentage(GameModifier target)
+        {
+            if ((object)target == null || target.modifiers == null || target.modifiers.Length == 0)
+                return;
+            if (_stockPercentage.ContainsKey(target.name)) return;
+            _stockPercentage[target.name] = target.modifiers[0].percentageValue;
+        }
+
+        private static void RestoreStockPercentage(GameModifier target)
+        {
+            if ((object)target == null || target.modifiers == null || target.modifiers.Length == 0)
+                return;
+            float stock;
+            if (_stockPercentage.TryGetValue(target.name, out stock))
+                target.modifiers[0].percentageValue = stock;
+        }
+
         public static void ApplyMod(string modName, int level)
         {
             try
@@ -264,18 +286,90 @@ namespace DescendersModMenu.Mods
                     if ((object)mods[i] != null && mods[i].name == modName)
                     { target = mods[i]; break; }
                 if ((object)target == null) { ModLog.Warn("[GameMod] Modifier not found: " + modName); return; }
+
+                RememberStockPercentage(target);
+
+                // v1.9.5 behaviour (crews share this list + these ScriptableObjects):
+                // stock dial = do NOT mutate %, do NOT Add/Remove. Auto-load at defaults
+                // must leave career crew perks alone.
+                bool stockNeutral = level == 5 && modName != "OFFROADFRICTION";
+                if (stockNeutral)
+                {
+                    // If a prior non-neutral dial wrote over the shared asset, put stock % back
+                    // without ripping the entry off the list (that would kill crew picks).
+                    RestoreStockPercentage(target);
+                    ModLog.Debug("[GameMod] " + modName + " level 5 (stock - list untouched)");
+                    return;
+                }
+
                 // Percentage dials: (level-5)*20 → −80%…+100%. Game uses 1 + pct/100 as multiplier.
-                // Always write the value (including 0% at level 5) so returning to stock actually clears the buff.
                 float value = modName == "OFFROADFRICTION" ? IceMult(level) : Delta(level);
                 target.modifiers[0].percentageValue = value;
                 PlayerManager pm = UnityEngine.Object.FindObjectOfType<PlayerManager>();
                 if ((object)pm == null) { ModLog.Warn("[GameMod] PlayerManager not found."); return; }
                 PlayerInfoImpact pi = pm.GetPlayerImpact();
                 if ((object)pi == null) { ModLog.Warn("[GameMod] PlayerInfoImpact not found."); return; }
+
                 pi.AddGameModifier(target);
                 ModLog.Debug("[GameMod] " + modName + " level " + level + " (" + value + "%)");
             }
             catch (System.Exception ex) { MelonLogger.Error("[GameMod] ApplyMod " + modName + ": " + ex.Message); Telemetry.ReportErrorAsync(ex, "GameModifiers"); }
+        }
+
+        private static List<GameModifier> GetActiveList(PlayerInfoImpact pi)
+        {
+            if ((object)_activeListField == null)
+            {
+                FieldInfo[] fields = typeof(PlayerInfoImpact).GetFields(
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                for (int i = 0; i < fields.Length; i++)
+                    if (fields[i].FieldType.Equals(typeof(List<GameModifier>)))
+                    { _activeListField = fields[i]; break; }
+            }
+            if ((object)_activeListField == null) return null;
+            return _activeListField.GetValue(pi) as List<GameModifier>;
+        }
+
+        /// <summary>
+        /// Re-apply only Sandbox dial levels that are non-stock.
+        /// Never strip by name — career crew perks share those same GameModifier assets.
+        /// </summary>
+        public static void ReconcileSandboxDialModifiers()
+        {
+            try
+            {
+                PlayerManager pm = UnityEngine.Object.FindObjectOfType<PlayerManager>();
+                if ((object)pm == null) return;
+                PlayerInfoImpact pi = pm.GetPlayerImpact();
+                if ((object)pi == null) return;
+
+                ApplyMod("WHEELIEBALANCE", WheelieBalanceLevel);
+                ApplyMod("AIRCORRECTION", InAirCorrLevel);
+                ApplyMod("FAKIEBALANCE", FakieBalanceLevel);
+                ApplyMod("PUMPSTRENGTH", PumpStrengthLevel);
+                ApplyMod("TWEAKSPEED", TweakSpeedLevel);
+                ApplyMod("OFFROADFRICTION", IcePhysicsLevel);
+
+                if (NoSpeedWobblesEnabled)
+                    ApplySpeedWobbles(0.0f);
+
+                List<GameModifier> list = GetActiveList(pi);
+                if (list != null)
+                {
+                    ModLog.Debug("[GameMod] Active modifiers after sandbox reconcile: " + list.Count);
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        GameModifier m = list[i];
+                        if ((object)m != null)
+                            ModLog.Debug("[GameMod]   active[" + i + "] " + m.name);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                MelonLogger.Error("[GameMod] ReconcileSandboxDialModifiers: " + ex.Message);
+                Telemetry.ReportErrorAsync(ex, "GameModifiers");
+            }
         }
 
         public static void DumpAllModifiers()

@@ -646,6 +646,11 @@ namespace DescendersModMenu.UI
             return cached;
         }
 
+        public static Sprite CircleSprite(int worldDiameter)
+        {
+            return CreateCircleSprite(worldDiameter);
+        }
+
         /// <summary>Touch shared UI sprites so first menu open does not hitch on texture gen.</summary>
         public static void Prewarm()
         {
@@ -656,6 +661,8 @@ namespace DescendersModMenu.UI
                 touch = TogSp; touch = KnobSp; touch = BarSp; touch = DotSp; touch = FrameSp;
                 for (int d = 2; d <= 8; d++)
                     CreateCircleSprite(d);
+                CreateCircleSprite(22);
+                CreateCircleSprite(20);
             }
             catch { }
         }

@@ -57,8 +57,8 @@ namespace DescendersModMenu.Mods
 
         public static void Tick()
         {
-            TickPerf();
-            TickRoomLog();
+            if (PerfOverlayEnabled) TickPerf();
+            if (DevLock.IsUnlocked) TickRoomLog();
             TickNameSpoof();
         }
 
@@ -551,8 +551,16 @@ namespace DescendersModMenu.Mods
             }
         }
 
+        private static float _nextRoomLogCheck;
+        private const float RoomLogInterval = 0.5f;
+
         private static void TickRoomLog()
         {
+            // RoomName allocates; do not poll every frame while DevLock is unlocked.
+            float now = Time.unscaledTime;
+            if (now < _nextRoomLogCheck) return;
+            _nextRoomLogCheck = now + RoomLogInterval;
+
             bool inRoom = ModChat.InRoom;
             string room = ModChat.RoomName ?? "";
             int count = ModChat.PlayerListCount;

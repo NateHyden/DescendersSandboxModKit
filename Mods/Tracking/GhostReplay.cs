@@ -62,7 +62,7 @@ namespace DescendersModMenu.Mods
                 IsPlaying = false;
                 RunTime = 0f;
                 BuildGhost();
-                ModLog.Debug("[GhostReplay] ON — step 1: ride to start and press B.");
+                ModLog.Feedback("[GhostReplay] ON - ride to start, then LS click.");
             }
             else
             {
@@ -71,7 +71,7 @@ namespace DescendersModMenu.Mods
                 IsPlaying = false;
                 _currentRun.Clear();
                 DestroyGhost();
-                ModLog.Debug("[GhostReplay] OFF.");
+                ModLog.Feedback("[GhostReplay] OFF");
             }
         }
 

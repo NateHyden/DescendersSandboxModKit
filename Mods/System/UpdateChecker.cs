@@ -80,11 +80,18 @@ namespace DescendersModMenu.Mods
                 if (IsNewer(remoteClean, localClean))
                 {
                     UpdateAvailable = true;
-                    MelonLogger.Msg("[UpdateChecker] OUTDATED - V" + localClean + " -----> V" + remoteClean + ", VISIT NEXUS OR GITHUB FOR THE LATEST VERSION");
+                    string line = "[UpdateChecker] OUTDATED - V" + localClean
+                        + " -----> V" + remoteClean + ", VISIT NEXUS OR GITHUB FOR THE LATEST VERSION";
+                    // Repeat so it stands out in the Melon console.
+                    MelonLogger.Msg(ConsoleColor.Red, line);
+                    Thread.Sleep(200);
+                    MelonLogger.Msg(ConsoleColor.Red, line);
+                    Thread.Sleep(200);
+                    MelonLogger.Msg(ConsoleColor.Red, line);
                 }
                 else
                 {
-                    MelonLogger.Msg("[UpdateChecker] UP TO DATE v" + localClean);
+                    MelonLogger.Msg(ConsoleColor.Green, "[UpdateChecker] UP TO DATE v" + localClean);
                 }
             }
             catch (Exception ex)

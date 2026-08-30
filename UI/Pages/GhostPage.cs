@@ -163,12 +163,15 @@ namespace DescendersModMenu.UI
 
         public static void Tick()
         {
+            // Prebuild leaves Ghost UI alive; skip string rebuilds while riding.
+            if (!MenuUI.IsOpen || MenuWindow.CurrentPage != 14) return;
             if (!UnityNull.Alive(_statusText))
             {
                 ClearUiRefs();
                 return;
             }
 
+            LagDiag.GhostPageTicks++;
             string label = GhostReplay.GetStateLabel();
             Color col = UIHelpers.OffColor;
             if (GhostReplay.Enabled)

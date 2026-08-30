@@ -17,6 +17,14 @@ namespace DescendersModMenu.UI
         }
 
         private static Texture2D _tex;
+        private static GUIStyle _titleStyle;
+        private static GUIStyle _labelStyle;
+        private static GUIStyle _valueStyle;
+        private static GUIStyle _valueAccentStyle;
+        private static int _styleTitleFs;
+        private static int _styleLabelFs;
+        private static int _styleValueFs;
+
         private static Texture2D Tex
         {
             get
@@ -104,51 +112,70 @@ namespace DescendersModMenu.UI
             DrawRect(x, y, accentBarW, titleH, AccentCol);
             DrawRect(x, y + titleH, panelW, b, new Color(0.678f, 1f, 0.184f, 0.15f));
 
-            var titleStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = titleFs,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleLeft,
-                normal = { textColor = AccentCol }
-            };
-            GUI.Label(new Rect(x + accentBarW + pad * 0.6f, y, panelW, titleH), "SESSION", titleStyle);
+            EnsureStyles(titleFs, labelFs, valueFs);
+            GUI.Label(new Rect(x + accentBarW + pad * 0.6f, y, panelW, titleH), "SESSION", _titleStyle);
 
             // ── Rows ──────────────────────────────────────────────────
             float cy = y + titleH + pad * 0.4f;
 
-            cy = DrawRow(x, cy, panelW, pad, rowH, labelFs, valueFs, "TIME", Mods.SessionTrackers.SessionTimeDisplay, false);
-            cy = DrawRow(x, cy, panelW, pad, rowH, labelFs, valueFs, "TOP SPEED", Mods.TopSpeed.DisplayValue, true);
+            cy = DrawRow(x, cy, panelW, pad, rowH, "TIME", Mods.SessionTrackers.SessionTimeDisplay, false);
+            cy = DrawRow(x, cy, panelW, pad, rowH, "TOP SPEED", Mods.TopSpeed.DisplayValue, true);
             cy = DrawDivider(x, cy, panelW, pad, divH, divGap);
-            cy = DrawRow(x, cy, panelW, pad, rowH, labelFs, valueFs, "BAILS", Mods.SessionTrackers.BailCountDisplay, false);
-            cy = DrawRow(x, cy, panelW, pad, rowH, labelFs, valueFs, "CHECKPOINTS", Mods.SessionTrackers.CheckpointCountDisplay, false);
+            cy = DrawRow(x, cy, panelW, pad, rowH, "BAILS", Mods.SessionTrackers.BailCountDisplay, false);
+            cy = DrawRow(x, cy, panelW, pad, rowH, "CHECKPOINTS", Mods.SessionTrackers.CheckpointCountDisplay, false);
             cy = DrawDivider(x, cy, panelW, pad, divH, divGap);
-            cy = DrawRow(x, cy, panelW, pad, rowH, labelFs, valueFs, "AIRTIME", Mods.SessionTrackers.AirtimeDisplay, true);
-            cy = DrawRow(x, cy, panelW, pad, rowH, labelFs, valueFs, "G-FORCE", Mods.SessionTrackers.GForceDisplay, false);
-            cy = DrawRow(x, cy, panelW, pad, rowH, labelFs, valueFs, "PEAK G", Mods.SessionTrackers.PeakGForceDisplay, true);
+            cy = DrawRow(x, cy, panelW, pad, rowH, "AIRTIME", Mods.SessionTrackers.AirtimeDisplay, true);
+            cy = DrawRow(x, cy, panelW, pad, rowH, "G-FORCE", Mods.SessionTrackers.GForceDisplay, false);
+            cy = DrawRow(x, cy, panelW, pad, rowH, "PEAK G", Mods.SessionTrackers.PeakGForceDisplay, true);
+        }
+
+        private static void EnsureStyles(int titleFs, int labelFs, int valueFs)
+        {
+            if ((object)_titleStyle == null)
+            {
+                _titleStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleLeft,
+                    normal = { textColor = AccentCol }
+                };
+                _labelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleLeft,
+                    normal = { textColor = LabelCol }
+                };
+                _valueStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleRight,
+                    normal = { textColor = ValueWhite }
+                };
+                _valueAccentStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleRight,
+                    normal = { textColor = ValueCol }
+                };
+            }
+            if (_styleTitleFs != titleFs) { _titleStyle.fontSize = titleFs; _styleTitleFs = titleFs; }
+            if (_styleLabelFs != labelFs) { _labelStyle.fontSize = labelFs; _styleLabelFs = labelFs; }
+            if (_styleValueFs != valueFs)
+            {
+                _valueStyle.fontSize = valueFs;
+                _valueAccentStyle.fontSize = valueFs;
+                _styleValueFs = valueFs;
+            }
         }
 
         // ── Helpers ───────────────────────────────────────────────────
         private static float DrawRow(float px, float py, float pw, float pad, float rowH,
-            int labelFs, int valueFs, string label, string value, bool accent)
+            string label, string value, bool accent)
         {
-            var labelStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = labelFs,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleLeft,
-                normal = { textColor = LabelCol }
-            };
-            var valueStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = valueFs,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleRight,
-                normal = { textColor = accent ? ValueCol : ValueWhite }
-            };
-
             float innerW = pw - pad * 2f;
-            GUI.Label(new Rect(px + pad, py, innerW * 0.55f, rowH), label, labelStyle);
-            GUI.Label(new Rect(px + pad + innerW * 0.45f, py, innerW * 0.55f, rowH), value, valueStyle);
+            GUI.Label(new Rect(px + pad, py, innerW * 0.55f, rowH), label, _labelStyle);
+            GUI.Label(new Rect(px + pad + innerW * 0.45f, py, innerW * 0.55f, rowH), value,
+                accent ? _valueAccentStyle : _valueStyle);
 
             return py + rowH;
         }

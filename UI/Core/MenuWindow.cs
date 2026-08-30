@@ -42,7 +42,9 @@ namespace DescendersModMenu.UI
         private static Text nswVal;
         private static Image nswTrack;
         private static RectTransform nswKnob;
-        private static Image capBg, capBdr; private static Text capTxt;
+        private static Text capTogVal;
+        private static Image capTrack;
+        private static RectTransform capKnob;
         // ── Camera & HUD (moved from Session) ─────────────────────────
         private static Text _fovVal, _fovTogVal;
         private static Image _fovBar, _fovTrack;
@@ -83,7 +85,7 @@ namespace DescendersModMenu.UI
         private static Image _treesTrack;
         private static RectTransform _treesKnob;
         // ── Pages ─────────────────────────────────────────────────────
-        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg22, pg23, pg24, pg25, pg26;
+        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg23, pg24, pg25, pg26;
         private static readonly bool[] _pageBuilt = new bool[32];
         private static object _pageWarmRoutine;
         private static int cur = 1;
@@ -91,14 +93,14 @@ namespace DescendersModMenu.UI
         public static int PendingPage = -1;
         public static int CurrentPage { get { return cur; } }
 
-        private static readonly int[] PageOrder = { 17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22, 26 };
-        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info", "Customise", "General", "Object Placer", "Xbox Mod.io Maps", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "Ghost Replay", "Maps", "Find", "Screenshot", "Other", "Perks", "Career" };
-        private static readonly string[] GroupLabels = { null, null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
+        private static readonly int[] PageOrder = { 17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 26 };
+        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info", "Customise", "General", "Object Placer", "Xbox Mod.io Maps", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "Ghost Replay", "Maps", "Find", "Screenshot", "Other", "Career" };
+        private static readonly string[] GroupLabels = { null, null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
 
-        private static Image[] _navBars = new Image[24];
-        private static Text[] _navTxts = new Text[24];
-        private static Image[] _navBgs = new Image[24];
-        private static Image[] _activeDots = new Image[24];
+        private static Image[] _navBars = new Image[23];
+        private static Text[] _navTxts = new Text[23];
+        private static Image[] _navBgs = new Image[23];
+        private static Image[] _activeDots = new Image[23];
         private static UnityEngine.UI.Image _infoTabDot;
         private static GameObject _chatUnreadBadge;
         private static Text _chatUnreadTxt;
@@ -130,6 +132,7 @@ namespace DescendersModMenu.UI
             {
                 if (UIHelpers.GetFont() == null) { MelonLogger.Error("Font null"); Telemetry.ReportErrorAsync(new System.Exception("Font null"), "MenuWindow"); return null; }
                 cur = (PendingPage >= 0) ? PendingPage : 1;
+                if (cur == 22) cur = 26;
                 PendingPage = -1;
                 FavouritesManager.ClearStarButtons();
 
@@ -551,7 +554,6 @@ namespace DescendersModMenu.UI
                 pg18 = MakePageRoot("P18", cont.transform);
                 pg19 = MakePageRoot("P19", cont.transform);
                 pg21 = MakePageRoot("P21", cont.transform);
-                pg22 = MakePageRoot("P22", cont.transform);
                 pg23 = MakePageRoot("P23", cont.transform);
                 pg24 = MakePageRoot("P24", cont.transform);
 
@@ -583,7 +585,7 @@ namespace DescendersModMenu.UI
                 case 12: return pg12; case 13: return pg13; case 14: return pg14;
                 case 15: return pg15; case 16: return pg16; case 17: return pg17;
                 case 18: return pg18; case 19: return pg19; case 20: return pg20;
-                case 21: return pg21; case 22: return pg22; case 23: return pg23;
+                case 21: return pg21; case 23: return pg23;
                 case 24: return pg24; case 25: return pg25; case 26: return pg26;
                 default: return null;
             }
@@ -618,7 +620,6 @@ namespace DescendersModMenu.UI
                     case 19: BindsPage.CreatePage(root.transform); break;
                     case 20: SearchPage.CreatePage(root.transform); break;
                     case 21: OtherPage.CreatePage(root.transform); break;
-                    case 22: PerksPage.CreatePage(root.transform); break;
                     case 23: XboxWorkshopPage.CreatePage(root.transform); break;
                     case 24: ObjectPlacerPage.CreatePage(root.transform); break;
                     case 25: InfoPage.CreateCustomisePage(root.transform); break;
@@ -639,7 +640,7 @@ namespace DescendersModMenu.UI
             StopPageWarm();
             int[] order = new int[]
             {
-                17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 22, 26
+                17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 26
             };
             for (int i = 0; i < order.Length; i++)
                 EnsurePageBuilt(order[i]);
@@ -695,49 +696,20 @@ namespace DescendersModMenu.UI
             UIHelpers.SmallBtn(ar.transform, "-", () => { Acceleration.Decrease(); RefreshAll(); });
             UIHelpers.SmallBtn(ar.transform, "+", () => { Acceleration.Increase(); RefreshAll(); });
 
-            var mso = UIHelpers.Panel("MSR", pg, UIHelpers.RowBg, UIHelpers.RowSp);
-            mso.AddComponent<LayoutElement>().minHeight = UIHelpers.RowH + 38;
-            var mbd = UIHelpers.Panel("MBd", mso.transform, UIHelpers.RowBorder, UIHelpers.RowSp);
-            mbd.GetComponent<Image>().raycastTarget = false; UIHelpers.Fill(UIHelpers.RT(mbd));
-            mbd.AddComponent<LayoutElement>().ignoreLayout = true;
-            var mvlg = mso.AddComponent<VerticalLayoutGroup>();
-            mvlg.spacing = 4; mvlg.padding = new RectOffset((int)UIHelpers.RowPad, (int)UIHelpers.RowPad, 6, 8);
-            mvlg.childAlignment = TextAnchor.UpperCenter;
-            mvlg.childForceExpandWidth = true; mvlg.childForceExpandHeight = false;
-
-            var mst = UIHelpers.Obj("MST", mso.transform);
-            mst.AddComponent<LayoutElement>().preferredHeight = 28;
-            var mhlg = mst.AddComponent<HorizontalLayoutGroup>();
-            mhlg.spacing = 8; mhlg.childAlignment = TextAnchor.MiddleCenter;
-            mhlg.childForceExpandWidth = false; mhlg.childForceExpandHeight = false;
-
-            var msll = UIHelpers.Txt("MSL", mst.transform, "Max Speed", 12, FontStyle.Bold, TextAnchor.MiddleLeft, UIHelpers.TextLight)
-                .gameObject.AddComponent<LayoutElement>();
-            msll.flexibleWidth = 1; msll.preferredHeight = 28;
-
-            msTogVal = UIHelpers.Txt("MSTV", mst.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            var msr = UIHelpers.StatRow("Max Speed", pg);
+            msTogVal = UIHelpers.Txt("MSTV", msr.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
             msTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
-            UIHelpers.Toggle(mst.transform, "MST2", () => { MaxSpeedMultiplier.Toggle(); RefreshAll(); }, out msTrack, out msKnob);
-            msBar = UIHelpers.MakeBar("MSB", mst.transform, (MaxSpeedMultiplier.Level - 1) / (float)(MaxSpeedMultiplier.MaxLevel - 1));
-            msVal = UIHelpers.Txt("MSV", mst.transform, MaxSpeedMultiplier.Level.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
+            UIHelpers.Toggle(msr.transform, "MST2", () => { MaxSpeedMultiplier.Toggle(); RefreshAll(); }, out msTrack, out msKnob);
+            msBar = UIHelpers.MakeBar("MSB", msr.transform, (MaxSpeedMultiplier.Level - 1) / (float)(MaxSpeedMultiplier.MaxLevel - 1));
+            msVal = UIHelpers.Txt("MSV", msr.transform, MaxSpeedMultiplier.Level.ToString(), 12, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextMid);
             msVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 18;
-            UIHelpers.SmallBtn(mst.transform, "-", () => { MaxSpeedMultiplier.Decrease(); RefreshAll(); });
-            UIHelpers.SmallBtn(mst.transform, "+", () => { MaxSpeedMultiplier.Increase(); RefreshAll(); });
+            UIHelpers.SmallBtn(msr.transform, "-", () => { MaxSpeedMultiplier.Decrease(); RefreshAll(); });
+            UIHelpers.SmallBtn(msr.transform, "+", () => { MaxSpeedMultiplier.Increase(); RefreshAll(); });
 
-            var cap = UIHelpers.Obj("Cap", mso.transform);
-            capBg = cap.AddComponent<Image>(); capBg.sprite = UIHelpers.BtnSp;
-            capBg.type = Image.Type.Sliced; capBg.color = UIHelpers.NeonBlue;
-            var cbtn = cap.AddComponent<Button>();
-            cbtn.onClick.AddListener(() => { NoSpeedCap.Toggle(); RefreshAll(); });
-            var ccb = cbtn.colors; ccb.normalColor = Color.white; ccb.highlightedColor = new Color(1, 1, 1, 1.15f);
-            ccb.pressedColor = new Color(.7f, .7f, .7f, 1); ccb.colorMultiplier = 1; ccb.fadeDuration = .08f;
-            cbtn.colors = ccb;
-            cap.AddComponent<LayoutElement>().preferredHeight = 30;
-            var cbd = UIHelpers.Panel("CBd", cap.transform, UIHelpers.NeonBlue, UIHelpers.BtnSp);
-            capBdr = cbd.GetComponent<Image>(); capBdr.raycastTarget = false; UIHelpers.Fill(UIHelpers.RT(cbd));
-            capTxt = UIHelpers.Txt("CT", cap.transform, "REMOVE SPEED CAP", 11, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0, 0, 0, 1));
-            capTxt.horizontalOverflow = HorizontalWrapMode.Overflow;
-            UIHelpers.Fill(UIHelpers.RT(capTxt.gameObject));
+            var capRow = UIHelpers.StatRow("No Speed Cap", pg);
+            capTogVal = UIHelpers.Txt("CapTV", capRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            capTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(capRow.transform, "CapT", () => { NoSpeedCap.Toggle(); RefreshAll(); }, out capTrack, out capKnob);
 
             // ── Speed Limiter ─────────────────────────────────────────
             var slr = UIHelpers.StatRow("Speed Limiter", pg);
@@ -960,8 +932,8 @@ namespace DescendersModMenu.UI
             UIHelpers.InfoBox(pg, "Fires you forward fast. Fun for testing.");
 
             FavouritesManager.RegisterStarButton("Acceleration", UIHelpers.StarBtn(ar.transform, "Acceleration", () => FavouritesManager.Toggle("Acceleration")));
-            FavouritesManager.RegisterStarButton("MaxSpeed", UIHelpers.StarBtn(mst.transform, "MaxSpeed", () => FavouritesManager.Toggle("MaxSpeed")));
-            FavouritesManager.RegisterStarButton("NoSpeedCap", UIHelpers.StarBtnAbs(cap.transform, "NoSpeedCap", () => FavouritesManager.Toggle("NoSpeedCap")));
+            FavouritesManager.RegisterStarButton("MaxSpeed", UIHelpers.StarBtn(msr.transform, "MaxSpeed", () => FavouritesManager.Toggle("MaxSpeed")));
+            FavouritesManager.RegisterStarButton("NoSpeedCap", UIHelpers.StarBtn(capRow.transform, "NoSpeedCap", () => FavouritesManager.Toggle("NoSpeedCap")));
             FavouritesManager.RegisterStarButton("SpeedLimiter", UIHelpers.StarBtn(slr.transform, "SpeedLimiter", () => FavouritesManager.Toggle("SpeedLimiter")));
             FavouritesManager.RegisterStarButton("LandingImpact", UIHelpers.StarBtn(lr.transform, "LandingImpact", () => FavouritesManager.Toggle("LandingImpact")));
             FavouritesManager.RegisterStarButton("NoBail", UIHelpers.StarBtn(nr.transform, "NoBail", () => FavouritesManager.Toggle("NoBail")));
@@ -1383,7 +1355,6 @@ namespace DescendersModMenu.UI
                     case 19: return BindsPage.IsAnyActive;
                     case 20: return false;
                     case 21: return OtherPage.IsAnyActive;
-                    case 22: return false;
                     case 23: return false;
                     case 24: return ObjectPlacerPage.IsAnyActive;
                     default: return false;
@@ -1396,6 +1367,7 @@ namespace DescendersModMenu.UI
 
         private static void Switch(int pg)
         {
+            if (pg == 22) pg = 26;
             cur = pg;
             if (pg == 12) ModChat.MarkAsRead();
             RefreshTabs();
@@ -1432,7 +1404,6 @@ namespace DescendersModMenu.UI
             if (pg18) pg18.SetActive(cur == 18);
             if (pg19) pg19.SetActive(cur == 19);
             if (pg21) pg21.SetActive(cur == 21);
-            if (pg22) pg22.SetActive(cur == 22);
             if (pg23) pg23.SetActive(cur == 23);
             if (pg24) pg24.SetActive(cur == 24);
             if (cur != 24) ObjectPlacerPage.CancelRename();
@@ -1459,7 +1430,6 @@ namespace DescendersModMenu.UI
             }
             if (cur == 2) EspPage.RefreshTexts();
             if (cur == 3) InfoPage.Refresh();
-            if (cur == 22) { Mods.PerkMenu.ForceReload(); PerksPage.Rebuild(); }
             if (_infoTabDot) _infoTabDot.color = DiagnosticsManager.FailCount > 0 ? UIHelpers.OffColor : UIHelpers.OnColor;
             UpdateChatUnreadBadge(true);
         }
@@ -1501,9 +1471,8 @@ namespace DescendersModMenu.UI
 
             // ── No Speed Cap ──────────────────────────────────────────
             bool cap2 = NoSpeedCap.Enabled;
-            if (capTxt) { capTxt.text = cap2 ? "SPEED CAP REMOVED" : "REMOVE SPEED CAP"; capTxt.color = new Color(0, 0, 0, 1); }
-            if (capBg) capBg.color = cap2 ? UIHelpers.OnColor : UIHelpers.NeonBlue;
-            if (capBdr) capBdr.color = cap2 ? UIHelpers.OnColor : UIHelpers.NeonBlue;
+            if (capTogVal) { capTogVal.text = cap2 ? "ON" : "OFF"; capTogVal.color = cap2 ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(capTrack, capKnob, cap2);
 
             // ── Speed Limiter ─────────────────────────────────────────
             bool slOn = SpeedLimiter.Enabled;
@@ -1614,6 +1583,7 @@ namespace DescendersModMenu.UI
             UIHelpers.SetToggle(_treesTrack, _treesKnob, !Trees.Enabled);
 
             if (_pageBuilt[16]) SessionPage.RefreshAll();
+            if (_pageBuilt[2]) try { EspPage.RefreshTexts(); } catch { }
             if (_pageBuilt[8]) try { BikePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("BikePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "BikePage.RefreshAll"); }
             if (_pageBuilt[6]) try { MovePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("MovePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "MovePage.RefreshAll"); }
             if (_pageBuilt[9]) try { FunPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("FunPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "FunPage.RefreshAll"); }
@@ -1706,31 +1676,50 @@ namespace DescendersModMenu.UI
             RefreshAll();
         }
 
+        private static string _lastUpdateStatus;
+
         public static void TickLive()
         {
-            if (MenuUI.IsOpen && _pageBuilt[16]) SessionPage.TickLive();
+            // Only refresh live session numbers while that tab is visible.
+            if (MenuUI.IsOpen && CurrentPage == 16 && _pageBuilt[16])
+                SessionPage.TickLive();
 
             if (!UnityNull.Alive(_updateStatusText))
             {
                 _updateStatusText = null;
-            }
-            else if (!UpdateChecker.CheckComplete)
-            {
-                _updateStatusText.text = "checking for updates...";
-                _updateStatusText.color = UIHelpers.TextDim;
-                _updateStatusText.fontStyle = FontStyle.Normal;
-            }
-            else if (UpdateChecker.UpdateAvailable)
-            {
-                _updateStatusText.text = "\u25B2 v" + UpdateChecker.LatestVersion + " available";
-                _updateStatusText.color = new UnityEngine.Color(1f, 0.20f, 0.20f, 1f);
-                _updateStatusText.fontStyle = FontStyle.Bold;
+                _lastUpdateStatus = null;
             }
             else
             {
-                _updateStatusText.text = "\u2713 v" + BuildInfo.Version + " up to date";
-                _updateStatusText.color = UIHelpers.OnColor;
-                _updateStatusText.fontStyle = FontStyle.Normal;
+                string next;
+                Color col;
+                FontStyle style;
+                if (!UpdateChecker.CheckComplete)
+                {
+                    next = "checking for updates...";
+                    col = UIHelpers.TextDim;
+                    style = FontStyle.Normal;
+                }
+                else if (UpdateChecker.UpdateAvailable)
+                {
+                    next = "\u25B2 v" + UpdateChecker.LatestVersion + " available";
+                    col = new UnityEngine.Color(1f, 0.20f, 0.20f, 1f);
+                    style = FontStyle.Bold;
+                }
+                else
+                {
+                    next = "\u2713 v" + BuildInfo.Version + " up to date";
+                    col = UIHelpers.OnColor;
+                    style = FontStyle.Normal;
+                }
+
+                if (_lastUpdateStatus != next)
+                {
+                    _lastUpdateStatus = next;
+                    _updateStatusText.text = next;
+                    _updateStatusText.color = col;
+                    _updateStatusText.fontStyle = style;
+                }
             }
 
             if (_hdrFlashTimer > 0f)

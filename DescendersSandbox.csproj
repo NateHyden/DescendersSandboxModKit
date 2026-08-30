@@ -166,6 +166,9 @@
     <Compile Include="Mods\World\TimeOfDay.cs" />
     <Compile Include="Mods\Player\DrunkMode.cs" />
     <Compile Include="Mods\Player\RiderCustomiser.cs" />
+    <Compile Include="Mods\Player\LuxGlowTint.cs" />
+    <Compile Include="Mods\Player\LuxGlowTintHarmony.cs" />
+    <Compile Include="Mods\Player\LuxGlowPresets.cs" />
     <Compile Include="Mods\Player\FlyMode.cs" />
     <Compile Include="Mods\Player\Fov.cs" />
     <Compile Include="Mods\Player\MirrorMode.cs" />
@@ -186,6 +189,7 @@
     <Compile Include="Mods\System\CareerReset.cs" />
     <Compile Include="Mods\System\DevLock.cs" />
     <Compile Include="Mods\System\SandboxDevTools.cs" />
+    <Compile Include="Mods\System\LagDiag.cs" />
     <Compile Include="Mods\System\StateNavigator.cs" />
     <Compile Include="Mods\System\DiagnosticsManager.cs" />
     <Compile Include="Mods\System\GameModifiers.cs" />
@@ -197,7 +201,6 @@
     <Compile Include="Mods\System\SceneDumper.cs" />
     <Compile Include="Mods\System\ScreenshotMode.cs" />
     <Compile Include="Mods\System\CompassAlwaysOn.cs" />
-    <Compile Include="Mods\System\PerkMenu.cs" />
     <Compile Include="Mods\System\PlayerCache.cs" />
     <Compile Include="Mods\System\SessionCommands.cs" />
     <Compile Include="Mods\System\AllModsSwitch.cs" />
@@ -228,6 +231,7 @@
     <Compile Include="Mods\Other\RandomBikeSwitch.cs" />
     <Compile Include="Mods\Other\RubberBandSteering.cs" />
     <Compile Include="Mods\Bike\PedalWhileTweak.cs" />
+    <Compile Include="Mods\Bike\PedalWhileReverse.cs" />
     <Compile Include="Mods\Other\RandomWeatherRoulette.cs" />
     <Compile Include="Mods\World\Fog.cs" />
     <Compile Include="Mods\World\Music.cs" />
@@ -270,7 +274,6 @@
     <Compile Include="UI\Pages\SearchPage.cs" />
     <Compile Include="UI\Pages\SessionPage.cs" />
     <Compile Include="UI\Pages\BindsPage.cs" />
-    <Compile Include="UI\Pages\PerksPage.cs" />
     <Compile Include="UI\Pages\WorldPage.cs" />
     <Compile Include="UI\HUDs\LavaRisingHUD.cs" />
     <Compile Include="UI\HUDs\PoliceHUD.cs" />
@@ -278,6 +281,7 @@
     <Compile Include="UI\HUDs\SurvivalHUD.cs" />
     <Compile Include="UI\HUDs\SuspensionHUD.cs" />
     <Compile Include="UI\HUDs\TrickAttackHUD.cs" />
+    <Compile Include="UI\Core\LuxColorPicker.cs" />
     <Compile Include="UI\Core\UIHelpers.cs" />
     <Compile Include="UI\Core\GamepadCursor.cs" />
     <Compile Include="UI\Core\MenuWindow.cs" />

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using MelonLoader;
 using DescendersModMenu;
@@ -167,6 +168,7 @@ namespace DescendersModMenu.BikeStats
                     RubberBandSteeringEnabled = RubberBandSteering.Enabled,
                     RubberBandSteeringLevel = RubberBandSteering.Level,
                     PedalWhileTweakEnabled = PedalWhileTweak.Enabled,
+                    PedalWhileReverseEnabled = PedalWhileReverse.Enabled,
                     PoliceBestTimeEasy = PoliceChaseMode.BestTimeEasy,
                     PoliceBestTimeMedium = PoliceChaseMode.BestTimeMedium,
                     PoliceBestTimeHard = PoliceChaseMode.BestTimeHard,
@@ -181,10 +183,67 @@ namespace DescendersModMenu.BikeStats
 
         // ══════════════════════════════════════════════════════════════
         // ══════════════════════════════════════════════════════════════
-        public static void LoadStats()
+        public static bool ReadyForAutoLoad()
         {
-            try { ResetStats(false); }
-            catch (System.Exception ex) { ModLog.Warn("[StatsManager] Pre-load reset: " + ex.Message); }
+            try
+            {
+                if (IsInMenuOnlyState())
+                    return false;
+
+                if (HasActiveUiType("UI_Speedometer"))
+                    return true;
+                if (HasActiveUiType("UI_InGame"))
+                    return true;
+                if (HasActiveUiType("UI_SpeedrunTimer"))
+                    return true;
+
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                ModLog.Warn("[StatsManager] ReadyForAutoLoad: " + ex.Message);
+                return true;
+            }
+        }
+
+        private static bool IsInMenuOnlyState()
+        {
+            StateMachine sm = UnityEngine.Object.FindObjectOfType<StateMachine>();
+            if ((object)sm == null) return false;
+
+            System.Reflection.PropertyInfo curStateProp = typeof(StateMachine).GetProperty(
+                "\u005EtrLeIp",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if ((object)curStateProp == null) return false;
+
+            object state = curStateProp.GetValue(sm, null);
+            if (state == null) return false;
+
+            int stateVal = (int)state;
+            // MainMenu, Customization (shed), ModSelect (crew pick), freeride mod pick
+            return stateVal == 2 || stateVal == 11 || stateVal == 33 || stateVal == 36;
+        }
+
+        private static bool HasActiveUiType(string typeName)
+        {
+            UnityEngine.Object[] objs = Resources.FindObjectsOfTypeAll(typeof(GameObject));
+            for (int i = 0; i < objs.Length; i++)
+            {
+                GameObject go = objs[i] as GameObject;
+                if ((object)go == null || !go.activeInHierarchy) continue;
+                if (go.name == typeName || go.name.StartsWith(typeName, System.StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
+        }
+
+        public static void LoadStats(bool fromAutoLoad = false)
+        {
+            if (!fromAutoLoad)
+            {
+                try { ResetStats(false); }
+                catch (System.Exception ex) { ModLog.Warn("[StatsManager] Pre-load reset: " + ex.Message); }
+            }
 
             try
             {
@@ -200,7 +259,14 @@ namespace DescendersModMenu.BikeStats
                 MaxSpeedMultiplier.SetLevel(data.MaxSpeedLevel);
                 LandingImpact.SetLevel(data.LandingImpactLevel);
                 NoBail.SetEnabled(data.NoBailEnabled);
-                BikeSwitcher.SetBike(data.BikeIndex);
+                if (fromAutoLoad)
+                {
+                    // PrefsManager often isn't ready on the first AutoLoad frame — deferred
+                    // path waits, then EnsureBikeApplied (preferred + switch if needed).
+                    MelonCoroutines.Start(DeferredEnsureSavedBike(data.BikeIndex));
+                }
+                else
+                    BikeSwitcher.EnsureBikeApplied(data.BikeIndex);
 
                 FlyMode.MoveSpeed = data.FlyMoveSpeed;
                 FlyMode.ClimbSpeed = data.FlyClimbSpeed;
@@ -344,12 +410,16 @@ namespace DescendersModMenu.BikeStats
                 RubberBandSteering.SetLevel(rbLevel);
                 if (data.RubberBandSteeringEnabled && !RubberBandSteering.Enabled) RubberBandSteering.Toggle();
                 if (data.PedalWhileTweakEnabled && !PedalWhileTweak.Enabled) PedalWhileTweak.Toggle();
+                if (data.PedalWhileReverseEnabled && !PedalWhileReverse.Enabled) PedalWhileReverse.Toggle();
                 PoliceChaseMode.ApplyBestTimes(
                     data.PoliceBestTimeEasy, data.PoliceBestTimeMedium, data.PoliceBestTimeHard);
 
                 ModLog.Feedback("[Stats] Loaded active mods.");
             }
             catch (Exception ex) { MelonLogger.Error("[StatsManager] LoadStats: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "StatsManager"); }
+
+            try { GameModifierMods.ReconcileSandboxDialModifiers(); }
+            catch (System.Exception ex) { ModLog.Warn("[StatsManager] ReconcileSandboxDialModifiers: " + ex.Message); }
 
             try { MovePage.RefreshAll(); } catch { }
             try { WorldPage.RefreshAll(); } catch { }
@@ -360,6 +430,45 @@ namespace DescendersModMenu.BikeStats
             try { SessionPage.RefreshAll(); } catch { }
             try { InfoPage.Refresh(); } catch { }
             try { GhostPage.RefreshAll(); } catch { }
+        }
+
+        private static IEnumerator DeferredEnsureSavedBike(int bikeIndex)
+        {
+            // Wait for spawn/outfit to settle, then force the Sandbox-saved bike if needed.
+            for (int i = 0; i < 120; i++)
+                yield return null;
+
+            try
+            {
+                BikeSwitcher.EnsureBikeApplied(bikeIndex);
+                ModLog.Debug("[StatsManager] DeferredEnsureSavedBike index=" + bikeIndex);
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[StatsManager] DeferredEnsureSavedBike: " + ex.Message);
+            }
+
+            // One more pass — first map spawn sometimes rebuilds bike after our first apply.
+            for (int i = 0; i < 60; i++)
+                yield return null;
+
+            try { BikeSwitcher.EnsureBikeApplied(bikeIndex); }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[StatsManager] DeferredEnsureSavedBike retry: " + ex.Message);
+            }
+
+            // SetBike rebuilds the rider; if the game outfit save is empty (bad Lux quit),
+            // re-apply ActiveSlot clothes only when body/bike are still missing.
+            try
+            {
+                if (LuxGlowTint.NeedsOutfitRepair())
+                    OutfitPresets.ForceReapplyActiveOutfit();
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("[StatsManager] Outfit reapply after bike: " + ex.Message);
+            }
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -379,6 +488,7 @@ namespace DescendersModMenu.BikeStats
                 if (RubberBandSteering.Enabled) RubberBandSteering.Toggle();
                 RubberBandSteering.SetLevel(5);
                 if (PedalWhileTweak.Enabled) PedalWhileTweak.Toggle();
+                if (PedalWhileReverse.Enabled) PedalWhileReverse.Toggle();
 
                 Acceleration.SetLevel(1);
                 MaxSpeedMultiplier.SetLevel(1);

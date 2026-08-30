@@ -31,7 +31,7 @@ namespace DescendersModMenu
             "TrickSetSwap",    "ScreenshotMode",   "NoSpeedWobbles",  "LandingImpact",
             "BlackDeath",      "Compass",          "RubberBand",      "FOV",
             "Acceleration",    "MaxSpeed",         "SessionHUD",      "TrickMultiplier",
-            "PedalWhileTweak", "ChatHUD",           "ESPDistance",     "ESPTracers",
+            "PedalWhileTweak", "PedalWhileReverse", "ChatHUD",           "ESPDistance",     "ESPTracers",
             "ESPWorldObjects",
             // ── Bike ─────────────────────────────────────────────────────
             "InvisibleBike",   "NextBike",         "PrevBike",        "BouncyBike",
@@ -47,7 +47,7 @@ namespace DescendersModMenu
             "RandomWeather",   "RideOnWater",
             // ── Actions ───────────────────────────────────────────────────
             "SuperLaunch",     "TeleportCheckpoint", "JumpToFinish",    "RespawnAtStart",
-            "SkipSong",        "Airhorn",            "ClearPerks",      "GhostClear",
+            "SkipSong",        "Airhorn",            "GhostClear",
             "TopSpeedReset",   "SpectateNext",       "SpectatePrev",    "TrailColour",
             "GoToShed",        "LeaveShed",          "AllMods",
             // ── Modes ─────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ namespace DescendersModMenu
             "Trick Set Swap",    "Screenshot Mode",         "No Speed Wobbles",   "Landing Impact",
             "Black Death",       "Compass Always On",       "Rubber Band Steering","FOV",
             "Acceleration",      "Max Speed Multiplier",    "Session HUD",        "Trick Multiplier",
-            "Pedal While Tweak", "Chat HUD",                "ESP Distance",       "ESP Tracers",
+            "Pedal While Tweak", "Pedal While Reverse", "Chat HUD",                "ESP Distance",       "ESP Tracers",
             "ESP World Objects",
             // ── Bike ─────────────────────────────────────────────────────
             "Invisible Bike",    "Next Bike",              "Previous Bike",       "Bouncy Bike",
@@ -89,7 +89,7 @@ namespace DescendersModMenu
             "Random Weather",    "Ride On Water",
             // ── Actions ───────────────────────────────────────────────────
             "Super Launch",      "Teleport to Checkpoint",  "Jump to Finish",     "Respawn at Start",
-            "Skip Song",         "Airhorn",                 "Clear All Perks",    "Clear Saved Ghost",
+            "Skip Song",         "Airhorn",                 "Clear Saved Ghost",
             "Reset Top Speed",   "Spectate: Next",          "Spectate: Previous", "Trail Painter Colour",
             "Go To Shed",        "Leave Shed",              "Mods Master Switch",
             // ── Modes ─────────────────────────────────────────────────────
@@ -443,6 +443,7 @@ namespace DescendersModMenu
                     case "SessionHUD":         SessionHUD.Toggle();                               break;
                     case "TrickMultiplier":    TrickMultiplier.Toggle();                          break;
                     case "PedalWhileTweak":    PedalWhileTweak.Toggle();                          break;
+                    case "PedalWhileReverse":  PedalWhileReverse.Toggle();                        break;
                     case "ChatHUD":            ChatHUD.Toggle();                                  break;
                     case "ESPDistance":        ESP.ToggleDistance();                              break;
                     case "ESPTracers":         ESP.ToggleTracers();                               break;
@@ -490,7 +491,6 @@ namespace DescendersModMenu
                     case "RespawnAtStart":     DoRespawnAtStart();                                break;
                     case "SkipSong":           DoSkipSong();                                      break;
                     case "Airhorn":            Airhorn.Honk();                                    break;
-                    case "ClearPerks":         PerkMenu.ClearAllPerks();                          break;
                     case "GhostClear":         GhostReplay.ClearSavedRun();                       break;
                     case "TopSpeedReset":      TopSpeed.ResetSession();                           break;
                     case "SpectateNext":       SpectateMode.Next();                               break;

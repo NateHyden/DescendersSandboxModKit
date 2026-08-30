@@ -3,13 +3,23 @@ using System.IO;
 using MelonLoader;
 using UnityEngine;
 using DescendersModMenu;
+using DescendersModMenu.UI;
 
 namespace DescendersModMenu.Mods
 {
     public static class TopSpeed
     {
         public static float SessionTopSpeed { get; private set; } = 0f;
-        private static bool _tracking = false;
+        public static bool Enabled { get; private set; } = false;
+
+        public static void Toggle()
+        {
+            Enabled = !Enabled;
+            if (!Enabled) ResetSession();
+            ModLog.Feedback("[TopSpeed] tracking -> " + (Enabled ? "ON" : "OFF"));
+        }
+
+        public static bool NeedsTracking => Enabled || SessionHUD.Enabled;
 
         private static float _lastSaveTime = -999f;
 
@@ -23,11 +33,15 @@ namespace DescendersModMenu.Mods
 
         public static string DisplayValue
         {
-            get { return SessionTopSpeed > 0.1f ? SessionTopSpeed.ToString("F1") + " km/h" : "--"; }
+            get
+            {
+                if (!Enabled && !SessionHUD.Enabled) return "--";
+                return SessionTopSpeed > 0.1f ? SessionTopSpeed.ToString("F1") + " km/h" : "--";
+            }
         }
 
-        public static void StartTracking() { _tracking = true; }
-        public static void StopTracking() { _tracking = false; }
+        public static void StartTracking() { Enabled = true; }
+        public static void StopTracking() { Enabled = false; ResetSession(); }
 
         public static void ResetSession()
         {
@@ -50,7 +64,7 @@ namespace DescendersModMenu.Mods
 
         public static void Tick()
         {
-            if (!_tracking) return;
+            if (!NeedsTracking) return;
             try
             {
                 if (!UnityNull.Alive(_cachedPlayer) || !_cachedPlayer.activeInHierarchy)

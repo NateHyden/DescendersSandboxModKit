@@ -32,6 +32,13 @@ namespace DescendersModMenu.UI
         private static readonly List<Toast> _toasts = new List<Toast>();
         private static Texture2D _tex;
 
+        private static GUIStyle _iconStyle;
+        private static GUIStyle _nameStyle;
+        private static GUIStyle _msgStyle;
+        private static int _styleIconFs;
+        private static int _styleNameFs;
+        private static int _styleMsgFs;
+
         private static Texture2D Tex
         {
             get
@@ -121,42 +128,50 @@ namespace DescendersModMenu.UI
                 DrawRect(x + panelW - b, y, b, rowH, border);
                 DrawRect(x, y, Mathf.Max(2f, 3f * s), rowH, accent);
 
-                var iconStyle = new GUIStyle(GUI.skin.label)
-                {
-                    fontSize = iconFs,
-                    fontStyle = FontStyle.Bold,
-                    alignment = TextAnchor.MiddleCenter,
-                    normal = { textColor = icon }
-                };
-                GUI.Label(new Rect(x + pad, y, iconW, rowH), "\u2709", iconStyle);
+                EnsureStyles(iconFs, nameFs, msgFs);
+                _iconStyle.normal.textColor = icon;
+                _nameStyle.normal.textColor = accent;
+                _msgStyle.normal.textColor = textC;
+
+                GUI.Label(new Rect(x + pad, y, iconW, rowH), "\u2709", _iconStyle);
 
                 float textX = x + pad + iconW + 4f * s;
                 float textW = panelW - (textX - x) - pad;
 
-                var nameStyle = new GUIStyle(GUI.skin.label)
-                {
-                    fontSize = nameFs,
-                    fontStyle = FontStyle.Bold,
-                    alignment = TextAnchor.UpperLeft,
-                    clipping = TextClipping.Clip,
-                    normal = { textColor = accent }
-                };
-                var msgStyle = new GUIStyle(GUI.skin.label)
-                {
-                    fontSize = msgFs,
-                    fontStyle = FontStyle.Normal,
-                    alignment = TextAnchor.UpperLeft,
-                    clipping = TextClipping.Clip,
-                    normal = { textColor = textC }
-                };
-
                 float half = rowH * 0.5f;
-                GUI.Label(new Rect(textX, y + 2f * s, textW, half), t.PlayerName, nameStyle);
-                string shown = Ellipsize(t.Text, msgStyle, textW);
-                GUI.Label(new Rect(textX, y + half - 2f * s, textW, half), shown, msgStyle);
+                GUI.Label(new Rect(textX, y + 2f * s, textW, half), t.PlayerName, _nameStyle);
+                string shown = Ellipsize(t.Text, _msgStyle, textW);
+                GUI.Label(new Rect(textX, y + half - 2f * s, textW, half), shown, _msgStyle);
 
                 y += rowH + gap;
             }
+        }
+
+        private static void EnsureStyles(int iconFs, int nameFs, int msgFs)
+        {
+            if ((object)_iconStyle == null)
+            {
+                _iconStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter
+                };
+                _nameStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.UpperLeft,
+                    clipping = TextClipping.Clip
+                };
+                _msgStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontStyle = FontStyle.Normal,
+                    alignment = TextAnchor.UpperLeft,
+                    clipping = TextClipping.Clip
+                };
+            }
+            if (_styleIconFs != iconFs) { _iconStyle.fontSize = iconFs; _styleIconFs = iconFs; }
+            if (_styleNameFs != nameFs) { _nameStyle.fontSize = nameFs; _styleNameFs = nameFs; }
+            if (_styleMsgFs != msgFs) { _msgStyle.fontSize = msgFs; _styleMsgFs = msgFs; }
         }
 
         private static string Ellipsize(string text, GUIStyle style, float maxWidth)

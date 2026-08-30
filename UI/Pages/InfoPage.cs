@@ -38,6 +38,9 @@ namespace DescendersModMenu.UI
         private static Text _mlVersionTxt;
         private static Text _careerResultTxt;
         private static Text _telemetryStatusTxt;
+        private static Text _lagDiagVal;
+        private static Image _lagDiagTrk;
+        private static RectTransform _lagDiagKnb;
 
         private static int _feedbackCategory = 2;
         private static readonly string[] _feedbackCatNames = { "Bug Report", "Feature Request", "Feedback" };
@@ -477,6 +480,16 @@ namespace DescendersModMenu.UI
             UIHelpers.SectionHeader("RUNTIME", ddc);
             _devSceneTxt = MakeInfoRow("Scene / DDOL", ddc);
             _devPerfTxt = MakeInfoRow("Perf", ddc);
+
+            var lagRow = UIHelpers.StatRow("Lag Diagnostics", ddc);
+            _lagDiagVal = UIHelpers.Txt("LagDiagV", lagRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            var lagValLe = _lagDiagVal.gameObject.AddComponent<LayoutElement>();
+            lagValLe.preferredWidth = 28; lagValLe.preferredHeight = 18; lagValLe.flexibleHeight = 0;
+            UIHelpers.Toggle(lagRow.transform, "LagDiagT", OnLagDiagToggle, out _lagDiagTrk, out _lagDiagKnb);
+            UIHelpers.ActionBtn(lagRow.transform, "Sample", OnLagDiagSample, 56);
+            UIHelpers.InfoBox(ddc,
+                "Logs FPS / GC / Photon players / join-leave / mod scans / Lux material hits every few seconds to MelonLoader.",
+                Color.white);
 
             var perfRow = UIHelpers.StatRow("Perf Overlay", ddc);
             _devPerfHudVal = UIHelpers.Txt("DevPerfV", perfRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
@@ -1035,6 +1048,8 @@ namespace DescendersModMenu.UI
                     _devPerfHudVal.color = SandboxDevTools.PerfOverlayEnabled ? UIHelpers.OnColor : UIHelpers.OffColor;
                 }
                 UIHelpers.SetToggle(_devPerfHudTrk, _devPerfHudKnb, SandboxDevTools.PerfOverlayEnabled);
+
+                RefreshLagDiagRow();
             }
             catch (System.Exception ex)
             {
@@ -1155,6 +1170,30 @@ namespace DescendersModMenu.UI
             _devNameBuffer = "";
             RefreshDevLive(true);
         }
+        private static void OnLagDiagToggle()
+        {
+            LagDiag.Toggle();
+            RefreshLagDiagRow();
+        }
+
+        private static void OnLagDiagSample()
+        {
+            if (!LagDiag.Enabled) LagDiag.Toggle();
+            LagDiag.SampleNow();
+            RefreshLagDiagRow();
+        }
+
+        private static void RefreshLagDiagRow()
+        {
+            bool on = LagDiag.Enabled;
+            if (_lagDiagVal)
+            {
+                _lagDiagVal.text = on ? "ON" : "OFF";
+                _lagDiagVal.color = on ? UIHelpers.OnColor : UIHelpers.OffColor;
+            }
+            UIHelpers.SetToggle(_lagDiagTrk, _lagDiagKnb, on);
+        }
+
         private static void OnDevPerfToggle() { SandboxDevTools.TogglePerfOverlay(); RefreshDevLive(true); }
         private static void OnDevGc() { SandboxDevTools.ForceGc(); RefreshDevLive(true); }
         private static void OnDevUnload() { SandboxDevTools.UnloadUnused(); RefreshDevLive(true); }
@@ -1626,6 +1665,11 @@ namespace DescendersModMenu.UI
         // -- Tick ------------------------------------------------------
         public static void Tick()
         {
+            if (!MenuUI.IsOpen) return;
+            int pg = MenuWindow.CurrentPage;
+            // Info / Customise / Career only — avoid Photon string rebuilds while on other tabs.
+            if (pg != 3 && pg != 25 && pg != 26) return;
+
             if (_custSavedRow)
                 _custSavedRow.SetActive(Mods.MenuCustomiser.ShowSavedIndicator);
 

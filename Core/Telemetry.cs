@@ -134,6 +134,7 @@ namespace DescendersModMenu
                 stack = ScrubPath(stack);
                 stack = Sanitise(stack, 700);
                 string mod = Sanitise(activeMod ?? "unknown", 40);
+                string version = Sanitise(BuildInfo.Version, 16);
                 string platform = GetPlatform();
                 string mlVer = GetMelonLoaderVersion();
                 string mods = Sanitise(GetLoadedMods(), 350);
@@ -141,7 +142,7 @@ namespace DescendersModMenu
                 if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
                 string playerName = Sanitise(rawName, 32);
 
-                Thread t = new Thread(() => DoPostError(exType, exMsg, stack, mod, platform, mlVer, mods, playerName));
+                Thread t = new Thread(() => DoPostError(exType, exMsg, stack, mod, version, platform, mlVer, mods, playerName));
                 t.IsBackground = true;
                 t.Start();
             }
@@ -163,6 +164,7 @@ namespace DescendersModMenu
             {
                 string msg = Sanitise(message, 400);
                 string mod = Sanitise(activeMod ?? "unknown", 40);
+                string version = Sanitise(BuildInfo.Version, 16);
                 string platform = GetPlatform();
                 string mlVer = GetMelonLoaderVersion();
                 string mods = Sanitise(GetLoadedMods(), 350);
@@ -170,7 +172,7 @@ namespace DescendersModMenu
                 if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
                 string playerName = Sanitise(rawName, 32);
 
-                Thread t = new Thread(() => DoPostWarning(msg, mod, platform, mlVer, mods, playerName));
+                Thread t = new Thread(() => DoPostWarning(msg, mod, version, platform, mlVer, mods, playerName));
                 t.IsBackground = true;
                 t.Start();
             }
@@ -254,6 +256,7 @@ namespace DescendersModMenu
                 for (int i = 0; i < failures.Count && i < max; i++)
                     safe.Add(Sanitise(failures[i], 150));
                 string extra = failures.Count > max ? " (+" + (failures.Count - max) + " more)" : "";
+                string version = Sanitise(BuildInfo.Version, 16);
                 string platform = GetPlatform();
                 string mlVer = GetMelonLoaderVersion();
                 string mods = Sanitise(GetLoadedMods(), 300);
@@ -261,7 +264,7 @@ namespace DescendersModMenu
                 if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
                 string playerName = Sanitise(rawName, 32);
 
-                Thread t = new Thread(() => DoPostInitFailures(safe, extra, platform, mlVer, mods, playerName));
+                Thread t = new Thread(() => DoPostInitFailures(safe, extra, version, platform, mlVer, mods, playerName));
                 t.IsBackground = true;
                 t.Start();
             }
@@ -301,7 +304,7 @@ namespace DescendersModMenu
         }
 
         private static void DoPostError(string exType, string exMsg, string stack,
-            string mod, string platform, string mlVer, string mods, string playerName)
+            string mod, string version, string platform, string mlVer, string mods, string playerName)
         {
             try
             {
@@ -321,6 +324,7 @@ namespace DescendersModMenu
                             "{\"name\":\"Exception\",\"value\":\"" + Sanitise(exType, 100) + "\",\"inline\":false}," +
                             "{\"name\":\"Message\",\"value\":\"" + exMsg + "\",\"inline\":false}," +
                             "{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}," +
+                            "{\"name\":\"Version\",\"value\":\"" + version + "\",\"inline\":true}," +
                             "{\"name\":\"Active Mod\",\"value\":\"" + mod + "\",\"inline\":true}," +
                             "{\"name\":\"Platform\",\"value\":\"" + Sanitise(platform, 16) + "\",\"inline\":true}," +
                             "{\"name\":\"MelonLoader\",\"value\":\"" + Sanitise(mlVer, 16) + "\",\"inline\":true}," +
@@ -334,7 +338,7 @@ namespace DescendersModMenu
             catch { }
         }
 
-        private static void DoPostWarning(string message, string mod,
+        private static void DoPostWarning(string message, string mod, string version,
             string platform, string mlVer, string mods, string playerName)
         {
             try
@@ -354,6 +358,7 @@ namespace DescendersModMenu
                         "\"fields\":[" +
                             "{\"name\":\"Message\",\"value\":\"" + message + "\",\"inline\":false}," +
                             "{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}," +
+                            "{\"name\":\"Version\",\"value\":\"" + version + "\",\"inline\":true}," +
                             "{\"name\":\"Active Mod\",\"value\":\"" + mod + "\",\"inline\":true}," +
                             "{\"name\":\"Platform\",\"value\":\"" + Sanitise(platform, 16) + "\",\"inline\":true}," +
                             "{\"name\":\"MelonLoader\",\"value\":\"" + Sanitise(mlVer, 16) + "\",\"inline\":true}," +
@@ -367,7 +372,7 @@ namespace DescendersModMenu
         }
 
         private static void DoPostInitFailures(List<string> failures, string extra,
-            string platform, string mlVer, string mods, string playerName)
+            string version, string platform, string mlVer, string mods, string playerName)
         {
             try
             {
@@ -381,6 +386,7 @@ namespace DescendersModMenu
 
                 List<string> fields = new List<string>();
                 fields.Add("{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}");
+                fields.Add("{\"name\":\"Version\",\"value\":\"" + version + "\",\"inline\":true}");
                 fields.Add("{\"name\":\"Platform\",\"value\":\"" + Sanitise(platform, 16) + "\",\"inline\":true}");
                 fields.Add("{\"name\":\"MelonLoader\",\"value\":\"" + Sanitise(mlVer, 16) + "\",\"inline\":true}");
                 fields.Add("{\"name\":\"Failed Count\",\"value\":\"" + Sanitise(failures.Count + extra, 20) + "\",\"inline\":true}");

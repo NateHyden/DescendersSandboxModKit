@@ -28,6 +28,10 @@ namespace DescendersModMenu.UI
         private static Image _pwtTrack;
         private static RectTransform _pwtKnob;
 
+        private static Text _pwrTogVal;
+        private static Image _pwrTrack;
+        private static RectTransform _pwrKnob;
+
         // ── Wheelie HUD row fields ────────────────────────────────────
         private static GameObject _whRow;
         private static Text _whTogVal;
@@ -52,6 +56,7 @@ namespace DescendersModMenu.UI
             GameModifierMods.WheelieBalanceLevel != 5 ||
             GameModifierMods.TweakSpeedLevel != 5 ||
             PedalWhileTweak.Enabled ||
+            PedalWhileReverse.Enabled ||
             NearMissSensitivity.Enabled ||
             CenterOfMass.OffsetLR != 0f || CenterOfMass.OffsetFB != 0f || CenterOfMass.OffsetUD != 0f;
 
@@ -191,6 +196,15 @@ namespace DescendersModMenu.UI
                 _pwtTrack = pwtTrack; _pwtKnob = pwtKnob;
                 UIHelpers.InfoBox(pg6, "Lets you keep pedalling while you tweak with the stick.");
                 FavouritesManager.RegisterStarButton("PedalWhileTweak", UIHelpers.StarBtn(pwtR.transform, "PedalWhileTweak", () => FavouritesManager.Toggle("PedalWhileTweak")));
+
+                var pwrR = UIHelpers.StatRow("Pedal While Reverse", pg6);
+                _pwrTogVal = UIHelpers.Txt("PwrTV", pwrR.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+                _pwrTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+                Image pwrTrack; RectTransform pwrKnob;
+                UIHelpers.Toggle(pwrR.transform, "PwrT", () => { PedalWhileReverse.Toggle(); RefreshAll(); }, out pwrTrack, out pwrKnob);
+                _pwrTrack = pwrTrack; _pwrKnob = pwrKnob;
+                UIHelpers.InfoBox(pg6, "Lets you pedal forwards while rolling backwards (fakie).");
+                FavouritesManager.RegisterStarButton("PedalWhileReverse", UIHelpers.StarBtn(pwrR.transform, "PedalWhileReverse", () => FavouritesManager.Toggle("PedalWhileReverse")));
 
                 var nmr = UIHelpers.StatRow("Near Miss Sensitivity", pg6);
                 _nmBar = UIHelpers.MakeBar("NmB", nmr.transform, (NearMissSensitivity.Level - 1) / 9f);
@@ -350,6 +364,15 @@ namespace DescendersModMenu.UI
                 });
                 FavouritesManager.Register(new ModFavEntry
                 {
+                    Id = "PedalWhileReverse",
+                    DisplayName = "Pedal While Reverse",
+                    TabBadge = "MOVE",
+                    BuildControls = (p) => FavsPage.BuildToggleOnly(p, "PedalWhileReverse", "Pedal While Reverse",
+                        () => PedalWhileReverse.Enabled, () => { PedalWhileReverse.Toggle(); RefreshAll(); }),
+                    IsActive = () => PedalWhileReverse.Enabled
+                });
+                FavouritesManager.Register(new ModFavEntry
+                {
                     Id = "NearMiss",
                     DisplayName = "Near Miss Sensitivity",
                     TabBadge = "MOVE",
@@ -466,6 +489,10 @@ namespace DescendersModMenu.UI
             bool pwtOn = PedalWhileTweak.Enabled;
             if (_pwtTogVal) { _pwtTogVal.text = pwtOn ? "ON" : "OFF"; _pwtTogVal.color = pwtOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_pwtTrack, _pwtKnob, pwtOn);
+
+            bool pwrOn = PedalWhileReverse.Enabled;
+            if (_pwrTogVal) { _pwrTogVal.text = pwrOn ? "ON" : "OFF"; _pwrTogVal.color = pwrOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_pwrTrack, _pwrKnob, pwrOn);
 
             // ── Center of Mass ────────────────────────────────────────
             if (_comLRVal) _comLRVal.text = CenterOfMass.DisplayLR;

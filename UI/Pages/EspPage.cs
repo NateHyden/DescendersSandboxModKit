@@ -231,6 +231,9 @@ namespace DescendersModMenu.UI
         public static void Tick()
         {
             if (!_modUsersText) return;
+            // Prebuild leaves ESP page UI alive; list only needs refresh on ESP tab.
+            if (!MenuUI.IsOpen || MenuWindow.CurrentPage != 2) return;
+            LagDiag.EspPageTicks++;
             RefreshModUsers();
         }
 

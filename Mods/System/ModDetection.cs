@@ -22,6 +22,7 @@ namespace DescendersModMenu.Mods
         private static bool _tagged;
         private static float _nextScanTime;
         private const float ScanInterval = 2.5f;
+        private static int _lastScanPlayerCount = -1;
 
         private static readonly string PhotonNetName = "upVWa\u0084E";
         private static readonly string LocalPlayerName = "gQ\u0060\u0083tus";
@@ -118,7 +119,11 @@ namespace DescendersModMenu.Mods
                     return;
                 }
 
-                if (_tagged) return;
+                // Already tagged and DescMM still present — nothing to do.
+                if (_tagged && LocalHasModProp(localP))
+                    return;
+
+                LagDiag.ModDetectTagAttempts++;
 
                 ParameterInfo[] parms = _setProps.GetParameters();
                 Type htType = parms.Length > 0 ? parms[0].ParameterType : null;
@@ -137,6 +142,12 @@ namespace DescendersModMenu.Mods
 
                 _setProps.Invoke(localP, new object[] { ht, null, false });
                 _tagged = true;
+                LagDiag.ModDetectTagSuccess++;
+
+                // Props just set — force an immediate rescan so HUD/chat don't stay at 0
+                // until someone else joins/leaves (common alone on mod.io maps).
+                _lastScanPlayerCount = -1;
+                Scan();
             }
             catch (Exception ex)
             {
@@ -145,15 +156,33 @@ namespace DescendersModMenu.Mods
             }
         }
 
+        private static bool LocalHasModProp(object localP)
+        {
+            try
+            {
+                if ((object)localP == null) return false;
+                PropertyInfo pp = _propsProp;
+                if ((object)pp == null)
+                    pp = localP.GetType().GetProperty(CustomPropsName, BindingFlags.Public | BindingFlags.Instance);
+                if ((object)pp == null) return false;
+                object props = pp.GetValue(localP, null);
+                IDictionary dict = props as IDictionary;
+                return (object)dict != null && dict.Contains(PropKey);
+            }
+            catch { return false; }
+        }
+
         public static void ResetTag()
         {
             _tagged = false;
             _modUsers.Clear();
             _nextScanTime = 0f;
+            _lastScanPlayerCount = -1;
         }
 
         public static void Scan()
         {
+            LagDiag.ModDetectScans++;
             _modUsers.Clear();
 
             try
@@ -272,12 +301,41 @@ namespace DescendersModMenu.Mods
             return sb.ToString();
         }
 
+        private static float _nextTagCheck;
+        private const float TagCheckInterval = 1f;
+
         public static void Tick()
         {
-            TagLocalPlayer();
             float now = UnityEngine.Time.unscaledTime;
+            // Once tagged, only re-check room occasionally (avoids InRoom reflection every frame).
+            if (!_tagged)
+            {
+                if (now >= _nextTagCheck)
+                {
+                    _nextTagCheck = now + TagCheckInterval;
+                    TagLocalPlayer();
+                }
+            }
+            else if (now >= _nextTagCheck)
+            {
+                _nextTagCheck = now + TagCheckInterval;
+                TagLocalPlayer();
+            }
+
             if (now < _nextScanTime) return;
             _nextScanTime = now + ScanInterval;
+
+            if (!ModChat.InRoom)
+            {
+                if (_modUsers.Count > 0) _modUsers.Clear();
+                _lastScanPlayerCount = -1;
+                return;
+            }
+
+            // Always refresh on interval while in a room. Waiting only for player-count
+            // changes misses self-tag (and late remote DescMM props) on quiet mod.io lobbies.
+            int count = ModChat.PlayerListCount;
+            _lastScanPlayerCount = count;
             Scan();
         }
 

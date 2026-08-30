@@ -210,6 +210,8 @@ namespace DescendersModMenu.UI
         public static void Tick()
         {
             if (!_inputText) return;
+            // Prebuild leaves page UI alive; do not rebuild strings every frame while riding.
+            if (!MenuUI.IsOpen) return;
 
             if (ModChat.HasNewMessages)
             {
@@ -218,6 +220,10 @@ namespace DescendersModMenu.UI
                 if (MenuWindow.IsChatOpen)
                     ModChat.MarkAsRead();
             }
+
+            // Status/online labels only while Chat tab is visible.
+            if (MenuWindow.CurrentPage != 12) return;
+            LagDiag.ChatPageTicks++;
 
             if (_chatFocused && Input.GetMouseButtonDown(0))
             {

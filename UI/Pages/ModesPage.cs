@@ -775,6 +775,8 @@ namespace DescendersModMenu.UI
 
         public static void Tick()
         {
+            // Mode subpages rewrite labels every frame; only needed while Modes is open.
+            if (!MenuUI.IsOpen || MenuWindow.CurrentPage != 13) return;
             if (_activeTab == 0) LavaRisingPage.Tick();
             if (_activeTab == 1) AvalanchePage.Tick();
             if (_activeTab == 3) TickPoliceChasePage();

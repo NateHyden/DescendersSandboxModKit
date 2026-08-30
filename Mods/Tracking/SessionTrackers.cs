@@ -3,6 +3,7 @@ using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
 using DescendersModMenu;
+using DescendersModMenu.UI;
 
 namespace DescendersModMenu.Mods
 {
@@ -10,6 +11,14 @@ namespace DescendersModMenu.Mods
     {
         // ── Session Timer ─────────────────────────────────────────────────
         private static float _sessionStartTime = -1f;
+        public static bool TrackSessionTime { get; private set; } = false;
+
+        public static void ToggleTrackSessionTime()
+        {
+            TrackSessionTime = !TrackSessionTime;
+            if (!TrackSessionTime) _sessionStartTime = -1f;
+            ModLog.Feedback("[Session] Timer tracking -> " + (TrackSessionTime ? "ON" : "OFF"));
+        }
 
         public static float SessionTime
         {
@@ -24,6 +33,7 @@ namespace DescendersModMenu.Mods
         {
             get
             {
+                if (!TrackSessionTime) return "--:--";
                 float t = SessionTime;
                 if (t <= 0f) return "--:--";
                 int mins = (int)(t / 60f);
@@ -34,16 +44,37 @@ namespace DescendersModMenu.Mods
 
         // ── Bail Counter ──────────────────────────────────────────────────
         public static int BailCount { get; private set; } = 0;
+        public static bool TrackBails { get; private set; } = false;
+
+        public static void ToggleTrackBails()
+        {
+            TrackBails = !TrackBails;
+            if (!TrackBails) ResetBails();
+            ModLog.Feedback("[Session] Bail tracking -> " + (TrackBails ? "ON" : "OFF"));
+        }
+
+        private static bool NeedsBailCount =>
+            TrackBails
+            || SurvivalMode.Enabled
+            || TrickAttackMode.CurrentState != TrickAttackMode.State.Off;
         private static float _lastBailTime = -999f;
         private const float BailCooldown = 1.0f;
 
         public static string BailCountDisplay
         {
-            get { return BailCount.ToString(); }
+            get { return TrackBails ? BailCount.ToString() : "--"; }
         }
 
         // ── Checkpoint Counter ────────────────────────────────────────
         public static int CheckpointCount { get; private set; } = 0;
+        public static bool TrackCheckpoints { get; private set; } = false;
+
+        public static void ToggleTrackCheckpoints()
+        {
+            TrackCheckpoints = !TrackCheckpoints;
+            if (!TrackCheckpoints) ResetCheckpoints();
+            ModLog.Feedback("[Session] Checkpoint tracking -> " + (TrackCheckpoints ? "ON" : "OFF"));
+        }
         private static int _lastCpIndex = -1;
 
         private static System.Reflection.PropertyInfo _cpIndexProp = null;
@@ -53,11 +84,37 @@ namespace DescendersModMenu.Mods
 
         public static string CheckpointCountDisplay
         {
-            get { return CheckpointCount.ToString(); }
+            get { return TrackCheckpoints ? CheckpointCount.ToString() : "--"; }
         }
+
+        /// <summary>Skip per-frame physics reads when nothing consumes session stats.</summary>
+        public static bool NeedsTracking
+        {
+            get
+            {
+                return NeedsSessionTimeTick
+                    || NeedsPhysicsTick
+                    || NeedsCheckpointPoll
+                    || SurvivalMode.Enabled
+                    || TrickAttackMode.CurrentState != TrickAttackMode.State.Off
+                    || ConfettiOnTrick.Enabled
+                    || RandomMutatorOnCheckpoint.Enabled;
+            }
+        }
+
+        public static bool NeedsSessionTimeTick =>
+            TrackSessionTime || SessionHUD.Enabled;
+
+        public static bool NeedsPhysicsTick =>
+            TrackAirtime || TrackGForce || SessionHUD.Enabled || ConfettiOnTrick.Enabled;
+
+        public static bool NeedsCheckpointPoll =>
+            TrackCheckpoints || RandomMutatorOnCheckpoint.Enabled || SessionHUD.Enabled;
 
         public static void CheckpointTick()
         {
+            if (!NeedsCheckpointPoll) return;
+
             try
             {
                 if ((object)_cachedVE == null || !(bool)(UnityEngine.Object)_cachedVE)
@@ -102,7 +159,7 @@ namespace DescendersModMenu.Mods
 
                 if (idx > _lastCpIndex)
                 {
-                    CheckpointCount += 1;
+                    if (TrackCheckpoints) CheckpointCount += 1;
                     RandomMutatorOnCheckpoint.OnCheckpoint();
                 }
                 else if (idx == 0 && _lastCpIndex > 0)
@@ -132,7 +189,10 @@ namespace DescendersModMenu.Mods
             float now = Time.unscaledTime;
             if (now - _lastBailTime < BailCooldown) return;
             _lastBailTime = now;
-            BailCount++;
+
+            if (NeedsBailCount)
+                BailCount++;
+
             ModLog.Debug("[SessionTrackers] Bail #" + BailCount);
 
             float impactSpeed = 0f;
@@ -147,12 +207,29 @@ namespace DescendersModMenu.Mods
 
         // ── Longest Airtime ───────────────────────────────────────────────
         public static float LongestAirtime { get; private set; } = 0f;
+        public static bool TrackAirtime { get; private set; } = false;
+
+        public static void ToggleTrackAirtime()
+        {
+            TrackAirtime = !TrackAirtime;
+            if (!TrackAirtime) ResetAirtime();
+            ModLog.Feedback("[Session] Airtime tracking -> " + (TrackAirtime ? "ON" : "OFF"));
+        }
+
         private static float _currentAirtimeStart = -1f;
         private static bool _wasOnGround = true;
 
         // ── G-Force Tracker ──────────────────────────────────────────────
         public static float CurrentGForce { get; private set; } = 0f;
         public static float PeakGForce { get; private set; } = 0f;
+        public static bool TrackGForce { get; private set; } = false;
+
+        public static void ToggleTrackGForce()
+        {
+            TrackGForce = !TrackGForce;
+            if (!TrackGForce) ResetGForce();
+            ModLog.Feedback("[Session] G-Force tracking -> " + (TrackGForce ? "ON" : "OFF"));
+        }
         private static Vector3 _lastVelocity = Vector3.zero;
         private static bool _hasLastVelocity = false;
 
@@ -165,25 +242,37 @@ namespace DescendersModMenu.Mods
 
         public static string AirtimeDisplay
         {
-            get { return LongestAirtime > 0.1f ? LongestAirtime.ToString("F1") + "s" : "--"; }
+            get
+            {
+                if (!TrackAirtime) return "--";
+                return LongestAirtime > 0.1f ? LongestAirtime.ToString("F1") + "s" : "--";
+            }
         }
 
         public static string GForceDisplay
         {
-            get { return CurrentGForce.ToString("F1") + "G"; }
+            get { return TrackGForce ? CurrentGForce.ToString("F1") + "G" : "--"; }
         }
 
         public static string PeakGForceDisplay
         {
-            get { return PeakGForce > 0.1f ? PeakGForce.ToString("F1") + "G" : "--"; }
+            get
+            {
+                if (!TrackGForce) return "--";
+                return PeakGForce > 0.1f ? PeakGForce.ToString("F1") + "G" : "--";
+            }
         }
 
         public static void Tick()
         {
+            if (!NeedsTracking) return;
+
             try
             {
-                if (_sessionStartTime < 0f)
+                if (NeedsSessionTimeTick && _sessionStartTime < 0f)
                     _sessionStartTime = Time.unscaledTime;
+
+                if (!NeedsPhysicsTick) return;
 
                 if (!UnityNull.Alive(_cachedPlayer) || !_cachedPlayer.activeInHierarchy)
                 {
@@ -197,80 +286,88 @@ namespace DescendersModMenu.Mods
                     _cachedVehicle = _cachedPlayer.GetComponent<Vehicle>();
                 if (!UnityNull.Alive(_cachedVehicle)) return;
 
-                // ── Airtime tracking ─────────────────────────────────────
-                bool onGround = true;
+                bool trackAirtime = TrackAirtime || SessionHUD.Enabled || ConfettiOnTrick.Enabled;
 
-                if (!_groundPropCached)
+                // ── Airtime tracking ─────────────────────────────────────
+                if (trackAirtime)
                 {
-                    _groundPropCached = true;
-                    PropertyInfo[] props = _cachedVehicle.GetType().GetProperties(
-                        BindingFlags.Public | BindingFlags.Instance);
-                    for (int i = 0; i < props.Length; i++)
+                    bool onGround = true;
+
+                    if (!_groundPropCached)
                     {
-                        if (!props[i].CanRead) continue;
-                        if (!string.Equals(props[i].PropertyType.Name, "Boolean",
-                            System.StringComparison.Ordinal)) continue;
-                        if (props[i].Name.StartsWith("T"))
+                        _groundPropCached = true;
+                        PropertyInfo[] props = _cachedVehicle.GetType().GetProperties(
+                            BindingFlags.Public | BindingFlags.Instance);
+                        for (int i = 0; i < props.Length; i++)
                         {
-                            _onGroundProp = props[i];
-                            ModLog.Debug("[SessionTrackers] Found onGround prop: " + props[i].Name);
-                            break;
+                            if (!props[i].CanRead) continue;
+                            if (!string.Equals(props[i].PropertyType.Name, "Boolean",
+                                System.StringComparison.Ordinal)) continue;
+                            if (props[i].Name.StartsWith("T"))
+                            {
+                                _onGroundProp = props[i];
+                                ModLog.Debug("[SessionTrackers] Found onGround prop: " + props[i].Name);
+                                break;
+                            }
                         }
                     }
-                }
 
-                if ((object)_onGroundProp != null)
-                {
-                    object val = _onGroundProp.GetValue(_cachedVehicle, null);
-                    if (val is bool) onGround = (bool)val;
-                }
+                    if ((object)_onGroundProp != null)
+                    {
+                        object val = _onGroundProp.GetValue(_cachedVehicle, null);
+                        if (val is bool) onGround = (bool)val;
+                    }
 
-                if (!onGround)
-                {
-                    if (_wasOnGround)
+                    if (!onGround)
                     {
-                        _currentAirtimeStart = Time.unscaledTime;
+                        if (_wasOnGround)
+                        {
+                            _currentAirtimeStart = Time.unscaledTime;
+                        }
+                        else if (_currentAirtimeStart > 0f)
+                        {
+                            float airtime = Time.unscaledTime - _currentAirtimeStart;
+                            if (airtime > LongestAirtime)
+                                LongestAirtime = airtime;
+                        }
                     }
-                    else if (_currentAirtimeStart > 0f)
+                    else
                     {
-                        float airtime = Time.unscaledTime - _currentAirtimeStart;
-                        if (airtime > LongestAirtime)
-                            LongestAirtime = airtime;
+                        if (!_wasOnGround && _currentAirtimeStart > 0f)
+                        {
+                            float airtime = Time.unscaledTime - _currentAirtimeStart;
+                            if (airtime > LongestAirtime)
+                                LongestAirtime = airtime;
+                            ConfettiOnTrick.OnLanded(airtime);
+                        }
+                        _currentAirtimeStart = -1f;
                     }
-                }
-                else
-                {
-                    if (!_wasOnGround && _currentAirtimeStart > 0f)
-                    {
-                        float airtime = Time.unscaledTime - _currentAirtimeStart;
-                        if (airtime > LongestAirtime)
-                            LongestAirtime = airtime;
-                        ConfettiOnTrick.OnLanded(airtime);
-                    }
-                    _currentAirtimeStart = -1f;
-                }
 
-                _wasOnGround = onGround;
+                    _wasOnGround = onGround;
+                }
 
                 // ── G-Force tracking ──────────────────────────────────────
-                if (!UnityNull.Alive(_cachedRb))
-                    _cachedRb = _cachedPlayer.GetComponentInChildren<Rigidbody>();
-                if (UnityNull.Alive(_cachedRb))
+                if (TrackGForce || SessionHUD.Enabled)
                 {
-                    Vector3 currentVelocity = _cachedRb.velocity;
-                    if (_hasLastVelocity)
+                    if (!UnityNull.Alive(_cachedRb))
+                        _cachedRb = _cachedPlayer.GetComponentInChildren<Rigidbody>();
+                    if (UnityNull.Alive(_cachedRb))
                     {
-                        float dt = Time.fixedDeltaTime;
-                        if (dt > 0.0001f)
+                        Vector3 currentVelocity = _cachedRb.velocity;
+                        if (_hasLastVelocity)
                         {
-                            Vector3 accel = (currentVelocity - _lastVelocity) / dt;
-                            CurrentGForce = accel.magnitude / 9.81f;
-                            if (CurrentGForce > PeakGForce)
-                                PeakGForce = CurrentGForce;
+                            float dt = Time.fixedDeltaTime;
+                            if (dt > 0.0001f)
+                            {
+                                Vector3 accel = (currentVelocity - _lastVelocity) / dt;
+                                CurrentGForce = accel.magnitude / 9.81f;
+                                if (CurrentGForce > PeakGForce)
+                                    PeakGForce = CurrentGForce;
+                            }
                         }
+                        _lastVelocity = currentVelocity;
+                        _hasLastVelocity = true;
                     }
-                    _lastVelocity = currentVelocity;
-                    _hasLastVelocity = true;
                 }
             }
             catch { }

@@ -84,6 +84,7 @@ namespace DescendersModMenu.Mods
                 S("DiscoMode", () => DiscoMode.Enabled, DiscoMode.Toggle),
                 S("BlizzardDial", () => BlizzardDial.Enabled, BlizzardDial.Toggle),
                 S("NearMiss", () => NearMissSensitivity.Enabled, NearMissSensitivity.Toggle),
+                S("PedalWhileReverse", () => PedalWhileReverse.Enabled, PedalWhileReverse.Toggle),
                 S("ObjectPlacer", () => ObjectPlacer.Enabled, ObjectPlacer.Toggle),
                 S("UIRemover", () => UIRemover.Enabled, UIRemover.Toggle),
                 S("ScreenshotMode", () => ScreenshotMode.Enabled, ScreenshotMode.Toggle),

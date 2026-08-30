@@ -40,6 +40,10 @@ namespace DescendersModMenu.Mods
         private static PropertyInfo _nickName = null;
         private static PropertyInfo _inRoom = null;
         private static PropertyInfo _connectionState = null;
+        private static PropertyInfo _allPlayersProp = null;
+        private static PropertyInfo _roomProp = null;
+        private static PropertyInfo _roomNameProp = null;
+        private static System.Type _cachedRoomType = null;
         private static System.Type _photonHashtable = null;
         private static bool _subscribed = false;
         private static bool _resolved = false;
@@ -85,10 +89,8 @@ namespace DescendersModMenu.Mods
             {
                 try
                 {
-                    if (!_photonAccessEnabled || !Resolve() || (object)_photonType == null) return -1;
-                    PropertyInfo pl = _photonType.GetProperty("CoH\u007C\u007EDq", BindingFlags.Public | BindingFlags.Static);
-                    if ((object)pl == null) return -1;
-                    object arr = pl.GetValue(null, null);
+                    if (!_photonAccessEnabled || !Resolve() || (object)_allPlayersProp == null) return -1;
+                    object arr = _allPlayersProp.GetValue(null, null);
                     Array a = arr as Array;
                     return (object)a != null ? a.Length : -1;
                 }
@@ -102,17 +104,21 @@ namespace DescendersModMenu.Mods
             {
                 try
                 {
-                    if (!_photonAccessEnabled || !Resolve() || (object)_photonType == null) return "";
-                    PropertyInfo roomProp = _photonType.GetProperty("wkT\u0080REz", BindingFlags.Public | BindingFlags.Static);
-                    if ((object)roomProp == null) return "";
-                    object room = roomProp.GetValue(null, null);
+                    if (!_photonAccessEnabled || !Resolve() || (object)_roomProp == null) return "";
+                    object room = _roomProp.GetValue(null, null);
                     if ((object)room == null) return "";
-                    PropertyInfo nameProp = room.GetType().GetProperty("name", BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-                    if ((object)nameProp == null)
-                        nameProp = room.GetType().GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);
-                    if ((object)nameProp != null)
+                    System.Type roomType = room.GetType();
+                    if ((object)_cachedRoomType != (object)roomType)
                     {
-                        object n = nameProp.GetValue(room, null);
+                        _cachedRoomType = roomType;
+                        _roomNameProp = roomType.GetProperty("name",
+                            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                        if ((object)_roomNameProp == null)
+                            _roomNameProp = roomType.GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);
+                    }
+                    if ((object)_roomNameProp != null)
+                    {
+                        object n = _roomNameProp.GetValue(room, null);
                         if ((object)n != null) return n.ToString();
                     }
                     return room.ToString();
@@ -293,6 +299,8 @@ namespace DescendersModMenu.Mods
 
                 _inRoom = _photonType.GetProperty("La\u0080lETO", BindingFlags.Public | BindingFlags.Static);
                 _connectionState = _photonType.GetProperty("W\u007Dikkp\u0080", BindingFlags.Public | BindingFlags.Static);
+                _allPlayersProp = _photonType.GetProperty("CoH\u007C\u007EDq", BindingFlags.Public | BindingFlags.Static);
+                _roomProp = _photonType.GetProperty("wkT\u0080REz", BindingFlags.Public | BindingFlags.Static);
 
                 Assembly[] htAsms = AppDomain.CurrentDomain.GetAssemblies();
                 for (int ai = 0; ai < htAsms.Length; ai++)
@@ -344,6 +352,7 @@ namespace DescendersModMenu.Mods
         // ── Photon event handler ──────────────────────────────────────────
         private static void OnPhotonEvent(byte eventCode, object data, int senderId)
         {
+            LagDiag.ModChatEvents++;
             if (eventCode != EventCode) return;
             try
             {
@@ -553,6 +562,7 @@ namespace DescendersModMenu.Mods
 
         private static void AddMessage(ChatMessage msg)
         {
+            LagDiag.ModChatMessages++;
             _messages.Add(msg);
             if (_messages.Count > MaxMessages)
                 _messages.RemoveAt(0);

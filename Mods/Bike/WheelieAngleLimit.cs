@@ -58,11 +58,28 @@ namespace DescendersModMenu.Mods
 
         public static void ResetGrace() { _graceTimer = 0f; }
 
+        private static Vehicle _localVehicle;
+        private static float _nextLocalFind;
+
+        private static bool IsLocalPlayer(Vehicle v)
+        {
+            if (!UnityNull.Alive(_localVehicle))
+            {
+                float now = Time.unscaledTime;
+                if (now < _nextLocalFind) return false;
+                _nextLocalFind = now + 1f;
+                GameObject go = GameObject.Find("Player_Human");
+                _localVehicle = UnityNull.Alive(go) ? go.GetComponent<Vehicle>() : null;
+            }
+            return (object)v == (object)_localVehicle;
+        }
+
         public static void Postfix(Vehicle __instance)
         {
+            // Avoid gameObject.name allocs on every remote bike every FixedUpdate.
+            if (!WheelieAngleLimit.Enabled && !WheelieHUD.Enabled) return;
             if (!UnityNull.Alive(__instance)) return;
-            if (!string.Equals(__instance.gameObject.name, "Player_Human",
-                System.StringComparison.Ordinal)) return;
+            if (!IsLocalPlayer(__instance)) return;
 
             try
             {

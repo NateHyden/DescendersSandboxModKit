@@ -195,6 +195,7 @@ namespace DescendersModMenu.BikeStats
         public bool RubberBandSteeringEnabled = false;
         public int RubberBandSteeringLevel = 5;
         public bool PedalWhileTweakEnabled = false;
+        public bool PedalWhileReverseEnabled = false;
 
         // ── Police Chase best times (seconds) ──────────────────────────
         public float PoliceBestTimeEasy = 0f;

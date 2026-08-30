@@ -226,6 +226,122 @@ namespace DescendersModMenu.Mods
             }
         }
 
+        public static BikeType[] GetAllBikeTypes()
+        {
+            try
+            {
+                GameData gameData = UnityEngine.Object.FindObjectOfType<GameData>();
+                if (object.ReferenceEquals(gameData, null))
+                    return null;
+
+                FieldInfo[] gameDataFields = gameData.GetType().GetFields(Flags);
+                for (int i = 0; i < gameDataFields.Length; i++)
+                {
+                    FieldInfo field = gameDataFields[i];
+                    if (!field.FieldType.IsArray)
+                        continue;
+
+                    Type elementType = field.FieldType.GetElementType();
+                    if (!object.ReferenceEquals(elementType, null) &&
+                        string.Equals(elementType.Name, "BikeType", StringComparison.Ordinal))
+                        return field.GetValue(gameData) as BikeType[];
+                }
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("BikeSwitcher.GetAllBikeTypes failed: " + ex);
+                Telemetry.ReportErrorAsync(ex, "BikeSwitcher");
+            }
+
+            return null;
+        }
+
+        public static BikeType GetCurrentBikeType()
+        {
+            try
+            {
+                PlayerInfoImpact player = GetPlayerImpact();
+                if (object.ReferenceEquals(player, null))
+                    return null;
+
+                FieldInfo[] playerFields = player.GetType().GetFields(Flags);
+                for (int i = 0; i < playerFields.Length; i++)
+                {
+                    FieldInfo field = playerFields[i];
+                    if (!string.Equals(field.FieldType.Name, "BikeType", StringComparison.Ordinal))
+                        continue;
+
+                    BikeType bt = field.GetValue(player) as BikeType;
+                    if (!object.ReferenceEquals(bt, null))
+                        return bt;
+                }
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error("BikeSwitcher.GetCurrentBikeType failed: " + ex);
+                Telemetry.ReportErrorAsync(ex, "BikeSwitcher");
+            }
+
+            return null;
+        }
+
+        public static int FindBikeIndex(BikeType bike)
+        {
+            if (object.ReferenceEquals(bike, null))
+                return -1;
+
+            BikeType[] bikes = GetAllBikeTypes();
+            if (object.ReferenceEquals(bikes, null) || bikes.Length == 0)
+                return -1;
+
+            for (int i = 0; i < bikes.Length; i++)
+            {
+                if (object.ReferenceEquals(bikes[i], bike))
+                    return i;
+            }
+
+            string bikeName = bike.name ?? "";
+            for (int i = 0; i < bikes.Length; i++)
+            {
+                BikeType candidate = bikes[i];
+                if (object.ReferenceEquals(candidate, null))
+                    continue;
+
+                if (string.Equals(candidate.name, bikeName, StringComparison.OrdinalIgnoreCase))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        public static int FindBikeIndexForCustomizationItem(CustomizationItem item)
+        {
+            if (object.ReferenceEquals(item, null))
+                return -1;
+
+            BikeType[] bikes = GetAllBikeTypes();
+            if (object.ReferenceEquals(bikes, null) || bikes.Length == 0)
+                return -1;
+
+            string displayName = item.displayName ?? "";
+            for (int i = 0; i < bikes.Length; i++)
+            {
+                BikeType candidate = bikes[i];
+                if (object.ReferenceEquals(candidate, null))
+                    continue;
+
+                string bikeName = candidate.name ?? "";
+                if (string.Equals(displayName, bikeName, StringComparison.OrdinalIgnoreCase))
+                    return i;
+
+                if (bikeName.Length > 2 &&
+                    displayName.IndexOf(bikeName, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return i;
+            }
+
+            return -1;
+        }
+
         private static PlayerInfoImpact GetPlayerImpact()
         {
             try
@@ -260,11 +376,9 @@ namespace DescendersModMenu.Mods
 
         private static PrefsManager GetPrefsManager()
         {
-            PrefsManager prefs = UnityEngine.Object.FindObjectOfType<PrefsManager>();
-            if (object.ReferenceEquals(prefs, null))
-                ModLog.Warn("BikeSwitcher: PrefsManager not found.");
-
-            return prefs;
+            // Early spawn / menu hops often call preferred-bike helpers before PrefsManager
+            // exists — not a real failure; callers no-op and DeferredEnsureSavedBike retries.
+            return UnityEngine.Object.FindObjectOfType<PrefsManager>();
         }
 
         private static int GetPreferredBikeIndex()
@@ -298,6 +412,31 @@ namespace DescendersModMenu.Mods
                 Telemetry.ReportErrorAsync(ex, "BikeSwitcher");
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Updates PREFERREDBIKE without switching bike type or touching TrickSetSwap.
+        /// </summary>
+        public static void SetPreferredBikeIndexOnly(int index)
+        {
+            SetPreferredBikeIndex(index);
+        }
+
+        /// <summary>
+        /// Sets preferred bike and switches the spawned rider if they are on a different bike.
+        /// Safe to call after Player_Human exists (autoload / map hop).
+        /// </summary>
+        public static void EnsureBikeApplied(int index)
+        {
+            if (index < 0) return;
+            SetPreferredBikeIndex(index);
+            int actual = FindBikeIndex(GetCurrentBikeType());
+            if (actual >= 0 && actual == index)
+            {
+                ModLog.Debug("BikeSwitcher: already on bike index " + index);
+                return;
+            }
+            SetBike(index);
         }
 
         private static void SetPreferredBikeIndex(int index)
