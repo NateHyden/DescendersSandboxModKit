@@ -355,6 +355,6 @@ I make this mod for the Descenders community, and it will always be free.
 
 ## Links
 
-- **VirusTotal:** [scan results](https://www.virustotal.com/gui/file/701096a931cae3c6f7d33f363bd0be99156941759958f43721db82e4739b1424/detection)
+- **VirusTotal:** [scan results](https://www.virustotal.com/gui/file/67b7803333971bdbf57e04c3793d0a009480cfeef0b72de166c96c488cb8dc35/detection)
 - **Discord:** [discord.gg/rHvCrBdqaR](https://discord.gg/rHvCrBdqaR)
 - **Nexus Mods:** [nexusmods.com/descenders/mods/8](https://www.nexusmods.com/descenders/mods/8)
