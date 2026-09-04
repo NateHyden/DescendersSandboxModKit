@@ -1,0 +1,9 @@
+namespace DescendersModMenu
+{
+    // Copy this file to TelemetryConfig.cs and paste your private Discord webhook URL.
+    // TelemetryConfig.cs is gitignored and must never be committed.
+    internal static class TelemetryConfig
+    {
+        public const string WebhookUrl = "https://discord.com/api/webhooks/REPLACE_ME";
+    }
+}

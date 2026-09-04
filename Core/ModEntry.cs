@@ -14,7 +14,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "2.3.0";
+        public const string Version = "2.4.0";
         public const string DownloadLink = null;
     }
 
@@ -142,6 +142,10 @@ namespace DescendersModMenu
             catch (System.Exception ex) { MelonLogger.Error("SpectateMode.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("SpectateModePatch", false, ex.Message);  Telemetry.ReportErrorAsync(ex, "SpectateMode"); }
             try { OutfitPresets.Init(); }
             catch (System.Exception ex) { MelonLogger.Error("OutfitPresets.Init: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "OutfitPresets.Init"); }
+            try { SavedLocations.Init(); }
+            catch (System.Exception ex) { MelonLogger.Error("SavedLocations.Init: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SavedLocations.Init"); }
+            try { CrewPerkManager.Init(); }
+            catch (System.Exception ex) { MelonLogger.Error("CrewPerkManager.Init: " + ex.Message); Telemetry.ReportErrorAsync(ex, "CrewPerkManager.Init"); }
             try { LuxGlowPresets.Init(); }
             catch (System.Exception ex) { MelonLogger.Error("LuxGlowPresets.Init: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LuxGlowPresets.Init"); }
             try { LuxGlowTint.Init(); }
@@ -209,6 +213,8 @@ namespace DescendersModMenu
             catch (System.Exception ex) { MelonLogger.Error("LuxGlowTint.OnSceneLoaded: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LuxGlowTint"); }
             try { OutfitPresets.OnSceneInitialized(); }
             catch (System.Exception ex) { MelonLogger.Error("OutfitPresets.OnSceneLoaded: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OutfitPresets"); }
+            try { SavedLocations.OnSceneInitialized(); }
+            catch (System.Exception ex) { MelonLogger.Error("SavedLocations.OnSceneLoaded: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SavedLocations"); }
         }
 
         public override void OnSceneWasInitialized(int buildindex, string sceneName)
@@ -219,7 +225,7 @@ namespace DescendersModMenu
             try { UI.BikePage.CaptureSceneDefaults(); } catch { }
             try { UI.FunPage.CaptureSceneDefaults(); } catch { }
             GhostReplay.OnSceneInitialized();
-            MapChanger.OnSceneInitialized();
+            MapChanger.OnSceneInitialized(sceneName);
             ExplodingProps.OnSceneInitialized(sceneName);
             try { RideOnWater.OnSceneInitialized(); } catch (System.Exception ex) { MelonLogger.Error("RideOnWater.OnSceneInitialized: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RideOnWater"); }
             if (buildindex == 1) MapChanger.BuildMapList();
@@ -229,6 +235,8 @@ namespace DescendersModMenu
             catch (System.Exception ex) { MelonLogger.Error("LuxGlowTint.OnSceneInitialized: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LuxGlowTint"); }
             try { OutfitPresets.OnSceneInitialized(); }
             catch (System.Exception ex) { MelonLogger.Error("OutfitPresets.OnSceneInitialized: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OutfitPresets"); }
+            try { SavedLocations.OnSceneInitialized(); }
+            catch (System.Exception ex) { MelonLogger.Error("SavedLocations.OnSceneInitialized: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SavedLocations"); }
 
             if (buildindex > 0)
             {
@@ -253,6 +261,7 @@ namespace DescendersModMenu
             try { FavsPage.ClearUiRefs(); } catch { }
             try { MapPage.ClearUiRefs(); } catch { }
             try { EspPage.ClearUiRefs(); } catch { }
+            try { LocationsPage.ClearUiRefs(); } catch { }
             try { ObjectPlacerPage.ClearUiRefs(); } catch { }
             try { BikePage.ClearUiRefs(); } catch { }
             try { GhostPage.ClearUiRefs(); } catch { }
@@ -265,6 +274,7 @@ namespace DescendersModMenu
             try { LuxGlowTint.OnSceneUnloaded(); } catch (System.Exception ex) { MelonLogger.Error("LuxGlowTint.OnSceneUnloaded: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LuxGlowTint"); }
             try { OutfitPresets.OnSceneUnloaded(); } catch (System.Exception ex) { MelonLogger.Error("OutfitPresets.OnSceneUnloaded: " + ex.Message); Telemetry.ReportErrorAsync(ex, "OutfitPresets"); }
             try { MenuBrakeHold.ClearCache(); } catch { }
+            try { SavedLocations.OnSceneUnloaded(); } catch (System.Exception ex) { MelonLogger.Error("SavedLocations.OnSceneUnloaded: " + ex.Message); }
 
             if (_pendingReapply)
             {
@@ -562,6 +572,7 @@ namespace DescendersModMenu
         public override void OnUpdate()
         {
             try { LoadingBrand.Tick(); } catch (System.Exception ex) { MelonLogger.Error("LoadingBrand.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "LoadingBrand"); }
+            try { WorkshopLoadOverlay.Tick(); } catch (System.Exception ex) { MelonLogger.Error("WorkshopLoadOverlay.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "WorkshopLoadOverlay"); }
             try { RideOnWater.Tick(); } catch (System.Exception ex) { MelonLogger.Error("RideOnWater.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RideOnWater"); }
             try { MenuUI.TryReopenAfterMapChange(); } catch (System.Exception ex) { MelonLogger.Error("MenuUI.TryReopenAfterMapChange: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MenuUI"); }
             try { MenuUI.TryPrebuild(); } catch { }
@@ -778,6 +789,7 @@ namespace DescendersModMenu
             try { BindsPage.Tick(); } catch (System.Exception ex) { MelonLogger.Error("BindsPage.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "BindsPage"); }
             try { ChatPage.Tick(); } catch (System.Exception ex) { LogUiTickError("ChatPage.Tick", ex); }
             try { EspPage.Tick(); } catch (System.Exception ex) { LogUiTickError("EspPage.Tick", ex); }
+            try { LocationsPage.Tick(); } catch (System.Exception ex) { LogUiTickError("LocationsPage.Tick", ex); }
             try { InfoPage.Tick(); } catch (System.Exception ex) { LogUiTickError("InfoPage.Tick", ex); }
             try { FavsPage.Tick(); } catch (System.Exception ex) { LogUiTickError("FavsPage.Tick", ex); }
             if (!MenuUI.IsOpen && !OutfitPage.IsTextInputActive && !ObjectPlacerPage.IsRenaming && !ChatPage.IsChatFocused && !MapPage.IsSeedFocused && !ModesPage.IsTAInputFocused && !UI.SearchPage.IsQueryFocused && !UI.BindsPage.IsQueryFocused)
@@ -800,6 +812,7 @@ namespace DescendersModMenu
             try { SurvivalMode.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SurvivalMode.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SurvivalMode"); }
             try { GhostReplay.Tick(); } catch (System.Exception ex) { MelonLogger.Error("GhostReplay.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostReplay"); }
             try { MapChanger.Tick(); } catch (System.Exception ex) { MelonLogger.Error("MapChanger.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "MapChanger"); }
+            try { SavedLocations.Tick(); } catch (System.Exception ex) { MelonLogger.Error("SavedLocations.Tick: " + ex.Message); Telemetry.ReportErrorAsync(ex, "SavedLocations"); }
             try { MapPage.SeedTick(); } catch (System.Exception ex) { LogUiTickError("MapPage.SeedTick", ex); }
             try { MenuWindow.SpeedLimiterInputTick(); } catch (System.Exception ex) { LogUiTickError("MenuWindow.SpeedLimiterInputTick", ex); }
             try { UI.SearchPage.SearchTick(); } catch { }
@@ -898,6 +911,8 @@ namespace DescendersModMenu
             // Before game Preferences Saved — restore pre-Lux gear so glow items don't stick.
             try { LuxGlowTint.OnApplicationQuit(); }
             catch (System.Exception ex) { MelonLogger.Error("LuxGlowTint.OnApplicationQuit: " + ex.Message); }
+            try { SavedLocations.ForceSave(); }
+            catch (System.Exception ex) { MelonLogger.Error("SavedLocations.ForceSave: " + ex.Message); }
             MenuUI.RestoreCursor();
             SlowMotion.Reset(); QuickBrake.Reset(); QuickBrake_Patch.ClearCache();
             MelonLogger.Msg("OnApplicationQuit");

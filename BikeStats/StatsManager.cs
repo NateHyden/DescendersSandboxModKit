@@ -185,6 +185,12 @@ namespace DescendersModMenu.BikeStats
         // ══════════════════════════════════════════════════════════════
         public static bool ReadyForAutoLoad()
         {
+            return IsRidingHudActive();
+        }
+
+        /// <summary>True when speedo / in-game HUD is up (player confirmed spawn and is riding).</summary>
+        public static bool IsRidingHudActive()
+        {
             try
             {
                 if (IsInMenuOnlyState())
@@ -204,6 +210,12 @@ namespace DescendersModMenu.BikeStats
                 ModLog.Warn("[StatsManager] ReadyForAutoLoad: " + ex.Message);
                 return true;
             }
+        }
+
+        /// <summary>True in main menu, shed, crew/mod pick — not an active ride.</summary>
+        public static bool IsInMenuContext()
+        {
+            return IsInMenuOnlyState();
         }
 
         private static bool IsInMenuOnlyState()

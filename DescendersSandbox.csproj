@@ -160,6 +160,8 @@
     <Compile Include="Mods\World\Gravity.cs" />
     <Compile Include="Mods\World\HeadlightsOnly.cs" />
     <Compile Include="Mods\World\MapChanger.cs" />
+    <Compile Include="Mods\World\ModWorkshopLoader.cs" />
+    <Compile Include="Mods\World\WorkshopLoadOverlay.cs" />
     <Compile Include="Mods\World\NearMissSensitivity.cs" />
     <Compile Include="Mods\World\SkyColours.cs" />
     <Compile Include="Mods\World\DiscoMode.cs" />
@@ -199,6 +201,8 @@
     <Compile Include="Mods\System\MultiplayerMenuGuard.cs" />
     <Compile Include="Mods\System\ModDetection.cs" />
     <Compile Include="Mods\System\SceneDumper.cs" />
+    <Compile Include="Mods\System\SavedLocations.cs" />
+    <Compile Include="Mods\System\CrewPerkManager.cs" />
     <Compile Include="Mods\System\ScreenshotMode.cs" />
     <Compile Include="Mods\System\CompassAlwaysOn.cs" />
     <Compile Include="Mods\System\PlayerCache.cs" />
@@ -259,6 +263,7 @@
     <Compile Include="UI\Pages\AvalanchePage.cs" />
     <Compile Include="UI\Pages\BikePage.cs" />
     <Compile Include="UI\Pages\ChatPage.cs" />
+    <Compile Include="UI\Pages\LocationsPage.cs" />
     <Compile Include="UI\Pages\EspPage.cs" />
     <Compile Include="UI\Pages\FavsPage.cs" />
     <Compile Include="UI\Pages\FunPage.cs" />

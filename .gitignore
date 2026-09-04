@@ -363,7 +363,7 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-# Descenders ModMenu build output
+# Descenders Sandbox build output
 Output/
 
 # Force-include the local build script, its logs, and the project file
@@ -377,12 +377,22 @@ Output/
 GamePath.props
 Core/TelemetryConfig.cs
 
-# Fody - auto-generated XML schema
-FodyWeavers.xsd
+# Local one-off tooling / reflection probes (not part of the shipped mod)
+tools/
+_probe/
+_tmp*/
+*_tmp*.txt
+**/dump_out.txt
+
 # Scene dumps from the in-game dumper (often 100MB+; GitHub rejects >100MB)
 _scenedump/
 **/SceneDump/
+*.zip
 
-# Scratch/probe scripts used for one-off reflection & decompile investigations
-_probe/
+# Editor / IDE local state
+.cursor/
+*.DotSettings.user
+
+# Fody - auto-generated XML schema
+FodyWeavers.xsd
 

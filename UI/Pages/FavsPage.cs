@@ -197,6 +197,8 @@ namespace DescendersModMenu.UI
             Canvas.ForceUpdateCanvases();
             if ((object)_scrollRect != null)
                 _scrollRect.verticalNormalizedPosition = 1f;
+
+            FavouritesManager.InvokeRefresh();
         }
 
         public static void RefreshFavourites()

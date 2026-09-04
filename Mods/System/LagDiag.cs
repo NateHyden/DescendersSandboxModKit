@@ -84,7 +84,6 @@ namespace DescendersModMenu.Mods
                 _sessionEnabled = false;
                 _windowStart = Time.unscaledTime;
                 _nextSample = Time.unscaledTime + IntervalSec;
-                try { MelonPreferences.Save(); } catch { }
                 ModLog.Debug("[LagDiag] Init session-off (opt-in)");
             }
             catch (Exception ex)

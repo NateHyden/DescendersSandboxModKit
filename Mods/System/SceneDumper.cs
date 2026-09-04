@@ -269,6 +269,21 @@ namespace DescendersModMenu.Mods
                     ModLog.Feedback("SceneDumper: FILE 4 done -> " + path4);
                 }
 
+                {
+                    string path5 = Path.Combine(desktop, "DescendersModWorkshop_" + timestamp + ".txt");
+                    ModLog.Debug("SceneDumper: FILE 5 (mod.io catalog) starting...");
+
+                    using (DumpWriter sb = new DumpWriter(path5, MaxCharsPerFile, "mod.io workshop catalog"))
+                    {
+                        sb.AppendLine("=== DESCENDERS MOD.IO / WORKSHOP CATALOG ===");
+                        sb.AppendLine("Scene: " + scene.name + "  |  Date: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        sb.AppendLine();
+                        ModWorkshopLoader.WriteDiagnostics(sb.AppendLine);
+                    }
+
+                    ModLog.Feedback("SceneDumper: FILE 5 done -> " + path5);
+                }
+
                 ModLog.Debug("SceneDumper: All files written to game directory.");
             }
             catch (Exception ex)

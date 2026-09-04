@@ -1241,9 +1241,8 @@ namespace DescendersModMenu.UI
 
             UIHelpers.SectionHeader("GAMEPLAY", vlg.transform);
             UIHelpers.HotkeyRow(vlg.transform, "Toggle slow motion", "F2");
-            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay ? toggle", "F3 / RS Dbl Click");
-            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay ? save run", "F4 / RS Click");
-            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay ? set spawn", "LS Click");
+            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay - save run", "F4 / RS Click");
+            UIHelpers.HotkeyRow(vlg.transform, "Ghost Replay - set spawn", "LS Click");
 
         }
 
@@ -1452,8 +1451,26 @@ namespace DescendersModMenu.UI
 
         private static void BuildCustomisePage(Transform p)
         {
-            var vlg = UIHelpers.Obj("CustVlg", p);
-            UIHelpers.Fill(UIHelpers.RT(vlg));
+            var scrollObj = UIHelpers.Obj("CustScroll", p);
+            UIHelpers.Fill(UIHelpers.RT(scrollObj));
+            var sr = scrollObj.AddComponent<ScrollRect>();
+            sr.horizontal = false; sr.vertical = true;
+            sr.movementType = ScrollRect.MovementType.Clamped;
+            sr.scrollSensitivity = 25f; sr.inertia = false;
+
+            var vp = UIHelpers.Obj("CustVP", scrollObj.transform);
+            UIHelpers.Fill(UIHelpers.RT(vp));
+            vp.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f);
+            vp.AddComponent<Mask>().showMaskGraphic = true;
+            sr.viewport = UIHelpers.RT(vp);
+
+            var vlg = UIHelpers.Obj("CustVlg", vp.transform);
+            var crt = UIHelpers.RT(vlg);
+            crt.anchorMin = new Vector2(0, 1); crt.anchorMax = new Vector2(1, 1);
+            crt.pivot = new Vector2(0.5f, 1); crt.sizeDelta = new Vector2(0, 0);
+            sr.content = crt;
+            UIHelpers.AddScrollbar(sr);
+            vlg.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             var v = vlg.AddComponent<VerticalLayoutGroup>();
             v.spacing = UIHelpers.RowGap;
             v.padding = new RectOffset((int)UIHelpers.ContentPad, (int)UIHelpers.ContentPad, 8, 8);
@@ -1476,6 +1493,9 @@ namespace DescendersModMenu.UI
                 Mods.MenuCustomiser.PositionLabels[Mods.MenuCustomiser.PositionPreset],
                 11, FontStyle.Bold, TextAnchor.MiddleRight, UIHelpers.Accent);
             _custPosLbl.gameObject.AddComponent<LayoutElement>().preferredWidth = 60;
+
+            UIHelpers.InfoBox(c,
+                "Drag the menu by clicking the top bar to place it anywhere on the screen.");
 
             UIHelpers.Divider(c);
 

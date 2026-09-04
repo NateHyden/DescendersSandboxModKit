@@ -35,10 +35,7 @@ namespace DescendersModMenu
                 _prefHeaderHintDismissed = _prefCategory.CreateEntry("HeaderHintDismissed", false, "Dismissed the header telemetry hint");
 
                 if (string.IsNullOrEmpty(_prefWebhookUrl.Value) && !string.IsNullOrEmpty(builtIn))
-                {
                     _prefWebhookUrl.Value = builtIn;
-                    MelonPreferences.Save();
-                }
             }
             catch { }
         }
@@ -135,14 +132,12 @@ namespace DescendersModMenu
                 stack = Sanitise(stack, 700);
                 string mod = Sanitise(activeMod ?? "unknown", 40);
                 string version = Sanitise(BuildInfo.Version, 16);
-                string platform = GetPlatform();
                 string mlVer = GetMelonLoaderVersion();
                 string mods = Sanitise(GetLoadedMods(), 350);
-                string rawName = GetPhotonLocalPlayerName();
-                if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
-                string playerName = Sanitise(rawName, 32);
 
-                Thread t = new Thread(() => DoPostError(exType, exMsg, stack, mod, version, platform, mlVer, mods, playerName));
+                // Resolve player/platform on the worker after Steam is ready — init-time
+                // reports otherwise land as "unknown" / "Unknown".
+                Thread t = new Thread(() => DoPostError(exType, exMsg, stack, mod, version, mlVer, mods));
                 t.IsBackground = true;
                 t.Start();
             }
@@ -165,14 +160,10 @@ namespace DescendersModMenu
                 string msg = Sanitise(message, 400);
                 string mod = Sanitise(activeMod ?? "unknown", 40);
                 string version = Sanitise(BuildInfo.Version, 16);
-                string platform = GetPlatform();
                 string mlVer = GetMelonLoaderVersion();
                 string mods = Sanitise(GetLoadedMods(), 350);
-                string rawName = GetPhotonLocalPlayerName();
-                if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
-                string playerName = Sanitise(rawName, 32);
 
-                Thread t = new Thread(() => DoPostWarning(msg, mod, version, platform, mlVer, mods, playerName));
+                Thread t = new Thread(() => DoPostWarning(msg, mod, version, mlVer, mods));
                 t.IsBackground = true;
                 t.Start();
             }
@@ -210,31 +201,35 @@ namespace DescendersModMenu
                 string cat = Sanitise(category, 30);
                 string msg = Sanitise(message, 900);
                 string version = Sanitise(BuildInfo.Version, 16);
-                string platform = GetPlatform();
-                string rawName = GetPhotonLocalPlayerName();
-                if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
-                string playerName = Sanitise(rawName, 32);
 
                 int color = string.Equals(category, "Bug Report", StringComparison.Ordinal) ? 15158332
                     : string.Equals(category, "Feature Request", StringComparison.Ordinal) ? 3066993
                     : 10181046;
 
-                string json =
-                    "{\"embeds\":[{" +
-                        "\"color\":" + color + "," +
-                        "\"title\":\"Descenders Sandbox — " + cat + "\"," +
-                        "\"fields\":[" +
-                            "{\"name\":\"Message\",\"value\":\"" + msg + "\",\"inline\":false}," +
-                            "{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}," +
-                            "{\"name\":\"Platform\",\"value\":\"" + platform + "\",\"inline\":true}," +
-                            "{\"name\":\"Version\",\"value\":\"" + version + "\",\"inline\":true}" +
-                        "]" +
-                    "}]}";
-
                 Thread t = new Thread(() =>
                 {
-                    bool ok = PostJson(json);
-                    _feedbackState = ok ? FeedbackSendState.Success : FeedbackSendState.Failed;
+                    try
+                    {
+                        string playerName;
+                        string platform;
+                        ResolvePlayerIdentity(out playerName, out platform);
+
+                        string json =
+                            "{\"embeds\":[{" +
+                                "\"color\":" + color + "," +
+                                "\"title\":\"Descenders Sandbox — " + cat + "\"," +
+                                "\"fields\":[" +
+                                    "{\"name\":\"Message\",\"value\":\"" + msg + "\",\"inline\":false}," +
+                                    "{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}," +
+                                    "{\"name\":\"Platform\",\"value\":\"" + platform + "\",\"inline\":true}," +
+                                    "{\"name\":\"Version\",\"value\":\"" + version + "\",\"inline\":true}" +
+                                "]" +
+                            "}]}";
+
+                        bool ok = PostJson(json);
+                        _feedbackState = ok ? FeedbackSendState.Success : FeedbackSendState.Failed;
+                    }
+                    catch { _feedbackState = FeedbackSendState.Failed; }
                 });
                 t.IsBackground = true;
                 t.Start();
@@ -257,14 +252,10 @@ namespace DescendersModMenu
                     safe.Add(Sanitise(failures[i], 150));
                 string extra = failures.Count > max ? " (+" + (failures.Count - max) + " more)" : "";
                 string version = Sanitise(BuildInfo.Version, 16);
-                string platform = GetPlatform();
                 string mlVer = GetMelonLoaderVersion();
                 string mods = Sanitise(GetLoadedMods(), 300);
-                string rawName = GetPhotonLocalPlayerName();
-                if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
-                string playerName = Sanitise(rawName, 32);
 
-                Thread t = new Thread(() => DoPostInitFailures(safe, extra, version, platform, mlVer, mods, playerName));
+                Thread t = new Thread(() => DoPostInitFailures(safe, extra, version, mlVer, mods));
                 t.IsBackground = true;
                 t.Start();
             }
@@ -275,15 +266,12 @@ namespace DescendersModMenu
         {
             try
             {
-                WaitForSteamReady();
-
-                string version    = Sanitise(BuildInfo.Version, 16);
-                string rawName = GetPhotonLocalPlayerName();
-                if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
-                string playerName = Sanitise(rawName, 32);
-                string platform   = Sanitise(GetPlatform(), 16);
-                string mlVer      = Sanitise(GetMelonLoaderVersion(), 16);
-                string mods       = Sanitise(GetLoadedMods(), 350);
+                string version = Sanitise(BuildInfo.Version, 16);
+                string playerName;
+                string platform;
+                ResolvePlayerIdentity(out playerName, out platform);
+                string mlVer = Sanitise(GetMelonLoaderVersion(), 16);
+                string mods = Sanitise(GetLoadedMods(), 350);
 
                 string json =
                     "{\"embeds\":[{" +
@@ -304,17 +292,13 @@ namespace DescendersModMenu
         }
 
         private static void DoPostError(string exType, string exMsg, string stack,
-            string mod, string version, string platform, string mlVer, string mods, string playerName)
+            string mod, string version, string mlVer, string mods)
         {
             try
             {
-                if (string.IsNullOrEmpty(playerName) || string.Equals(playerName, "unknown", StringComparison.Ordinal))
-                {
-                    WaitForSteamReady();
-                    string rawName = GetPhotonLocalPlayerName();
-                    if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
-                    playerName = Sanitise(rawName, 32);
-                }
+                string playerName;
+                string platform;
+                ResolvePlayerIdentity(out playerName, out platform);
 
                 string json =
                     "{\"embeds\":[{" +
@@ -326,7 +310,7 @@ namespace DescendersModMenu
                             "{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}," +
                             "{\"name\":\"Version\",\"value\":\"" + version + "\",\"inline\":true}," +
                             "{\"name\":\"Active Mod\",\"value\":\"" + mod + "\",\"inline\":true}," +
-                            "{\"name\":\"Platform\",\"value\":\"" + Sanitise(platform, 16) + "\",\"inline\":true}," +
+                            "{\"name\":\"Platform\",\"value\":\"" + platform + "\",\"inline\":true}," +
                             "{\"name\":\"MelonLoader\",\"value\":\"" + Sanitise(mlVer, 16) + "\",\"inline\":true}," +
                             "{\"name\":\"Loaded Mods\",\"value\":\"" + mods + "\",\"inline\":false}," +
                             "{\"name\":\"Stack\",\"value\":\"" + stack + "\",\"inline\":false}" +
@@ -339,17 +323,13 @@ namespace DescendersModMenu
         }
 
         private static void DoPostWarning(string message, string mod, string version,
-            string platform, string mlVer, string mods, string playerName)
+            string mlVer, string mods)
         {
             try
             {
-                if (string.IsNullOrEmpty(playerName) || string.Equals(playerName, "unknown", StringComparison.Ordinal))
-                {
-                    WaitForSteamReady();
-                    string rawName = GetPhotonLocalPlayerName();
-                    if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
-                    playerName = Sanitise(rawName, 32);
-                }
+                string playerName;
+                string platform;
+                ResolvePlayerIdentity(out playerName, out platform);
 
                 string json =
                     "{\"embeds\":[{" +
@@ -360,7 +340,7 @@ namespace DescendersModMenu
                             "{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}," +
                             "{\"name\":\"Version\",\"value\":\"" + version + "\",\"inline\":true}," +
                             "{\"name\":\"Active Mod\",\"value\":\"" + mod + "\",\"inline\":true}," +
-                            "{\"name\":\"Platform\",\"value\":\"" + Sanitise(platform, 16) + "\",\"inline\":true}," +
+                            "{\"name\":\"Platform\",\"value\":\"" + platform + "\",\"inline\":true}," +
                             "{\"name\":\"MelonLoader\",\"value\":\"" + Sanitise(mlVer, 16) + "\",\"inline\":true}," +
                             "{\"name\":\"Loaded Mods\",\"value\":\"" + mods + "\",\"inline\":false}" +
                         "]" +
@@ -372,22 +352,18 @@ namespace DescendersModMenu
         }
 
         private static void DoPostInitFailures(List<string> failures, string extra,
-            string version, string platform, string mlVer, string mods, string playerName)
+            string version, string mlVer, string mods)
         {
             try
             {
-                if (string.IsNullOrEmpty(playerName) || string.Equals(playerName, "unknown", StringComparison.Ordinal))
-                {
-                    WaitForSteamReady();
-                    string rawName = GetPhotonLocalPlayerName();
-                    if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
-                    playerName = Sanitise(rawName, 32);
-                }
+                string playerName;
+                string platform;
+                ResolvePlayerIdentity(out playerName, out platform);
 
                 List<string> fields = new List<string>();
                 fields.Add("{\"name\":\"Player\",\"value\":\"" + playerName + "\",\"inline\":true}");
                 fields.Add("{\"name\":\"Version\",\"value\":\"" + version + "\",\"inline\":true}");
-                fields.Add("{\"name\":\"Platform\",\"value\":\"" + Sanitise(platform, 16) + "\",\"inline\":true}");
+                fields.Add("{\"name\":\"Platform\",\"value\":\"" + platform + "\",\"inline\":true}");
                 fields.Add("{\"name\":\"MelonLoader\",\"value\":\"" + Sanitise(mlVer, 16) + "\",\"inline\":true}");
                 fields.Add("{\"name\":\"Failed Count\",\"value\":\"" + Sanitise(failures.Count + extra, 20) + "\",\"inline\":true}");
                 for (int i = 0; i < failures.Count; i++)
@@ -404,6 +380,20 @@ namespace DescendersModMenu
                 PostJson(json);
             }
             catch { }
+        }
+
+        /// <summary>
+        /// Wait for Steam (when needed), then resolve display name + platform.
+        /// Must run on a worker thread — never during OnInitializeMelon.
+        /// </summary>
+        private static void ResolvePlayerIdentity(out string playerName, out string platform)
+        {
+            WaitForSteamReady();
+
+            string rawName = GetPhotonLocalPlayerName();
+            if (string.IsNullOrEmpty(rawName)) rawName = GetSteamName();
+            playerName = Sanitise(rawName, 32);
+            platform = Sanitise(GetPlatform(), 16);
         }
 
         // ── Shared webhook POST ────────────────────────────────────────
@@ -456,6 +446,17 @@ namespace DescendersModMenu
                 }
             }
             catch { }
+
+            // Facepunch may still be starting during early init reports.
+            try
+            {
+                string basePath = AppDomain.CurrentDomain.BaseDirectory ?? "";
+                if (basePath.IndexOf("steamapps", StringComparison.OrdinalIgnoreCase) >= 0
+                    || basePath.IndexOf("SteamLibrary", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return "Steam";
+            }
+            catch { }
+
             return "Unknown";
         }
 
@@ -474,7 +475,26 @@ namespace DescendersModMenu
 
         private static object GetSteamClientInstance()
         {
-            if (_steamClientChecked) return _steamClientInstance;
+            // Re-read Instance when we already know the type — early cache can be null/invalid.
+            if (_steamClientChecked && (object)_steamClientType != null)
+            {
+                try
+                {
+                    PropertyInfo instanceProp = _steamClientType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
+                    if ((object)instanceProp != null)
+                    {
+                        object instance = instanceProp.GetValue(null, null);
+                        if ((object)instance != null)
+                        {
+                            _steamClientInstance = instance;
+                            return instance;
+                        }
+                    }
+                }
+                catch { }
+                return _steamClientInstance;
+            }
+
             try
             {
                 Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -486,12 +506,13 @@ namespace DescendersModMenu
                     PropertyInfo instanceProp = t.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
                     if ((object)instanceProp == null) continue;
 
-                    object instance = instanceProp.GetValue(null, null);
-                    if ((object)instance == null) continue;
-
                     _steamClientType = t;
-                    _steamClientInstance = instance;
                     _steamClientChecked = true;
+
+                    object instance = instanceProp.GetValue(null, null);
+                    if ((object)instance == null) return null;
+
+                    _steamClientInstance = instance;
                     return instance;
                 }
             }

@@ -290,11 +290,122 @@ namespace DescendersModMenu.UI
 
         public static Button SmallBtn(Transform p, string lbl, UnityEngine.Events.UnityAction clk)
         {
-            var b = Btn(lbl + "B", p, lbl, new Vector2(24, 24), 13, clk, UITheme.BtnActionBg, UITheme.BtnActionText);
+            return SmallBtn(p, lbl, clk, UITheme.BtnActionBg, UITheme.BtnActionText);
+        }
+
+        public static Button SmallBtn(Transform p, string lbl, UnityEngine.Events.UnityAction clk, Color bg, Color text)
+        {
+            var b = Btn(lbl + "B", p, lbl, new Vector2(24, 24), 13, clk, bg, text);
             var le = b.gameObject.AddComponent<LayoutElement>();
             le.preferredWidth = 24; le.preferredHeight = 24;
             le.minWidth = 24; le.minHeight = 24; le.flexibleHeight = 0;
             return b;
+        }
+
+        public static void OutlineBtn(Button b, Color border)
+        {
+            if ((object)b == null) return;
+            var ring = Panel("Bdr", b.transform, border, FrameSp);
+            var img = ring.GetComponent<Image>();
+            img.raycastTarget = false;
+            img.type = Image.Type.Sliced;
+            Fill(RT(ring));
+            ring.AddComponent<LayoutElement>().ignoreLayout = true;
+            ring.transform.SetAsFirstSibling();
+        }
+
+        /// <summary>
+        /// Crisp 1px ring (no 9-slice glow). Optional rainbow letters for colour-picker chips.
+        /// </summary>
+        public static Button HardChipBtn(Transform p, string name, string label, Vector2 sz, int fs,
+            UnityEngine.Events.UnityAction clk, Color fill, Color border, bool rainbowLetters)
+        {
+            var g = Obj(name, p);
+            var outer = g.AddComponent<Image>();
+            outer.sprite = BtnSp;
+            outer.type = Image.Type.Sliced;
+            outer.color = border;
+            var b = g.AddComponent<Button>();
+            var cb = b.colors;
+            cb.normalColor = Color.white;
+            cb.highlightedColor = new Color(1, 1, 1, 1.12f);
+            cb.pressedColor = new Color(.75f, .75f, .75f, 1);
+            cb.colorMultiplier = 1;
+            cb.fadeDuration = .08f;
+            b.colors = cb;
+            RT(g).sizeDelta = sz;
+            b.onClick.AddListener(clk);
+
+            var inner = Panel("Fill", g.transform, fill, BtnSp);
+            var innerImg = inner.GetComponent<Image>();
+            innerImg.raycastTarget = false;
+            innerImg.type = Image.Type.Sliced;
+            Fill(RT(inner), 1, 1, 1, 1);
+            inner.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            if (rainbowLetters && !string.IsNullOrEmpty(label))
+            {
+                var letters = Obj("Letters", g.transform);
+                Fill(RT(letters), 8, 8, 4, 4);
+                letters.AddComponent<LayoutElement>().ignoreLayout = true;
+                var hlg = letters.AddComponent<HorizontalLayoutGroup>();
+                hlg.spacing = 1;
+                hlg.padding = new RectOffset(0, 0, 0, 0);
+                hlg.childAlignment = TextAnchor.MiddleCenter;
+                hlg.childForceExpandWidth = true;
+                hlg.childForceExpandHeight = true;
+                hlg.childControlWidth = true;
+                hlg.childControlHeight = true;
+                int n = label.Length;
+                for (int i = 0; i < n; i++)
+                {
+                    Color col = RainbowLetterColor(i, n);
+                    var t = Txt("C" + i, letters.transform, label.Substring(i, 1), fs,
+                        FontStyle.Bold, TextAnchor.MiddleCenter, col);
+                    t.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                }
+            }
+            else
+            {
+                var t = Txt("L", g.transform, label, fs, FontStyle.Bold,
+                    TextAnchor.MiddleCenter, TextLight);
+                Fill(RT(t.gameObject));
+            }
+
+            var le = g.AddComponent<LayoutElement>();
+            le.preferredWidth = sz.x;
+            le.preferredHeight = sz.y;
+            le.minWidth = sz.x;
+            le.minHeight = sz.y;
+            le.flexibleHeight = 0;
+            return b;
+        }
+
+        // Skip deep blue/violet — they read dark on the chip fill.
+        private static Color RainbowLetterColor(int index, int count)
+        {
+            Color[] cols = {
+                new Color(1.00f, 0.28f, 0.28f),
+                new Color(1.00f, 0.88f, 0.20f),
+                new Color(0.25f, 1.00f, 0.40f),
+                new Color(0.20f, 0.92f, 1.00f),
+                new Color(1.00f, 0.40f, 0.95f)
+            };
+            if (index < 0) index = 0;
+            if (count <= cols.Length)
+                return cols[index % cols.Length];
+            float hue = (float)index / (float)count;
+            if (hue > 0.55f && hue < 0.82f)
+                hue = 0.50f + (hue - 0.55f) * 0.08f;
+            return Color.HSVToRGB(hue, 0.70f, 1f);
+        }
+
+        public static void RowSpacer(Transform p, float width)
+        {
+            var g = Obj("Gap", p);
+            var le = g.AddComponent<LayoutElement>();
+            le.preferredWidth = width; le.minWidth = width; le.flexibleWidth = 0;
+            le.preferredHeight = 1; le.flexibleHeight = 0;
         }
 
         public static void ActionBtn(Transform p, string lbl, UnityEngine.Events.UnityAction clk, float w = 72)
@@ -307,7 +418,35 @@ namespace DescendersModMenu.UI
 
         public static void ActionBtnOrange(Transform p, string lbl, UnityEngine.Events.UnityAction clk, float w = 72)
         {
-            var b = Btn(lbl + "B", p, lbl, new Vector2(w, 26), 11, clk, UITheme.BtnActionBg, UITheme.BtnActionText);
+            var b = Btn(lbl + "B", p, lbl, new Vector2(w, 26), 11, clk, UITheme.BtnWarnBg, UITheme.BtnWarnText);
+            var le = b.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = w; le.preferredHeight = 26;
+            le.minWidth = w; le.minHeight = 26; le.flexibleHeight = 0;
+        }
+
+        public static void ActionBtnSolidRed(Transform p, string lbl, UnityEngine.Events.UnityAction clk, float w = 72)
+        {
+            Color fill = new Color(0.86f, 0.11f, 0.16f, 1f);
+            Color ink = new Color(0.06f, 0.04f, 0.04f, 1f);
+            var b = Btn(lbl + "SolidB", p, lbl, new Vector2(w, 28), 13, clk, fill, ink);
+            var le = b.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = w; le.preferredHeight = 28;
+            le.minWidth = w; le.minHeight = 28; le.flexibleHeight = 0;
+        }
+
+        public static void ActionBtnGreen(Transform p, string lbl, UnityEngine.Events.UnityAction clk, float w = 72)
+        {
+            var b = Btn(lbl + "B", p, lbl, new Vector2(w, 26), 11, clk,
+                UITheme.StateOnBg, UITheme.StateOn);
+            var le = b.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = w; le.preferredHeight = 26;
+            le.minWidth = w; le.minHeight = 26; le.flexibleHeight = 0;
+        }
+
+        public static void ActionBtnRed(Transform p, string lbl, UnityEngine.Events.UnityAction clk, float w = 72)
+        {
+            var b = Btn(lbl + "B", p, lbl, new Vector2(w, 26), 11, clk,
+                UITheme.StateOffBg, UITheme.StateOff);
             var le = b.gameObject.AddComponent<LayoutElement>();
             le.preferredWidth = w; le.preferredHeight = 26;
             le.minWidth = w; le.minHeight = 26; le.flexibleHeight = 0;

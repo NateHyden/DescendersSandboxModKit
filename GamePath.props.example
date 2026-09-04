@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- Copy this file to GamePath.props and set your Descenders install path. -->
+    <DescendersPath>C:\Program Files (x86)\Steam\steamapps\common\Descenders</DescendersPath>
+  </PropertyGroup>
+</Project>

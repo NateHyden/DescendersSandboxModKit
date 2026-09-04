@@ -18,7 +18,9 @@ namespace DescendersModMenu.UI
         private static string _renameBuffer = "";
 
         private static Text[] _luxHueInputTexts = new Text[15];
+        private static Image[] _luxHueBoxImgs = new Image[15];
         private static Text[] _luxBrightTexts = new Text[15];
+        private static Text[] _luxPartTogVals = new Text[15];
         private static GameObject _luxPickerPanel;
         private static LuxColorPicker _luxColorPicker;
         private static Text _luxPickerLabel;
@@ -29,6 +31,7 @@ namespace DescendersModMenu.UI
         private static string _luxHueBuffer = "";
         private static Image _luxRainbowTrack;
         private static RectTransform _luxRainbowKnob;
+        private static Text _luxRainbowTogVal;
         private static Text _luxRainbowBrightText;
         private static Text _luxRainbowSpeedText;
         private const float CompactRowH = 28f;
@@ -211,7 +214,7 @@ namespace DescendersModMenu.UI
 
                 var riderResetRow = UIHelpers.StatRow("", c);
                 SlimRow(riderResetRow, CompactRowH);
-                UIHelpers.ActionBtnOrange(riderResetRow.transform, "Reset All", () =>
+                UIHelpers.ActionBtnSolidRed(riderResetRow.transform, "Reset All", () =>
                 {
                     RiderCustomiser.ResetAll();
                     if (skinColorVal) skinColorVal.text = RiderCustomiser.SkinColorLevel.ToString();
@@ -224,34 +227,44 @@ namespace DescendersModMenu.UI
 
                 UIHelpers.Divider(c);
 
-                UIHelpers.SectionHeader("LUX GLOW", c);
+                UIHelpers.SectionHeader("LUX CUSTOM COLOUR", c);
                 UIHelpers.InfoBox(c,
-                    "Everything Rainbow cycles all Lux slots like the stock rainbow bike. "
-                    + "\u25C0B / \u25B6B brightness, \u25C0S / \u25B6S speed. "
-                    + "Or click a row for a fixed colour. Toggle Lux per slot. WHEEL opens the colour picker.",
+                    "Green arrows are brightness. Orange arrows are rainbow speed. "
+                    + "WHEEL opens the colour picker. Off puts that slot back to vanilla.",
                     Color.white);
 
                 var luxRainbowRow = UIHelpers.StatRow("Everything Rainbow", c);
                 SlimRow(luxRainbowRow, CompactRowH);
+                _luxRainbowTogVal = UIHelpers.Txt("LuxRainbowTV", luxRainbowRow.transform,
+                    LuxGlowTint.RainbowAllEnabled ? "ON" : "OFF", 11, FontStyle.Bold,
+                    TextAnchor.MiddleCenter,
+                    LuxGlowTint.RainbowAllEnabled ? UIHelpers.OnColor : UIHelpers.OffColor);
+                _luxRainbowTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
                 UIHelpers.Toggle(luxRainbowRow.transform, "LuxRainbowT",
-                    () => { LuxGlowTint.ToggleRainbowAll(); RefreshAll(); },
+                    () => { LuxGlowTint.ToggleRainbowAll(); RefreshAll(); NotifyLuxFavsChanged(); },
                     out _luxRainbowTrack, out _luxRainbowKnob);
+                UIHelpers.RowSpacer(luxRainbowRow.transform, 8);
                 UIHelpers.SmallBtn(luxRainbowRow.transform, "\u25C0B",
-                    () => { LuxGlowTint.StepRainbowBrightness(-1); RefreshAll(); });
+                    () => { LuxGlowTint.StepRainbowBrightness(-1); RefreshAll(); NotifyLuxFavsChanged(); },
+                    UIHelpers.OnBg, UIHelpers.OnColor);
                 _luxRainbowBrightText = UIHelpers.Txt("LuxRainbowBr", luxRainbowRow.transform,
                     LuxGlowTint.GetRainbowBrightnessPercent() + "%", 9,
-                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextLight);
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
                 _luxRainbowBrightText.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
-                UIHelpers.SmallBtn(luxRainbowRow.transform, "\u25B6B",
-                    () => { LuxGlowTint.StepRainbowBrightness(1); RefreshAll(); });
+                UIHelpers.SmallBtn(luxRainbowRow.transform, "B\u25B6",
+                    () => { LuxGlowTint.StepRainbowBrightness(1); RefreshAll(); NotifyLuxFavsChanged(); },
+                    UIHelpers.OnBg, UIHelpers.OnColor);
+                UIHelpers.RowSpacer(luxRainbowRow.transform, 8);
                 UIHelpers.SmallBtn(luxRainbowRow.transform, "\u25C0S",
-                    () => { LuxGlowTint.StepRainbowSpeed(-1); RefreshAll(); });
+                    () => { LuxGlowTint.StepRainbowSpeed(-1); RefreshAll(); NotifyLuxFavsChanged(); },
+                    UIHelpers.OrangeDim, UIHelpers.Orange);
                 _luxRainbowSpeedText = UIHelpers.Txt("LuxRainbowSp", luxRainbowRow.transform,
                     "S" + LuxGlowTint.GetRainbowSpeedPercent() + "%", 9,
-                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextLight);
+                    FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Orange);
                 _luxRainbowSpeedText.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
-                UIHelpers.SmallBtn(luxRainbowRow.transform, "\u25B6S",
-                    () => { LuxGlowTint.StepRainbowSpeed(1); RefreshAll(); });
+                UIHelpers.SmallBtn(luxRainbowRow.transform, "S\u25B6",
+                    () => { LuxGlowTint.StepRainbowSpeed(1); RefreshAll(); NotifyLuxFavsChanged(); },
+                    UIHelpers.OrangeDim, UIHelpers.Orange);
 
                 BuildLuxPartRow(c, "Lux Bike", LuxGlowTint.Part.Bike,
                     out _luxBikeTrack, out _luxBikeKnob, out _luxBikePresetVal);
@@ -283,10 +296,8 @@ namespace DescendersModMenu.UI
 
                 var luxResetRow = UIHelpers.StatRow("", c);
                 SlimRow(luxResetRow, CompactRowH);
-                UIHelpers.ActionBtnOrange(luxResetRow.transform, "All Vanilla", () => { LuxGlowTint.DisableAll(); RefreshAll(); }, 100);
-                UIHelpers.InfoBox(c,
-                    "Quit with Lux still on — your normal bike and gear are put back on next launch. All Vanilla does the same now without quitting.",
-                    Color.white);
+                UIHelpers.ActionBtnSolidRed(luxResetRow.transform, "All Vanilla",
+                    () => { LuxGlowTint.DisableAll(); RefreshAll(); NotifyLuxFavsChanged(); }, 100);
 
                 UIHelpers.Divider(c);
                 UIHelpers.SectionHeader("LUX PRESETS", c);
@@ -306,21 +317,21 @@ namespace DescendersModMenu.UI
 
                     var luxSv = UIHelpers.Btn("LuxSv" + i, row.transform, "SAVE",
                         new Vector2(48, CompactBtnH), 11,
-                        () => { LuxGlowPresets.Save(idx); RefreshAll(); },
+                        () => { LuxGlowPresets.Save(idx); RefreshAll(); NotifyLuxFavsChanged(); },
                         UIHelpers.NeonBlue, Color.black);
                     var luxSvLe = luxSv.gameObject.AddComponent<LayoutElement>();
                     luxSvLe.preferredWidth = 48; luxSvLe.preferredHeight = CompactBtnH;
 
                     _luxPresetLoadBtns[i] = UIHelpers.Btn("LuxLd" + i, row.transform, "LOAD",
                         new Vector2(48, CompactBtnH), 11,
-                        () => { LuxGlowPresets.Load(idx); RefreshAll(); },
+                        () => { LuxGlowPresets.Load(idx); RefreshAll(); NotifyLuxFavsChanged(); },
                         UIHelpers.NeonBlue, Color.black);
                     var luxLdLe = _luxPresetLoadBtns[i].gameObject.AddComponent<LayoutElement>();
                     luxLdLe.preferredWidth = 48; luxLdLe.preferredHeight = CompactBtnH;
 
                     _luxPresetDeleteBtns[i] = UIHelpers.Btn("LuxDl" + i, row.transform, "DEL",
                         new Vector2(40, CompactBtnH), 11,
-                        () => { LuxGlowPresets.Delete(idx); RefreshAll(); },
+                        () => { LuxGlowPresets.Delete(idx); RefreshAll(); NotifyLuxFavsChanged(); },
                         UIHelpers.Orange, Color.black);
                     var luxDlLe = _luxPresetDeleteBtns[i].gameObject.AddComponent<LayoutElement>();
                     luxDlLe.preferredWidth = 40; luxDlLe.preferredHeight = CompactBtnH;
@@ -335,6 +346,11 @@ namespace DescendersModMenu.UI
                 Transform rcHdr = c.Find("RIDER CUSTOMISATIONH");
                 if ((object)rcHdr != null)
                     FavouritesManager.RegisterStarButton("RiderCustomisation", UIHelpers.StarBtnAbs(rcHdr, "RiderCustomisation", () => FavouritesManager.Toggle("RiderCustomisation")));
+                Transform luxHdr = c.Find("LUX CUSTOM COLOURH");
+                if ((object)luxHdr != null)
+                    FavouritesManager.RegisterStarButton("LuxCustomColour",
+                        UIHelpers.StarBtnAbs(luxHdr, "LuxCustomColour",
+                            () => FavouritesManager.Toggle("LuxCustomColour")));
 
                 FavouritesManager.Register(new ModFavEntry {
                     Id = "OutfitPresets", DisplayName = "Outfit Presets", TabBadge = "OUTFIT",
@@ -381,7 +397,7 @@ namespace DescendersModMenu.UI
                             () => { RiderCustomiser.DecreaseBodyType(); if (fBody) fBody.text = RiderCustomiser.BodyTypeLevel.ToString(); },
                             () => { RiderCustomiser.IncreaseBodyType(); if (fBody) fBody.text = RiderCustomiser.BodyTypeLevel.ToString(); });
                         var row = UIHelpers.StatRow("", p);
-                        UIHelpers.ActionBtnOrange(row.transform, "Reset All", () =>
+                        UIHelpers.ActionBtnSolidRed(row.transform, "Reset All", () =>
                         {
                             RiderCustomiser.ResetAll();
                             if (fSkin) fSkin.text = RiderCustomiser.SkinColorLevel.ToString();
@@ -394,11 +410,127 @@ namespace DescendersModMenu.UI
                     },
                     IsActive = () => false
                 });
+                FavouritesManager.Register(new ModFavEntry {
+                    Id = "LuxCustomColour",
+                    DisplayName = "Lux Custom Colour",
+                    TabBadge = "OUTFIT",
+                    BuildControls = BuildLuxCustomColourFavourites,
+                    IsActive = () => LuxGlowTint.AnyEnabled || LuxGlowTint.RainbowAllEnabled
+                });
 
                 UIHelpers.AddScrollForwarders(c);
                 RefreshAll();
             }
             catch (System.Exception ex) { MelonLogger.Error("OutfitPage: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "OutfitPage"); }
+        }
+
+        private static void NotifyLuxFavsChanged()
+        {
+            try { FavsPage.RefreshFavourites(); } catch { }
+        }
+
+        private static void BuildLuxCustomColourFavourites(Transform p)
+        {
+            Image rainbowTrack;
+            RectTransform rainbowKnob;
+            Text rainbowBright;
+            Text rainbowSpeed;
+            Text[] nameTexts = new Text[LuxGlowPresets.SlotCount];
+            Text[] statusTexts = new Text[LuxGlowPresets.SlotCount];
+            Button[] loadBtns = new Button[LuxGlowPresets.SlotCount];
+            Button[] deleteBtns = new Button[LuxGlowPresets.SlotCount];
+
+            var rainbowRow = FavsPage.CompactStatRow("Everything Rainbow", p);
+            Text rainbowTogVal = UIHelpers.Txt("FLuxRainbowTV", rainbowRow.transform,
+                LuxGlowTint.RainbowAllEnabled ? "ON" : "OFF", 11, FontStyle.Bold,
+                TextAnchor.MiddleCenter,
+                LuxGlowTint.RainbowAllEnabled ? UIHelpers.OnColor : UIHelpers.OffColor);
+            rainbowTogVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(rainbowRow.transform, "FLuxRainbowT",
+                () => { LuxGlowTint.ToggleRainbowAll(); RefreshAll(); NotifyLuxFavsChanged(); },
+                out rainbowTrack, out rainbowKnob);
+            UIHelpers.RowSpacer(rainbowRow.transform, 8);
+            UIHelpers.SmallBtn(rainbowRow.transform, "\u25C0B",
+                () => { LuxGlowTint.StepRainbowBrightness(-1); RefreshAll(); NotifyLuxFavsChanged(); },
+                UIHelpers.OnBg, UIHelpers.OnColor);
+            rainbowBright = UIHelpers.Txt("FLuxRainbowBr", rainbowRow.transform,
+                LuxGlowTint.GetRainbowBrightnessPercent() + "%", 9,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
+            rainbowBright.gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
+            UIHelpers.SmallBtn(rainbowRow.transform, "B\u25B6",
+                () => { LuxGlowTint.StepRainbowBrightness(1); RefreshAll(); NotifyLuxFavsChanged(); },
+                UIHelpers.OnBg, UIHelpers.OnColor);
+            UIHelpers.RowSpacer(rainbowRow.transform, 8);
+            UIHelpers.SmallBtn(rainbowRow.transform, "\u25C0S",
+                () => { LuxGlowTint.StepRainbowSpeed(-1); RefreshAll(); NotifyLuxFavsChanged(); },
+                UIHelpers.OrangeDim, UIHelpers.Orange);
+            rainbowSpeed = UIHelpers.Txt("FLuxRainbowSp", rainbowRow.transform,
+                "S" + LuxGlowTint.GetRainbowSpeedPercent() + "%", 9,
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Orange);
+            rainbowSpeed.gameObject.AddComponent<LayoutElement>().preferredWidth = 44;
+            UIHelpers.SmallBtn(rainbowRow.transform, "S\u25B6",
+                () => { LuxGlowTint.StepRainbowSpeed(1); RefreshAll(); NotifyLuxFavsChanged(); },
+                UIHelpers.OrangeDim, UIHelpers.Orange);
+
+            for (int s = 0; s < LuxGlowPresets.SlotCount; s++)
+            {
+                int idx = s;
+                var row = FavsPage.CompactStatRow(LuxGlowPresets.GetName(s), p);
+                Transform nameTf = row.transform.Find(LuxGlowPresets.GetName(s) + "L");
+                nameTexts[s] = (object)nameTf != null ? nameTf.GetComponent<Text>() : null;
+
+                statusTexts[s] = UIHelpers.Txt("FLuxSt" + s, row.transform,
+                    LuxGlowPresets.HasPreset(s) ? "SAVED" : "EMPTY", 9,
+                    FontStyle.Bold, TextAnchor.MiddleCenter,
+                    LuxGlowPresets.HasPreset(s) ? UIHelpers.OnColor : UIHelpers.OffColor);
+                statusTexts[s].gameObject.AddComponent<LayoutElement>().preferredWidth = 40;
+
+                UIHelpers.ActionBtn(row.transform, "SAVE",
+                    () => { LuxGlowPresets.Save(idx); RefreshAll(); NotifyLuxFavsChanged(); }, 50);
+                loadBtns[s] = UIHelpers.Btn("FLuxLd" + s, row.transform, "LOAD",
+                    new Vector2(50, 26), 11,
+                    () => { LuxGlowPresets.Load(idx); RefreshAll(); NotifyLuxFavsChanged(); },
+                    UIHelpers.NeonBlue, Color.black);
+                var ldLe = loadBtns[s].gameObject.AddComponent<LayoutElement>();
+                ldLe.preferredWidth = 50; ldLe.preferredHeight = 26;
+                deleteBtns[s] = UIHelpers.Btn("FLuxDl" + s, row.transform, "DEL",
+                    new Vector2(40, 26), 11,
+                    () => { LuxGlowPresets.Delete(idx); RefreshAll(); NotifyLuxFavsChanged(); },
+                    UIHelpers.Orange, Color.black);
+                var dlLe = deleteBtns[s].gameObject.AddComponent<LayoutElement>();
+                dlLe.preferredWidth = 40; dlLe.preferredHeight = 26;
+                loadBtns[s].interactable = LuxGlowPresets.HasPreset(s);
+                deleteBtns[s].interactable = LuxGlowPresets.HasPreset(s);
+            }
+
+            FavouritesManager.RegisterRefresh("LuxCustomColour", () =>
+            {
+                UIHelpers.SetToggle(rainbowTrack, rainbowKnob, LuxGlowTint.RainbowAllEnabled);
+                if (rainbowTogVal)
+                {
+                    bool rainOn = LuxGlowTint.RainbowAllEnabled;
+                    rainbowTogVal.text = rainOn ? "ON" : "OFF";
+                    rainbowTogVal.color = rainOn ? UIHelpers.OnColor : UIHelpers.OffColor;
+                }
+                if (rainbowBright)
+                    rainbowBright.text = LuxGlowTint.GetRainbowBrightnessPercent() + "%";
+                if (rainbowSpeed)
+                    rainbowSpeed.text = "S" + LuxGlowTint.GetRainbowSpeedPercent() + "%";
+
+                for (int i = 0; i < LuxGlowPresets.SlotCount; i++)
+                {
+                    bool has = LuxGlowPresets.HasPreset(i);
+                    if (nameTexts[i])
+                        nameTexts[i].text = LuxGlowPresets.GetName(i);
+                    if (statusTexts[i])
+                    {
+                        statusTexts[i].text = has ? "SAVED" : "EMPTY";
+                        statusTexts[i].color = has ? UIHelpers.OnColor : UIHelpers.OffColor;
+                    }
+                    if ((object)loadBtns[i] != null) loadBtns[i].interactable = has;
+                    if ((object)deleteBtns[i] != null) deleteBtns[i].interactable = has;
+                }
+            });
         }
 
         private static void BuildLuxPartRow(Transform parent, string label, LuxGlowTint.Part part,
@@ -425,24 +557,42 @@ namespace DescendersModMenu.UI
             rowHitBtn.colors = rowHitCb;
             rowHitBtn.onClick.AddListener(() => { SelectLuxRow(part, label); });
 
+            bool partOn = LuxGlowTint.IsPartEnabled(part);
+            _luxPartTogVals[pi] = UIHelpers.Txt("LuxTV_" + label, row.transform,
+                partOn ? "ON" : "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter,
+                partOn ? UIHelpers.OnColor : UIHelpers.OffColor);
+            _luxPartTogVals[pi].gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.Toggle(row.transform, "LuxT_" + label, () => { LuxGlowTint.TogglePart(part); RefreshAll(); },
                 out track, out knob);
-            UIHelpers.SmallBtn(row.transform, "\u25C0", () => { LuxGlowTint.PrevPreset(part); RefreshAll(); });
+            UIHelpers.RowSpacer(row.transform, 6);
+            var prevCol = UIHelpers.SmallBtn(row.transform, "\u25C0",
+                () => { LuxGlowTint.PrevPreset(part); RefreshAll(); },
+                UIHelpers.BtnBg, UIHelpers.Accent);
+            UIHelpers.OutlineBtn(prevCol, UIHelpers.AccentBdr);
             presetVal = UIHelpers.Txt("LuxPV_" + label, row.transform, LuxGlowTint.GetPartDisplayName(part), 10,
                 FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
             presetVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 72;
-            UIHelpers.SmallBtn(row.transform, "\u25B6", () => { LuxGlowTint.NextPreset(part); RefreshAll(); });
-            UIHelpers.SmallBtn(row.transform, "\u25C0B", () => { LuxGlowTint.StepBrightness(part, -1); RefreshAll(); });
+            var nextCol = UIHelpers.SmallBtn(row.transform, "\u25B6",
+                () => { LuxGlowTint.NextPreset(part); RefreshAll(); },
+                UIHelpers.BtnBg, UIHelpers.Accent);
+            UIHelpers.OutlineBtn(nextCol, UIHelpers.AccentBdr);
+            UIHelpers.RowSpacer(row.transform, 6);
+            UIHelpers.SmallBtn(row.transform, "\u25C0B", () => { LuxGlowTint.StepBrightness(part, -1); RefreshAll(); },
+                UIHelpers.OnBg, UIHelpers.OnColor);
             _luxBrightTexts[pi] = UIHelpers.Txt("LuxBr_" + label, row.transform,
                 LuxGlowTint.GetBrightnessPercent(part) + "%", 9,
-                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.TextLight);
+                FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OnColor);
             _luxBrightTexts[pi].gameObject.AddComponent<LayoutElement>().preferredWidth = 36;
-            UIHelpers.SmallBtn(row.transform, "\u25B6B", () => { LuxGlowTint.StepBrightness(part, 1); RefreshAll(); });
-            UIHelpers.ActionBtn(row.transform, "WHEEL", () => { ToggleLuxPicker(part, label); }, 42);
+            UIHelpers.SmallBtn(row.transform, "B\u25B6", () => { LuxGlowTint.StepBrightness(part, 1); RefreshAll(); },
+                UIHelpers.OnBg, UIHelpers.OnColor);
+            UIHelpers.RowSpacer(row.transform, 6);
+            UIHelpers.HardChipBtn(row.transform, "WHEELB_" + label, "WHEEL",
+                new Vector2(70, 26), 11, () => { ToggleLuxPicker(part, label); },
+                UIHelpers.BtnBg, UIHelpers.Accent, true);
 
             var hueInObj = UIHelpers.Obj("LuxHIn_" + label, row.transform);
-            var hueInImg = hueInObj.AddComponent<Image>();
-            hueInImg.color = new Color(0.12f, 0.12f, 0.14f, 0.9f);
+            _luxHueBoxImgs[pi] = hueInObj.AddComponent<Image>();
+            _luxHueBoxImgs[pi].color = new Color(0.12f, 0.12f, 0.14f, 0.9f);
             var hueInLe = hueInObj.AddComponent<LayoutElement>();
             hueInLe.preferredWidth = 52; hueInLe.preferredHeight = CompactBtnH;
             var hueInBtn = hueInObj.AddComponent<Button>();
@@ -458,7 +608,7 @@ namespace DescendersModMenu.UI
             UIHelpers.Fill(UIHelpers.RT(_luxHueInputTexts[pi].gameObject));
             _luxHueInputTexts[pi].raycastTarget = false;
 
-            UIHelpers.ActionBtn(row.transform, "Off", () => { LuxGlowTint.DisablePart(part); RefreshAll(); }, 36);
+            UIHelpers.ActionBtnRed(row.transform, "Off", () => { LuxGlowTint.DisablePart(part); RefreshAll(); }, 36);
         }
 
         private static void SelectLuxRow(LuxGlowTint.Part part, string label)
@@ -747,6 +897,12 @@ namespace DescendersModMenu.UI
             {
                 if (_luxRainbowTrack)
                     UIHelpers.SetToggle(_luxRainbowTrack, _luxRainbowKnob, LuxGlowTint.RainbowAllEnabled);
+                if (_luxRainbowTogVal)
+                {
+                    bool rainOn = LuxGlowTint.RainbowAllEnabled;
+                    _luxRainbowTogVal.text = rainOn ? "ON" : "OFF";
+                    _luxRainbowTogVal.color = rainOn ? UIHelpers.OnColor : UIHelpers.OffColor;
+                }
                 if (_luxRainbowBrightText)
                     _luxRainbowBrightText.text = LuxGlowTint.GetRainbowBrightnessPercent() + "%";
                 if (_luxRainbowSpeedText)
@@ -786,6 +942,12 @@ namespace DescendersModMenu.UI
         private static void RefreshLuxPart(LuxGlowTint.Part part, Image track, RectTransform knob, Text presetVal)
         {
             bool on = LuxGlowTint.IsPartEnabled(part);
+            Text togVal = _luxPartTogVals[(int)part];
+            if (togVal)
+            {
+                togVal.text = on ? "ON" : "OFF";
+                togVal.color = on ? UIHelpers.OnColor : UIHelpers.OffColor;
+            }
             if (presetVal)
             {
                 presetVal.text = LuxGlowTint.GetPartDisplayName(part);
@@ -799,6 +961,24 @@ namespace DescendersModMenu.UI
             }
             if ((object)track != null && (object)knob != null)
                 UIHelpers.SetToggle(track, knob, on);
+
+            int pi = (int)part;
+            if (_luxHueBoxImgs[pi])
+            {
+                if (on)
+                {
+                    float h = LuxGlowTint.GetHueDegrees(part) / 360f;
+                    _luxHueBoxImgs[pi].color = Color.HSVToRGB(h, 0.75f, 0.38f);
+                    if (_luxHueInputTexts[pi] && _luxHueEditPart != pi)
+                        _luxHueInputTexts[pi].color = Color.white;
+                }
+                else
+                {
+                    _luxHueBoxImgs[pi].color = new Color(0.12f, 0.12f, 0.14f, 0.9f);
+                    if (_luxHueInputTexts[pi] && _luxHueEditPart != pi)
+                        _luxHueInputTexts[pi].color = UIHelpers.TextLight;
+                }
+            }
         }
     }
 }

@@ -85,7 +85,7 @@ namespace DescendersModMenu.UI
         private static Image _treesTrack;
         private static RectTransform _treesKnob;
         // ── Pages ─────────────────────────────────────────────────────
-        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg23, pg24, pg25, pg26;
+        private static GameObject pg1, pg2, pg3, pg6, pg7, pg8, pg9, pg10, pg11, pg12, pg13, pg14, pg15, pg16, pg17, pg18, pg19, pg20, pg21, pg23, pg24, pg25, pg26, pg27;
         private static readonly bool[] _pageBuilt = new bool[32];
         private static object _pageWarmRoutine;
         private static int cur = 1;
@@ -93,14 +93,14 @@ namespace DescendersModMenu.UI
         public static int PendingPage = -1;
         public static int CurrentPage { get { return cur; } }
 
-        private static readonly int[] PageOrder = { 17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 26 };
-        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info", "Customise", "General", "Object Placer", "Xbox Mod.io Maps", "Session", "Move", "Bike", "Graphics", "World", "Fun", "Outfit", "Chat", "Modes", "Ghost Replay", "Maps", "Find", "Screenshot", "Other", "Career" };
-        private static readonly string[] GroupLabels = { null, null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
+        private static readonly int[] PageOrder = { 17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 27, 15, 9, 11, 12, 13, 14, 2, 18, 21, 26 };
+        private static readonly string[] NavLabels = { "\u2605 Favourites", "Search", "Key Binds", "Info", "Customise", "General", "Object Placer", "Xbox Mod.io Maps", "Session", "Move", "Bike", "Graphics", "World", "Spot Book", "Maps", "Fun", "Outfit", "Chat", "Modes", "Ghost Replay", "Find", "Screenshot", "Other", "Career" };
+        private static readonly string[] GroupLabels = { null, null, null, null, null, "SEP", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
 
-        private static Image[] _navBars = new Image[23];
-        private static Text[] _navTxts = new Text[23];
-        private static Image[] _navBgs = new Image[23];
-        private static Image[] _activeDots = new Image[23];
+        private static Image[] _navBars = new Image[24];
+        private static Text[] _navTxts = new Text[24];
+        private static Image[] _navBgs = new Image[24];
+        private static Image[] _activeDots = new Image[24];
         private static UnityEngine.UI.Image _infoTabDot;
         private static GameObject _chatUnreadBadge;
         private static Text _chatUnreadTxt;
@@ -124,6 +124,8 @@ namespace DescendersModMenu.UI
         private static ScrollRect _sibScroll;
         private static CanvasGroup _sibMoreHint;
         private static CanvasGroup _sibMoreHintTop;
+        private static Text _sibMoreHintTxt;
+        private static Text _sibMoreHintTopTxt;
 
         // ─────────────────────────────────────────────────────────────
         public static GameObject CreateMenu()
@@ -204,7 +206,7 @@ namespace DescendersModMenu.UI
                 var vbBdr = UIHelpers.Panel("VBBdr", verBadge.transform, UIHelpers.AccentBdr, UIHelpers.BtnSp);
                 vbBdr.GetComponent<Image>().raycastTarget = false; UIHelpers.Fill(UIHelpers.RT(vbBdr));
                 vbBdr.AddComponent<LayoutElement>().ignoreLayout = true;
-                var verTxt = UIHelpers.Txt("VT", verBadge.transform, "v" + BuildInfo.Version, 10, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                var verTxt = UIHelpers.Txt("VT", verBadge.transform, "v" + BuildInfo.Version, 10, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
                 UIHelpers.Fill(UIHelpers.RT(verTxt.gameObject));
 
                 _allModsRow = UIHelpers.Panel("AllModsWrap", hdr.transform, UIHelpers.RowBg, UIHelpers.ChipSp);
@@ -245,7 +247,7 @@ namespace DescendersModMenu.UI
                 _allModsKnob.sizeDelta = new Vector2(11, 11);
                 RefreshAllModsSwitch();
 
-                var byTxt = UIHelpers.Txt("By", hdr.transform, "Created by NateHyden", 9, FontStyle.Normal, TextAnchor.UpperRight, UIHelpers.TextMid);
+                var byTxt = UIHelpers.Txt("By", hdr.transform, "Created by NateHyden", 9, FontStyle.Normal, TextAnchor.UpperRight, Color.white);
                 var byrt = UIHelpers.RT(byTxt.gameObject);
                 byrt.anchorMin = new Vector2(1, 1); byrt.anchorMax = new Vector2(1, 1);
                 byrt.pivot = new Vector2(1, 1);
@@ -268,12 +270,12 @@ namespace DescendersModMenu.UI
                 usrt.anchoredPosition = new Vector2(-8, -17);
                 usTxt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
-                var telLbl = UIHelpers.Txt("TelLbl", hdr.transform, "Telemetry", 9, FontStyle.Bold, TextAnchor.UpperRight, UIHelpers.TextMid);
+                var telLbl = UIHelpers.Txt("TelLbl", hdr.transform, "Telemetry:", 9, FontStyle.Bold, TextAnchor.UpperRight, Color.white);
                 var telLblRt = UIHelpers.RT(telLbl.gameObject);
                 telLblRt.anchorMin = new Vector2(1, 1); telLblRt.anchorMax = new Vector2(1, 1);
                 telLblRt.pivot = new Vector2(1, 1);
-                telLblRt.sizeDelta = new Vector2(60, 16);
-                telLblRt.anchoredPosition = new Vector2(-92, -35);
+                telLblRt.sizeDelta = new Vector2(68, 16);
+                telLblRt.anchoredPosition = new Vector2(-74, -35);
                 telLbl.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
                 _telemetryTxt = UIHelpers.Txt("TelState", hdr.transform, "ON", 9, FontStyle.Bold, TextAnchor.UpperRight, UIHelpers.OnColor);
@@ -281,7 +283,7 @@ namespace DescendersModMenu.UI
                 telStateRt.anchorMin = new Vector2(1, 1); telStateRt.anchorMax = new Vector2(1, 1);
                 telStateRt.pivot = new Vector2(1, 1);
                 telStateRt.sizeDelta = new Vector2(26, 16);
-                telStateRt.anchoredPosition = new Vector2(-56, -35);
+                telStateRt.anchoredPosition = new Vector2(-46, -35);
                 _telemetryTxt.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
                 BuildHeaderToggle(hdr.transform, "TelSwitch", new Vector2(-8, -32),
@@ -401,12 +403,9 @@ namespace DescendersModMenu.UI
                 moreRt.sizeDelta = new Vector2(0, 26);
                 moreRt.anchoredPosition = Vector2.zero;
                 moreHint.AddComponent<LayoutElement>().ignoreLayout = true;
-                var moreFade = UIHelpers.Panel("Fade", moreHint.transform, new Color(0.04f, 0.05f, 0.08f, 0.82f));
-                UIHelpers.Fill(UIHelpers.RT(moreFade));
-                moreFade.GetComponent<Image>().raycastTarget = false;
-                var moreTxt = UIHelpers.Txt("Arr", moreHint.transform, "\u25BC", 13, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
-                UIHelpers.Fill(UIHelpers.RT(moreTxt.gameObject));
-                moreTxt.raycastTarget = false;
+                _sibMoreHintTxt = UIHelpers.Txt("Arr", moreHint.transform, "\u25BC", 14, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                UIHelpers.Fill(UIHelpers.RT(_sibMoreHintTxt.gameObject));
+                _sibMoreHintTxt.raycastTarget = false;
                 _sibMoreHint = moreHint.AddComponent<CanvasGroup>();
                 _sibMoreHint.alpha = 0f;
                 _sibMoreHint.blocksRaycasts = false;
@@ -419,12 +418,9 @@ namespace DescendersModMenu.UI
                 moreTopRt.sizeDelta = new Vector2(0, 26);
                 moreTopRt.anchoredPosition = Vector2.zero;
                 moreHintTop.AddComponent<LayoutElement>().ignoreLayout = true;
-                var moreTopFade = UIHelpers.Panel("Fade", moreHintTop.transform, new Color(0.04f, 0.05f, 0.08f, 0.82f));
-                UIHelpers.Fill(UIHelpers.RT(moreTopFade));
-                moreTopFade.GetComponent<Image>().raycastTarget = false;
-                var moreTopTxt = UIHelpers.Txt("Arr", moreHintTop.transform, "\u25B2", 13, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
-                UIHelpers.Fill(UIHelpers.RT(moreTopTxt.gameObject));
-                moreTopTxt.raycastTarget = false;
+                _sibMoreHintTopTxt = UIHelpers.Txt("Arr", moreHintTop.transform, "\u25B2", 14, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.Accent);
+                UIHelpers.Fill(UIHelpers.RT(_sibMoreHintTopTxt.gameObject));
+                _sibMoreHintTopTxt.raycastTarget = false;
                 _sibMoreHintTop = moreHintTop.AddComponent<CanvasGroup>();
                 _sibMoreHintTop.alpha = 0f;
                 _sibMoreHintTop.blocksRaycasts = false;
@@ -556,6 +552,7 @@ namespace DescendersModMenu.UI
                 pg21 = MakePageRoot("P21", cont.transform);
                 pg23 = MakePageRoot("P23", cont.transform);
                 pg24 = MakePageRoot("P24", cont.transform);
+                pg27 = MakePageRoot("P27", cont.transform);
 
                 // Build every tab in this same frame — one hitch beat drip-feed stutter.
                 BuildAllPagesNow();
@@ -587,6 +584,7 @@ namespace DescendersModMenu.UI
                 case 18: return pg18; case 19: return pg19; case 20: return pg20;
                 case 21: return pg21; case 23: return pg23;
                 case 24: return pg24; case 25: return pg25; case 26: return pg26;
+                case 27: return pg27;
                 default: return null;
             }
         }
@@ -614,6 +612,7 @@ namespace DescendersModMenu.UI
                     case 13: ModesPage.CreatePage(root.transform); break;
                     case 14: GhostPage.CreatePage(root.transform); break;
                     case 15: MapPage.CreatePage(root.transform); break;
+                    case 27: LocationsPage.CreatePage(root.transform); break;
                     case 16: SessionPage.CreatePage(root.transform); break;
                     case 17: FavsPage.CreatePage(root.transform); break;
                     case 18: ScreenshotPage.CreatePage(root.transform); break;
@@ -640,7 +639,7 @@ namespace DescendersModMenu.UI
             StopPageWarm();
             int[] order = new int[]
             {
-                17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 9, 11, 12, 13, 14, 15, 2, 18, 21, 26
+                17, 20, 19, 3, 25, 1, 24, 23, 16, 6, 8, 10, 7, 27, 15, 9, 11, 12, 13, 14, 2, 18, 21, 26
             };
             for (int i = 0; i < order.Length; i++)
                 EnsurePageBuilt(order[i]);
@@ -1357,6 +1356,7 @@ namespace DescendersModMenu.UI
                     case 21: return OtherPage.IsAnyActive;
                     case 23: return false;
                     case 24: return ObjectPlacerPage.IsAnyActive;
+                    case 27: return LocationsPage.IsAnyActive;
                     default: return false;
                 }
             }
@@ -1397,6 +1397,9 @@ namespace DescendersModMenu.UI
             if (pg13) pg13.SetActive(cur == 13); if (pg14) pg14.SetActive(cur == 14);
             if (pg15) pg15.SetActive(cur == 15);
             if (cur == 15 && _lastCur != 15) MapPage.RefreshAll();
+            if (pg27) pg27.SetActive(cur == 27);
+            if (cur != 27) LocationsPage.CancelRename();
+            if (cur == 27 && _lastCur != 27) LocationsPage.RefreshAll();
             if (pg16) pg16.SetActive(cur == 16);
             if (pg17) pg17.SetActive(cur == 17);
             if (cur == 17) FavsPage.CheckDirty();
@@ -1429,6 +1432,7 @@ namespace DescendersModMenu.UI
                 if (_activeDots[i]) _activeDots[i].enabled = active && !on;
             }
             if (cur == 2) EspPage.RefreshTexts();
+            if (cur == 27) LocationsPage.RefreshAll();
             if (cur == 3) InfoPage.Refresh();
             if (_infoTabDot) _infoTabDot.color = DiagnosticsManager.FailCount > 0 ? UIHelpers.OffColor : UIHelpers.OnColor;
             UpdateChatUnreadBadge(true);
@@ -1584,6 +1588,7 @@ namespace DescendersModMenu.UI
 
             if (_pageBuilt[16]) SessionPage.RefreshAll();
             if (_pageBuilt[2]) try { EspPage.RefreshTexts(); } catch { }
+            if (_pageBuilt[27]) try { LocationsPage.RefreshAll(); } catch { }
             if (_pageBuilt[8]) try { BikePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("BikePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "BikePage.RefreshAll"); }
             if (_pageBuilt[6]) try { MovePage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("MovePage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "MovePage.RefreshAll"); }
             if (_pageBuilt[9]) try { FunPage.RefreshAll(); } catch (System.Exception ex) { MelonLogger.Error("FunPage.RefreshAll: " + ex); Telemetry.ReportErrorAsync(ex, "FunPage.RefreshAll"); }
@@ -1744,6 +1749,8 @@ namespace DescendersModMenu.UI
             {
                 _sibMoreHint = null;
                 _sibMoreHintTop = null;
+                _sibMoreHintTxt = null;
+                _sibMoreHintTopTxt = null;
                 _sibScroll = null;
                 return;
             }
@@ -1761,20 +1768,31 @@ namespace DescendersModMenu.UI
                     float v = _sibScroll.verticalNormalizedPosition;
                     bool atTop = v >= 0.96f;
                     bool atBottom = v <= 0.04f;
-                    showBottom = overflow && atTop;
-                    showTop = overflow && atBottom;
+                    showBottom = overflow && !atBottom;
+                    showTop = overflow && !atTop;
                 }
+
+                // Smooth pulse on the arrow only (no fade plate — that dimmed tab text underneath).
+                float pulse = Mathf.PingPong(Time.unscaledTime * 2.8f, 1f);
+                Color arrowCol = Color.Lerp(UIHelpers.Accent, Color.white, 0.35f + 0.65f * pulse);
+                arrowCol.a = 0.45f + 0.55f * pulse;
 
                 float step = Time.unscaledDeltaTime * 8f;
                 if (_sibMoreHint)
                     _sibMoreHint.alpha = Mathf.MoveTowards(_sibMoreHint.alpha, showBottom ? 1f : 0f, step);
                 if (_sibMoreHintTop)
                     _sibMoreHintTop.alpha = Mathf.MoveTowards(_sibMoreHintTop.alpha, showTop ? 1f : 0f, step);
+                if (_sibMoreHintTxt)
+                    _sibMoreHintTxt.color = arrowCol;
+                if (_sibMoreHintTopTxt)
+                    _sibMoreHintTopTxt.color = arrowCol;
             }
             catch (System.Exception)
             {
                 _sibMoreHint = null;
                 _sibMoreHintTop = null;
+                _sibMoreHintTxt = null;
+                _sibMoreHintTopTxt = null;
                 _sibScroll = null;
             }
         }
