@@ -120,7 +120,7 @@ namespace DescendersModMenu.UI
             WideTyres.Reset();
             BikeSize.ResetToDefault();
             BikeSize.Level = 10;
-            if (TrickSetSwap.Enabled) TrickSetSwap.Disable();
+            TrickSetSwap.Reset();
             TrickSpeed.Reset();
             RubberBandSteering.Reset();
         }
@@ -804,7 +804,7 @@ namespace DescendersModMenu.UI
             if (BikeDamage.Enabled) BikeDamage.Toggle();
             if (ReverseSteering.Enabled) ReverseSteering.Toggle();
             RubberBandSteering.Reset();
-            if (TrickSetSwap.Enabled) TrickSetSwap.Disable();
+            TrickSetSwap.Reset();
             TrickSpeed.Reset();
             if (CutBrakes.Enabled) CutBrakes.Toggle();
             if (BikeTorch.DiscoEnabled) BikeTorch.ToggleDisco();

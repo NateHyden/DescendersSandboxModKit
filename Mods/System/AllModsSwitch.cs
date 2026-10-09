@@ -54,6 +54,7 @@ namespace DescendersModMenu.Mods
                     else CartoonSquash.Toggle();
                 }),
                 S("InstantRespawn", () => InstantRespawn.Enabled, InstantRespawn.Toggle),
+                S("SessionMarker", () => SessionMarker.Enabled, SessionMarker.Toggle),
                 S("InvisibleBike", () => InvisibleBike.Enabled, InvisibleBike.Toggle),
                 S("InvisiblePlayer", () => InvisiblePlayer.Enabled, InvisiblePlayer.Toggle),
                 S("TrickSetSwap", () => TrickSetSwap.Enabled, TrickSetSwap.Toggle),

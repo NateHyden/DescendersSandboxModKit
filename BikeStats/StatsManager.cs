@@ -148,6 +148,7 @@ namespace DescendersModMenu.BikeStats
                     TyrePressureLevel = TyrePressure.Level,
 
                     InstantRespawnEnabled = InstantRespawn.Enabled,
+                    SessionMarkerEnabled = SessionMarker.Enabled,
 
                     BikeDamageEnabled = BikeDamage.Enabled,
                     HeadlightsOnlyEnabled = HeadlightsOnly.Enabled,
@@ -155,7 +156,7 @@ namespace DescendersModMenu.BikeStats
 
                     WheelieHUDEnabled = WheelieHUD.Enabled,
 
-                    TrickSetSwapEnabled = TrickSetSwap.Enabled,
+                    TrickSetSwapEnabled = TrickSetSwap.Wanted,
                     TrickSetSwapSourceName = TrickSetSwap.CurrentSourceName,
                     TrickSpeedLevel = TrickSpeed.Level,
 
@@ -393,6 +394,7 @@ namespace DescendersModMenu.BikeStats
                 if (data.TyrePressureEnabled && !TyrePressure.Enabled) TyrePressure.Toggle();
 
                 if (data.InstantRespawnEnabled && !InstantRespawn.Enabled) InstantRespawn.Toggle();
+                if (data.SessionMarkerEnabled && !SessionMarker.Enabled) SessionMarker.Toggle();
 
                 if (data.BikeDamageEnabled && !BikeDamage.Enabled) BikeDamage.Toggle();
                 if (data.HeadlightsOnlyEnabled && !HeadlightsOnly.Enabled) HeadlightsOnly.Toggle();
@@ -402,7 +404,7 @@ namespace DescendersModMenu.BikeStats
 
                 if (!string.IsNullOrEmpty(data.TrickSetSwapSourceName))
                     TrickSetSwap.SetSourceByName(data.TrickSetSwapSourceName);
-                if (data.TrickSetSwapEnabled && !TrickSetSwap.Enabled) TrickSetSwap.Toggle();
+                if (data.TrickSetSwapEnabled) TrickSetSwap.Request();
 
                 int trickSpeedLv = data.TrickSpeedLevel;
                 if (trickSpeedLv < 1 || trickSpeedLv > 10) trickSpeedLv = 5;
@@ -611,11 +613,12 @@ namespace DescendersModMenu.BikeStats
                 if (TyrePressure.Enabled) TyrePressure.Toggle();
                 TyrePressure.SetLevel(5);
                 if (InstantRespawn.Enabled) InstantRespawn.Toggle();
+                if (SessionMarker.Enabled) SessionMarker.Toggle();
                 if (BikeDamage.Enabled) BikeDamage.Toggle();
                 if (HeadlightsOnly.Enabled) HeadlightsOnly.Toggle();
                 if (UIRemover.Enabled) UIRemover.Toggle();
                 if (WheelieHUD.Enabled) WheelieHUD.Toggle();
-                if (TrickSetSwap.Enabled) TrickSetSwap.Disable();
+                TrickSetSwap.Reset();
                 TrickSpeed.Reset();
 
                 if (AvalancheMode.Enabled) AvalancheMode.Reset();

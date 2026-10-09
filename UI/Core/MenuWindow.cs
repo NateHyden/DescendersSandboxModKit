@@ -75,6 +75,9 @@ namespace DescendersModMenu.UI
         private static Text _instRespVal;
         private static Image _instRespTrack;
         private static RectTransform _instRespKnob;
+        private static Text _sessionMarkerVal;
+        private static Image _sessionMarkerTrack;
+        private static RectTransform _sessionMarkerKnob;
         // ── Grip & World (moved from Bike / World) ───────────────────
         private static Text _stickyVal;
         private static Image _stickyTrack;
@@ -864,6 +867,13 @@ namespace DescendersModMenu.UI
             _instRespVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
             UIHelpers.Toggle(irr.transform, "IrT", () => { InstantRespawn.Toggle(); RefreshAll(); }, out _instRespTrack, out _instRespKnob);
 
+            var markerRow = UIHelpers.StatRow("Respawn Point Anywhere", pg);
+            _sessionMarkerVal = UIHelpers.Txt("SmkV", markerRow.transform, "OFF", 11, FontStyle.Bold, TextAnchor.MiddleCenter, UIHelpers.OffColor);
+            _sessionMarkerVal.gameObject.AddComponent<LayoutElement>().preferredWidth = 28;
+            UIHelpers.Toggle(markerRow.transform, "SmkT", () => { SessionMarker.Toggle(); RefreshAll(); }, out _sessionMarkerTrack, out _sessionMarkerKnob);
+            UIHelpers.InfoBox(pg,
+                "When ON, your normal Set Respawn Point controls work while moving or falling.");
+
             // ── GRIP & WORLD ──────────────────────────────────────────
             UIHelpers.SectionHeader("GRIP & WORLD", pg);
 
@@ -950,6 +960,7 @@ namespace DescendersModMenu.UI
             FavouritesManager.RegisterStarButton("SlowMotion", UIHelpers.StarBtn(smr.transform, "SlowMotion", () => FavouritesManager.Toggle("SlowMotion")));
             FavouritesManager.RegisterStarButton("SlowMoOnBail", UIHelpers.StarBtn(smobr.transform, "SlowMoOnBail", () => FavouritesManager.Toggle("SlowMoOnBail")));
             FavouritesManager.RegisterStarButton("InstantRespawn", UIHelpers.StarBtn(irr.transform, "InstantRespawn", () => FavouritesManager.Toggle("InstantRespawn")));
+            FavouritesManager.RegisterStarButton("SessionMarker", UIHelpers.StarBtn(markerRow.transform, "SessionMarker", () => FavouritesManager.Toggle("SessionMarker")));
             FavouritesManager.RegisterStarButton("StickyTyres", UIHelpers.StarBtn(stickyr.transform, "StickyTyres", () => FavouritesManager.Toggle("StickyTyres")));
             FavouritesManager.RegisterStarButton("Gravity", UIHelpers.StarBtn(gravr.transform, "Gravity", () => FavouritesManager.Toggle("Gravity")));
             FavouritesManager.RegisterStarButton("Trees", UIHelpers.StarBtn(treer.transform, "Trees", () => FavouritesManager.Toggle("Trees")));
@@ -1176,6 +1187,15 @@ namespace DescendersModMenu.UI
             });
             FavouritesManager.Register(new ModFavEntry
             {
+                Id = "SessionMarker",
+                DisplayName = "Respawn Point Anywhere",
+                TabBadge = "GENERAL",
+                BuildControls = (fp) => FavsPage.BuildSimpleToggle(fp, "SessionMarker", "Respawn Point Anywhere",
+                    () => Mods.SessionMarker.Enabled, () => Mods.SessionMarker.Toggle(), () => RefreshAll()),
+                IsActive = () => Mods.SessionMarker.Enabled
+            });
+            FavouritesManager.Register(new ModFavEntry
+            {
                 Id = "StickyTyres",
                 DisplayName = "Sticky Tyres",
                 TabBadge = "GENERAL",
@@ -1339,6 +1359,7 @@ namespace DescendersModMenu.UI
                                     Mods.GameModifierMods.FakieBalanceLevel != 5 ||
                                     Mods.SlowMotion.Enabled || Mods.SlowMoOnBail.Enabled ||
                                     Mods.InstantRespawn.Enabled ||
+                                    Mods.SessionMarker.Enabled ||
                                     Mods.StickyTyres.Enabled || Mods.Gravity.Level != 5 ||
                                     Mods.Trees.Enabled;
                     case 6: return MovePage.IsAnyActive;
@@ -1572,6 +1593,11 @@ namespace DescendersModMenu.UI
             bool irOn = InstantRespawn.Enabled;
             if (_instRespVal) { _instRespVal.text = irOn ? "ON" : "OFF"; _instRespVal.color = irOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
             UIHelpers.SetToggle(_instRespTrack, _instRespKnob, irOn);
+
+            // ── Respawn Point Anywhere ────────────────────────────────
+            bool smkOn = SessionMarker.Enabled;
+            if (_sessionMarkerVal) { _sessionMarkerVal.text = smkOn ? "ON" : "OFF"; _sessionMarkerVal.color = smkOn ? UIHelpers.OnColor : UIHelpers.OffColor; }
+            UIHelpers.SetToggle(_sessionMarkerTrack, _sessionMarkerKnob, smkOn);
 
             // ── Sticky Tyres ──────────────────────────────────────────
             bool stickyOn = StickyTyres.Enabled;

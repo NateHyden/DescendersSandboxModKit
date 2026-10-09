@@ -14,7 +14,7 @@ namespace DescendersModMenu
         public const string Description = "An advanced sandbox experience for Descenders";
         public const string Author = "NateHyden";
         public const string Company = null;
-        public const string Version = "2.4.0";
+        public const string Version = "2.5.0";
         public const string DownloadLink = null;
     }
 
@@ -22,10 +22,6 @@ namespace DescendersModMenu
     {
         private HarmonyLib.Harmony harmony;
 
-        private float _lastRStickClick = -999f;
-        private bool _pendingRStickSave = false;
-        private float _rStickSaveTime = 0f;
-        private float _ghostToggleLockUntil = -999f;
         private float _lastRsEdgeTime = -999f;
 
         private bool _pendingReapply;
@@ -128,12 +124,18 @@ namespace DescendersModMenu
             catch (System.Exception ex) { MelonLogger.Error("TrickSetSwap patch: " + ex.Message); DiagnosticsManager.Report("TrickSetSwap", false, ex.Message);  Telemetry.ReportErrorAsync(ex, "TrickSetSwap"); }
             try { MapChanger.ApplyPatch(harmony); DiagnosticsManager.Report("MapChanger", true); }
             catch (System.Exception ex) { ModLog.Warn("MapChanger.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("MapChanger", false, ex.Message); }
+            try { ModSearchDirectoryGuard.ApplyPatch(harmony); DiagnosticsManager.Report("ModSearchDirectoryGuard", true); }
+            catch (System.Exception ex) { MelonLogger.Error("ModSearchDirectoryGuard.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("ModSearchDirectoryGuard", false, ex.Message); Telemetry.ReportErrorAsync(ex, "ModSearchDirectoryGuard"); }
             try { PedalWhileTweak.ApplyPatch(harmony); DiagnosticsManager.Report("PedalWhileTweak", true); }
             catch (System.Exception ex) { MelonLogger.Error("PedalWhileTweak.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("PedalWhileTweak", false, ex.Message); Telemetry.ReportErrorAsync(ex, "PedalWhileTweak"); }
             try { PedalWhileReverse.ApplyPatch(harmony); DiagnosticsManager.Report("PedalWhileReverse", true); }
             catch (System.Exception ex) { MelonLogger.Error("PedalWhileReverse.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("PedalWhileReverse", false, ex.Message); Telemetry.ReportErrorAsync(ex, "PedalWhileReverse"); }
+            try { SessionMarker.ApplyPatch(harmony); DiagnosticsManager.Report("SessionMarker", true); }
+            catch (System.Exception ex) { MelonLogger.Error("SessionMarker.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("SessionMarker", false, ex.Message); Telemetry.ReportErrorAsync(ex, "SessionMarker"); }
             try { NoBail.ApplyPatch(harmony); }
             catch (System.Exception ex) { MelonLogger.Error("NoBail.ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "NoBail"); }
+            try { BikeSwitcher.ApplyPatch(harmony); DiagnosticsManager.Report("BikeSwitcherRespawn", true); }
+            catch (System.Exception ex) { MelonLogger.Error("BikeSwitcher.ApplyPatch: " + ex.Message); DiagnosticsManager.Report("BikeSwitcherRespawn", false, ex.Message); Telemetry.ReportErrorAsync(ex, "BikeSwitcher"); }
             try { SlowMoOnBail.ApplyPatch(harmony); }
             catch (System.Exception ex) { MelonLogger.Error("SlowMoOnBail.ApplyPatch: " + ex.Message);  Telemetry.ReportErrorAsync(ex, "SlowMoOnBail"); }
             try { CompassAlwaysOn.ApplyPatch(harmony); DiagnosticsManager.Report("CompassAlwaysOn", true); }
@@ -226,6 +228,7 @@ namespace DescendersModMenu
             try { UI.FunPage.CaptureSceneDefaults(); } catch { }
             GhostReplay.OnSceneInitialized();
             MapChanger.OnSceneInitialized(sceneName);
+            try { ModSearchDirectoryGuard.EnsurePatched(harmony); } catch { }
             ExplodingProps.OnSceneInitialized(sceneName);
             try { RideOnWater.OnSceneInitialized(); } catch (System.Exception ex) { MelonLogger.Error("RideOnWater.OnSceneInitialized: " + ex.Message); Telemetry.ReportErrorAsync(ex, "RideOnWater"); }
             if (buildindex == 1) MapChanger.BuildMapList();
@@ -313,6 +316,7 @@ namespace DescendersModMenu
             bool wasHeadlightsOnly = HeadlightsOnly.Enabled;
             bool wasUIRemover = UIRemover.Enabled;
             bool wasInstantRespawn = InstantRespawn.Enabled;
+            bool wasSessionMarker = SessionMarker.Enabled;
             bool wasStickyTyres = StickyTyres.Enabled;
             bool wasSpiderBike = SpiderBike.Enabled;
             bool wasAirControl = AirControl.Enabled;
@@ -390,6 +394,7 @@ namespace DescendersModMenu
             if (wasIceMode) ModLog.Debug("[Reapply]   IceMode");
             if (wasTyrePressure) ModLog.Debug("[Reapply]   TyrePressure lv=" + tyrePressureLv);
             if (wasInstantRespawn) ModLog.Debug("[Reapply]   InstantRespawn");
+            if (wasSessionMarker) ModLog.Debug("[Reapply]   SessionMarker");
             if (wasStickyTyres) ModLog.Debug("[Reapply]   StickyTyres");
             if (wasSpiderBike) ModLog.Debug("[Reapply]   SpiderBike");
             if (wasAirControl) ModLog.Debug("[Reapply]   AirControl");
@@ -434,7 +439,7 @@ namespace DescendersModMenu
             RubberBandSteering.Reset(); RubberBandSteering.ClearCache();
             PedalWhileTweak.Reset();
             PedalWhileReverse.Reset();
-            WideTyres.Reset(); IceMode.Reset(); TyrePressure.Reset(); InstantRespawn.Reset(); BikeDamage.Reset(); HeadlightsOnly.Reset(); UIRemover.Reset(); ScreenshotMode.Reset(); SpeedrunTimer.Reset();
+            WideTyres.Reset(); IceMode.Reset(); TyrePressure.Reset(); InstantRespawn.Reset(); SessionMarker.Reset(); BikeDamage.Reset(); HeadlightsOnly.Reset(); UIRemover.Reset(); ScreenshotMode.Reset(); SpeedrunTimer.Reset();
             GameModifierMods.NoSpeedWobblesReset();
             MirrorMode.Reset(); FlyMode.Reset(); DrunkMode.Reset(); HoverMode.Reset();
             SpectateMode.Reset(); SpectateMode.ClearCache();
@@ -491,6 +496,7 @@ namespace DescendersModMenu
             if (wasHeadlightsOnly) { HeadlightsOnly.Toggle(); ModLog.Debug("[Reapply] IMM HeadlightsOnly -> " + HeadlightsOnly.Enabled); }
             if (wasUIRemover) { UIRemover.Toggle(); ModLog.Debug("[Reapply] IMM UIRemover -> " + UIRemover.Enabled); }
             if (wasInstantRespawn) { InstantRespawn.Toggle(); ModLog.Debug("[Reapply] IMM InstantRespawn -> " + InstantRespawn.Enabled); }
+            if (wasSessionMarker) { SessionMarker.Toggle(); ModLog.Debug("[Reapply] IMM SessionMarker -> " + SessionMarker.Enabled); }
             if (wasStickyTyres) { StickyTyres.Toggle(); ModLog.Debug("[Reapply] IMM StickyTyres -> " + StickyTyres.Enabled); }
             if (wasSpiderBike) { SpiderBike.Toggle(); ModLog.Debug("[Reapply] IMM SpiderBike -> " + SpiderBike.Enabled); }
             if (wasAirControl) { AirControl.Toggle(); ModLog.Debug("[Reapply] IMM AirControl -> " + AirControl.Enabled); }
@@ -702,7 +708,6 @@ namespace DescendersModMenu
             try
             {
                 // LS / RS clicks — Unity joystick codes + InControl (pads vary by driver).
-                // RS must be listened to while Ghost is OFF so double-click can enable it.
                 // Collapse Unity+InControl edges within 40ms so one physical press isn't counted twice.
                 bool lsClick = MenuInputGuard.GetKeyDown(KeyCode.JoystickButton8);
                 bool rsClick = MenuInputGuard.GetKeyDown(KeyCode.JoystickButton9);
@@ -730,40 +735,12 @@ namespace DescendersModMenu
                     else if (GhostReplay.Enabled) { GhostReplay.SetSpawnMarker(); GhostPage.RefreshAll(); }
                 }
 
-                if (rsClick)
+                // RS click while Ghost is on → save current run (toggle is menu / F3 / bind only).
+                if (rsClick && GhostReplay.Enabled
+                    && GhostReplay.IsRecording && GhostReplay.RecordedFrames >= 30)
                 {
-                    float now = Time.realtimeSinceStartup;
-                    float gap = now - _lastRStickClick;
-                    _lastRStickClick = now;
-                    if (gap < 0.45f)
-                    {
-                        // Double-click RS → toggle Ghost on/off (works from OFF).
-                        // Lock briefly so a 3rd bounce / dual-driver edge can't flip it back off.
-                        if (now >= _ghostToggleLockUntil)
-                        {
-                            _pendingRStickSave = false;
-                            _lastRStickClick = -999f;
-                            _ghostToggleLockUntil = now + 0.5f;
-                            GhostReplay.Toggle();
-                            GhostPage.RefreshAll();
-                        }
-                    }
-                    else if (GhostReplay.Enabled)
-                    {
-                        // Single click while on → pending save after debounce window.
-                        _pendingRStickSave = true;
-                        _rStickSaveTime = now + 0.45f;
-                    }
-                }
-
-                if (_pendingRStickSave && Time.realtimeSinceStartup >= _rStickSaveTime)
-                {
-                    _pendingRStickSave = false;
-                    if (GhostReplay.IsRecording && GhostReplay.RecordedFrames >= 30)
-                    {
-                        GhostReplay.SaveRun();
-                        GhostPage.RefreshAll();
-                    }
+                    GhostReplay.SaveRun();
+                    GhostPage.RefreshAll();
                 }
             }
             catch (System.Exception ex) { MelonLogger.Error("GhostReplay hotkeys: " + ex.Message); Telemetry.ReportErrorAsync(ex, "GhostReplay"); }

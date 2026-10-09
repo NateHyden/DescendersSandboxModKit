@@ -27,7 +27,7 @@ namespace DescendersModMenu
             "QuickBrake",      "BikeTorch",        "DiscoTorch",      "ExplodingProps",
             "NearMiss",        "StickyTyres",      "WideTyres",       "ESP",
             "BikeDamage",      "HeadlightsOnly",   "UIRemover",       "WheelieHUD",
-            "InstantRespawn",  "TyrePressure",     "BrakeFade",       "SuspensionHUD",
+            "InstantRespawn",  "SessionMarker",    "TyrePressure",     "BrakeFade",       "SuspensionHUD",
             "TrickSetSwap",    "ScreenshotMode",   "NoSpeedWobbles",  "LandingImpact",
             "BlackDeath",      "Compass",          "RubberBand",      "FOV",
             "Acceleration",    "MaxSpeed",         "SessionHUD",      "TrickMultiplier",
@@ -69,7 +69,7 @@ namespace DescendersModMenu
             "Quick Brake",       "Bike Torch",              "Disco Torch",        "Exploding Props",
             "Near Miss Sensitivity", "Sticky Tyres",        "Wide Tyres",         "ESP",
             "Bike Damage",       "Headlights Only",         "UI Remover",         "Wheelie HUD",
-            "Instant Respawn",   "Tyre Pressure",           "Brake Fade",         "Suspension HUD",
+            "Instant Respawn",   "Respawn Point Anywhere",  "Tyre Pressure",       "Brake Fade",         "Suspension HUD",
             "Trick Set Swap",    "Screenshot Mode",         "No Speed Wobbles",   "Landing Impact",
             "Black Death",       "Compass Always On",       "Rubber Band Steering","FOV",
             "Acceleration",      "Max Speed Multiplier",    "Session HUD",        "Trick Multiplier",
@@ -427,6 +427,7 @@ namespace DescendersModMenu
                     case "UIRemover":          UIRemover.Toggle();                                break;
                     case "WheelieHUD":         WheelieHUD.Toggle();                               break;
                     case "InstantRespawn":     InstantRespawn.Toggle();                           break;
+                    case "SessionMarker":      SessionMarker.Toggle();                            break;
                     case "TyrePressure":       TyrePressure.Toggle();                             break;
                     case "BrakeFade":          BrakeFade.Toggle();                                break;
                     case "SuspensionHUD":      SuspensionHUD.Toggle();                            break;

@@ -176,6 +176,9 @@ namespace DescendersModMenu.BikeStats
         // ── Instant Respawn ────────────────────────────────────────────
         public bool InstantRespawnEnabled = false;
 
+        // ── Respawn Point (anywhere) ───────────────────────────────────
+        public bool SessionMarkerEnabled = false;
+
         // ── Bike Damage ────────────────────────────────────────────────
         public bool BikeDamageEnabled = false;
 

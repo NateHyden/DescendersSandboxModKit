@@ -171,19 +171,40 @@ namespace DescendersModMenu.Mods
         public static void Toggle()
         {
             if (Enabled) { Disable(); return; }
+            TryEnable(false);
+        }
 
+        /// <summary>
+        /// True when the user wants the swap on. It survives bike changes: BikeSwitcher.SetBike
+        /// suspends the patch on the outgoing bike and re-applies it to the new bike.
+        /// Cleared by Disable() / Reset().
+        /// </summary>
+        public static bool Wanted { get; private set; } = false;
+
+        /// <summary>
+        /// Used when restoring saved state: remember the user wants the swap on even if it cannot
+        /// be applied to the current bike yet (e.g. the bike is switched a moment later).
+        /// </summary>
+        public static void Request()
+        {
+            Wanted = true;
+            if (!Enabled) TryEnable(false);
+        }
+
+        private static bool TryEnable(bool quiet)
+        {
             if (_availableBikes == null) RefreshAvailableBikes();
             if (_availableBikes == null || _availableBikes.Count == 0)
             {
-                ModLog.Warn("[TrickSetSwap] No bike types with trick sets found — cannot enable");
-                return;
+                ModLog.Warn("[TrickSetSwap] No bike types with trick sets found - cannot enable");
+                return false;
             }
 
             BikeType target = GetCurrentPlayerBikeType();
             if ((object)target == null)
             {
-                ModLog.Warn("[TrickSetSwap] Could not read current player bike type — cannot enable");
-                return;
+                ModLog.Warn("[TrickSetSwap] Could not read current player bike type - cannot enable");
+                return false;
             }
 
             int srcIdx = Mathf.Clamp(SourceIndex, 0, _availableBikes.Count - 1);
@@ -191,37 +212,48 @@ namespace DescendersModMenu.Mods
 
             if ((object)source == (object)target)
             {
-                ModLog.Debug("[TrickSetSwap] Source bike (" + source.name + ") matches current bike — nothing to swap");
-                return;
+                ModLog.Debug("[TrickSetSwap] Source bike (" + source.name + ") matches current bike - nothing to swap");
+                return false;
             }
 
             _patchedBike = target;
             _originalGestures = target.overrideGestures;
             target.overrideGestures = source.overrideGestures;
             Enabled = true;
+            Wanted = true;
 
             int origLen = _originalGestures != null ? _originalGestures.Length : 0;
             int newLen = source.overrideGestures != null ? source.overrideGestures.Length : 0;
-            ModLog.Feedback("[TrickSetSwap] -> ON  | target=" + target.name
+            string msg = "[TrickSetSwap] -> ON  | target=" + target.name
                 + " (was " + origLen + " gestures) | source=" + source.name
-                + " (" + newLen + " gestures)");
+                + " (" + newLen + " gestures)";
+            if (quiet) ModLog.Debug(msg); else ModLog.Feedback(msg);
+            return true;
         }
 
         public static void Disable()
         {
+            Wanted = false;
             if (!Enabled) return;
+            DisableCore(false);
+        }
+
+        private static void DisableCore(bool quiet)
+        {
             try
             {
                 if ((object)_patchedBike != null)
                 {
                     _patchedBike.overrideGestures = _originalGestures;
                     int restoredLen = _originalGestures != null ? _originalGestures.Length : 0;
-                    ModLog.Feedback("[TrickSetSwap] -> OFF | restored " + _patchedBike.name
-                        + " (" + restoredLen + " gestures)");
+                    string msg = "[TrickSetSwap] -> OFF | restored " + _patchedBike.name
+                        + " (" + restoredLen + " gestures)";
+                    if (quiet) ModLog.Debug(msg); else ModLog.Feedback(msg);
                 }
                 else
                 {
-                    ModLog.Feedback("[TrickSetSwap] -> OFF (no snapshot to restore)");
+                    string msg = "[TrickSetSwap] -> OFF (no snapshot to restore)";
+                    if (quiet) ModLog.Debug(msg); else ModLog.Feedback(msg);
                 }
             }
             catch (Exception ex)
@@ -236,10 +268,38 @@ namespace DescendersModMenu.Mods
                 Enabled = false;
             }
 
-            try { MenuWindow.RefreshAll(); } catch { }
+            if (!quiet)
+            {
+                try { MenuWindow.RefreshAll(); } catch { }
+            }
         }
 
         public static void Reset() { Disable(); }
+
+        /// <summary>
+        /// Called by BikeSwitcher.SetBike before the bike changes: restores the original gestures
+        /// on the outgoing bike type but keeps Wanted, so the swap can follow the player.
+        /// Returns true if the swap should be re-applied afterwards.
+        /// </summary>
+        public static bool SuspendForBikeChange()
+        {
+            if (Enabled)
+            {
+                Wanted = true;
+                DisableCore(true);
+            }
+            return Wanted;
+        }
+
+        /// <summary>Called by BikeSwitcher.SetBike after the bike changed: re-applies the swap to the new bike.</summary>
+        public static void ResumeAfterBikeChange()
+        {
+            if (!Wanted || Enabled) return;
+            bool ok = TryEnable(true);
+            ModLog.Debug("[TrickSetSwap] Re-apply after bike change -> "
+                + (ok ? "ON" : "skipped (source matches the new bike, or bike unavailable)"));
+            try { MenuWindow.RefreshAll(); } catch { }
+        }
 
         // ─────────────────────────────────────────────────────────────
         public static void NextSource()

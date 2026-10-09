@@ -133,6 +133,7 @@
     <Compile Include="Mods\Bike\HoverMode.cs" />
     <Compile Include="Mods\Bike\IceMode.cs" />
     <Compile Include="Mods\Bike\InstantRespawn.cs" />
+    <Compile Include="Mods\Bike\SessionMarker.cs" />
     <Compile Include="Mods\Bike\LandingImpact.cs" />
     <Compile Include="Mods\Bike\MaxSpeedMultiplier.cs" />
     <Compile Include="Mods\Bike\Movement.cs" />
@@ -161,6 +162,7 @@
     <Compile Include="Mods\World\HeadlightsOnly.cs" />
     <Compile Include="Mods\World\MapChanger.cs" />
     <Compile Include="Mods\World\ModWorkshopLoader.cs" />
+    <Compile Include="Mods\World\ModSearchDirectoryGuard.cs" />
     <Compile Include="Mods\World\WorkshopLoadOverlay.cs" />
     <Compile Include="Mods\World\NearMissSensitivity.cs" />
     <Compile Include="Mods\World\SkyColours.cs" />
